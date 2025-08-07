@@ -73,9 +73,15 @@ export default function SalonDetail() {
   });
 
   // Fetch available time slots for selected date and service
-  const { data: timeSlots = [] } = useQuery<TimeSlot[]>({
-    queryKey: [`/api/salons/${salonId}/time-slots`, selectedDate?.toISOString().split('T')[0], selectedService],
-    enabled: !!salonId && !!selectedDate && !!selectedService,
+  const { data: timeSlots = [], isLoading: timeSlotsLoading } = useQuery({
+    queryKey: [`/api/salons/${salonId}/time-slots`, selectedDate?.toISOString().split('T')[0]],
+    enabled: !!salonId && !!selectedDate,
+    queryFn: async (): Promise<TimeSlot[]> => {
+      if (!selectedDate) return [];
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const response = await apiRequest(`/api/salons/${salonId}/time-slots?date=${dateStr}`);
+      return Array.isArray(response) ? response : [];
+    },
   });
 
   const form = useForm<BookingFormData>({
@@ -502,8 +508,12 @@ export default function SalonDetail() {
                                 <FormItem>
                                   <FormLabel>Available Time Slots</FormLabel>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                    {timeSlots.length > 0 ? (
-                                      timeSlots.map((slot) => (
+                                    {timeSlotsLoading ? (
+                                      <p className="col-span-2 sm:col-span-3 text-sm text-gray-500 text-center py-4">
+                                        Loading available slots...
+                                      </p>
+                                    ) : timeSlots && timeSlots.length > 0 ? (
+                                      timeSlots.filter((slot: TimeSlot) => slot.isAvailable).map((slot: TimeSlot) => (
                                         <Button
                                           key={slot.id}
                                           type="button"
@@ -517,9 +527,15 @@ export default function SalonDetail() {
                                         </Button>
                                       ))
                                     ) : (
-                                      <p className="col-span-2 sm:col-span-3 text-sm text-gray-500 text-center py-4">
-                                        No available slots for this date
-                                      </p>
+                                      <div className="col-span-2 sm:col-span-3 text-center py-6">
+                                        <Clock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                        <p className="text-sm text-gray-500 mb-2">
+                                          No time slots available for this date
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                          The salon owner needs to create time slots for this date
+                                        </p>
+                                      </div>
                                     )}
                                   </div>
                                   <FormMessage />
