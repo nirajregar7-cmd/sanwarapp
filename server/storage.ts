@@ -22,7 +22,7 @@ import {
   type InsertReview,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, desc, asc } from "drizzle-orm";
+import { eq, and, gte, desc, asc, or } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -169,17 +169,43 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableTimeSlots(salonId: string, date: string): Promise<TimeSlot[]> {
-    return await db
+    // Get all time slots for this salon and date
+    const allSlots = await db
       .select()
       .from(timeSlots)
       .where(
         and(
           eq(timeSlots.salonId, salonId),
-          eq(timeSlots.date, date),
-          eq(timeSlots.isAvailable, true)
+          eq(timeSlots.date, date)
         )
       )
       .orderBy(asc(timeSlots.startTime));
+
+    // Get all bookings for this salon and date to check which slots are booked
+    const bookedSlots = await db
+      .select({
+        timeSlotId: bookings.timeSlotId
+      })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.salonId, salonId),
+          eq(bookings.date, date),
+          // Only confirmed and completed bookings make slots unavailable
+          or(
+            eq(bookings.status, "confirmed"),
+            eq(bookings.status, "completed")
+          )
+        )
+      );
+
+    const bookedSlotIds = new Set(bookedSlots.map(b => b.timeSlotId));
+
+    // Return all slots with real-time availability based on actual bookings
+    return allSlots.map(slot => ({
+      ...slot,
+      isAvailable: !bookedSlotIds.has(slot.id) // Available if not booked
+    }));
   }
 
   async updateTimeSlotAvailability(id: string, isAvailable: boolean): Promise<void> {
@@ -189,6 +215,11 @@ export class DatabaseStorage implements IStorage {
   // Booking operations
   async createBooking(booking: InsertBooking): Promise<Booking> {
     const [newBooking] = await db.insert(bookings).values(booking).returning();
+    
+    // After creating a booking, the time slot becomes unavailable for others
+    // Note: We don't modify the timeSlots table isAvailable field anymore
+    // Instead, availability is calculated dynamically based on bookings
+    
     return newBooking;
   }
 
