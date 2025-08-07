@@ -52,7 +52,7 @@ export default function Layout({ children }: LayoutProps) {
               {isAuthenticated && !isMobile && (
                 <nav className="flex items-center space-x-4">
                   <Link 
-                    href="/" 
+                    href="/landing" 
                     className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                   >
                     Home
@@ -97,7 +97,7 @@ export default function Layout({ children }: LayoutProps) {
             {isAuthenticated && !isMobile && (
               <div className="flex items-center space-x-2 sm:space-x-4">
                 {/* Home Button */}
-                <Link href="/">
+                <Link href="/landing">
                   <Button
                     variant="ghost"
                     size="sm"

@@ -35,6 +35,9 @@ function Router() {
       {/* Authentication page */}
       <Route path="/auth" component={AuthPage} />
       
+      {/* Landing page - accessible to all users */}
+      <Route path="/landing" component={Landing} />
+      
       {/* Landing page for non-authenticated users */}
       {!user || !isAuthenticated ? (
         <>
