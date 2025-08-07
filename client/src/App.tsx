@@ -15,19 +15,38 @@ import OwnerDashboard from "@/pages/owner/dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  // Temporarily show landing page while we fix authentication
-  // TODO: Re-enable authentication once the core app is working
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Landing} />
-        <Route path="/customer" component={CustomerHome} />
-        <Route path="/customer/salon/:salonId" component={SalonDetail} />
-        <Route path="/bookings" component={CustomerBookings} />
-        <Route path="/owner" component={OwnerDashboard} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      {/* Landing page without Layout (has its own footer design) */}
+      <Route path="/" component={Landing} />
+      
+      {/* Other pages with Layout */}
+      <Route path="/customer">
+        <Layout>
+          <CustomerHome />
+        </Layout>
+      </Route>
+      <Route path="/customer/salon/:salonId">
+        <Layout>
+          <SalonDetail />
+        </Layout>
+      </Route>
+      <Route path="/bookings">
+        <Layout>
+          <CustomerBookings />
+        </Layout>
+      </Route>
+      <Route path="/owner">
+        <Layout>
+          <OwnerDashboard />
+        </Layout>
+      </Route>
+      <Route>
+        <Layout>
+          <NotFound />
+        </Layout>
+      </Route>
+    </Switch>
   );
 }
 
