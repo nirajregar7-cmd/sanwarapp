@@ -18,7 +18,7 @@
   --accent: hsl(158.8235 100% 35.2941%);
   --accent-foreground: hsl(0 0% 100%);
   --muted: hsl(240 1.9608% 90%);
-  --muted-foreground: hsl(210 25% 7.8431%);
+  --muted-foreground: hsl(210 25% 45%);
   --destructive: hsl(356.3033 90.5579% 54.3137%);
   --destructive-foreground: hsl(0 0% 100%);
   --border: hsl(201.4286 30.4348% 90.9804%);
@@ -62,10 +62,10 @@
   --popover-foreground: hsl(200 6.6667% 91.1765%);
   --primary: hsl(248.0645 92.8571% 61.1765%);
   --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(195.0000 15.3846% 94.9020%);
-  --secondary-foreground: hsl(210 25% 7.8431%);
+  --secondary: hsl(210 40% 15%);
+  --secondary-foreground: hsl(0 0% 100%);
   --muted: hsl(0 0% 9.4118%);
-  --muted-foreground: hsl(210 3.3898% 46.2745%);
+  --muted-foreground: hsl(210 3.3898% 65%);
   --accent: hsl(205.7143 70% 7.8431%);
   --accent-foreground: hsl(248.0645 92.8571% 61.1765%);
   --destructive: hsl(356.3033 90.5579% 54.3137%);
@@ -123,6 +123,22 @@ button {
 .bg-primary {
   background-color: hsl(var(--primary)) !important;
   color: hsl(var(--primary-foreground)) !important;
+}
+
+/* Ensure proper contrast for text elements */
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Fix destructive alert styling */
+.border-destructive {
+  border-color: hsl(var(--destructive)) !important;
+}
+
+/* Ensure secondary button contrast */
+.bg-secondary {
+  background-color: hsl(var(--secondary)) !important;
+  color: hsl(var(--secondary-foreground)) !important;
 }
 
 .time-slot-available:hover {

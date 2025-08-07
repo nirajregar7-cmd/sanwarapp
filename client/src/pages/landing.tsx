@@ -49,21 +49,21 @@ export default function Landing() {
           {/* Platform Statistics */}
           {!statsLoading && stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12 max-w-4xl mx-auto">
-              <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.totalCustomers}+</div>
-                <div className="text-xs sm:text-sm opacity-80">Happy Customers</div>
+              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white">{stats.totalCustomers}+</div>
+                <div className="text-xs sm:text-sm text-white/90">Happy Customers</div>
               </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.totalSalons}+</div>
-                <div className="text-xs sm:text-sm opacity-80">Partner Salons</div>
+              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white">{stats.totalSalons}+</div>
+                <div className="text-xs sm:text-sm text-white/90">Partner Salons</div>
               </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.totalBookings}+</div>
-                <div className="text-xs sm:text-sm opacity-80">Bookings Made</div>
+              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white">{stats.totalBookings}+</div>
+                <div className="text-xs sm:text-sm text-white/90">Bookings Made</div>
               </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.totalServices}+</div>
-                <div className="text-xs sm:text-sm opacity-80">Services Available</div>
+              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white">{stats.totalServices}+</div>
+                <div className="text-xs sm:text-sm text-white/90">Services Available</div>
               </div>
             </div>
           )}
@@ -98,7 +98,7 @@ export default function Landing() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Customer Card */}
-              <div className="bg-white/10 backdrop-blur rounded-xl p-6 hover:bg-white/20 transition-all cursor-pointer group"
+              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-6 hover:bg-white/30 transition-all cursor-pointer group"
                    onClick={() => window.location.href = '/api/login?user_intent=customer'}>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
@@ -124,7 +124,7 @@ export default function Landing() {
               </div>
 
               {/* Salon Owner Card */}
-              <div className="bg-white/10 backdrop-blur rounded-xl p-6 hover:bg-white/20 transition-all cursor-pointer group"
+              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-6 hover:bg-white/30 transition-all cursor-pointer group"
                    onClick={() => window.location.href = '/api/login?user_intent=salon_owner'}>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">

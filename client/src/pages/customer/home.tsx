@@ -147,7 +147,7 @@ export default function CustomerHome() {
                     <div className="flex items-center mb-4">
                       <Clock className="h-4 w-4 text-gray-400 mr-2" />
                       <span className="text-sm text-gray-600">Open now</span>
-                      <Badge variant="secondary" className="ml-auto bg-accent text-white">
+                      <Badge variant="secondary" className="ml-auto bg-green-100 text-green-700">
                         Available
                       </Badge>
                     </div>
