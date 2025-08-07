@@ -367,9 +367,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const revenueShare = calculateRevenueShare(confirmationAmount);
       await db.insert(revenueShares).values({
         bookingId: booking.id,
-        confirmationAmount,
-        platformShare: revenueShare.platformShare,
-        salonShare: revenueShare.salonShare,
+        confirmationAmount: confirmationAmount.toString(),
+        platformShare: revenueShare.platformShare.toString(),
+        salonShare: revenueShare.salonShare.toString(),
         transferStatus: 'pending'
       });
       

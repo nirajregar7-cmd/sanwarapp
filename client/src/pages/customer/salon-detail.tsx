@@ -108,15 +108,12 @@ export default function SalonDetail() {
       }
 
       // Step 1: Create Razorpay payment order
-      const orderResponse = await apiRequest("/api/bookings/create-payment-order", {
-        method: 'POST',
-        body: JSON.stringify({
-          salonId,
-          serviceId: data.serviceId,
-          staffId: data.staffId || null,
-          timeSlotId: data.timeSlotId,
-          date: data.date.toISOString().split('T')[0],
-        }),
+      const orderResponse = await apiRequest("POST", "/api/bookings/create-payment-order", {
+        salonId,
+        serviceId: data.serviceId,
+        staffId: data.staffId || null,
+        timeSlotId: data.timeSlotId,
+        date: data.date.toISOString().split('T')[0],
       });
 
       const orderData = await orderResponse.json();
@@ -133,18 +130,15 @@ export default function SalonDetail() {
           handler: async (response: any) => {
             try {
               // Step 3: Verify payment and create booking
-              const verifyResponse = await apiRequest("/api/bookings/verify-payment", {
-                method: 'POST',
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  salonId,
-                  serviceId: data.serviceId,
-                  staffId: data.staffId || null,
-                  timeSlotId: data.timeSlotId,
-                  date: data.date.toISOString().split('T')[0],
-                }),
+              const verifyResponse = await apiRequest("POST", "/api/bookings/verify-payment", {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                salonId,
+                serviceId: data.serviceId,
+                staffId: data.staffId || null,
+                timeSlotId: data.timeSlotId,
+                date: data.date.toISOString().split('T')[0],
               });
 
               const bookingData = await verifyResponse.json();
@@ -154,8 +148,8 @@ export default function SalonDetail() {
             }
           },
           prefill: {
-            name: user?.firstName || "",
-            email: user?.email || "",
+            name: (user as any)?.firstName || "",
+            email: (user as any)?.email || "",
           },
           theme: {
             color: "#3B82F6",
