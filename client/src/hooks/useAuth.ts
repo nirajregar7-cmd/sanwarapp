@@ -20,14 +20,30 @@ export function useAuth() {
   
   const { data: user, isLoading, error, isError } = useQuery({
     queryKey: ["/api/auth/user"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/user", {
+        credentials: "include",
+      });
+      
+      // Don't throw on 401, just return null
+      if (res.status === 401) {
+        return null;
+      }
+      
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      
+      return await res.json();
+    },
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 60 * 1000, // 1 minute
     refetchInterval: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
     refetchOnReconnect: false,
-    gcTime: 30 * 60 * 1000, // 30 minutes cache time
-    enabled: true, // Always enabled but won't refetch due to settings above
+    gcTime: 5 * 60 * 1000, // 5 minutes cache time
+    enabled: true,
   });
 
   // If we get a 401 error, the user is not authenticated
