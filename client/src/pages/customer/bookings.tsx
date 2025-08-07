@@ -50,13 +50,13 @@ export default function CustomerBookings() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <Skeleton className="h-8 w-48 mb-2" />
-          <Skeleton className="h-4 w-64" />
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <Skeleton className="h-6 sm:h-8 w-32 sm:w-48 mb-2" />
+          <Skeleton className="h-3 sm:h-4 w-48 sm:w-64" />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {[1, 2].map((i) => (
             <Card key={i}>
               <CardContent className="p-6">

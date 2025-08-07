@@ -31,70 +31,72 @@ export default function Landing() {
   return (
     <div className="interface-panel">
       {/* Hero Section */}
-      <section className="gradient-primary text-white py-16 lg:py-24">
+      <section className="gradient-primary text-white py-12 sm:py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="mb-8">
-            <div className="flex items-center justify-center mb-6">
-              <Scissors className="h-12 w-12 text-white mr-4" />
-              <h1 className="text-5xl md:text-7xl font-bold">Sanwar</h1>
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center justify-center mb-4 sm:mb-6">
+              <Scissors className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-white mr-3 sm:mr-4" />
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold">Sanwar</h1>
             </div>
-            <p className="text-xl md:text-2xl mb-4 opacity-90">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-3 sm:mb-4 opacity-90">
               India's Smart Salon Booking Platform
             </p>
-            <p className="text-lg md:text-xl mb-8 opacity-80">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-80 px-4">
               Like Zomato for Salons • Real-time slots like IRCTC • Instant confirmations
             </p>
           </div>
 
           {/* Platform Statistics */}
           {!statsLoading && stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 max-w-4xl mx-auto">
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-bold">{stats.totalCustomers}+</div>
-                <div className="text-sm opacity-80">Happy Customers</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12 max-w-4xl mx-auto">
+              <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.totalCustomers}+</div>
+                <div className="text-xs sm:text-sm opacity-80">Happy Customers</div>
               </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-bold">{stats.totalSalons}+</div>
-                <div className="text-sm opacity-80">Partner Salons</div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.totalSalons}+</div>
+                <div className="text-xs sm:text-sm opacity-80">Partner Salons</div>
               </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-bold">{stats.totalBookings}+</div>
-                <div className="text-sm opacity-80">Bookings Made</div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.totalBookings}+</div>
+                <div className="text-xs sm:text-sm opacity-80">Bookings Made</div>
               </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-bold">{stats.totalServices}+</div>
-                <div className="text-sm opacity-80">Services Available</div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.totalServices}+</div>
+                <div className="text-xs sm:text-sm opacity-80">Services Available</div>
               </div>
             </div>
           )}
           
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto bg-white rounded-xl p-3 flex flex-col sm:flex-row gap-3 shadow-2xl">
-            <div className="flex-1 flex items-center px-4">
-              <MapPin className="text-gray-400 mr-3 h-5 w-5" />
+          <div className="max-w-2xl mx-auto bg-white rounded-xl p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 shadow-2xl">
+            <div className="flex-1 flex items-center px-3 sm:px-4 py-2 sm:py-0">
+              <MapPin className="text-gray-400 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
               <Input 
                 type="text" 
                 placeholder="Enter your city or area..." 
-                className="w-full text-gray-700 text-lg bg-transparent border-none outline-none focus:ring-0"
+                className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
               />
             </div>
-            <Button className="bg-primary text-white px-8 py-3 hover:bg-primary/90 rounded-lg font-semibold">
+            <Button className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 rounded-lg font-semibold text-sm sm:text-base">
               <Search className="h-4 w-4 mr-2" />
-              Find Salons
+              <span className="hidden xs:inline">Find Salons</span>
+              <span className="xs:hidden">Find</span>
             </Button>
           </div>
 
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-primary hover:bg-gray-100 text-lg px-8 py-4 rounded-xl font-semibold shadow-lg" asChild>
+          <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+            <Button size="lg" className="bg-white text-primary hover:bg-gray-100 text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold shadow-lg" asChild>
               <Link href="/customer">
-                <Users className="h-5 w-5 mr-2" />
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Book a Salon Now
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-4 rounded-xl font-semibold" asChild>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold" asChild>
               <Link href="/owner">
-                <Scissors className="h-5 w-5 mr-2" />
-                Join as a Shopkeeper
+                <Scissors className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                <span className="hidden xs:inline">Join as a Shopkeeper</span>
+                <span className="xs:hidden">Join as Owner</span>
               </Link>
             </Button>
           </div>
@@ -102,18 +104,18 @@ export default function Landing() {
       </section>
 
       {/* Available Services Section */}
-      <section className="py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               Available Services
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
               Discover a wide range of beauty and grooming services at your fingertips
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
             {[
               { icon: Scissors, name: "Haircut & Styling", color: "bg-blue-100 text-blue-600" },
               { icon: Star, name: "Facial Treatment", color: "bg-pink-100 text-pink-600" },
@@ -123,10 +125,10 @@ export default function Landing() {
               { icon: Smartphone, name: "Manicure & Pedicure", color: "bg-yellow-100 text-yellow-600" },
             ].map((service, index) => (
               <div key={index} className="text-center group cursor-pointer">
-                <div className={`mx-auto w-16 h-16 rounded-full ${service.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                  <service.icon className="h-8 w-8" />
+                <div className={`mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full ${service.color} flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform`}>
+                  <service.icon className="h-6 w-6 sm:h-8 sm:w-8" />
                 </div>
-                <h3 className="font-semibold text-gray-900 text-sm">{service.name}</h3>
+                <h3 className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">{service.name}</h3>
               </div>
             ))}
           </div>
@@ -134,18 +136,18 @@ export default function Landing() {
       </section>
 
       {/* Live Salon Previews */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-12 sm:py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               Top Rated Salons Near You
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
               Book instantly with our partner salons offering premium services
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {salonsLoading ? (
               // Loading skeleton for salons
               Array.from({ length: 3 }).map((_, index) => (
@@ -175,30 +177,30 @@ export default function Landing() {
                       </div>
                     )}
                   </div>
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-lg">{salon.name}</h3>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="ml-1 text-sm font-medium">
+                      <h3 className="font-semibold text-base sm:text-lg pr-2">{salon.name}</h3>
+                      <div className="flex items-center flex-shrink-0">
+                        <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="ml-1 text-xs sm:text-sm font-medium">
                           {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
                         </span>
-                        <span className="ml-1 text-sm text-gray-500">
+                        <span className="ml-1 text-xs sm:text-sm text-gray-500">
                           ({salon.totalReviews || 0})
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {salon.address}
+                    <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-2">
+                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                      <span className="truncate">{salon.address}</span>
                     </div>
                     <div className="mb-3">
-                      <p className="text-sm text-gray-600 line-clamp-2">
+                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
                         {salon.description || "Professional salon services"}
                       </p>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-green-600">
+                      <span className="text-xs sm:text-sm font-medium text-green-600">
                         Starting from ₹500
                       </span>
                       <Button 

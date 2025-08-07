@@ -22,42 +22,43 @@ export default function CustomerHome() {
     return (
       <div className="interface-panel">
         {/* Hero Section */}
-        <section className="gradient-primary text-white py-16">
+        <section className="gradient-primary text-white py-12 sm:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold mb-4 sm:mb-6">
               Book Your Perfect Salon Experience
             </h1>
-            <p className="text-xl md:text-2xl mb-8 opacity-90">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 px-4">
               Discover top-rated salons near you and book appointments instantly
             </p>
             
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2">
-              <div className="flex-1 flex items-center px-4">
-                <MapPin className="text-gray-400 mr-3 h-5 w-5" />
+              <div className="flex-1 flex items-center px-3 sm:px-4 py-2 sm:py-0">
+                <MapPin className="text-gray-400 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
                 <Input 
                   type="text" 
                   placeholder="Enter your location" 
-                  className="w-full text-gray-700 text-lg bg-transparent border-none outline-none focus:ring-0"
+                  className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
                 />
               </div>
-              <Button className="bg-primary text-white px-8 py-3 hover:bg-primary/90">
+              <Button className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 text-sm sm:text-base">
                 <Search className="h-4 w-4 mr-2" />
-                Find Salons
+                <span className="hidden xs:inline">Find Salons</span>
+                <span className="xs:hidden">Find</span>
               </Button>
             </div>
           </div>
         </section>
 
         {/* Loading Skeleton */}
-        <section className="py-16">
+        <section className="py-12 sm:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Salons Near You</h2>
-              <p className="text-xl text-gray-600">Discover the best salon services in your area</p>
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Featured Salons Near You</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 px-4">Discover the best salon services in your area</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {[1, 2, 3].map((i) => (
                 <Card key={i} className="overflow-hidden">
                   <Skeleton className="w-full h-48" />

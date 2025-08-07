@@ -359,38 +359,38 @@ export default function OwnerDashboard() {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <Button 
                       variant="outline" 
-                      className="flex items-center justify-center p-6 h-auto"
+                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px]"
                       onClick={() => window.location.href = '/owner/time-slots'}
                     >
-                      <Clock className="h-8 w-8 text-indigo-600 mb-2" />
+                      <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 mb-2" />
                       <div className="text-center">
-                        <p className="font-medium">Manage Time Slots</p>
-                        <p className="text-sm text-gray-600">Create and organize your salon's booking slots</p>
+                        <p className="font-medium text-sm sm:text-base">Manage Time Slots</p>
+                        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Create and organize your salon's booking slots</p>
                       </div>
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="flex items-center justify-center p-6 h-auto"
+                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px]"
                       onClick={() => setActiveTab('services')}
                     >
-                      <Scissors className="h-8 w-8 text-pink-600 mb-2" />
+                      <Scissors className="h-6 w-6 sm:h-8 sm:w-8 text-pink-600 mb-2" />
                       <div className="text-center">
-                        <p className="font-medium">Manage Services</p>
-                        <p className="text-sm text-gray-600">Add or edit your salon's services and pricing</p>
+                        <p className="font-medium text-sm sm:text-base">Manage Services</p>
+                        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Add or edit your salon's services and pricing</p>
                       </div>
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="flex items-center justify-center p-6 h-auto"
+                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px]"
                       onClick={() => setActiveTab('staff')}
                     >
-                      <UserPlus className="h-8 w-8 text-cyan-600 mb-2" />
+                      <UserPlus className="h-6 w-6 sm:h-8 sm:w-8 text-cyan-600 mb-2" />
                       <div className="text-center">
-                        <p className="font-medium">Manage Staff</p>
-                        <p className="text-sm text-gray-600">Add and organize your salon team</p>
+                        <p className="font-medium text-sm sm:text-base">Manage Staff</p>
+                        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Add and organize your salon team</p>
                       </div>
                     </Button>
                   </div>
@@ -398,14 +398,14 @@ export default function OwnerDashboard() {
               </Card>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center">
-                      <Calendar className="h-8 w-8 text-blue-500" />
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                        <p className="text-2xl font-bold text-gray-900">{bookings.length}</p>
+                      <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 flex-shrink-0" />
+                      <div className="ml-2 sm:ml-4 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600">Total Bookings</p>
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{bookings.length}</p>
                       </div>
                     </div>
                   </CardContent>
