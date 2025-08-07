@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { PlatformStats } from "@shared/schema";
+import type { PlatformStats, Salon } from "@shared/schema";
 
 export default function Landing() {
   // Fetch platform statistics
@@ -14,6 +14,16 @@ export default function Landing() {
     queryFn: async () => {
       const response = await fetch("/api/platform/stats");
       if (!response.ok) throw new Error("Failed to fetch stats");
+      return response.json();
+    },
+  });
+
+  // Fetch top-rated salons (real data only)
+  const { data: topSalons, isLoading: salonsLoading } = useQuery<Salon[]>({
+    queryKey: ["/api/salons/featured"],
+    queryFn: async () => {
+      const response = await fetch("/api/salons/featured");
+      if (!response.ok) throw new Error("Failed to fetch salons");
       return response.json();
     },
   });
@@ -136,72 +146,83 @@ export default function Landing() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Glamour Studio",
-                rating: 4.9,
-                reviews: 127,
-                image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400",
-                services: ["Haircut", "Facial", "Bridal"],
-                price: "₹500-₹2000",
-                location: "Connaught Place"
-              },
-              {
-                name: "Style Hub",
-                rating: 4.8,
-                reviews: 89,
-                image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400",
-                services: ["Hair Color", "Spa", "Manicure"],
-                price: "₹300-₹1500",
-                location: "Khan Market"
-              },
-              {
-                name: "Beauty Lounge",
-                rating: 4.7,
-                reviews: 156,
-                image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=400",
-                services: ["Bridal", "Makeup", "Massage"],
-                price: "₹800-₹3000",
-                location: "Saket"
-              }
-            ].map((salon, index) => (
-              <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
+            {salonsLoading ? (
+              // Loading skeleton for salons
+              Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="overflow-hidden animate-pulse">
+                  <div className="aspect-video bg-gray-300"></div>
+                  <CardContent className="p-4">
+                    <div className="h-6 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : topSalons && topSalons.length > 0 ? (
+              topSalons.map((salon) => (
+              <Card key={salon.id} className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
                 <div className="aspect-video bg-gray-200 overflow-hidden">
-                  <img 
-                    src={salon.image} 
-                    alt={salon.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                  {salon.imageUrl ? (
+                    <img 
+                      src={salon.imageUrl} 
+                      alt={salon.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                      <Scissors className="h-12 w-12 text-gray-400" />
+                    </div>
+                  )}
                 </div>
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-lg">{salon.name}</h3>
                     <div className="flex items-center">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="ml-1 text-sm font-medium">{salon.rating}</span>
-                      <span className="ml-1 text-sm text-gray-500">({salon.reviews})</span>
+                      <span className="ml-1 text-sm font-medium">
+                        {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
+                      </span>
+                      <span className="ml-1 text-sm text-gray-500">
+                        ({salon.totalReviews || 0})
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center text-sm text-gray-600 mb-2">
                     <MapPin className="h-4 w-4 mr-1" />
-                    {salon.location}
+                    {salon.address}
                   </div>
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {salon.services.map((service, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">
-                        {service}
-                      </Badge>
-                    ))}
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {salon.description || "Professional salon services"}
+                    </p>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-green-600">{salon.price}</span>
-                    <Button size="sm" className="bg-primary hover:bg-primary/90">
-                      Book Now
+                    <span className="text-sm font-medium text-green-600">
+                      Starting from ₹500
+                    </span>
+                    <Button size="sm" className="bg-primary hover:bg-primary/90" asChild>
+                      <Link href={`/customer/salon/${salon.id}`}>
+                        Book Now
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            ))
+            ) : (
+              // No salons found state
+              <div className="col-span-full text-center py-12">
+                <Scissors className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Salons Yet</h3>
+                <p className="text-gray-600 mb-6">Be the first salon owner to join our platform!</p>
+                <Button asChild className="bg-primary hover:bg-primary/90">
+                  <Link href="/owner">
+                    <Scissors className="h-4 w-4 mr-2" />
+                    Register Your Salon
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </section>

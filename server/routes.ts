@@ -6,7 +6,8 @@ import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services } from "@shared/schema";
+import { eq, desc, isNotNull, sql, count } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -33,26 +34,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Platform statistics endpoint
+  // Platform statistics endpoint - real data only
   app.get('/api/platform/stats', async (req, res) => {
     try {
-      // Get or initialize platform stats
-      let [stats] = await db.select().from(platformStats).limit(1);
-      
-      if (!stats) {
-        // Initialize with default values for demo
-        [stats] = await db.insert(platformStats).values({
-          totalCustomers: 1250,
-          totalSalons: 87,
-          totalBookings: 3420,
-          totalServices: 342,
-        }).returning();
-      }
+      // Calculate real statistics from database
+      const [
+        totalCustomersResult,
+        totalSalonsResult, 
+        totalBookingsResult,
+        totalServicesResult
+      ] = await Promise.all([
+        db.select({ count: count() }).from(users).where(eq(users.userType, 'customer')),
+        db.select({ count: count() }).from(salons).where(eq(salons.isApproved, true)),
+        db.select({ count: count() }).from(bookings),
+        db.select({ count: count() }).from(services)
+      ]);
+
+      const stats = {
+        id: "stats",
+        totalCustomers: Number(totalCustomersResult[0]?.count) || 0,
+        totalSalons: Number(totalSalonsResult[0]?.count) || 0,
+        totalBookings: Number(totalBookingsResult[0]?.count) || 0,
+        totalServices: Number(totalServicesResult[0]?.count) || 0,
+        lastUpdated: new Date()
+      };
       
       res.json(stats);
     } catch (error) {
       console.error("Error fetching platform stats:", error);
       res.status(500).json({ message: "Failed to fetch platform statistics" });
+    }
+  });
+
+  // Featured salons endpoint (real data only)
+  app.get('/api/salons/featured', async (req, res) => {
+    try {
+      // Fetch all approved salons (since we may not have many yet)
+      const featuredSalons = await db.select()
+        .from(salons)
+        .where(eq(salons.isApproved, true))
+        .orderBy(desc(salons.averageRating), desc(salons.totalReviews))
+        .limit(6);
+      
+      res.json(featuredSalons);
+    } catch (error) {
+      console.error("Error fetching featured salons:", error);
+      res.status(500).json({ message: "Failed to fetch featured salons" });
     }
   });
 
