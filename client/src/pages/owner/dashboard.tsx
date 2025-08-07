@@ -116,7 +116,7 @@ export default function OwnerDashboard() {
       phone: salon?.phone || "",
       address: salon?.address || "",
       imageUrl: salon?.imageUrl || "",
-      confirmationAmount: salon?.confirmationAmount ? salon.confirmationAmount / 100 : 0,
+      confirmationAmount: salon?.confirmationAmount || 0,
     },
   });
 
@@ -157,7 +157,7 @@ export default function OwnerDashboard() {
       const method = salon ? 'PUT' : 'POST';
       return apiRequest(method, endpoint, {
         ...data,
-        confirmationAmount: data.confirmationAmount * 100, // Convert to paise
+        // Keep confirmationAmount as is - server expects rupees, not paisa
       });
     },
     onSuccess: () => {
