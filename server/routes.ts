@@ -206,10 +206,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'pending'
       }).returning();
       
-      // Mark time slot as unavailable
-      await db.update(timeSlots)
-        .set({ isAvailable: false })
-        .where(eq(timeSlots.id, timeSlotId));
+      // Note: We don't need to update the timeSlots table anymore
+      // Availability is now calculated dynamically based on bookings
+      // The getAvailableTimeSlots function will exclude this slot
       
       res.json(booking);
     } catch (error) {

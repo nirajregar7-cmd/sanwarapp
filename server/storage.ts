@@ -169,6 +169,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableTimeSlots(salonId: string, date: string): Promise<TimeSlot[]> {
+    console.log(`[DEBUG] Fetching time slots for salon ${salonId} on date ${date}`);
+    
     // Get all time slots for this salon and date
     const allSlots = await db
       .select()
@@ -181,6 +183,8 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(asc(timeSlots.startTime));
 
+    console.log(`[DEBUG] Found ${allSlots.length} total time slots`);
+
     // Get all bookings for this salon and date to check which slots are booked
     const bookedSlots = await db
       .select({
@@ -191,8 +195,10 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(bookings.salonId, salonId),
           eq(bookings.date, date),
-          // Only confirmed and completed bookings make slots unavailable
+          // All bookings (pending, confirmed, completed) make slots unavailable
+          // Once someone books a slot, it should not be available to others
           or(
+            eq(bookings.status, "pending"),
             eq(bookings.status, "confirmed"),
             eq(bookings.status, "completed")
           )
@@ -200,12 +206,16 @@ export class DatabaseStorage implements IStorage {
       );
 
     const bookedSlotIds = new Set(bookedSlots.map(b => b.timeSlotId));
+    console.log(`[DEBUG] Found ${bookedSlots.length} booked slots:`, Array.from(bookedSlotIds));
 
     // Return all slots with real-time availability based on actual bookings
-    return allSlots.map(slot => ({
+    const result = allSlots.map(slot => ({
       ...slot,
       isAvailable: !bookedSlotIds.has(slot.id) // Available if not booked
     }));
+
+    console.log(`[DEBUG] Returning slots with availability:`, result.map(s => ({ id: s.id, startTime: s.startTime, isAvailable: s.isAvailable })));
+    return result;
   }
 
   async updateTimeSlotAvailability(id: string, isAvailable: boolean): Promise<void> {
