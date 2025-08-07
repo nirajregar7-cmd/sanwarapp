@@ -110,7 +110,7 @@ export default function Landing() {
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               Available Services
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
               Discover a wide range of beauty and grooming services at your fingertips
             </p>
           </div>
@@ -142,7 +142,7 @@ export default function Landing() {
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               Top Rated Salons Near You
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
               Book instantly with our partner salons offering premium services
             </p>
           </div>
@@ -185,17 +185,17 @@ export default function Landing() {
                         <span className="ml-1 text-xs sm:text-sm font-medium">
                           {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
                         </span>
-                        <span className="ml-1 text-xs sm:text-sm text-gray-500">
+                        <span className="ml-1 text-xs sm:text-sm text-gray-600">
                           ({salon.totalReviews || 0})
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-2">
+                    <div className="flex items-center text-xs sm:text-sm text-gray-700 mb-2">
                       <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
                       <span className="truncate">{salon.address}</span>
                     </div>
                     <div className="mb-3">
-                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                      <p className="text-xs sm:text-sm text-gray-700 line-clamp-2">
                         {salon.description || "Professional salon services"}
                       </p>
                     </div>
@@ -223,7 +223,7 @@ export default function Landing() {
               <div className="col-span-full text-center py-12">
                 <Scissors className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No Salons Yet</h3>
-                <p className="text-gray-600 mb-6">Be the first salon owner to join our platform!</p>
+                <p className="text-gray-700 mb-6">Be the first salon owner to join our platform!</p>
                 <Button asChild className="bg-primary hover:bg-primary/90">
                   <Link href="/owner">
                     <Scissors className="h-4 w-4 mr-2" />
@@ -243,7 +243,7 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               How Sanwar Works
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto">
               Simple steps to book your perfect salon experience
             </p>
           </div>
@@ -271,15 +271,15 @@ export default function Landing() {
             ].map((item, index) => (
               <div key={index} className="text-center">
                 <div className="relative mb-6">
-                  <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{backgroundColor: 'hsl(248.0645, 92.8571%, 61.1765%)'}}>
                     <item.icon className="h-8 w-8 text-white" />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-secondary rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{backgroundColor: 'hsl(328.1818, 84.8485%, 60.5882%)'}}>
                     {item.step}
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
+                <p className="text-gray-700">{item.description}</p>
               </div>
             ))}
           </div>
@@ -324,7 +324,7 @@ export default function Landing() {
                     <feature.icon className="h-6 w-6 text-primary" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-gray-600 text-sm">{feature.description}</p>
+                  <p className="text-gray-700 text-sm">{feature.description}</p>
                 </CardContent>
               </Card>
             ))}
