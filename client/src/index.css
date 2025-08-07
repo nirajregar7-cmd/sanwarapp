@@ -141,6 +141,33 @@ button {
   color: hsl(var(--secondary-foreground)) !important;
 }
 
+/* Fix select component contrast */
+[data-placeholder] {
+  color: hsl(210 25% 35%) !important;
+}
+
+.dark [data-placeholder] {
+  color: hsl(210 3.3898% 75%) !important;
+}
+
+/* Improve form labels and select text */
+.text-foreground {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Better contrast for select values */
+[data-radix-select-trigger] {
+  color: hsl(var(--foreground)) !important;
+}
+
+[data-radix-select-trigger][data-placeholder] {
+  color: hsl(210 25% 35%) !important;
+}
+
+.dark [data-radix-select-trigger][data-placeholder] {
+  color: hsl(210 3.3898% 75%) !important;
+}
+
 .time-slot-available:hover {
   @apply border-primary bg-primary text-white;
 }
