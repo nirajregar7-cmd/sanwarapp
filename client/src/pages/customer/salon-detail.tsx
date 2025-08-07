@@ -43,9 +43,12 @@ export default function SalonDetail() {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
 
   // Fetch salon details
-  const { data: salon, isLoading: salonLoading } = useQuery<Salon>({
+  const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
     queryKey: [`/api/salons/${salonId}`],
     enabled: !!salonId,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   // Fetch salon services
