@@ -33,7 +33,7 @@ function Router() {
       {!user ? (
         <>
           <Route path="/" component={Landing} />
-          <Route path="/customer/salon/:salonId">
+          <Route path="/salon/:salonId">
             <Layout>
               <SalonDetail />
             </Layout>
@@ -58,6 +58,11 @@ function Router() {
           <Route path="/customer">
             <Layout>
               <CustomerHome />
+            </Layout>
+          </Route>
+          <Route path="/salon/:salonId">
+            <Layout>
+              <SalonDetail />
             </Layout>
           </Route>
           <Route path="/customer/salon/:salonId">
