@@ -4,6 +4,8 @@
 
 Sanwar is a smart salon booking platform that helps local salon shopkeepers digitize their business and allows customers to easily discover and book services. Think of it like Zomato for salons, but with features inspired by IRCTC's booking system — showing live available slots, clear pricing, and instant confirmations. The platform serves two distinct user types: salon owners who want to go digital and attract more customers, and customers who want quick, online salon bookings without waiting lines.
 
+**Latest Update (August 2025):** Successfully transitioned from Replit Auth to traditional email/password authentication, making the platform accessible to everyone without requiring Replit accounts. Users can now sign up by choosing their role and login with email and password.
+
 **Important:** The system uses completely manual time slot creation - only slots explicitly created by salon owners appear for customer booking. No automatic generation occurs.
 
 ## User Preferences
@@ -74,7 +76,7 @@ The application uses PostgreSQL as the primary database with Drizzle ORM for typ
 The database design supports multi-tenancy through owner-based data isolation, includes session storage for authentication, and now supports advanced features like staff management, referral programs, and wallet systems with full transaction tracking.
 
 ### Authentication System
-Authentication is implemented using Replit's OpenID Connect (OIDC) provider with Passport.js for session management. The system uses express-session with PostgreSQL session storage for persistent login state. User roles are differentiated at the application level with "customer" and "salon_owner" types, enabling role-based access control throughout the application.
+Authentication is implemented using traditional email/password authentication with bcrypt for secure password hashing and JWT tokens for session management. The system uses express-session with PostgreSQL session storage for persistent login state. Users can sign up by choosing their role (customer or salon owner) and login with their email and password. User roles are differentiated at the application level with "customer" and "salon_owner" types, enabling role-based access control throughout the application.
 
 ### File Storage and Media Management  
 The application integrates with Google Cloud Storage for media uploads, using Replit's sidecar authentication for secure access. File uploads are handled through Uppy.js, providing a modern file upload interface with progress tracking and preview capabilities. The system includes an Access Control List (ACL) mechanism for fine-grained permission management on uploaded files, allowing for private media access based on user relationships.
@@ -89,8 +91,10 @@ The project uses Vite for fast development builds and hot module replacement. Th
 - **Drizzle ORM**: Type-safe database operations and migrations
 
 ### Authentication
-- **Replit Auth**: OpenID Connect provider for user authentication
-- **Passport.js**: Authentication middleware with OIDC strategy
+- **Email/Password Authentication**: Traditional authentication system with secure password hashing
+- **bcrypt**: Password hashing and verification
+- **JWT Tokens**: Session management and user authentication
+- **Passport.js**: Authentication middleware for session handling
 
 ### File Storage
 - **Google Cloud Storage**: Object storage service for media files

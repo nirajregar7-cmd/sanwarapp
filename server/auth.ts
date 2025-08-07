@@ -34,7 +34,7 @@ export function setupAuth(app: Express) {
   const PostgresSessionStore = connectPg(session);
   const sessionStore = new PostgresSessionStore({ 
     pool, 
-    createTableIfMissing: true,
+    createTableIfMissing: false, // Table already exists
     ttl: 7 * 24 * 60 * 60, // 7 days
   });
 
