@@ -1156,7 +1156,7 @@ export default function OwnerDashboard() {
                         phone: salon?.phone || "",
                         address: salon?.address || "",
                         imageUrl: salon?.imageUrl || "",
-                        confirmationAmount: salon?.confirmationAmount ? salon.confirmationAmount / 100 : 0,
+                        confirmationAmount: salon?.confirmationAmount || 0,
                       });
                       setSalonDialogOpen(true);
                     }}>
@@ -1181,7 +1181,7 @@ export default function OwnerDashboard() {
                         </div>
                         <div className="flex items-center">
                           <IndianRupee className="h-4 w-4 mr-2 text-gray-400" />
-                          Confirmation Amount: ₹{salon.confirmationAmount ? salon.confirmationAmount / 100 : 0}
+                          Confirmation Amount: ₹{salon.confirmationAmount || 0}
                         </div>
                         <div className="flex items-center">
                           <Star className="h-4 w-4 mr-2 text-gray-400" />

@@ -251,7 +251,7 @@ export default function Landing() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs sm:text-sm font-medium text-green-600">
-                        Book with ₹{salon.confirmationAmount ? (salon.confirmationAmount / 100).toFixed(0) : "0"}
+                        Book with ₹{salon.confirmationAmount || 0}
                       </span>
                       <Button 
                         size="sm" 
