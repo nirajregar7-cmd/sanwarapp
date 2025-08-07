@@ -6,6 +6,7 @@ import {
   timeSlots,
   bookings,
   reviews,
+  salonGallery,
   type User,
   type UpsertUser,
   type Salon,
@@ -20,6 +21,8 @@ import {
   type InsertBooking,
   type Review,
   type InsertReview,
+  type SalonGallery,
+  type InsertSalonGallery,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, asc, or } from "drizzle-orm";
@@ -62,6 +65,12 @@ export interface IStorage {
   createReview(review: InsertReview): Promise<Review>;
   getReviewsBySalon(salonId: string): Promise<Review[]>;
   updateSalonRating(salonId: string): Promise<void>;
+
+  // Gallery operations
+  createGalleryImage(galleryImage: InsertSalonGallery): Promise<SalonGallery>;
+  getGalleryImagesBySalon(salonId: string): Promise<SalonGallery[]>;
+  updateGalleryImage(id: string, galleryImage: Partial<InsertSalonGallery>): Promise<SalonGallery | undefined>;
+  deleteGalleryImage(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -299,6 +308,33 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(salons.id, salonId));
     }
+  }
+
+  // Gallery operations
+  async createGalleryImage(galleryImage: InsertSalonGallery): Promise<SalonGallery> {
+    const [newGalleryImage] = await db.insert(salonGallery).values(galleryImage).returning();
+    return newGalleryImage;
+  }
+
+  async getGalleryImagesBySalon(salonId: string): Promise<SalonGallery[]> {
+    return await db
+      .select()
+      .from(salonGallery)
+      .where(and(eq(salonGallery.salonId, salonId), eq(salonGallery.isActive, true)))
+      .orderBy(asc(salonGallery.order), desc(salonGallery.createdAt));
+  }
+
+  async updateGalleryImage(id: string, galleryImage: Partial<InsertSalonGallery>): Promise<SalonGallery | undefined> {
+    const [updatedImage] = await db
+      .update(salonGallery)
+      .set(galleryImage)
+      .where(eq(salonGallery.id, id))
+      .returning();
+    return updatedImage;
+  }
+
+  async deleteGalleryImage(id: string): Promise<void> {
+    await db.update(salonGallery).set({ isActive: false }).where(eq(salonGallery.id, id));
   }
 }
 

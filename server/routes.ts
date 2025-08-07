@@ -948,6 +948,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Gallery routes
+  app.post("/api/salons/:salonId/gallery", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { salonId } = req.params;
+      const { imageUrl, title, description, category } = req.body;
+      
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage this salon's gallery" });
+      }
+      
+      // Check if salon already has 10 images
+      const existingImages = await storage.getGalleryImagesBySalon(salonId);
+      if (existingImages.length >= 10) {
+        return res.status(400).json({ message: "Maximum 10 images allowed per salon" });
+      }
+      
+      const galleryImage = await storage.createGalleryImage({
+        salonId,
+        imageUrl,
+        title,
+        description,
+        category: category || 'work',
+        order: existingImages.length + 1
+      });
+      
+      res.json(galleryImage);
+    } catch (error) {
+      console.error("Error adding gallery image:", error);
+      res.status(500).json({ message: "Failed to add gallery image" });
+    }
+  });
+
+  app.get("/api/salons/:salonId/gallery", async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const galleryImages = await storage.getGalleryImagesBySalon(salonId);
+      res.json(galleryImages);
+    } catch (error) {
+      console.error("Error fetching gallery:", error);
+      res.status(500).json({ message: "Failed to fetch gallery" });
+    }
+  });
+
+  app.put("/api/salons/:salonId/gallery/:imageId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { salonId, imageId } = req.params;
+      const { title, description, category } = req.body;
+      
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage this salon's gallery" });
+      }
+      
+      const updatedImage = await storage.updateGalleryImage(imageId, {
+        title,
+        description,
+        category
+      });
+      
+      if (!updatedImage) {
+        return res.status(404).json({ message: "Gallery image not found" });
+      }
+      
+      res.json(updatedImage);
+    } catch (error) {
+      console.error("Error updating gallery image:", error);
+      res.status(500).json({ message: "Failed to update gallery image" });
+    }
+  });
+
+  app.delete("/api/salons/:salonId/gallery/:imageId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { salonId, imageId } = req.params;
+      
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage this salon's gallery" });
+      }
+      
+      await storage.deleteGalleryImage(imageId);
+      res.json({ message: "Gallery image deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting gallery image:", error);
+      res.status(500).json({ message: "Failed to delete gallery image" });
+    }
+  });
+
   // Review routes
   app.post("/api/reviews", isAuthenticated, async (req: any, res) => {
     try {

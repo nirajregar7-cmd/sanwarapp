@@ -21,7 +21,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { Salon, Service, Staff, Booking, Review } from "@shared/schema";
+import type { Salon, Service, Staff, Booking, Review, SalonGallery } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -49,9 +49,16 @@ const staffSchema = z.object({
   photoUrl: z.string().optional(),
 });
 
+const gallerySchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  category: z.enum(['work', 'staff', 'interior']).default('work'),
+});
+
 type SalonFormData = z.infer<typeof salonSchema>;
 type ServiceFormData = z.infer<typeof serviceSchema>;
 type StaffFormData = z.infer<typeof staffSchema>;
+type GalleryFormData = z.infer<typeof gallerySchema>;
 
 export default function OwnerDashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -60,6 +67,7 @@ export default function OwnerDashboard() {
   const [salonDialogOpen, setSalonDialogOpen] = useState(false);
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
+  const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
 
   // Fetch user's salon
@@ -89,6 +97,12 @@ export default function OwnerDashboard() {
   // Fetch salon reviews
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
     queryKey: [`/api/salons/${salon?.id}/reviews`],
+    enabled: !!salon?.id,
+  });
+
+  // Fetch salon gallery
+  const { data: gallery = [], isLoading: galleryLoading } = useQuery<SalonGallery[]>({
+    queryKey: [`/api/salons/${salon?.id}/gallery`],
     enabled: !!salon?.id,
   });
 
@@ -122,6 +136,15 @@ export default function OwnerDashboard() {
       phone: "",
       email: "",
       photoUrl: "",
+    },
+  });
+
+  const galleryForm = useForm<GalleryFormData>({
+    resolver: zodResolver(gallerySchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      category: "work",
     },
   });
 
@@ -202,6 +225,53 @@ export default function OwnerDashboard() {
     },
   });
 
+  // Gallery mutation
+  const galleryMutation = useMutation({
+    mutationFn: async (data: { imageUrl: string } & GalleryFormData) => {
+      const endpoint = editingItem ? `/api/salons/${salon?.id}/gallery/${editingItem.id}` : `/api/salons/${salon?.id}/gallery`;
+      const method = editingItem ? 'PUT' : 'POST';
+      return apiRequest(method, endpoint, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: editingItem ? "Gallery Updated!" : "Image Added!",
+        description: editingItem ? "Gallery image has been updated." : "New image has been added to your gallery.",
+      });
+      setGalleryDialogOpen(false);
+      setEditingItem(null);
+      galleryForm.reset();
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/gallery`] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Gallery delete mutation
+  const deleteGalleryMutation = useMutation({
+    mutationFn: async (imageId: string) => {
+      return apiRequest("DELETE", `/api/salons/${salon?.id}/gallery/${imageId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Image Deleted",
+        description: "The image has been removed from your gallery.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/gallery`] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -255,6 +325,49 @@ export default function OwnerDashboard() {
       photoUrl: member.photoUrl || "",
     });
     setStaffDialogOpen(true);
+  };
+
+  const handleEditGallery = (galleryItem: SalonGallery) => {
+    setEditingItem(galleryItem);
+    galleryForm.reset({
+      title: galleryItem.title || "",
+      description: galleryItem.description || "",
+      category: galleryItem.category || "work",
+    });
+    setGalleryDialogOpen(true);
+  };
+
+  const handleGalleryUpload = async (): Promise<{ method: "PUT"; url: string }> => {
+    try {
+      const response = await apiRequest('POST', '/api/objects/upload');
+      return {
+        method: "PUT",
+        url: response.uploadURL,
+      };
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      throw error;
+    }
+  };
+
+  const handleGalleryUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const imageUrl = uploadedFile.uploadURL;
+      
+      // Submit the form with the uploaded image URL
+      const formData = galleryForm.getValues();
+      galleryMutation.mutate({
+        ...formData,
+        imageUrl,
+      });
+    }
+  };
+
+  const handleDeleteGallery = (imageId: string) => {
+    if (confirm("Are you sure you want to delete this image?")) {
+      deleteGalleryMutation.mutate(imageId);
+    }
   };
 
   return (
@@ -343,10 +456,11 @@ export default function OwnerDashboard() {
         // Main Dashboard
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 gap-1">
               <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
               <TabsTrigger value="services" className="text-xs sm:text-sm">Services</TabsTrigger>
               <TabsTrigger value="staff" className="text-xs sm:text-sm">Staff</TabsTrigger>
+              <TabsTrigger value="gallery" className="text-xs sm:text-sm">Gallery</TabsTrigger>
               <TabsTrigger value="timeslots" className="text-xs sm:text-sm">Slots</TabsTrigger>
               <TabsTrigger value="bookings" className="text-xs sm:text-sm">Bookings</TabsTrigger>
               <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
@@ -634,6 +748,86 @@ export default function OwnerDashboard() {
                       }}>
                         <UserPlus className="h-4 w-4 mr-2" />
                         Add Your First Team Member
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="gallery" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Gallery Management
+                    <Button onClick={() => {
+                      setEditingItem(null);
+                      galleryForm.reset();
+                      setGalleryDialogOpen(true);
+                    }} disabled={gallery.length >= 10}>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Add Image ({gallery.length}/10)
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {galleryLoading ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse"></div>
+                      ))}
+                    </div>
+                  ) : gallery.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {gallery.map((image) => (
+                        <div key={image.id} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                          <img 
+                            src={image.imageUrl} 
+                            alt={image.title || "Gallery image"} 
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 flex space-x-2">
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => handleEditGallery(image)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteGallery(image.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          {image.title && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
+                              <p className="text-white text-sm font-medium">{image.title}</p>
+                              <p className="text-white text-xs capitalize">{image.category}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Upload className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Images Yet</h3>
+                      <p className="text-gray-600 mb-6">
+                        Showcase your salon's best work by uploading high-quality images. 
+                        You can add up to 10 images to attract more customers.
+                      </p>
+                      <Button onClick={() => {
+                        setEditingItem(null);
+                        galleryForm.reset();
+                        setGalleryDialogOpen(true);
+                      }}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload First Image
                       </Button>
                     </div>
                   )}
@@ -1408,6 +1602,114 @@ export default function OwnerDashboard() {
                   {staffMutation.isPending ? "Saving..." : (editingItem ? "Update Staff" : "Add Staff")}
                 </Button>
               </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Gallery Form Dialog */}
+      <Dialog open={galleryDialogOpen} onOpenChange={setGalleryDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingItem ? "Edit Gallery Image" : "Add Gallery Image"}</DialogTitle>
+            <DialogDescription>
+              {editingItem ? "Update image details" : "Upload and describe your image"}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...galleryForm}>
+            <form onSubmit={galleryForm.handleSubmit((data) => {
+              // For editing, just update the metadata without re-uploading
+              if (editingItem) {
+                galleryMutation.mutate({
+                  ...data,
+                  imageUrl: editingItem.imageUrl,
+                });
+              }
+              // For new images, the upload will handle submission via handleGalleryUploadComplete
+            })} className="space-y-4">
+              {!editingItem && (
+                <div>
+                  <label className="text-sm font-medium">Upload Image</label>
+                  <div className="mt-2">
+                    <ObjectUploader
+                      onGetUploadParameters={handleGalleryUpload}
+                      onComplete={handleGalleryUploadComplete}
+                      maxFileSize={10485760} // 10MB
+                      buttonClassName="w-full"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Choose Image
+                    </ObjectUploader>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Max 10MB. JPG, PNG supported.</p>
+                </div>
+              )}
+
+              <FormField
+                control={galleryForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Hair Styling, Bridal Makeup" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={galleryForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (optional)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Describe this work..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={galleryForm.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="work">Work Samples</SelectItem>
+                        <SelectItem value="staff">Team Photos</SelectItem>
+                        <SelectItem value="interior">Salon Interior</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {editingItem && (
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setGalleryDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={galleryMutation.isPending}>
+                    {galleryMutation.isPending ? "Updating..." : "Update Image"}
+                  </Button>
+                </div>
+              )}
             </form>
           </Form>
         </DialogContent>

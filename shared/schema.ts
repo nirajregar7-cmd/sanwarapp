@@ -143,6 +143,19 @@ export const staff = pgTable("staff", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Salon gallery table for work showcase images
+export const salonGallery = pgTable("salon_gallery", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  imageUrl: varchar("image_url").notNull(),
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  category: varchar("category", { length: 100 }), // e.g., "work", "staff", "interior"
+  order: integer("order").default(0), // for ordering images
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Platform statistics table
 export const platformStats = pgTable("platform_stats", {
   id: varchar("id").primaryKey().default("stats"),
@@ -207,6 +220,7 @@ export const salonsRelations = relations(salons, ({ one, many }) => ({
   timeSlots: many(timeSlots),
   bookings: many(bookings),
   reviews: many(reviews),
+  gallery: many(salonGallery),
 }));
 
 export const servicesRelations = relations(services, ({ one, many }) => ({
@@ -308,6 +322,13 @@ export const referralsRelations = relations(referrals, ({ one }) => ({
   }),
 }));
 
+export const salonGalleryRelations = relations(salonGallery, ({ one }) => ({
+  salon: one(salons, {
+    fields: [salonGallery.salonId],
+    references: [salons.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -379,6 +400,11 @@ export const insertReferralSchema = createInsertSchema(referrals).omit({
   completedAt: true,
 });
 
+export const insertSalonGallerySchema = createInsertSchema(salonGallery).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -404,3 +430,5 @@ export type WalletTransaction = typeof walletTransactions.$inferSelect;
 export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
 export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = z.infer<typeof insertReferralSchema>;
+export type SalonGallery = typeof salonGallery.$inferSelect;
+export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;
