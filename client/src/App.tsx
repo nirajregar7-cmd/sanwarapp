@@ -31,53 +31,62 @@ function Router() {
     <Switch>
       {/* Landing page for non-authenticated users */}
       {!user ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/customer/salon/:salonId">
+            <Layout>
+              <SalonDetail />
+            </Layout>
+          </Route>
+        </>
       ) : (user as any)?.userType ? (
         // Authenticated users with user type set
-        <Route path="/">
-          {(user as any).userType === 'salon_owner' ? (
-            <Layout>
-              <OwnerDashboard />
-            </Layout>
-          ) : (
+        <>
+          <Route path="/">
+            {(user as any).userType === 'salon_owner' ? (
+              <Layout>
+                <OwnerDashboard />
+              </Layout>
+            ) : (
+              <Layout>
+                <CustomerHome />
+              </Layout>
+            )}
+          </Route>
+          
+          {/* Customer routes */}
+          <Route path="/customer">
             <Layout>
               <CustomerHome />
             </Layout>
-          )}
-        </Route>
+          </Route>
+          <Route path="/customer/salon/:salonId">
+            <Layout>
+              <SalonDetail />
+            </Layout>
+          </Route>
+          <Route path="/bookings">
+            <Layout>
+              <CustomerBookings />
+            </Layout>
+          </Route>
+
+          {/* Owner routes */}
+          <Route path="/owner">
+            <Layout>
+              <OwnerDashboard />
+            </Layout>
+          </Route>
+          <Route path="/owner/time-slots">
+            <Layout>
+              <TimeSlots />
+            </Layout>
+          </Route>
+        </>
       ) : (
         // Authenticated users without user type - show selection page
         <Route path="/" component={UserTypeSelection} />
       )}
-      
-      {/* Customer routes */}
-      <Route path="/customer">
-        <Layout>
-          <CustomerHome />
-        </Layout>
-      </Route>
-      <Route path="/customer/salon/:salonId">
-        <Layout>
-          <SalonDetail />
-        </Layout>
-      </Route>
-      <Route path="/bookings">
-        <Layout>
-          <CustomerBookings />
-        </Layout>
-      </Route>
-
-      {/* Owner routes */}
-      <Route path="/owner">
-        <Layout>
-          <OwnerDashboard />
-        </Layout>
-      </Route>
-      <Route path="/owner/time-slots">
-        <Layout>
-          <TimeSlots />
-        </Layout>
-      </Route>
 
       {/* Fallback routes */}
       <Route path="/landing" component={Landing} />
