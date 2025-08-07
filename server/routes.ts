@@ -978,10 +978,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existingImages.length >= 10) {
         return res.status(400).json({ message: "Maximum 10 images allowed per salon" });
       }
+
+      // Set ACL policy for the uploaded image to make it public for customers
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        imageUrl,
+        {
+          owner: userId,
+          visibility: "public", // Make gallery images public so customers can view them
+        },
+      );
       
       const galleryImage = await storage.createGalleryImage({
         salonId,
-        imageUrl,
+        imageUrl: objectPath, // Use the normalized object path
         title,
         description,
         category: category || 'work',

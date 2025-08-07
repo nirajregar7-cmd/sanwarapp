@@ -12,7 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Clock, Users, Calendar as CalendarIcon,
-  Scissors, Heart, Share2, CheckCircle, IndianRupee, User
+  Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera
 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -63,6 +63,12 @@ export default function SalonDetail() {
   // Fetch salon reviews
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
     queryKey: [`/api/salons/${salonId}/reviews`],
+    enabled: !!salonId,
+  });
+
+  // Fetch salon gallery
+  const { data: gallery = [], isLoading: galleryLoading } = useQuery<any[]>({
+    queryKey: [`/api/salons/${salonId}/gallery`],
     enabled: !!salonId,
   });
 
@@ -329,6 +335,56 @@ export default function SalonDetail() {
                   </div>
                 ) : (
                   <p className="text-gray-600 text-center py-8">Staff information coming soon</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Gallery */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Camera className="h-5 w-5 mr-2" />
+                  Gallery
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {galleryLoading ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : gallery.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {gallery.map((image) => (
+                      <div key={image.id} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer">
+                        <img 
+                          src={image.imageUrl} 
+                          alt={image.title || "Gallery image"} 
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Camera className="h-8 w-8 text-white" />
+                          </div>
+                        </div>
+                        {image.title && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
+                            <p className="text-white text-sm font-medium">{image.title}</p>
+                            <p className="text-white text-xs capitalize">{image.category}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Camera className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Images Yet</h3>
+                    <p className="text-gray-600">
+                      This salon hasn't uploaded any images of their work yet.
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>
