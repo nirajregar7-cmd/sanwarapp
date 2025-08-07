@@ -1184,6 +1184,9 @@ export default function OwnerDashboard() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingItem ? "Edit Service" : "Add New Service"}</DialogTitle>
+            <DialogDescription>
+              {editingItem ? "Update service details and pricing" : "Add a new service to your salon menu"}
+            </DialogDescription>
           </DialogHeader>
           <Form {...serviceForm}>
             <form onSubmit={serviceForm.handleSubmit((data) => serviceMutation.mutate(data))} className="space-y-4">
@@ -1276,6 +1279,9 @@ export default function OwnerDashboard() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingItem ? "Edit Staff Member" : "Add New Staff Member"}</DialogTitle>
+            <DialogDescription>
+              {editingItem ? "Update staff member information" : "Add a new team member to your salon"}
+            </DialogDescription>
           </DialogHeader>
           <Form {...staffForm}>
             <form onSubmit={staffForm.handleSubmit((data) => staffMutation.mutate(data))} className="space-y-4">
