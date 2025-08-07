@@ -117,16 +117,17 @@ export default function SalonDetail() {
       });
 
       const orderData = await orderResponse.json();
+      console.log("Order data received:", orderData);
       
       // Step 2: Initialize Razorpay payment
       return new Promise((resolve, reject) => {
         const options = {
-          key: orderData.razorpayKeyId,
-          amount: orderData.order.amount,
-          currency: orderData.order.currency,
-          name: salon?.name || "Sanwar",
-          description: `Booking confirmation for ${services.find(s => s.id === data.serviceId)?.name || "service"}`,
-          order_id: orderData.order.id,
+          key: orderData.keyId,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: orderData.salonName || salon?.name || "Sanwar",
+          description: `Booking confirmation for ${orderData.serviceName || "service"}`,
+          order_id: orderData.orderId,
           handler: async (response: any) => {
             try {
               // Step 3: Verify payment and create booking
