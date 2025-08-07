@@ -1,5 +1,4 @@
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Scissors, User, Store, Calendar, ChevronDown } from "lucide-react";
 import {
@@ -15,11 +14,11 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { isAuthenticated, user } = useAuth();
   const [location] = useLocation();
-  const [userType, setUserType] = useState<"customer" | "salon_owner">(
-    user?.userType || "customer"
-  );
+  const [userType, setUserType] = useState<"customer" | "salon_owner">("customer");
+  
+  // Temporarily disable authentication for development
+  const isAuthenticated = location.includes('/customer') || location.includes('/owner');
 
   const handleUserTypeSwitch = (type: "customer" | "salon_owner") => {
     setUserType(type);

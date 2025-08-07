@@ -15,39 +15,16 @@ import OwnerDashboard from "@/pages/owner/dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Temporarily show landing page while we fix authentication
+  // TODO: Re-enable authentication once the core app is working
   return (
     <Layout>
       <Switch>
-        {!isAuthenticated ? (
-          <Route path="/" component={Landing} />
-        ) : (
-          <>
-            {user?.userType === "customer" ? (
-              <>
-                <Route path="/" component={CustomerHome} />
-                <Route path="/salon/:id" component={SalonDetail} />
-                <Route path="/bookings" component={CustomerBookings} />
-              </>
-            ) : (
-              <>
-                <Route path="/" component={OwnerDashboard} />
-              </>
-            )}
-          </>
-        )}
+        <Route path="/" component={Landing} />
+        <Route path="/customer" component={CustomerHome} />
+        <Route path="/salon/:id" component={SalonDetail} />
+        <Route path="/bookings" component={CustomerBookings} />
+        <Route path="/owner" component={OwnerDashboard} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

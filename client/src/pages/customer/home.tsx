@@ -9,12 +9,12 @@ import { Star, Clock, MapPin, Search } from "lucide-react";
 import type { Salon } from "@shared/schema";
 
 export default function CustomerHome() {
-  const { data: salons, isLoading } = useQuery({
+  const { data: salons, isLoading } = useQuery<Salon[]>({
     queryKey: ["/api/salons"],
     queryFn: async () => {
       const response = await fetch("/api/salons");
       if (!response.ok) throw new Error("Failed to fetch salons");
-      return response.json() as Salon[];
+      return response.json();
     },
   });
 

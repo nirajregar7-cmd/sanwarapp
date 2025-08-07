@@ -32,9 +32,12 @@ export default function Landing() {
             </Button>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 flex gap-4">
             <Button size="lg" asChild>
-              <a href="/api/login">Get Started</a>
+              <Link href="/customer">Customer Portal</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/owner">Salon Owner</Link>
             </Button>
           </div>
         </div>
