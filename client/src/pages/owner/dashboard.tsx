@@ -647,14 +647,10 @@ export default function OwnerDashboard() {
                   <CardTitle className="flex items-center justify-between">
                     Time Slot Management
                     <Button onClick={() => {
-                      // Generate time slots functionality
-                      toast({
-                        title: "Generating Time Slots",
-                        description: "Time slots will be generated based on your working hours and service durations.",
-                      });
+                      window.location.href = "/owner/time-slots";
                     }}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Generate Time Slots
+                      Manage Time Slots
                     </Button>
                   </CardTitle>
                 </CardHeader>
@@ -664,10 +660,10 @@ export default function OwnerDashboard() {
                       <div className="flex items-center">
                         <Clock className="h-5 w-5 text-blue-600 mr-2" />
                         <div>
-                          <h4 className="font-medium text-blue-900">Automatic Time Slot Generation</h4>
+                          <h4 className="font-medium text-blue-900">Manual Time Slot Management</h4>
                           <p className="text-sm text-blue-700">
-                            Time slots are automatically created based on your working hours and service durations. 
-                            Each service gets dedicated time slots to avoid conflicts.
+                            Create your own time slots exactly when you want them. You have complete control over your schedule - 
+                            only the slots you create will be available for customer bookings.
                           </p>
                         </div>
                       </div>
