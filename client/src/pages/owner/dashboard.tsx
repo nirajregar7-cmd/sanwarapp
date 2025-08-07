@@ -220,7 +220,7 @@ export default function OwnerDashboard() {
   if (salonLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-300 rounded w-1/4"></div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -261,18 +261,22 @@ export default function OwnerDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 {salon ? salon.name : "Setup Your Salon"}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm sm:text-base">
                 {salon ? "Manage your salon and grow your business" : "Create your salon profile to get started"}
               </p>
             </div>
             {!salon && (
-              <Button onClick={() => setSalonDialogOpen(true)} size="lg">
+              <Button 
+                onClick={() => setSalonDialogOpen(true)} 
+                size="lg"
+                className="w-full sm:w-auto"
+              >
                 <Store className="h-4 w-4 mr-2" />
                 Create Salon Profile
               </Button>
@@ -283,24 +287,28 @@ export default function OwnerDashboard() {
 
       {!salon ? (
         // Salon Setup Screen
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center mb-8">
-            <Scissors className="h-16 w-16 text-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Sanwar!</h2>
-            <p className="text-lg text-gray-600">Let's set up your salon profile to start attracting customers</p>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="text-center mb-6 sm:mb-8">
+            <Scissors className="h-12 w-12 sm:h-16 sm:w-16 text-primary mx-auto mb-4" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Welcome to Sanwar!</h2>
+            <p className="text-base sm:text-lg text-gray-600">Let's set up your salon profile to start attracting customers</p>
           </div>
           
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
-              <CardTitle>Setup Your Salon</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Setup Your Salon</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="text-center">
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-gray-600 mb-4 text-sm sm:text-base">
                     Complete your salon profile to appear on our platform and start receiving bookings from customers.
                   </p>
-                  <Button onClick={() => setSalonDialogOpen(true)} size="lg" className="w-full">
+                  <Button 
+                    onClick={() => setSalonDialogOpen(true)} 
+                    size="lg" 
+                    className="w-full"
+                  >
                     <Store className="h-4 w-4 mr-2" />
                     Create Salon Profile
                   </Button>
@@ -333,15 +341,15 @@ export default function OwnerDashboard() {
         </div>
       ) : (
         // Main Dashboard
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="services">Services</TabsTrigger>
-              <TabsTrigger value="staff">Staff</TabsTrigger>
-              <TabsTrigger value="timeslots">Time Slots</TabsTrigger>
-              <TabsTrigger value="bookings">Bookings</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="services" className="text-xs sm:text-sm">Services</TabsTrigger>
+              <TabsTrigger value="staff" className="text-xs sm:text-sm">Staff</TabsTrigger>
+              <TabsTrigger value="timeslots" className="text-xs sm:text-sm">Slots</TabsTrigger>
+              <TabsTrigger value="bookings" className="text-xs sm:text-sm">Bookings</TabsTrigger>
+              <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -974,7 +982,7 @@ export default function OwnerDashboard() {
 
       {/* Salon Form Dialog */}
       <Dialog open={salonDialogOpen} onOpenChange={setSalonDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{salon ? "Edit Salon" : "Create Salon Profile"}</DialogTitle>
             <DialogDescription>
@@ -982,7 +990,10 @@ export default function OwnerDashboard() {
             </DialogDescription>
           </DialogHeader>
           <Form {...salonForm}>
-            <form onSubmit={salonForm.handleSubmit((data) => salonMutation.mutate(data))} className="space-y-4">
+            <form onSubmit={salonForm.handleSubmit((data) => {
+              console.log("Form submitted with data:", data);
+              salonMutation.mutate(data);
+            })} className="space-y-4">
               <FormField
                 control={salonForm.control}
                 name="name"
@@ -1011,7 +1022,7 @@ export default function OwnerDashboard() {
                 )}
               />
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={salonForm.control}
                   name="phone"
@@ -1146,11 +1157,20 @@ export default function OwnerDashboard() {
                 )}
               />
               
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setSalonDialogOpen(false)}>
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setSalonDialogOpen(false)}
+                  className="w-full sm:w-auto"
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={salonMutation.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={salonMutation.isPending}
+                  className="w-full sm:w-auto"
+                >
                   {salonMutation.isPending ? "Saving..." : (salon ? "Update Salon" : "Create Salon")}
                 </Button>
               </div>

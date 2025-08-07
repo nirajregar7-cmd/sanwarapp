@@ -267,15 +267,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.claims?.sub;
       const salonData = req.body;
       
+      console.log("Creating salon for user:", userId, "with data:", salonData);
+      
+      // Validate required fields
+      if (!salonData.name || !salonData.phone || !salonData.address) {
+        return res.status(400).json({ 
+          message: "Missing required fields: name, phone, and address are required" 
+        });
+      }
+      
       const [salon] = await db.insert(salons).values({
-        ...salonData,
-        ownerId: userId
+        name: salonData.name,
+        description: salonData.description || '',
+        phone: salonData.phone,
+        address: salonData.address,
+        imageUrl: salonData.imageUrl || null,
+        confirmationAmount: salonData.confirmationAmount || 0,
+        ownerId: userId,
+        isActive: true,
+        averageRating: 0,
+        totalReviews: 0
       }).returning();
       
+      console.log("Created salon:", salon);
       res.json(salon);
     } catch (error) {
       console.error("Error creating salon:", error);
-      res.status(500).json({ message: "Failed to create salon" });
+      res.status(500).json({ 
+        message: "Failed to create salon", 
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
