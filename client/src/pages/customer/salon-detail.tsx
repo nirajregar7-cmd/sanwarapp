@@ -100,13 +100,14 @@ export default function SalonDetail() {
       if (!isAuthenticated) {
         throw new Error("Please log in to book an appointment");
       }
-      return apiRequest(`/api/bookings`, "POST", {
+      const response = await apiRequest("POST", `/api/bookings`, {
         salonId,
         serviceId: data.serviceId,
         staffId: data.staffId || null,
         timeSlotId: data.timeSlotId,
         date: data.date.toISOString().split('T')[0],
       });
+      return response.json();
     },
     onSuccess: () => {
       toast({

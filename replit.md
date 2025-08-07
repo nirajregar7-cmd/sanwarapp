@@ -42,9 +42,9 @@ Preferred communication style: Simple, everyday language.
 - Referral program with wallet credits → PENDING
 
 ### Payment Integration
-- Razorpay integration for confirmation amounts and full payments
-- Digital receipts and invoices
-- Wallet system for referral credits
+- Razorpay integration for confirmation amounts and full payments → PENDING
+- Digital receipts and invoices → PENDING  
+- Wallet system for referral credits ✓
 
 ## System Architecture
 
