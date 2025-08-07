@@ -130,7 +130,7 @@ export default function OwnerDashboard() {
     mutationFn: async (data: SalonFormData) => {
       const endpoint = salon ? `/api/salons/${salon.id}` : '/api/salons';
       const method = salon ? 'PUT' : 'POST';
-      return apiRequest(endpoint, method, {
+      return apiRequest(method, endpoint, {
         ...data,
         confirmationAmount: data.confirmationAmount * 100, // Convert to paise
       });
@@ -157,7 +157,7 @@ export default function OwnerDashboard() {
     mutationFn: async (data: ServiceFormData) => {
       const endpoint = editingItem ? `/api/services/${editingItem.id}` : `/api/salons/${salon?.id}/services`;
       const method = editingItem ? 'PUT' : 'POST';
-      return apiRequest(endpoint, method, data);
+      return apiRequest(method, endpoint, data);
     },
     onSuccess: () => {
       toast({
@@ -182,7 +182,7 @@ export default function OwnerDashboard() {
     mutationFn: async (data: StaffFormData) => {
       const endpoint = editingItem ? `/api/staff/${editingItem.id}` : `/api/salons/${salon?.id}/staff`;
       const method = editingItem ? 'PUT' : 'POST';
-      return apiRequest(endpoint, method, data);
+      return apiRequest(method, endpoint, data);
     },
     onSuccess: () => {
       toast({
