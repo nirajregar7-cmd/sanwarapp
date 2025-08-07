@@ -86,7 +86,7 @@ export default function Landing() {
           </div>
 
           <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-            <Button size="lg" className="bg-white text-primary hover:bg-gray-100 text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold shadow-lg" asChild>
+            <Button size="lg" className="bg-white hover:bg-gray-100 text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold shadow-lg" style={{color: 'hsl(248.0645, 92.8571%, 61.1765%)'}} asChild>
               <Link href="/customer">
                 <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Book a Salon Now
@@ -342,7 +342,7 @@ export default function Landing() {
             Join thousands of satisfied customers and partner salons on Sanwar
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-primary hover:bg-gray-100 text-lg px-8 py-4 rounded-xl font-semibold" asChild>
+            <Button size="lg" className="bg-white hover:bg-gray-100 text-lg px-8 py-4 rounded-xl font-semibold" style={{color: 'hsl(248.0645, 92.8571%, 61.1765%)'}} asChild>
               <Link href="/customer">
                 Start Booking Now
               </Link>
