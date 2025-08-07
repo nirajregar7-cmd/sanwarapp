@@ -120,28 +120,28 @@ export default function CustomerBookings() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
-        <p className="text-gray-600">Manage your salon appointments</p>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
+        <p className="text-gray-600 text-sm sm:text-base">Manage your salon appointments</p>
       </div>
 
       {bookings && bookings.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {bookings.map((booking: Booking) => (
             <Card 
               key={booking.id} 
               className={`${isUpcoming(booking.date, booking.startTime) ? 'border-l-4 border-l-accent' : ''}`}
             >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 space-y-2 sm:space-y-0">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                       Salon Booking #{booking.id.slice(-6)}
                     </h3>
-                    <p className="text-gray-600">Service booked</p>
+                    <p className="text-gray-600 text-sm">Service booked</p>
                   </div>
-                  <Badge className={getStatusColor(booking.status)}>
+                  <Badge className={`${getStatusColor(booking.status)} flex-shrink-0 self-start`}>
                     {getStatusText(booking.status)}
                   </Badge>
                 </div>
@@ -161,20 +161,20 @@ export default function CustomerBookings() {
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-primary">₹{booking.totalAmount}</span>
-                  <div className="space-x-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+                  <span className="font-semibold text-primary text-lg">₹{booking.totalAmount}</span>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
                     {booking.status === "completed" ? (
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         <Star className="h-4 w-4 mr-1" />
                         Rate & Review
                       </Button>
                     ) : booking.status === "confirmed" || booking.status === "pending" ? (
                       <>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
                           Reschedule
                         </Button>
-                        <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto text-red-600 hover:text-red-700">
                           Cancel
                         </Button>
                       </>

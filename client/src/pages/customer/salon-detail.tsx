@@ -160,17 +160,17 @@ export default function SalonDetail() {
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={() => navigate("/")} className="flex items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+            <Button variant="ghost" onClick={() => navigate("/")} className="flex items-center w-fit">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Salons
             </Button>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
+            <div className="flex items-center gap-2 sm:space-x-2">
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                 <Heart className="h-4 w-4 mr-2" />
                 Save
               </Button>
@@ -179,14 +179,14 @@ export default function SalonDetail() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Salon Header */}
             <Card>
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row gap-6">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
                   <div className="w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden">
                     {salon.imageUrl ? (
                       <img
@@ -202,9 +202,9 @@ export default function SalonDetail() {
                   </div>
                   
                   <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{salon.name}</h1>
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
+                      <div className="flex-1 min-w-0">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 truncate">{salon.name}</h1>
                         <div className="flex items-center mb-2">
                           <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                           <span className="ml-1 text-lg font-medium">
@@ -220,7 +220,7 @@ export default function SalonDetail() {
                         </div>
                       </div>
                       {salon.isPremium && (
-                        <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">
+                        <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white flex-shrink-0">
                           Premium
                         </Badge>
                       )}
@@ -250,18 +250,18 @@ export default function SalonDetail() {
                     ))}
                   </div>
                 ) : services.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {services.map((service) => (
-                      <div key={service.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{service.name}</h3>
-                          <p className="text-sm text-gray-600">{service.description}</p>
-                          <div className="flex items-center mt-1 text-sm text-gray-500">
+                      <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{service.name}</h3>
+                          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{service.description}</p>
+                          <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-500">
                             <Clock className="h-3 w-3 mr-1" />
                             {service.duration} mins
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-left sm:text-right flex-shrink-0">
                           <div className="text-lg font-semibold text-green-600">
                             ₹{service.price}
                           </div>
@@ -285,7 +285,7 @@ export default function SalonDetail() {
               </CardHeader>
               <CardContent>
                 {staffLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {Array.from({ length: 4 }).map((_, i) => (
                       <div key={i} className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
@@ -297,18 +297,18 @@ export default function SalonDetail() {
                     ))}
                   </div>
                 ) : staff.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {staff.map((member) => (
                       <div key={member.id} className="flex items-center space-x-3">
-                        <Avatar className="h-12 w-12">
+                        <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
                           <AvatarImage src={member.photoUrl || ""} alt={member.name} />
                           <AvatarFallback>
-                            <User className="h-6 w-6" />
+                            <User className="h-5 w-5 sm:h-6 sm:w-6" />
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{member.name}</h4>
-                          <p className="text-sm text-gray-600">{member.role}</p>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{member.name}</h4>
+                          <p className="text-xs sm:text-sm text-gray-600 truncate">{member.role}</p>
                           <div className="flex items-center mt-1">
                             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                             <span className="text-xs text-gray-500 ml-1">
@@ -380,19 +380,19 @@ export default function SalonDetail() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Booking Card */}
-            <Card className="sticky top-4">
+            <Card className="lg:sticky lg:top-4">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <CalendarIcon className="h-5 w-5 mr-2" />
                   Book Appointment
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4 sm:p-6">
                 {!isAuthenticated ? (
-                  <div className="text-center py-6">
-                    <p className="text-gray-600 mb-4">Please log in to book an appointment</p>
+                  <div className="text-center py-4 sm:py-6">
+                    <p className="text-gray-600 mb-4 text-sm sm:text-base">Please log in to book an appointment</p>
                     <Button asChild className="w-full">
                       <Link href="/api/login">
                         Log In to Book
@@ -407,7 +407,7 @@ export default function SalonDetail() {
                         Book Now
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>Book Your Appointment</DialogTitle>
                       </DialogHeader>
@@ -484,7 +484,7 @@ export default function SalonDetail() {
                                     setSelectedDate(date);
                                   }}
                                   disabled={(date) => date < new Date() || date.getDay() === 0}
-                                  className="rounded-md border"
+                                  className="rounded-md border w-full"
                                 />
                                 <FormMessage />
                               </FormItem>
@@ -498,7 +498,7 @@ export default function SalonDetail() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Available Time Slots</FormLabel>
-                                  <div className="grid grid-cols-2 gap-2">
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     {timeSlots.length > 0 ? (
                                       timeSlots.map((slot) => (
                                         <Button
@@ -506,6 +506,7 @@ export default function SalonDetail() {
                                           type="button"
                                           variant={field.value === slot.id ? "default" : "outline"}
                                           size="sm"
+                                          className="text-xs sm:text-sm"
                                           onClick={() => field.onChange(slot.id)}
                                           disabled={!slot.isAvailable}
                                         >
@@ -513,7 +514,7 @@ export default function SalonDetail() {
                                         </Button>
                                       ))
                                     ) : (
-                                      <p className="col-span-2 text-sm text-gray-500 text-center py-4">
+                                      <p className="col-span-2 sm:col-span-3 text-sm text-gray-500 text-center py-4">
                                         No available slots for this date
                                       </p>
                                     )}
@@ -525,12 +526,12 @@ export default function SalonDetail() {
                           )}
 
                           {selectedServiceData && (
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                              <h4 className="font-semibold mb-2">Booking Summary</h4>
-                              <div className="space-y-1 text-sm">
+                            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                              <h4 className="font-semibold mb-2 text-sm sm:text-base">Booking Summary</h4>
+                              <div className="space-y-1 text-xs sm:text-sm">
                                 <div className="flex justify-between">
                                   <span>Service:</span>
-                                  <span>{selectedServiceData.name}</span>
+                                  <span className="truncate ml-2">{selectedServiceData.name}</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span>Duration:</span>
