@@ -332,14 +332,15 @@ export default function OwnerDashboard() {
     galleryForm.reset({
       title: galleryItem.title || "",
       description: galleryItem.description || "",
-      category: galleryItem.category || "work",
+      category: (galleryItem.category as "work" | "staff" | "interior") || "work",
     });
     setGalleryDialogOpen(true);
   };
 
   const handleGalleryUpload = async (): Promise<{ method: "PUT"; url: string }> => {
     try {
-      const response = await apiRequest('POST', '/api/objects/upload');
+      const response = await apiRequest('POST', '/api/objects/upload') as { uploadURL: string };
+      console.log("Upload URL response:", response);
       return {
         method: "PUT",
         url: response.uploadURL,
@@ -351,16 +352,43 @@ export default function OwnerDashboard() {
   };
 
   const handleGalleryUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    console.log("Upload result:", result);
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
-      const imageUrl = uploadedFile.uploadURL;
+      console.log("Uploaded file:", uploadedFile);
       
-      // Submit the form with the uploaded image URL
-      const formData = galleryForm.getValues();
-      galleryMutation.mutate({
-        ...formData,
-        imageUrl,
-      });
+      // Extract the URL from Uppy's response 
+      // After successful upload to S3, the file URL is in the uploadURL field
+      const uploadURL = (uploadedFile as any).uploadURL || (uploadedFile as any).response?.uploadURL;
+      let imageUrl = uploadURL;
+      
+      // Remove query parameters to get clean URL for storage
+      if (imageUrl && imageUrl.includes('?')) {
+        imageUrl = imageUrl.split('?')[0];
+      }
+      
+      // If we still don't have a URL, construct it manually from the original upload URL
+      if (!imageUrl) {
+        // This should not happen with proper upload, but fallback
+        console.error("No image URL found in upload response, checking alternative sources");
+        console.log("Upload file object:", uploadedFile);
+      }
+      
+      console.log("Final image URL:", imageUrl);
+      
+      if (imageUrl) {
+        // Submit the form with the uploaded image URL
+        const formData = galleryForm.getValues();
+        galleryMutation.mutate({
+          ...formData,
+          imageUrl,
+        });
+        // Close the dialog
+        setGalleryDialogOpen(false);
+      } else {
+        console.error("No image URL found in upload result");
+        alert("Upload failed - no URL found. Please try again.");
+      }
     }
   };
 
