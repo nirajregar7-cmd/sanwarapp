@@ -405,13 +405,13 @@ export default function OwnerDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
                 {salon ? salon.name : "Setup Your Salon"}
               </h1>
-              <p className="text-gray-600 text-sm sm:text-base">
+              <p className="text-gray-600 text-sm sm:text-base mt-1">
                 {salon ? "Manage your salon and grow your business" : "Create your salon profile to get started"}
               </p>
             </div>
@@ -485,26 +485,48 @@ export default function OwnerDashboard() {
         </div>
       ) : (
         // Main Dashboard
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 gap-1">
-              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-              <TabsTrigger value="services" className="text-xs sm:text-sm">Services</TabsTrigger>
-              <TabsTrigger value="staff" className="text-xs sm:text-sm">Staff</TabsTrigger>
-              <TabsTrigger value="gallery" className="text-xs sm:text-sm">Gallery</TabsTrigger>
-              <TabsTrigger value="timeslots" className="text-xs sm:text-sm">Slots</TabsTrigger>
-              <TabsTrigger value="bookings" className="text-xs sm:text-sm">Bookings</TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
-            </TabsList>
+            <div className="mb-6">
+              {/* Mobile Tab Navigation */}
+              <div className="block sm:hidden">
+                <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1">
+                  <TabsTrigger value="overview" className="text-xs py-3">Overview</TabsTrigger>
+                  <TabsTrigger value="services" className="text-xs py-3">Services</TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
+                  <TabsTrigger value="staff" className="text-xs py-3">Staff</TabsTrigger>
+                  <TabsTrigger value="gallery" className="text-xs py-3">Gallery</TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-3 gap-1 h-auto p-1 mt-1">
+                  <TabsTrigger value="timeslots" className="text-xs py-3">Slots</TabsTrigger>
+                  <TabsTrigger value="bookings" className="text-xs py-3">Bookings</TabsTrigger>
+                  <TabsTrigger value="settings" className="text-xs py-3">Settings</TabsTrigger>
+                </TabsList>
+              </div>
+              
+              {/* Desktop Tab Navigation */}
+              <div className="hidden sm:block">
+                <TabsList className="grid w-full grid-cols-7 gap-1">
+                  <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
+                  <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
+                  <TabsTrigger value="staff" className="text-sm">Staff</TabsTrigger>
+                  <TabsTrigger value="gallery" className="text-sm">Gallery</TabsTrigger>
+                  <TabsTrigger value="timeslots" className="text-sm">Slots</TabsTrigger>
+                  <TabsTrigger value="bookings" className="text-sm">Bookings</TabsTrigger>
+                  <TabsTrigger value="settings" className="text-sm">Settings</TabsTrigger>
+                </TabsList>
+              </div>
+            </div>
 
-            <TabsContent value="overview" className="space-y-6">
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6">
               {/* Quick Actions */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <Button 
                       variant="outline" 
                       className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px]"
@@ -569,12 +591,12 @@ export default function OwnerDashboard() {
                 </Card>
                 
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center">
-                      <IndianRupee className="h-8 w-8 text-green-500" />
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-                        <p className="text-2xl font-bold text-gray-900">
+                      <IndianRupee className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 flex-shrink-0" />
+                      <div className="ml-2 sm:ml-4 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600">Monthly Revenue</p>
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                           ₹{bookings.reduce((sum, booking) => sum + Number(booking.totalAmount || 0), 0).toLocaleString()}
                         </p>
                       </div>
@@ -583,12 +605,12 @@ export default function OwnerDashboard() {
                 </Card>
                 
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center">
-                      <Star className="h-8 w-8 text-yellow-500" />
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Average Rating</p>
-                        <p className="text-2xl font-bold text-gray-900">
+                      <Star className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 flex-shrink-0" />
+                      <div className="ml-2 sm:ml-4 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600">Average Rating</p>
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                           {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
                         </p>
                       </div>
@@ -597,12 +619,12 @@ export default function OwnerDashboard() {
                 </Card>
                 
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center">
-                      <Users className="h-8 w-8 text-purple-500" />
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Team Members</p>
-                        <p className="text-2xl font-bold text-gray-900">{staff.length}</p>
+                      <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 flex-shrink-0" />
+                      <div className="ml-2 sm:ml-4 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600">Team Members</p>
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{staff.length}</p>
                       </div>
                     </div>
                   </CardContent>
