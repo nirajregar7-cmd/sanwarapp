@@ -62,8 +62,9 @@ export default function TimeSlots() {
     queryKey: [`/api/salons/${salon?.id}/time-slots`, selectedDate],
     enabled: !!salon?.id,
     queryFn: async () => {
-      const response = await apiRequest(`/api/salons/${salon!.id}/time-slots?date=${format(selectedDate, "yyyy-MM-dd")}`);
-      return Array.isArray(response) ? response : [];
+      const response = await apiRequest("GET", `/api/salons/${salon!.id}/time-slots?date=${format(selectedDate, "yyyy-MM-dd")}`);
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 

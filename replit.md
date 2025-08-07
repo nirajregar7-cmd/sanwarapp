@@ -4,6 +4,8 @@
 
 Sanwar is a smart salon booking platform that helps local salon shopkeepers digitize their business and allows customers to easily discover and book services. Think of it like Zomato for salons, but with features inspired by IRCTC's booking system — showing live available slots, clear pricing, and instant confirmations. The platform serves two distinct user types: salon owners who want to go digital and attract more customers, and customers who want quick, online salon bookings without waiting lines.
 
+**Important:** The system uses completely manual time slot creation - only slots explicitly created by salon owners appear for customer booking. No automatic generation occurs.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -22,7 +24,7 @@ Preferred communication style: Simple, everyday language.
 - Service management with pricing and duration ✓
 - Staff management with photos and roles ✓
 - Working hours and break time configuration ✓
-- Time slot management system with manual control and auto-generation ✓
+- **Time slot management system with 100% manual control only** ✓
 - Confirmation amount setting for serious bookings (₹10, ₹20, etc.) ✓
 - Booking management dashboard with customer info and payment status ✓
 - Manual walk-in customer addition → PENDING

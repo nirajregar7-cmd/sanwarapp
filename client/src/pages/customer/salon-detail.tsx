@@ -79,8 +79,9 @@ export default function SalonDetail() {
     queryFn: async (): Promise<TimeSlot[]> => {
       if (!selectedDate) return [];
       const dateStr = selectedDate.toISOString().split('T')[0];
-      const response = await apiRequest(`/api/salons/${salonId}/time-slots?date=${dateStr}`);
-      return Array.isArray(response) ? response : [];
+      const response = await apiRequest("GET", `/api/salons/${salonId}/time-slots?date=${dateStr}`);
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
