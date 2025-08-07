@@ -32,10 +32,10 @@ function Router() {
       {/* Landing page for non-authenticated users */}
       {!user ? (
         <Route path="/" component={Landing} />
-      ) : user.userType ? (
+      ) : (user as any)?.userType ? (
         // Authenticated users with user type set
         <Route path="/">
-          {user.userType === 'salon_owner' ? (
+          {(user as any).userType === 'salon_owner' ? (
             <Layout>
               <OwnerDashboard />
             </Layout>
@@ -46,7 +46,7 @@ function Router() {
           )}
         </Route>
       ) : (
-        // Authenticated users without user type - show selection
+        // Authenticated users without user type - show selection page
         <Route path="/" component={UserTypeSelection} />
       )}
       

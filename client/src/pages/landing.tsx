@@ -85,26 +85,70 @@ export default function Landing() {
             </Button>
           </div>
 
-          <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-            <Button 
-              size="lg" 
-              className="bg-white hover:bg-gray-100 text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold shadow-lg" 
-              style={{color: 'hsl(248.0645, 92.8571%, 61.1765%)'}} 
-              onClick={() => window.location.href = '/api/login'}
-            >
-              <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-              Book a Salon Now
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-primary text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold" 
-              onClick={() => window.location.href = '/api/login'}
-            >
-              <Scissors className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-              <span className="hidden xs:inline">Join as a Shopkeeper</span>
-              <span className="xs:hidden">Join as Owner</span>
-            </Button>
+          {/* User Type Selection */}
+          <div className="mt-8 sm:mt-12 max-w-4xl mx-auto px-4">
+            <div className="text-center mb-8">
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">
+                Who are you?
+              </h3>
+              <p className="text-white/90 text-sm sm:text-base">
+                Choose your account type to get started with Sanwar
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {/* Customer Card */}
+              <div className="bg-white/10 backdrop-blur rounded-xl p-6 hover:bg-white/20 transition-all cursor-pointer group"
+                   onClick={() => window.location.href = '/api/login?user_intent=customer'}>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-3">I'm a Customer</h4>
+                  <p className="text-white/80 text-sm mb-4">
+                    I want to discover and book salon services
+                  </p>
+                  <ul className="text-white/70 text-sm space-y-1 mb-6">
+                    <li>• Find nearby salons</li>
+                    <li>• Book appointments instantly</li>
+                    <li>• Manage bookings</li>
+                    <li>• Leave reviews & earn rewards</li>
+                  </ul>
+                  <Button 
+                    size="lg" 
+                    className="w-full bg-white hover:bg-gray-100 text-blue-600 font-semibold py-3 rounded-lg"
+                  >
+                    Sign Up / Login as Customer
+                  </Button>
+                </div>
+              </div>
+
+              {/* Salon Owner Card */}
+              <div className="bg-white/10 backdrop-blur rounded-xl p-6 hover:bg-white/20 transition-all cursor-pointer group"
+                   onClick={() => window.location.href = '/api/login?user_intent=salon_owner'}>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <Scissors className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-3">I'm a Salon Owner</h4>
+                  <p className="text-white/80 text-sm mb-4">
+                    I want to manage my salon business online
+                  </p>
+                  <ul className="text-white/70 text-sm space-y-1 mb-6">
+                    <li>• Setup salon profile</li>
+                    <li>• Manage services & staff</li>
+                    <li>• Create time slots</li>
+                    <li>• Handle bookings & earnings</li>
+                  </ul>
+                  <Button 
+                    size="lg" 
+                    className="w-full bg-white hover:bg-gray-100 text-purple-600 font-semibold py-3 rounded-lg"
+                  >
+                    Sign Up / Login as Salon Owner
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -352,7 +396,7 @@ export default function Landing() {
               size="lg" 
               className="bg-white hover:bg-gray-100 text-lg px-8 py-4 rounded-xl font-semibold" 
               style={{color: 'hsl(248.0645, 92.8571%, 61.1765%)'}} 
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/api/login?user_intent=customer'}
             >
               Start Booking Now
             </Button>
@@ -360,7 +404,7 @@ export default function Landing() {
               size="lg" 
               variant="outline" 
               className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-4 rounded-xl font-semibold" 
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/api/login?user_intent=salon_owner'}
             >
               Partner With Us
             </Button>

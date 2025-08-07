@@ -57,14 +57,22 @@ function updateUserSession(
 
 async function upsertUser(
   claims: any,
+  userIntent?: string,
 ) {
-  await storage.upsertUser({
+  const userData: any = {
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
-  });
+  };
+
+  // Set user type based on intent if provided
+  if (userIntent && ["customer", "salon_owner"].includes(userIntent)) {
+    userData.userType = userIntent;
+  }
+
+  await storage.upsertUser(userData);
 }
 
 export async function setupAuth(app: Express) {
@@ -103,17 +111,48 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
+    // Store user intent in session for later use
+    if (req.query.user_intent) {
+      req.session.userIntent = req.query.user_intent as string;
+    }
+    
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
-  app.get("/api/callback", (req, res, next) => {
+  app.get("/api/callback", async (req: any, res, next) => {
+    // Handle user intent during callback
+    const handleCallback = async () => {
+      if (req.isAuthenticated() && req.user?.claims?.sub && req.session.userIntent) {
+        const userIntent = req.session.userIntent;
+        const userId = req.user.claims.sub;
+        
+        try {
+          // Set user type based on intent
+          if (["customer", "salon_owner"].includes(userIntent)) {
+            await storage.updateUserType(userId, userIntent as "customer" | "salon_owner");
+          }
+        } catch (error) {
+          console.error("Error setting user type from intent:", error);
+        }
+        
+        // Clear intent from session
+        delete req.session.userIntent;
+      }
+      
+      res.redirect("/");
+    };
+
     passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
-    })(req, res, next);
+    })(req, res, async (err: any) => {
+      if (err) {
+        return res.redirect("/api/login");
+      }
+      await handleCallback();
+    });
   });
 
   app.get("/api/logout", (req, res) => {
