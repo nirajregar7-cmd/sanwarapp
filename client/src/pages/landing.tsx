@@ -99,7 +99,7 @@ export default function Landing() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Customer Card */}
               <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-6 hover:bg-white/30 transition-all cursor-pointer group"
-                   onClick={() => window.location.href = '/api/login?user_intent=customer'}>
+                   onClick={() => window.location.href = '/auth'}>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                     <Users className="h-8 w-8 text-blue-600" />
@@ -125,7 +125,7 @@ export default function Landing() {
 
               {/* Salon Owner Card */}
               <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-6 hover:bg-white/30 transition-all cursor-pointer group"
-                   onClick={() => window.location.href = '/api/login?user_intent=salon_owner'}>
+                   onClick={() => window.location.href = '/auth'}>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                     <Scissors className="h-8 w-8 text-purple-600" />

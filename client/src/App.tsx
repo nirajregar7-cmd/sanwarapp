@@ -8,6 +8,7 @@ import Layout from "@/components/Layout";
 
 // Pages
 import Landing from "@/pages/landing";
+import AuthPage from "@/pages/auth";
 import UserTypeSelection from "@/pages/user-type-selection";
 import CustomerHome from "@/pages/customer/home";
 import SalonDetail from "@/pages/customer/salon-detail";
@@ -30,6 +31,9 @@ function Router() {
 
   return (
     <Switch>
+      {/* Authentication page */}
+      <Route path="/auth" component={AuthPage} />
+      
       {/* Landing page for non-authenticated users */}
       {!user ? (
         <>
