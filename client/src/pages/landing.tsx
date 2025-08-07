@@ -309,13 +309,13 @@ export default function Landing() {
               {
                 step: 2,
                 title: "Book Instantly",
-                description: "Select your preferred time slot and pay a small confirmation amount",
+                description: "Select your preferred time slot and pay the confirmation amount to secure your booking",
                 icon: Calendar
               },
               {
                 step: 3,
                 title: "Enjoy Service",
-                description: "Visit the salon at your booked time and enjoy premium services",
+                description: "Visit the salon at your booked time, enjoy premium services, and pay the remaining amount",
                 icon: CheckCircle
               }
             ].map((item, index) => (

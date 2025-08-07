@@ -42,7 +42,9 @@ Preferred communication style: Simple, everyday language.
 - Referral program with wallet credits → PENDING
 
 ### Payment Integration
-- Razorpay integration for confirmation amounts and full payments → PENDING
+- **Confirmation Amount Payment Flow**: Customers pay only the small booking confirmation amount (set by salon owners) upfront via Razorpay to secure their slot
+- **Full Service Payment**: Remaining service amount paid at salon after service completion
+- Razorpay integration for confirmation amounts → PENDING
 - Digital receipts and invoices → PENDING  
 - Wallet system for referral credits ✓
 
