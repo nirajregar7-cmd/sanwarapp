@@ -160,54 +160,61 @@ export default function Landing() {
               ))
             ) : topSalons && topSalons.length > 0 ? (
               topSalons.map((salon) => (
-              <Card key={salon.id} className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
-                <div className="aspect-video bg-gray-200 overflow-hidden">
-                  {salon.imageUrl ? (
-                    <img 
-                      src={salon.imageUrl} 
-                      alt={salon.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                      <Scissors className="h-12 w-12 text-gray-400" />
+              <Link key={salon.id} href={`/customer/salon/${salon.id}`}>
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
+                  <div className="aspect-video bg-gray-200 overflow-hidden">
+                    {salon.imageUrl ? (
+                      <img 
+                        src={salon.imageUrl} 
+                        alt={salon.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                        <Scissors className="h-12 w-12 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-lg">{salon.name}</h3>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="ml-1 text-sm font-medium">
+                          {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
+                        </span>
+                        <span className="ml-1 text-sm text-gray-500">
+                          ({salon.totalReviews || 0})
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-lg">{salon.name}</h3>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="ml-1 text-sm font-medium">
-                        {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
-                      </span>
-                      <span className="ml-1 text-sm text-gray-500">
-                        ({salon.totalReviews || 0})
-                      </span>
+                    <div className="flex items-center text-sm text-gray-600 mb-2">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      {salon.address}
                     </div>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600 mb-2">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {salon.address}
-                  </div>
-                  <div className="mb-3">
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {salon.description || "Professional salon services"}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-green-600">
-                      Starting from ₹500
-                    </span>
-                    <Button size="sm" className="bg-primary hover:bg-primary/90" asChild>
-                      <Link href={`/customer/salon/${salon.id}`}>
+                    <div className="mb-3">
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {salon.description || "Professional salon services"}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-green-600">
+                        Starting from ₹500
+                      </span>
+                      <Button 
+                        size="sm" 
+                        className="bg-primary hover:bg-primary/90" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Button will be handled by parent Link
+                        }}
+                      >
                         Book Now
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))
             ) : (
               // No salons found state

@@ -6,7 +6,7 @@ import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots } from "@shared/schema";
 import { eq, desc, isNotNull, sql, count } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -45,7 +45,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalServicesResult
       ] = await Promise.all([
         db.select({ count: count() }).from(users).where(eq(users.userType, 'customer')),
-        db.select({ count: count() }).from(salons).where(eq(salons.isApproved, true)),
+        db.select({ count: count() }).from(salons),
         db.select({ count: count() }).from(bookings),
         db.select({ count: count() }).from(services)
       ]);
@@ -69,10 +69,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Featured salons endpoint (real data only)
   app.get('/api/salons/featured', async (req, res) => {
     try {
-      // Fetch all approved salons (since we may not have many yet)
+      // Fetch all salons (since we may not have many yet)
       const featuredSalons = await db.select()
         .from(salons)
-        .where(eq(salons.isApproved, true))
         .orderBy(desc(salons.averageRating), desc(salons.totalReviews))
         .limit(6);
       
@@ -80,6 +79,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching featured salons:", error);
       res.status(500).json({ message: "Failed to fetch featured salons" });
+    }
+  });
+
+  // Individual salon details endpoint  
+  app.get('/api/salons/:salonId', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      res.json(salon);
+    } catch (error) {
+      console.error("Error fetching salon:", error);
+      res.status(500).json({ message: "Failed to fetch salon details" });
+    }
+  });
+
+  // Salon services endpoint
+  app.get('/api/salons/:salonId/services', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const salonServices = await db.select()
+        .from(services)
+        .where(eq(services.salonId, salonId));
+      
+      res.json(salonServices);
+    } catch (error) {
+      console.error("Error fetching salon services:", error);
+      res.status(500).json({ message: "Failed to fetch salon services" });
+    }
+  });
+
+  // Salon staff endpoint
+  app.get('/api/salons/:salonId/staff', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const salonStaff = await db.select()
+        .from(staff)
+        .where(eq(staff.salonId, salonId));
+      
+      res.json(salonStaff);
+    } catch (error) {
+      console.error("Error fetching salon staff:", error);
+      res.status(500).json({ message: "Failed to fetch salon staff" });
+    }
+  });
+
+  // Salon reviews endpoint
+  app.get('/api/salons/:salonId/reviews', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const salonReviews = await db.select()
+        .from(reviews)
+        .where(eq(reviews.salonId, salonId))
+        .orderBy(desc(reviews.createdAt))
+        .limit(10);
+      
+      res.json(salonReviews);
+    } catch (error) {
+      console.error("Error fetching salon reviews:", error);
+      res.status(500).json({ message: "Failed to fetch salon reviews" });
+    }
+  });
+
+  // Salon working hours endpoint
+  app.get('/api/salons/:salonId/working-hours', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const hours = await db.select()
+        .from(workingHours)
+        .where(eq(workingHours.salonId, salonId));
+      
+      res.json(hours);
+    } catch (error) {
+      console.error("Error fetching working hours:", error);
+      res.status(500).json({ message: "Failed to fetch working hours" });
+    }
+  });
+
+  // Available time slots endpoint
+  app.get('/api/salons/:salonId/time-slots', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const { date, serviceId } = req.query;
+      
+      let query = db.select()
+        .from(timeSlots)
+        .where(eq(timeSlots.salonId, salonId));
+      
+      if (date) {
+        query = query.where(eq(timeSlots.date, date as string));
+      }
+      
+      const slots = await query.orderBy(timeSlots.startTime);
+      
+      res.json(slots);
+    } catch (error) {
+      console.error("Error fetching time slots:", error);
+      res.status(500).json({ message: "Failed to fetch available time slots" });
+    }
+  });
+
+  // Create booking endpoint
+  app.post('/api/bookings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { salonId, serviceId, staffId, timeSlotId, date } = req.body;
+      
+      // Get service details for pricing
+      const [service] = await db.select()
+        .from(services)
+        .where(eq(services.id, serviceId));
+      
+      if (!service) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+      
+      // Get time slot details
+      const [timeSlot] = await db.select()
+        .from(timeSlots)
+        .where(eq(timeSlots.id, timeSlotId));
+      
+      if (!timeSlot || !timeSlot.isAvailable) {
+        return res.status(400).json({ message: "Time slot not available" });
+      }
+      
+      // Create booking
+      const [booking] = await db.insert(bookings).values({
+        customerId: userId,
+        salonId,
+        serviceId,
+        staffId,
+        timeSlotId,
+        date,
+        startTime: timeSlot.startTime,
+        endTime: timeSlot.endTime,
+        totalAmount: service.price,
+        status: 'pending'
+      }).returning();
+      
+      // Mark time slot as unavailable
+      await db.update(timeSlots)
+        .set({ isAvailable: false })
+        .where(eq(timeSlots.id, timeSlotId));
+      
+      res.json(booking);
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      res.status(500).json({ message: "Failed to create booking" });
     }
   });
 

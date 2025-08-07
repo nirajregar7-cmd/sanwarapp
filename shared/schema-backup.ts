@@ -1,16 +1,15 @@
-import { 
-  index,
-  jsonb,
+import { sql, relations } from "drizzle-orm";
+import {
   pgTable,
-  timestamp,
   varchar,
   text,
+  timestamp,
   decimal,
   integer,
   boolean,
+  jsonb,
+  index,
 } from "drizzle-orm/pg-core";
-import { sql } from 'drizzle-orm';
-import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -104,7 +103,6 @@ export const bookings = pgTable("bookings", {
   salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
   serviceId: varchar("service_id").references(() => services.id, { onDelete: "cascade" }).notNull(),
   timeSlotId: varchar("time_slot_id").references(() => timeSlots.id, { onDelete: "cascade" }).notNull(),
-  staffId: varchar("staff_id").references(() => staff.id, { onDelete: "set null" }),
   date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
   startTime: varchar("start_time", { length: 5 }).notNull(), // HH:MM format
   endTime: varchar("end_time", { length: 5 }).notNull(), // HH:MM format
@@ -192,7 +190,6 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   ownedSalons: many(salons, { relationName: "salon_owner" }),
   bookings: many(bookings, { relationName: "customer_bookings" }),
   reviews: many(reviews, { relationName: "customer_reviews" }),
-  wallet: one(wallets),
 }));
 
 export const salonsRelations = relations(salons, ({ one, many }) => ({
@@ -202,7 +199,6 @@ export const salonsRelations = relations(salons, ({ one, many }) => ({
     relationName: "salon_owner",
   }),
   services: many(services),
-  staff: many(staff),
   workingHours: many(workingHours),
   timeSlots: many(timeSlots),
   bookings: many(bookings),
@@ -246,10 +242,6 @@ export const bookingsRelations = relations(bookings, ({ one, many }) => ({
     fields: [bookings.serviceId],
     references: [services.id],
   }),
-  staff: one(staff, {
-    fields: [bookings.staffId],
-    references: [staff.id],
-  }),
   timeSlot: one(timeSlots, {
     fields: [bookings.timeSlotId],
     references: [timeSlots.id],
@@ -270,41 +262,6 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   booking: one(bookings, {
     fields: [reviews.bookingId],
     references: [bookings.id],
-  }),
-}));
-
-export const staffRelations = relations(staff, ({ one }) => ({
-  salon: one(salons, {
-    fields: [staff.salonId],
-    references: [salons.id],
-  }),
-}));
-
-export const walletsRelations = relations(wallets, ({ one, many }) => ({
-  customer: one(users, {
-    fields: [wallets.customerId],
-    references: [users.id],
-  }),
-  transactions: many(walletTransactions),
-}));
-
-export const walletTransactionsRelations = relations(walletTransactions, ({ one }) => ({
-  wallet: one(wallets, {
-    fields: [walletTransactions.walletId],
-    references: [wallets.id],
-  }),
-}));
-
-export const referralsRelations = relations(referrals, ({ one }) => ({
-  referrer: one(users, {
-    fields: [referrals.referrerId],
-    references: [users.id],
-    relationName: "user_referrals_given",
-  }),
-  referred: one(users, {
-    fields: [referrals.referredId],
-    references: [users.id],
-    relationName: "user_referrals_received",
   }),
 }));
 
@@ -336,12 +293,6 @@ export const insertServiceSchema = createInsertSchema(services).omit({
   updatedAt: true,
 });
 
-export const insertStaffSchema = createInsertSchema(staff).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 export const insertWorkingHoursSchema = createInsertSchema(workingHours).omit({
   id: true,
 });
@@ -362,6 +313,46 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   createdAt: true,
 });
 
+// Customer wallets for referral credits (duplicate removed above)
+
+// Wallet transactions for audit trail
+export const walletTransactions = pgTable("wallet_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  walletId: varchar("wallet_id").references(() => wallets.id, { onDelete: "cascade" }).notNull(),
+  type: varchar("type", { enum: ["credit", "debit"] }).notNull(),
+  amount: integer("amount").notNull(), // in paise
+  description: text("description"),
+  referenceId: varchar("reference_id"), // booking ID or referral ID
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Referrals table for tracking referral program
+export const referrals = pgTable("referrals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  refereeId: varchar("referee_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  creditAmount: integer("credit_amount").default(5000), // ₹50 in paise
+  isRewardClaimed: boolean("is_reward_claimed").default(false),
+  firstBookingId: varchar("first_booking_id"), // when referee makes first booking
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Platform statistics for landing page
+export const platformStats = pgTable("platform_stats", {
+  id: varchar("id").primaryKey().default("stats"),
+  totalCustomers: integer("total_customers").default(0),
+  totalSalons: integer("total_salons").default(0),
+  totalBookings: integer("total_bookings").default(0),
+  totalServices: integer("total_services").default(0),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Additional insert schemas for new tables
+export const insertStaffSchema = createInsertSchema(staff).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertWalletSchema = createInsertSchema(wallets).omit({
   id: true,
   createdAt: true,
@@ -376,10 +367,45 @@ export const insertWalletTransactionSchema = createInsertSchema(walletTransactio
 export const insertReferralSchema = createInsertSchema(referrals).omit({
   id: true,
   createdAt: true,
-  completedAt: true,
 });
 
-// Type exports
+// Additional relations for new tables
+export const staffRelations = relations(staff, ({ one }) => ({
+  salon: one(salons, {
+    fields: [staff.salonId],
+    references: [salons.id],
+  }),
+}));
+
+export const walletsRelations = relations(wallets, ({ one, many }) => ({
+  customer: one(users, {
+    fields: [wallets.customerId],
+    references: [users.id],
+  }),
+  transactions: many(walletTransactions),
+}));
+
+export const walletTransactionsRelations = relations(walletTransactions, ({ one }) => ({
+  wallet: one(wallets, {
+    fields: [walletTransactions.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const referralsRelations = relations(referrals, ({ one }) => ({
+  referrer: one(users, {
+    fields: [referrals.referrerId],
+    references: [users.id],
+    relationName: "user_referrals_given",
+  }),
+  referee: one(users, {
+    fields: [referrals.refereeId],
+    references: [users.id],
+    relationName: "user_referrals_received",
+  }),
+}));
+
+// Types
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -387,8 +413,6 @@ export type Salon = typeof salons.$inferSelect;
 export type InsertSalon = z.infer<typeof insertSalonSchema>;
 export type Service = typeof services.$inferSelect;
 export type InsertService = z.infer<typeof insertServiceSchema>;
-export type Staff = typeof staff.$inferSelect;
-export type InsertStaff = z.infer<typeof insertStaffSchema>;
 export type WorkingHours = typeof workingHours.$inferSelect;
 export type InsertWorkingHours = z.infer<typeof insertWorkingHoursSchema>;
 export type TimeSlot = typeof timeSlots.$inferSelect;
@@ -397,10 +421,12 @@ export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
-export type PlatformStats = typeof platformStats.$inferSelect;
+export type Staff = typeof staff.$inferSelect;
+export type InsertStaff = z.infer<typeof insertStaffSchema>;
 export type Wallet = typeof wallets.$inferSelect;
 export type InsertWallet = z.infer<typeof insertWalletSchema>;
 export type WalletTransaction = typeof walletTransactions.$inferSelect;
 export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
 export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = z.infer<typeof insertReferralSchema>;
+export type PlatformStats = typeof platformStats.$inferSelect;
