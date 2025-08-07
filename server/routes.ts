@@ -9,8 +9,10 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares } from "@shared/schema";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
+import { createRazorpayOrder, verifyRazorpayPayment } from "./payment";
+import { calculateRevenueShare } from "@shared/revenue";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -194,52 +196,335 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Create booking endpoint
-  app.post('/api/bookings', isAuthenticated, async (req: any, res) => {
+  // Create payment order for booking confirmation
+  app.post('/api/bookings/create-payment-order', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
-      const { salonId, serviceId, staffId, timeSlotId, date } = req.body;
+      const { salonId, serviceId, timeSlotId, date, staffId } = req.body;
       
-      // Get service details for pricing
+      // Validate required fields
+      if (!salonId || !serviceId || !timeSlotId || !date) {
+        return res.status(400).json({ 
+          message: "Missing required fields: salonId, serviceId, timeSlotId, and date are required" 
+        });
+      }
+      
+      // Get salon confirmation amount
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+        
+      if (!salon) {
+        return res.status(400).json({ message: "Salon not found" });
+      }
+      
+      // Get service details for receipt
       const [service] = await db.select()
         .from(services)
         .where(eq(services.id, serviceId));
-      
+        
       if (!service) {
-        return res.status(404).json({ message: "Service not found" });
+        return res.status(400).json({ message: "Service not found" });
       }
       
-      // Get time slot details
+      // Check if time slot is available
       const [timeSlot] = await db.select()
         .from(timeSlots)
         .where(eq(timeSlots.id, timeSlotId));
-      
+        
       if (!timeSlot || !timeSlot.isAvailable) {
         return res.status(400).json({ message: "Time slot not available" });
       }
       
-      // Create booking
+      // Check if slot is already booked for this date
+      const [existingBooking] = await db.select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.timeSlotId, timeSlotId),
+            eq(bookings.date, date)
+          )
+        );
+        
+      if (existingBooking) {
+        return res.status(400).json({ message: "Time slot is already booked" });
+      }
+      
+      // Create Razorpay order for confirmation amount
+      const order = await createRazorpayOrder({
+        amount: salon.confirmationAmount || 10, // Default ₹10 if not set
+        receipt: `booking_${Date.now()}`,
+        notes: {
+          salonId,
+          serviceId,
+          timeSlotId,
+          date,
+          staffId: staffId || null,
+          customerId: userId,
+          salonName: salon.name,
+          serviceName: service.name,
+          servicePrice: service.price
+        }
+      });
+      
+      res.json({
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        confirmationAmount: salon.confirmationAmount || 10,
+        servicePrice: service.price,
+        salonName: salon.name,
+        serviceName: service.name
+      });
+    } catch (error) {
+      console.error("Error creating payment order:", error);
+      res.status(500).json({ 
+        message: "Failed to create payment order", 
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Verify payment and create booking
+  app.post('/api/bookings/verify-payment', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        salonId,
+        serviceId,
+        timeSlotId,
+        date,
+        staffId,
+        notes
+      } = req.body;
+      
+      // Verify payment signature
+      const isValidPayment = verifyRazorpayPayment(
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature
+      );
+      
+      if (!isValidPayment) {
+        return res.status(400).json({ message: "Invalid payment signature" });
+      }
+      
+      // Get service and time slot details
+      const [service] = await db.select()
+        .from(services)
+        .where(eq(services.id, serviceId));
+        
+      const [timeSlot] = await db.select()
+        .from(timeSlots)
+        .where(eq(timeSlots.id, timeSlotId));
+      
+      if (!service || !timeSlot) {
+        return res.status(400).json({ message: "Service or time slot not found" });
+      }
+      
+      // Check if slot is still available
+      const [existingBooking] = await db.select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.timeSlotId, timeSlotId),
+            eq(bookings.date, date)
+          )
+        );
+        
+      if (existingBooking) {
+        return res.status(400).json({ message: "Time slot is no longer available" });
+      }
+      
+      // Get salon confirmation amount for revenue calculation
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+      
+      const confirmationAmount = salon?.confirmationAmount || 10;
+      
+      // Create booking after successful payment
       const [booking] = await db.insert(bookings).values({
         customerId: userId,
         salonId,
         serviceId,
-        staffId,
+        staffId: staffId || null,
         timeSlotId,
         date,
         startTime: timeSlot.startTime,
         endTime: timeSlot.endTime,
         totalAmount: service.price,
-        status: 'pending'
+        status: 'confirmed',
+        paymentId: razorpay_payment_id,
+        paymentStatus: 'completed'
       }).returning();
       
-      // Note: We don't need to update the timeSlots table anymore
-      // Availability is now calculated dynamically based on bookings
-      // The getAvailableTimeSlots function will exclude this slot
+      // Calculate and record revenue share
+      const revenueShare = calculateRevenueShare(confirmationAmount);
+      await db.insert(revenueShares).values({
+        bookingId: booking.id,
+        confirmationAmount,
+        platformShare: revenueShare.platformShare,
+        salonShare: revenueShare.salonShare,
+        transferStatus: 'pending'
+      });
       
-      res.json(booking);
+      console.log("Created booking after payment:", booking);
+      res.json({ 
+        success: true, 
+        booking,
+        message: "Booking confirmed! You've paid the confirmation amount. Pay the remaining service cost at the salon."
+      });
     } catch (error) {
-      console.error("Error creating booking:", error);
-      res.status(500).json({ message: "Failed to create booking" });
+      console.error("Error verifying payment and creating booking:", error);
+      res.status(500).json({ 
+        message: "Failed to verify payment and create booking", 
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
+  });
+
+  // Get salon owner account details
+  app.get('/api/owner/account', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      // Get salon owned by this user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Get account details
+      const [account] = await db.select()
+        .from(salonOwnerAccounts)
+        .where(eq(salonOwnerAccounts.salonId, salon.id));
+      
+      res.json(account || null);
+    } catch (error) {
+      console.error("Error fetching account details:", error);
+      res.status(500).json({ message: "Failed to fetch account details" });
+    }
+  });
+
+  // Create or update salon owner account details
+  app.post('/api/owner/account', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const accountData = req.body;
+      
+      // Validate required fields
+      if (!accountData.bankName || !accountData.accountHolderName || !accountData.accountNumber || !accountData.ifscCode) {
+        return res.status(400).json({ 
+          message: "Missing required fields: bankName, accountHolderName, accountNumber, and ifscCode are required" 
+        });
+      }
+      
+      // Get salon owned by this user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Check if account already exists
+      const [existingAccount] = await db.select()
+        .from(salonOwnerAccounts)
+        .where(eq(salonOwnerAccounts.salonId, salon.id));
+      
+      let account;
+      if (existingAccount) {
+        // Update existing account
+        [account] = await db.update(salonOwnerAccounts)
+          .set({
+            bankName: accountData.bankName,
+            accountHolderName: accountData.accountHolderName,
+            accountNumber: accountData.accountNumber,
+            ifscCode: accountData.ifscCode,
+            branch: accountData.branch || null,
+            upiId: accountData.upiId || null,
+            isVerified: false, // Reset verification on update
+            updatedAt: new Date()
+          })
+          .where(eq(salonOwnerAccounts.salonId, salon.id))
+          .returning();
+      } else {
+        // Create new account
+        [account] = await db.insert(salonOwnerAccounts).values({
+          salonId: salon.id,
+          bankName: accountData.bankName,
+          accountHolderName: accountData.accountHolderName,
+          accountNumber: accountData.accountNumber,
+          ifscCode: accountData.ifscCode,
+          branch: accountData.branch || null,
+          upiId: accountData.upiId || null,
+          isVerified: false
+        }).returning();
+      }
+      
+      res.json(account);
+    } catch (error) {
+      console.error("Error saving account details:", error);
+      res.status(500).json({ 
+        message: "Failed to save account details",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get revenue summary for salon owner
+  app.get('/api/owner/revenue', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      // Get salon owned by this user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Get revenue shares for bookings at this salon
+      const revenueData = await db.select({
+        totalEarnings: sql`COALESCE(SUM(${revenueShares.salonShare}), 0)`,
+        platformCommission: sql`COALESCE(SUM(${revenueShares.platformShare}), 0)`,
+        totalBookings: sql`COUNT(*)`,
+        pendingTransfers: sql`COALESCE(SUM(CASE WHEN ${revenueShares.transferStatus} = 'pending' THEN ${revenueShares.salonShare} ELSE 0 END), 0)`,
+        completedTransfers: sql`COALESCE(SUM(CASE WHEN ${revenueShares.transferStatus} = 'completed' THEN ${revenueShares.salonShare} ELSE 0 END), 0)`
+      })
+      .from(revenueShares)
+      .innerJoin(bookings, eq(revenueShares.bookingId, bookings.id))
+      .where(eq(bookings.salonId, salon.id));
+      
+      res.json(revenueData[0] || {
+        totalEarnings: "0",
+        platformCommission: "0", 
+        totalBookings: "0",
+        pendingTransfers: "0",
+        completedTransfers: "0"
+      });
+    } catch (error) {
+      console.error("Error fetching revenue data:", error);
+      res.status(500).json({ message: "Failed to fetch revenue data" });
+    }
+  });
+
+  // Legacy booking endpoint (now redirects to payment flow)
+  app.post('/api/bookings', isAuthenticated, async (req: any, res) => {
+    return res.status(400).json({
+      message: "Direct booking not allowed. Please use payment flow: /api/bookings/create-payment-order then /api/bookings/verify-payment"
+    });
   });
 
   // Owner-specific endpoints

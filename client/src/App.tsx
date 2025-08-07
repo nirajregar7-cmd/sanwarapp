@@ -14,6 +14,7 @@ import SalonDetail from "@/pages/customer/salon-detail";
 import CustomerBookings from "@/pages/customer/bookings";
 import OwnerDashboard from "@/pages/owner/dashboard";
 import TimeSlots from "@/pages/owner/time-slots";
+import AccountDetails from "@/pages/owner/account-details";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -85,6 +86,11 @@ function Router() {
           <Route path="/owner/time-slots">
             <Layout>
               <TimeSlots />
+            </Layout>
+          </Route>
+          <Route path="/owner/account-details">
+            <Layout>
+              <AccountDetails />
             </Layout>
           </Route>
         </>

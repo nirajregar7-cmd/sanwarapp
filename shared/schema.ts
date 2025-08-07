@@ -166,6 +166,34 @@ export const platformStats = pgTable("platform_stats", {
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
+// Salon Owner Account Details for money transfers
+export const salonOwnerAccounts = pgTable("salon_owner_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull().unique(),
+  bankName: varchar("bank_name").notNull(),
+  accountHolderName: varchar("account_holder_name").notNull(),
+  accountNumber: varchar("account_number").notNull(),
+  ifscCode: varchar("ifsc_code").notNull(),
+  branch: varchar("branch"),
+  upiId: varchar("upi_id"),
+  isVerified: boolean("is_verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Revenue tracking for each booking
+export const revenueShares = pgTable("revenue_shares", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingId: varchar("booking_id").references(() => bookings.id, { onDelete: "cascade" }).notNull(),
+  confirmationAmount: decimal("confirmation_amount", { precision: 10, scale: 2 }).notNull(),
+  platformShare: decimal("platform_share", { precision: 10, scale: 2 }).notNull(), // 45%
+  salonShare: decimal("salon_share", { precision: 10, scale: 2 }).notNull(), // 55%
+  transferStatus: varchar("transfer_status", { enum: ["pending", "completed", "failed"] }).default("pending"),
+  transferDate: timestamp("transfer_date"),
+  transferReference: varchar("transfer_reference"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Wallets table for customer credits/referrals
 export const wallets = pgTable("wallets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -221,6 +249,21 @@ export const salonsRelations = relations(salons, ({ one, many }) => ({
   bookings: many(bookings),
   reviews: many(reviews),
   gallery: many(salonGallery),
+  account: one(salonOwnerAccounts),
+}));
+
+export const salonOwnerAccountsRelations = relations(salonOwnerAccounts, ({ one }) => ({
+  salon: one(salons, {
+    fields: [salonOwnerAccounts.salonId],
+    references: [salons.id],
+  }),
+}));
+
+export const revenueSharesRelations = relations(revenueShares, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [revenueShares.bookingId],
+    references: [bookings.id],
+  }),
 }));
 
 export const servicesRelations = relations(services, ({ one, many }) => ({
@@ -429,6 +472,9 @@ export type InsertWallet = z.infer<typeof insertWalletSchema>;
 export type WalletTransaction = typeof walletTransactions.$inferSelect;
 export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
 export type Referral = typeof referrals.$inferSelect;
+export type SalonOwnerAccount = typeof salonOwnerAccounts.$inferSelect;
+export type InsertSalonOwnerAccount = typeof salonOwnerAccounts.$inferInsert;
+export type RevenueShare = typeof revenueShares.$inferSelect;
 export type InsertReferral = z.infer<typeof insertReferralSchema>;
 export type SalonGallery = typeof salonGallery.$inferSelect;
 export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;

@@ -13,8 +13,10 @@ import { toast } from "@/hooks/use-toast";
 import { 
   Store, Users, Calendar, IndianRupee, Clock, Star, Plus, 
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
-  BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload
+  BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
+  CreditCard
 } from "lucide-react";
+import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from '@uppy/core';
 import { useState } from "react";
@@ -502,7 +504,7 @@ export default function OwnerDashboard() {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <Button 
                       variant="outline" 
                       className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px]"
@@ -536,6 +538,18 @@ export default function OwnerDashboard() {
                         <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Add and organize your salon team</p>
                       </div>
                     </Button>
+                    <Link href="/owner/account-details">
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px] w-full"
+                      >
+                        <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mb-2" />
+                        <div className="text-center">
+                          <p className="font-medium text-sm sm:text-base">Account Details</p>
+                          <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Setup bank account for payment transfers</p>
+                        </div>
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
