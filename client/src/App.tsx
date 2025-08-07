@@ -12,6 +12,7 @@ import CustomerHome from "@/pages/customer/home";
 import SalonDetail from "@/pages/customer/salon-detail";
 import CustomerBookings from "@/pages/customer/bookings";
 import OwnerDashboard from "@/pages/owner/dashboard";
+import TimeSlots from "@/pages/owner/time-slots";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -39,6 +40,11 @@ function Router() {
       <Route path="/owner">
         <Layout>
           <OwnerDashboard />
+        </Layout>
+      </Route>
+      <Route path="/owner/time-slots">
+        <Layout>
+          <TimeSlots />
         </Layout>
       </Route>
       <Route>

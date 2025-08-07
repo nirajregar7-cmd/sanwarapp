@@ -353,6 +353,50 @@ export default function OwnerDashboard() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center justify-center p-6 h-auto"
+                      onClick={() => window.location.href = '/owner/time-slots'}
+                    >
+                      <Clock className="h-8 w-8 text-indigo-600 mb-2" />
+                      <div className="text-center">
+                        <p className="font-medium">Manage Time Slots</p>
+                        <p className="text-sm text-gray-600">Create and organize your salon's booking slots</p>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center justify-center p-6 h-auto"
+                      onClick={() => setActiveTab('services')}
+                    >
+                      <Scissors className="h-8 w-8 text-pink-600 mb-2" />
+                      <div className="text-center">
+                        <p className="font-medium">Manage Services</p>
+                        <p className="text-sm text-gray-600">Add or edit your salon's services and pricing</p>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center justify-center p-6 h-auto"
+                      onClick={() => setActiveTab('staff')}
+                    >
+                      <UserPlus className="h-8 w-8 text-cyan-600 mb-2" />
+                      <div className="text-center">
+                        <p className="font-medium">Manage Staff</p>
+                        <p className="text-sm text-gray-600">Add and organize your salon team</p>
+                      </div>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card>

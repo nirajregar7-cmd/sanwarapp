@@ -746,6 +746,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Time slot management routes (for shopkeepers)
+  app.post("/api/salons/:salonId/time-slots", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage time slots for this salon" });
+      }
+
+      const { date, startTime, endTime } = req.body;
+      
+      if (!date || !startTime || !endTime) {
+        return res.status(400).json({ message: "Date, start time, and end time are required" });
+      }
+
+      const timeSlot = await storage.createTimeSlot({
+        salonId: req.params.salonId,
+        date,
+        startTime,
+        endTime,
+        isAvailable: true
+      });
+
+      res.json(timeSlot);
+    } catch (error) {
+      console.error("Error creating time slot:", error);
+      res.status(500).json({ message: "Failed to create time slot" });
+    }
+  });
+
+  app.post("/api/salons/:salonId/time-slots/bulk", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage time slots for this salon" });
+      }
+
+      const { startDate, endDate, startTime, endTime, duration } = req.body;
+      
+      if (!startDate || !endDate || !startTime || !endTime || !duration) {
+        return res.status(400).json({ message: "All fields are required for bulk generation" });
+      }
+
+      const slotsCreated = [];
+      const durationMinutes = parseInt(duration);
+      
+      // Generate dates between startDate and endDate
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+        // Skip Sundays (0) unless specifically configured
+        if (date.getDay() === 0) continue;
+        
+        const dateString = date.toISOString().split('T')[0];
+        
+        // Generate time slots for this date
+        const [startHour, startMin] = startTime.split(':').map(Number);
+        const [endHour, endMin] = endTime.split(':').map(Number);
+        
+        let currentTime = new Date();
+        currentTime.setHours(startHour, startMin, 0, 0);
+        
+        const dayEndTime = new Date();
+        dayEndTime.setHours(endHour, endMin, 0, 0);
+        
+        while (currentTime < dayEndTime) {
+          const slotStartTime = currentTime.toTimeString().substring(0, 5);
+          
+          // Calculate end time
+          const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
+          const slotEndTimeString = slotEndTime.toTimeString().substring(0, 5);
+          
+          // Create the time slot
+          const timeSlot = await storage.createTimeSlot({
+            salonId: req.params.salonId,
+            date: dateString,
+            startTime: slotStartTime,
+            endTime: slotEndTimeString,
+            isAvailable: true
+          });
+          
+          slotsCreated.push(timeSlot);
+          
+          // Move to next slot
+          currentTime.setTime(currentTime.getTime() + durationMinutes * 60000);
+        }
+      }
+
+      res.json({ 
+        message: `Created ${slotsCreated.length} time slots`,
+        slots: slotsCreated 
+      });
+    } catch (error) {
+      console.error("Error creating bulk time slots:", error);
+      res.status(500).json({ message: "Failed to create bulk time slots" });
+    }
+  });
+
+  app.delete("/api/time-slots/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      // Get the time slot to check ownership
+      const timeSlot = await db.select().from(timeSlots).where(eq(timeSlots.id, req.params.id)).limit(1);
+      if (!timeSlot.length) {
+        return res.status(404).json({ message: "Time slot not found" });
+      }
+      
+      const salon = await storage.getSalonById(timeSlot[0].salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this time slot" });
+      }
+
+      // Check if the time slot is booked
+      const bookings = await db.select().from(bookings)
+        .where(and(
+          eq(bookings.timeSlotId, req.params.id),
+          or(eq(bookings.status, "confirmed"), eq(bookings.status, "completed"))
+        ));
+      
+      if (bookings.length > 0) {
+        return res.status(400).json({ message: "Cannot delete a time slot that has confirmed bookings" });
+      }
+
+      await db.delete(timeSlots).where(eq(timeSlots.id, req.params.id));
+      
+      res.json({ message: "Time slot deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting time slot:", error);
+      res.status(500).json({ message: "Failed to delete time slot" });
+    }
+  });
+
   // Booking routes
   app.post("/api/bookings", isAuthenticated, async (req: any, res) => {
     try {
