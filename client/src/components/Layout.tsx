@@ -52,8 +52,8 @@ export default function Layout({ children }: LayoutProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      userType === "customer" ? "customer-active" : ""
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all text-gray-700 hover:text-gray-900 ${
+                      userType === "customer" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-200"
                     }`}
                     onClick={() => handleUserTypeSwitch("customer")}
                   >
@@ -63,8 +63,8 @@ export default function Layout({ children }: LayoutProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      userType === "salon_owner" ? "owner-active" : ""
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all text-gray-700 hover:text-gray-900 ${
+                      userType === "salon_owner" ? "bg-green-100 text-green-700" : "hover:bg-gray-200"
                     }`}
                     onClick={() => handleUserTypeSwitch("salon_owner")}
                   >
@@ -76,12 +76,12 @@ export default function Layout({ children }: LayoutProps) {
                 {/* Profile Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center space-x-2">
+                    <Button variant="ghost" className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <User className="h-4 w-4 text-primary" />
                       </div>
-                      <span className="hidden sm:block">Profile</span>
-                      <ChevronDown className="h-4 w-4" />
+                      <span className="hidden sm:block text-gray-700">Profile</span>
+                      <ChevronDown className="h-4 w-4 text-gray-500" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -104,7 +104,7 @@ export default function Layout({ children }: LayoutProps) {
             )}
 
             {!isAuthenticated && (
-              <Button asChild>
+              <Button asChild className="bg-blue-600 text-white hover:bg-blue-700">
                 <a href="/api/login">Login</a>
               </Button>
             )}
