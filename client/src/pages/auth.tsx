@@ -101,17 +101,17 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome to Sanwar</h1>
-          <p className="text-white/90">Your smart salon booking platform</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-sm sm:max-w-md">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome to Sanwar</h1>
+          <p className="text-sm sm:text-base text-white/90">Your smart salon booking platform</p>
         </div>
 
         <Card className="border-0 shadow-2xl">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl">Get Started</CardTitle>
-            <CardDescription>
+          <CardHeader className="space-y-1 text-center pb-4 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">Get Started</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Sign in to your account or create a new one
             </CardDescription>
           </CardHeader>

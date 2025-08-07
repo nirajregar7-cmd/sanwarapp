@@ -405,8 +405,8 @@ export default function OwnerDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
+          <div className="flex flex-col space-y-3 sm:space-y-4 lg:space-y-0 lg:flex-row lg:justify-between lg:items-center">
             <div className="min-w-0 flex-1">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
                 {salon ? salon.name : "Setup Your Salon"}
@@ -419,10 +419,11 @@ export default function OwnerDashboard() {
               <Button 
                 onClick={() => setSalonDialogOpen(true)} 
                 size="lg"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto lg:w-auto"
               >
                 <Store className="h-4 w-4 mr-2" />
-                Create Salon Profile
+                <span className="hidden xs:inline">Create Salon Profile</span>
+                <span className="xs:hidden">Create Profile</span>
               </Button>
             )}
           </div>

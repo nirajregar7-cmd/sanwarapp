@@ -108,18 +108,19 @@ export default function AccountDetails() {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <div className="flex items-center gap-4 mb-6">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6">
+      <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 xs:gap-4 mb-6">
         <Link href="/owner/dashboard">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="w-fit">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            <span className="hidden xs:inline">Back to Dashboard</span>
+            <span className="xs:hidden">Back</span>
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold">Account Details</h1>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Account Details</h1>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         {/* Revenue Overview */}
         <div className="md:col-span-2">
           <Card>

@@ -200,12 +200,12 @@ export default function SalonDetail() {
   if (salonLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-300 rounded w-1/4"></div>
-            <div className="h-64 bg-gray-300 rounded"></div>
-            <div className="h-6 bg-gray-300 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-8">
+          <div className="animate-pulse space-y-3 sm:space-y-4">
+            <div className="h-6 sm:h-8 bg-gray-300 rounded w-1/4"></div>
+            <div className="h-48 sm:h-64 bg-gray-300 rounded"></div>
+            <div className="h-4 sm:h-6 bg-gray-300 rounded w-3/4"></div>
+            <div className="h-3 sm:h-4 bg-gray-300 rounded w-1/2"></div>
           </div>
         </div>
       </div>
@@ -253,8 +253,8 @@ export default function SalonDetail() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 lg:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Salon Header */}

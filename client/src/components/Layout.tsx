@@ -172,7 +172,7 @@ export default function Layout({ children }: LayoutProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2"
+                className="p-2 h-10 w-10 flex items-center justify-center"
               >
                 {mobileMenuOpen ? (
                   <X className="h-5 w-5" />
@@ -191,8 +191,8 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Mobile Menu */}
           {isAuthenticated && isMobile && mobileMenuOpen && (
-            <div className="border-t border-gray-200 py-4">
-              <div className="space-y-4">
+            <div className="border-t border-gray-200 py-3 bg-white">
+              <div className="space-y-3">
                 {/* Navigation Links Mobile */}
                 <div className="space-y-2">
                   <Link 

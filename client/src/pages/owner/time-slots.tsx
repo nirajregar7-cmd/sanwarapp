@@ -197,10 +197,10 @@ export default function TimeSlots() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Time Slot Management</h1>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">Time Slot Management</h1>
             <p className="text-sm sm:text-base text-gray-600">Manage your salon's available time slots</p>
           </div>
           <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
