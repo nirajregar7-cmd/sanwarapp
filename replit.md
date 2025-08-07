@@ -28,6 +28,7 @@ Preferred communication style: Simple, everyday language.
 - Confirmation amount setting for serious bookings (₹10, ₹20, etc.) ✓
 - Booking management dashboard with customer info and payment status ✓
 - Manual walk-in customer addition → PENDING
+- Revenue tracking and account details management ✓
 - Ratings and reviews management with reply capability ✓
 - Analytics dashboard showing bookings, peak hours, top services, income estimates ✓
 
@@ -41,10 +42,11 @@ Preferred communication style: Simple, everyday language.
 - Rating and review system with photo uploads ✓
 - Referral program with wallet credits → PENDING
 
-### Payment Integration
-- **Confirmation Amount Payment Flow**: Customers pay only the small booking confirmation amount (set by salon owners) upfront via Razorpay to secure their slot
-- **Full Service Payment**: Remaining service amount paid at salon after service completion
-- Razorpay integration for confirmation amounts → PENDING
+### Payment Integration ✓ COMPLETED
+- **Confirmation Amount Payment Flow**: Customers pay only the small booking confirmation amount (set by salon owners) upfront via Razorpay to secure their slot ✓
+- **Full Service Payment**: Remaining service amount paid at salon after service completion ✓
+- Razorpay integration for confirmation amounts with proper amount handling ✓
+- Revenue sharing system: 45% platform, 55% salon owner with automatic calculation ✓
 - Digital receipts and invoices → PENDING  
 - Wallet system for referral credits ✓
 
