@@ -196,30 +196,32 @@ export default function TimeSlots() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Time Slot Management</h1>
-          <p className="text-gray-600">Manage your salon's available time slots</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2">
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold">Time Slot Management</h1>
+            <p className="text-sm sm:text-base text-gray-600">Manage your salon's available time slots</p>
+          </div>
+          <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
           <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full xs:w-auto flex-1 sm:flex-none">
                 <CalendarIcon className="h-4 w-4 mr-2" />
-                Bulk Generate
+                <span className="hidden xs:inline">Bulk Generate</span>
+                <span className="xs:hidden">Bulk</span>
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[500px] max-w-[95vw] mx-auto">
               <DialogHeader>
-                <DialogTitle>Bulk Generate Time Slots</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-lg sm:text-xl">Bulk Generate Time Slots</DialogTitle>
+                <DialogDescription className="text-sm">
                   Generate time slots automatically for a date range
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="start-date">Start Date</Label>
                     <Input
@@ -240,11 +242,11 @@ export default function TimeSlots() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="start-time">Start Time</Label>
+                    <Label htmlFor="start-time" className="text-sm">Start Time</Label>
                     <Select value={bulkConfig.startTime} onValueChange={(value) => setBulkConfig({...bulkConfig, startTime: value})}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -257,9 +259,9 @@ export default function TimeSlots() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="end-time">End Time</Label>
+                    <Label htmlFor="end-time" className="text-sm">End Time</Label>
                     <Select value={bulkConfig.endTime} onValueChange={(value) => setBulkConfig({...bulkConfig, endTime: value})}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -274,9 +276,9 @@ export default function TimeSlots() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="duration">Slot Duration (minutes)</Label>
+                  <Label htmlFor="duration" className="text-sm">Slot Duration (minutes)</Label>
                   <Select value={bulkConfig.duration} onValueChange={(value) => setBulkConfig({...bulkConfig, duration: value})}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -301,25 +303,26 @@ export default function TimeSlots() {
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
+              <Button className="w-full xs:w-auto flex-1 sm:flex-none">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Time Slot
+                <span className="hidden xs:inline">Add Time Slot</span>
+                <span className="xs:hidden">Add</span>
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[425px] max-w-[95vw] mx-auto">
               <DialogHeader>
-                <DialogTitle>Create New Time Slot</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-lg sm:text-xl">Create New Time Slot</DialogTitle>
+                <DialogDescription className="text-sm">
                   Add a new time slot for {format(selectedDate, "MMMM dd, yyyy")}
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="start-time">Start Time</Label>
+                    <Label htmlFor="start-time" className="text-sm">Start Time</Label>
                     <Select value={newSlot.startTime} onValueChange={(value) => setNewSlot({...newSlot, startTime: value})}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10">
                         <SelectValue placeholder="Select start time" />
                       </SelectTrigger>
                       <SelectContent>
@@ -332,9 +335,9 @@ export default function TimeSlots() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="end-time">End Time</Label>
+                    <Label htmlFor="end-time" className="text-sm">End Time</Label>
                     <Select value={newSlot.endTime} onValueChange={(value) => setNewSlot({...newSlot, endTime: value})}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10">
                         <SelectValue placeholder="Select end time" />
                       </SelectTrigger>
                       <SelectContent>
@@ -361,47 +364,48 @@ export default function TimeSlots() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
         {/* Calendar */}
         <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-lg">Select Date</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">Select Date</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
               disabled={(date) => date < new Date()}
-              className="rounded-md border-0"
+              className="rounded-md border-0 w-full [&_.rdp-months]:w-full [&_.rdp-table]:w-full [&_.rdp-cell]:w-8 [&_.rdp-cell]:h-8 [&_.rdp-cell]:text-xs sm:[&_.rdp-cell]:w-10 sm:[&_.rdp-cell]:h-10 sm:[&_.rdp-cell]:text-sm"
             />
           </CardContent>
         </Card>
 
         {/* Time Slots */}
         <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="h-5 w-5 mr-2" />
-              Time Slots for {format(selectedDate, "MMMM dd, yyyy")}
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-base sm:text-lg">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span className="hidden sm:inline">Time Slots for {format(selectedDate, "MMMM dd, yyyy")}</span>
+              <span className="sm:hidden">Slots - {format(selectedDate, "MMM dd")}</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                  <div key={i} className="h-16 sm:h-20 bg-gray-200 rounded animate-pulse"></div>
                 ))}
               </div>
             ) : timeSlots.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {timeSlots.map((slot: TimeSlot) => (
                   <div
                     key={slot.id}
-                    className="border rounded-lg p-3 flex flex-col justify-between h-20"
+                    className="border rounded-lg p-3 flex flex-col justify-between h-16 sm:h-20 hover:shadow-sm transition-shadow"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">
+                      <span className="font-medium text-xs sm:text-sm">
                         {slot.startTime} - {slot.endTime}
                       </span>
                       <Button
@@ -409,9 +413,9 @@ export default function TimeSlots() {
                         size="sm"
                         onClick={() => deleteSlotMutation.mutate(slot.id)}
                         disabled={deleteSlotMutation.isPending}
-                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-red-500 hover:text-red-700"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </Button>
                     </div>
                     <Badge 
@@ -424,11 +428,11 @@ export default function TimeSlots() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Clock className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No time slots for this date</h3>
-                <p className="text-gray-600 mb-4">Create your first time slot to start accepting bookings</p>
-                <Button onClick={() => setDialogOpen(true)}>
+              <div className="text-center py-8 sm:py-12">
+                <Clock className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No time slots for this date</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-4 px-4">Create your first time slot to start accepting bookings</p>
+                <Button onClick={() => setDialogOpen(true)} size="sm" className="sm:size-default">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Time Slot
                 </Button>
@@ -436,6 +440,7 @@ export default function TimeSlots() {
             )}
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );
