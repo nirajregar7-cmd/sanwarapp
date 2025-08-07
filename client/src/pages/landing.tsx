@@ -86,18 +86,24 @@ export default function Landing() {
           </div>
 
           <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-            <Button size="lg" className="bg-white hover:bg-gray-100 text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold shadow-lg" style={{color: 'hsl(248.0645, 92.8571%, 61.1765%)'}} asChild>
-              <Link href="/customer">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Book a Salon Now
-              </Link>
+            <Button 
+              size="lg" 
+              className="bg-white hover:bg-gray-100 text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold shadow-lg" 
+              style={{color: 'hsl(248.0645, 92.8571%, 61.1765%)'}} 
+              onClick={() => window.location.href = '/api/login'}
+            >
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              Book a Salon Now
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold" asChild>
-              <Link href="/owner">
-                <Scissors className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                <span className="hidden xs:inline">Join as a Shopkeeper</span>
-                <span className="xs:hidden">Join as Owner</span>
-              </Link>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white hover:text-primary text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold" 
+              onClick={() => window.location.href = '/api/login'}
+            >
+              <Scissors className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span className="hidden xs:inline">Join as a Shopkeeper</span>
+              <span className="xs:hidden">Join as Owner</span>
             </Button>
           </div>
         </div>
@@ -342,15 +348,21 @@ export default function Landing() {
             Join thousands of satisfied customers and partner salons on Sanwar
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white hover:bg-gray-100 text-lg px-8 py-4 rounded-xl font-semibold" style={{color: 'hsl(248.0645, 92.8571%, 61.1765%)'}} asChild>
-              <Link href="/customer">
-                Start Booking Now
-              </Link>
+            <Button 
+              size="lg" 
+              className="bg-white hover:bg-gray-100 text-lg px-8 py-4 rounded-xl font-semibold" 
+              style={{color: 'hsl(248.0645, 92.8571%, 61.1765%)'}} 
+              onClick={() => window.location.href = '/api/login'}
+            >
+              Start Booking Now
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-4 rounded-xl font-semibold" asChild>
-              <Link href="/owner">
-                Partner With Us
-              </Link>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-4 rounded-xl font-semibold" 
+              onClick={() => window.location.href = '/api/login'}
+            >
+              Partner With Us
             </Button>
           </div>
         </div>

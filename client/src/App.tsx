@@ -8,6 +8,7 @@ import Layout from "@/components/Layout";
 
 // Pages
 import Landing from "@/pages/landing";
+import UserTypeSelection from "@/pages/user-type-selection";
 import CustomerHome from "@/pages/customer/home";
 import SalonDetail from "@/pages/customer/salon-detail";
 import CustomerBookings from "@/pages/customer/bookings";
@@ -16,12 +17,40 @@ import TimeSlots from "@/pages/owner/time-slots";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
-      {/* Landing page without Layout (has its own footer design) */}
-      <Route path="/" component={Landing} />
+      {/* Landing page for non-authenticated users */}
+      {!user ? (
+        <Route path="/" component={Landing} />
+      ) : user.userType ? (
+        // Authenticated users with user type set
+        <Route path="/">
+          {user.userType === 'salon_owner' ? (
+            <Layout>
+              <OwnerDashboard />
+            </Layout>
+          ) : (
+            <Layout>
+              <CustomerHome />
+            </Layout>
+          )}
+        </Route>
+      ) : (
+        // Authenticated users without user type - show selection
+        <Route path="/" component={UserTypeSelection} />
+      )}
       
-      {/* Other pages with Layout */}
+      {/* Customer routes */}
       <Route path="/customer">
         <Layout>
           <CustomerHome />
@@ -37,6 +66,8 @@ function Router() {
           <CustomerBookings />
         </Layout>
       </Route>
+
+      {/* Owner routes */}
       <Route path="/owner">
         <Layout>
           <OwnerDashboard />
@@ -47,6 +78,9 @@ function Router() {
           <TimeSlots />
         </Layout>
       </Route>
+
+      {/* Fallback routes */}
+      <Route path="/landing" component={Landing} />
       <Route>
         <Layout>
           <NotFound />

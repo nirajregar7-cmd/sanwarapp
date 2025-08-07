@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Scissors, User, Store, Calendar, ChevronDown, Menu, X } from "lucide-react";
+import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,13 +19,11 @@ export default function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated } = useAuth();
   
-  // Auto-detect user type based on current route
+  // Auto-detect user type based on current route or authenticated user
   const isOwnerRoute = location.includes('/owner');
-  const userType = isOwnerRoute ? "salon_owner" : "customer";
-  
-  // Temporarily disable authentication for development
-  const isAuthenticated = location.includes('/customer') || location.includes('/owner') || location.includes('/bookings');
+  const userType = (user as any)?.userType || (isOwnerRoute ? "salon_owner" : "customer");
 
   const handleUserTypeSwitch = (type: "customer" | "salon_owner") => {
     // Navigate to the appropriate route

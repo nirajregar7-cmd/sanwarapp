@@ -37,6 +37,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/auth/set-user-type', async (req: any, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { userType } = req.body;
+      if (!userType || !["customer", "salon_owner"].includes(userType)) {
+        return res.status(400).json({ message: "Invalid user type" });
+      }
+
+      const updatedUser = await storage.updateUserType(userId, userType);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error setting user type:", error);
+      res.status(500).json({ message: "Failed to set user type" });
+    }
+  });
+
   // Platform statistics endpoint - real data only
   app.get('/api/platform/stats', async (req, res) => {
     try {
