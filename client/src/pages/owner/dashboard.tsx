@@ -339,11 +339,12 @@ export default function OwnerDashboard() {
 
   const handleGalleryUpload = async (): Promise<{ method: "PUT"; url: string }> => {
     try {
-      const response = await apiRequest('POST', '/api/objects/upload') as { uploadURL: string };
-      console.log("Upload URL response:", response);
+      const response = await apiRequest('POST', '/api/objects/upload');
+      const data = await response.json() as { uploadURL: string };
+      console.log("Upload URL response:", data);
       return {
         method: "PUT",
-        url: response.uploadURL,
+        url: data.uploadURL,
       };
     } catch (error) {
       console.error("Error getting upload URL:", error);
