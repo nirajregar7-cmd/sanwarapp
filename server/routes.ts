@@ -24,19 +24,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // For development, return null if no session exists
       if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json(null);
+        return res.json(null);
       }
       
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json(null);
+        return res.json(null);
       }
       
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
-      res.status(401).json(null);
+      res.json(null);
     }
   });
 
@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/notifications/settings/:userId', isAuthenticated, async (req: any, res) => {
     try {
       const { userId } = req.params;
-      const currentUserId = req.user?.claims?.sub;
+      const currentUserId = req.user?.id;
       
       // Users can only access their own notification settings
       if (userId !== currentUserId) {
@@ -228,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/notifications/settings', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const updateData = req.body;
       
       // Update or create notification settings
@@ -250,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Push subscription endpoints
   app.post('/api/notifications/subscribe', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { subscription } = req.body;
       const subscriptionData = JSON.parse(subscription);
       
@@ -274,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/notifications/history/:userId', isAuthenticated, async (req: any, res) => {
     try {
       const { userId } = req.params;
-      const currentUserId = req.user?.claims?.sub;
+      const currentUserId = req.user?.id;
       
       if (userId !== currentUserId) {
         return res.status(403).json({ message: "Access denied" });
@@ -297,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create payment order for booking confirmation
   app.post('/api/bookings/create-payment-order', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { salonId, serviceId, timeSlotId, date, staffId } = req.body;
       
       // Validate required fields
@@ -387,7 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Verify payment and create booking
   app.post('/api/bookings/verify-payment', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const {
         razorpay_order_id,
         razorpay_payment_id,
@@ -497,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get salon owner account details
   app.get('/api/owner/account', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       
       // Get salon owned by this user
       const [salon] = await db.select()
@@ -523,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create or update salon owner account details
   app.post('/api/owner/account', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const accountData = req.body;
       
       // Validate required fields
@@ -590,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get revenue summary for salon owner
   app.get('/api/owner/revenue', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       
       // Get salon owned by this user
       const [salon] = await db.select()
@@ -638,7 +638,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get owner's salon
   app.get('/api/owner/salon', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const [salon] = await db.select()
         .from(salons)
         .where(eq(salons.ownerId, userId));
@@ -657,7 +657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create salon
   app.post('/api/salons', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salonData = req.body;
       
       console.log("Creating salon for user:", userId, "with data:", salonData);
@@ -696,7 +696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update salon
   app.put('/api/salons/:salonId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { salonId } = req.params;
       const salonData = req.body;
       
@@ -724,7 +724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add service to salon
   app.post('/api/salons/:salonId/services', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { salonId } = req.params;
       const serviceData = req.body;
       
@@ -752,7 +752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update service
   app.put('/api/services/:serviceId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { serviceId } = req.params;
       const serviceData = req.body;
       
@@ -784,7 +784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add staff to salon
   app.post('/api/salons/:salonId/staff', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { salonId } = req.params;
       const staffData = req.body;
       
@@ -812,7 +812,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update staff
   app.put('/api/staff/:staffId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { staffId } = req.params;
       const staffData = req.body;
       
@@ -844,7 +844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get owner's bookings
   app.get('/api/owner/bookings', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       
       // Get bookings for the owner's salon
       const ownerBookings = await db.select()
@@ -863,7 +863,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Object storage routes
   app.get("/objects/:objectPath(*)", async (req: any, res) => {
     // Get user ID if authenticated, but don't require authentication
-    const userId = req.isAuthenticated && req.isAuthenticated() ? req.user?.claims?.sub : undefined;
+    const userId = req.isAuthenticated && req.isAuthenticated() ? req.user?.id : undefined;
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
@@ -887,7 +887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/objects/upload", isAuthenticated, async (req: any, res) => {
     try {
-      console.log("Getting upload URL for user:", req.user?.claims?.sub);
+      console.log("Getting upload URL for user:", req.user?.id);
       
       // Check if ObjectStorageService can be instantiated
       console.log("Creating ObjectStorageService...");
@@ -914,7 +914,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: "imageUrl is required" });
     }
 
-    const userId = req.user?.claims?.sub;
+    const userId = req.user?.id;
 
     try {
       const objectStorageService = new ObjectStorageService();
@@ -938,7 +938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Salon routes
   app.post("/api/salons", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -964,7 +964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/salons/my", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salons = await storage.getSalonsByOwner(userId);
       res.json(salons);
     } catch (error) {
@@ -988,7 +988,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/salons/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salon = await storage.getSalonById(req.params.id);
       
       if (!salon || salon.ownerId !== userId) {
@@ -1009,7 +1009,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salon = await storage.getSalonById(req.params.id);
       
       if (!salon || salon.ownerId !== userId) {
@@ -1036,7 +1036,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Service routes
   app.post("/api/salons/:salonId/services", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salon = await storage.getSalonById(req.params.salonId);
       
       if (!salon || salon.ownerId !== userId) {
@@ -1064,7 +1064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/services/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       // Note: In a real app, you'd verify ownership through the salon relationship
       const service = await storage.updateService(req.params.id, req.body);
       res.json(service);
@@ -1076,7 +1076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/services/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       // Note: In a real app, you'd verify ownership through the salon relationship
       await storage.deleteService(req.params.id);
       res.json({ message: "Service deleted successfully" });
@@ -1089,7 +1089,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Working hours routes
   app.post("/api/salons/:salonId/working-hours", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salon = await storage.getSalonById(req.params.salonId);
       
       if (!salon || salon.ownerId !== userId) {
@@ -1157,7 +1157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Time slot management routes (for shopkeepers)
   app.post("/api/salons/:salonId/time-slots", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salon = await storage.getSalonById(req.params.salonId);
       
       if (!salon || salon.ownerId !== userId) {
@@ -1187,7 +1187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/salons/:salonId/time-slots/bulk", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salon = await storage.getSalonById(req.params.salonId);
       
       if (!salon || salon.ownerId !== userId) {
@@ -1258,7 +1258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/time-slots/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       
       // Get the time slot to check ownership
       const timeSlot = await db.select().from(timeSlots).where(eq(timeSlots.id, req.params.id)).limit(1);
@@ -1294,7 +1294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clear all time slots for a salon (admin use)
   app.delete("/api/salons/:salonId/time-slots/clear", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salon = await storage.getSalonById(req.params.salonId);
       
       if (!salon || salon.ownerId !== userId) {
@@ -1324,7 +1324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Booking routes
   app.post("/api/bookings", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const bookingData = insertBookingSchema.parse({ ...req.body, customerId: userId });
       
       // Mark the time slot as unavailable
@@ -1340,7 +1340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/bookings/my", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const bookings = await storage.getBookingsByCustomer(userId);
       res.json(bookings);
     } catch (error) {
@@ -1351,7 +1351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/salons/:salonId/bookings", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const salon = await storage.getSalonById(req.params.salonId);
       
       if (!salon || salon.ownerId !== userId) {
@@ -1382,7 +1382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Gallery routes
   app.post("/api/salons/:salonId/gallery", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { salonId } = req.params;
       const { imageUrl, title, description, category } = req.body;
       
@@ -1439,7 +1439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/salons/:salonId/gallery/:imageId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { salonId, imageId } = req.params;
       const { title, description, category } = req.body;
       
@@ -1468,7 +1468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/salons/:salonId/gallery/:imageId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { salonId, imageId } = req.params;
       
       // Verify salon ownership
@@ -1488,7 +1488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Review routes
   app.post("/api/reviews", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const reviewData = insertReviewSchema.parse({ ...req.body, customerId: userId });
       const review = await storage.createReview(reviewData);
       res.json(review);
@@ -1511,7 +1511,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notification settings endpoints
   app.get('/api/notification-settings', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       
       const [settings] = await db.select()
         .from(notificationSettings)
@@ -1534,7 +1534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/notification-settings', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const settings = req.body;
       
       const [updatedSettings] = await db.update(notificationSettings)
@@ -1560,7 +1560,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Push subscription endpoints
   app.post('/api/push-subscriptions', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { endpoint, p256dhKey, authKey, userAgent } = req.body;
       
       // Check if subscription already exists
@@ -1594,7 +1594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/push-subscriptions', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { endpoint } = req.body;
       
       await db.update(pushSubscriptions)
@@ -1614,7 +1614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notification history endpoint
   app.get('/api/notification-history', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const limit = parseInt(req.query.limit as string) || 50;
       
       const notifications = await db.select()
