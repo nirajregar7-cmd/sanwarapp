@@ -15,14 +15,21 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
-  const [userType, setUserType] = useState<"customer" | "salon_owner">("customer");
+  
+  // Auto-detect user type based on current route
+  const isOwnerRoute = location.includes('/owner');
+  const userType = isOwnerRoute ? "salon_owner" : "customer";
   
   // Temporarily disable authentication for development
-  const isAuthenticated = location.includes('/customer') || location.includes('/owner');
+  const isAuthenticated = location.includes('/customer') || location.includes('/owner') || location.includes('/bookings');
 
   const handleUserTypeSwitch = (type: "customer" | "salon_owner") => {
-    setUserType(type);
-    // In a real app, you'd update user preferences here
+    // Navigate to the appropriate route
+    if (type === "salon_owner") {
+      window.location.href = "/owner";
+    } else {
+      window.location.href = "/customer";
+    }
   };
 
   return (
