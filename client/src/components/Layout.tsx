@@ -298,8 +298,8 @@ export default function Layout({ children }: LayoutProps) {
             <div>
               <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Contact</h3>
               <ul className="space-y-2 text-gray-300">
-                <li className="text-sm">support@sanwar.com</li>
-                <li className="text-sm">+91 98765 43210</li>
+                <li className="text-sm">nirajregar7@gmail.com</li>
+                <li className="text-sm">+91 95875 59061</li>
                 <li className="text-sm">Mumbai, India</li>
               </ul>
             </div>
