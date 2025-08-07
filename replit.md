@@ -110,9 +110,26 @@ The project uses Vite for fast development builds and hot module replacement. Th
 
 ### Backend Services  
 - **Express.js**: Web application framework
-- **Replit Runtime**: Hosting and deployment platform
+- **Replit Runtime**: Hosting and development platform
+- **Vercel Deployment**: Production hosting with serverless functions
 
 ### Development Tools
 - **Vite**: Fast build tool and development server
 - **TypeScript**: Type-safe JavaScript compilation
 - **esbuild**: Fast JavaScript bundler for production builds
+
+## Deployment Options
+
+### Vercel Deployment (Production Ready)
+The platform is configured for seamless deployment on Vercel with:
+- **Serverless Functions**: Express.js API runs as serverless functions
+- **Static Frontend**: React app serves as optimized static files
+- **Database Integration**: Works with any PostgreSQL database (Neon, Supabase, Railway)
+- **Environment Variables**: Secure configuration for production
+- **Custom Domains**: Support for custom domain configuration
+
+**Deployment Files:**
+- `vercel.json`: Vercel configuration
+- `api/index.ts`: Serverless function entry point
+- `.env.example`: Environment variables template
+- `VERCEL-QUICK-START.md`: Step-by-step deployment guide
