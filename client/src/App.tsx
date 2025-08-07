@@ -20,7 +20,7 @@ import AccountDetails from "@/pages/owner/account-details";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return (
@@ -36,7 +36,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       
       {/* Landing page for non-authenticated users */}
-      {!user ? (
+      {!user || !isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/salon/:salonId">
