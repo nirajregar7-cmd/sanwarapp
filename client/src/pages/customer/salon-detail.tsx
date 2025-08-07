@@ -93,15 +93,12 @@ export default function SalonDetail() {
       if (!isAuthenticated) {
         throw new Error("Please log in to book an appointment");
       }
-      return apiRequest(`/api/bookings`, {
-        method: "POST",
-        body: JSON.stringify({
-          salonId,
-          serviceId: data.serviceId,
-          staffId: data.staffId || null,
-          timeSlotId: data.timeSlotId,
-          date: data.date.toISOString().split('T')[0],
-        }),
+      return apiRequest(`/api/bookings`, "POST", {
+        salonId,
+        serviceId: data.serviceId,
+        staffId: data.staffId || null,
+        timeSlotId: data.timeSlotId,
+        date: data.date.toISOString().split('T')[0],
       });
     },
     onSuccess: () => {
@@ -232,17 +229,6 @@ export default function SalonDetail() {
                     {salon.description && (
                       <p className="text-gray-700 mb-4">{salon.description}</p>
                     )}
-                    
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 mr-1" />
-                        {salon.phone || "Contact via booking"}
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        Open Today
-                      </div>
-                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -379,7 +365,7 @@ export default function SalonDetail() {
                             <span className="ml-2 font-medium">Customer Review</span>
                           </div>
                           <span className="text-sm text-gray-500">
-                            {new Date(review.createdAt).toLocaleDateString()}
+                            {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "Recently"}
                           </span>
                         </div>
                         <p className="text-gray-700">{review.comment}</p>

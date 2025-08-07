@@ -236,6 +236,212 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Owner-specific endpoints
+
+  // Get owner's salon
+  app.get('/api/owner/salon', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      res.json(salon);
+    } catch (error) {
+      console.error("Error fetching owner salon:", error);
+      res.status(500).json({ message: "Failed to fetch salon" });
+    }
+  });
+
+  // Create salon
+  app.post('/api/salons', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const salonData = req.body;
+      
+      const [salon] = await db.insert(salons).values({
+        ...salonData,
+        ownerId: userId
+      }).returning();
+      
+      res.json(salon);
+    } catch (error) {
+      console.error("Error creating salon:", error);
+      res.status(500).json({ message: "Failed to create salon" });
+    }
+  });
+
+  // Update salon
+  app.put('/api/salons/:salonId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { salonId } = req.params;
+      const salonData = req.body;
+      
+      // Verify ownership
+      const [existingSalon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+      
+      if (!existingSalon || existingSalon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this salon" });
+      }
+      
+      const [updatedSalon] = await db.update(salons)
+        .set({ ...salonData, updatedAt: new Date() })
+        .where(eq(salons.id, salonId))
+        .returning();
+      
+      res.json(updatedSalon);
+    } catch (error) {
+      console.error("Error updating salon:", error);
+      res.status(500).json({ message: "Failed to update salon" });
+    }
+  });
+
+  // Add service to salon
+  app.post('/api/salons/:salonId/services', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { salonId } = req.params;
+      const serviceData = req.body;
+      
+      // Verify salon ownership
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to add services to this salon" });
+      }
+      
+      const [service] = await db.insert(services).values({
+        ...serviceData,
+        salonId
+      }).returning();
+      
+      res.json(service);
+    } catch (error) {
+      console.error("Error adding service:", error);
+      res.status(500).json({ message: "Failed to add service" });
+    }
+  });
+
+  // Update service
+  app.put('/api/services/:serviceId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { serviceId } = req.params;
+      const serviceData = req.body;
+      
+      // Verify ownership through salon
+      const [service] = await db.select({
+        service: services,
+        salon: salons
+      })
+        .from(services)
+        .innerJoin(salons, eq(services.salonId, salons.id))
+        .where(eq(services.id, serviceId));
+      
+      if (!service || service.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this service" });
+      }
+      
+      const [updatedService] = await db.update(services)
+        .set({ ...serviceData, updatedAt: new Date() })
+        .where(eq(services.id, serviceId))
+        .returning();
+      
+      res.json(updatedService);
+    } catch (error) {
+      console.error("Error updating service:", error);
+      res.status(500).json({ message: "Failed to update service" });
+    }
+  });
+
+  // Add staff to salon
+  app.post('/api/salons/:salonId/staff', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { salonId } = req.params;
+      const staffData = req.body;
+      
+      // Verify salon ownership
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to add staff to this salon" });
+      }
+      
+      const [staffMember] = await db.insert(staff).values({
+        ...staffData,
+        salonId
+      }).returning();
+      
+      res.json(staffMember);
+    } catch (error) {
+      console.error("Error adding staff:", error);
+      res.status(500).json({ message: "Failed to add staff" });
+    }
+  });
+
+  // Update staff
+  app.put('/api/staff/:staffId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { staffId } = req.params;
+      const staffData = req.body;
+      
+      // Verify ownership through salon
+      const [staffMember] = await db.select({
+        staff: staff,
+        salon: salons
+      })
+        .from(staff)
+        .innerJoin(salons, eq(staff.salonId, salons.id))
+        .where(eq(staff.id, staffId));
+      
+      if (!staffMember || staffMember.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this staff member" });
+      }
+      
+      const [updatedStaff] = await db.update(staff)
+        .set({ ...staffData, updatedAt: new Date() })
+        .where(eq(staff.id, staffId))
+        .returning();
+      
+      res.json(updatedStaff);
+    } catch (error) {
+      console.error("Error updating staff:", error);
+      res.status(500).json({ message: "Failed to update staff" });
+    }
+  });
+
+  // Get owner's bookings
+  app.get('/api/owner/bookings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      // Get bookings for the owner's salon
+      const ownerBookings = await db.select()
+        .from(bookings)
+        .innerJoin(salons, eq(bookings.salonId, salons.id))
+        .where(eq(salons.ownerId, userId))
+        .orderBy(desc(bookings.createdAt));
+      
+      res.json(ownerBookings.map(booking => booking.bookings));
+    } catch (error) {
+      console.error("Error fetching owner bookings:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
   // Object storage routes
   app.get("/objects/:objectPath(*)", isAuthenticated, async (req: any, res) => {
     const userId = req.user?.claims?.sub;
