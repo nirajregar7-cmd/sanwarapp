@@ -11,6 +11,7 @@ import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth";
 import UserTypeSelection from "@/pages/user-type-selection";
 import CustomerHome from "@/pages/customer/home";
+import NotificationSettingsPage from "@/pages/NotificationSettingsPage";
 import SalonDetail from "@/pages/customer/salon-detail";
 import CustomerBookings from "@/pages/customer/bookings";
 import OwnerDashboard from "@/pages/owner/dashboard";
@@ -95,6 +96,13 @@ function Router() {
           <Route path="/owner/account-details">
             <Layout>
               <AccountDetails />
+            </Layout>
+          </Route>
+          
+          {/* Notification settings route */}
+          <Route path="/notifications">
+            <Layout>
+              <NotificationSettingsPage />
             </Layout>
           </Route>
         </>

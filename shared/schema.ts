@@ -32,6 +32,7 @@ export const users = pgTable("users", {
   password: varchar("password"), // For email/password auth
   firstName: varchar("first_name").notNull(),
   lastName: varchar("last_name"),
+  phone: varchar("phone", { length: 20 }),
   profileImageUrl: varchar("profile_image_url"),
   userType: varchar("user_type", { enum: ["customer", "salon_owner"] }).notNull().default("customer"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -165,6 +166,51 @@ export const platformStats = pgTable("platform_stats", {
   totalBookings: integer("total_bookings").default(0),
   totalServices: integer("total_services").default(0),
   lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Notification settings table
+export const notificationSettings = pgTable("notification_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull().unique(),
+  bookingConfirmation: boolean("booking_confirmation").default(true),
+  bookingReminder: boolean("booking_reminder").default(true),
+  dayBeforeReminder: boolean("day_before_reminder").default(true),
+  hourBeforeReminder: boolean("hour_before_reminder").default(true),
+  promotionalNotifications: boolean("promotional_notifications").default(false),
+  emailNotifications: boolean("email_notifications").default(true),
+  smsNotifications: boolean("sms_notifications").default(false),
+  webPushNotifications: boolean("web_push_notifications").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Push subscriptions table for web push notifications
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  endpoint: text("endpoint").notNull(),
+  p256dhKey: text("p256dh_key").notNull(),
+  authKey: text("auth_key").notNull(),
+  userAgent: text("user_agent"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Notification history table
+export const notificationHistory = pgTable("notification_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  type: varchar("type", { 
+    enum: ["booking_confirmation", "booking_reminder", "day_before_reminder", "hour_before_reminder", "promotional"] 
+  }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  channel: varchar("channel", { enum: ["web_push", "email", "sms"] }).notNull(),
+  status: varchar("status", { enum: ["sent", "delivered", "failed", "pending"] }).default("pending"),
+  bookingId: varchar("booking_id").references(() => bookings.id, { onDelete: "set null" }),
+  sentAt: timestamp("sent_at").defaultNow(),
+  deliveredAt: timestamp("delivered_at"),
+  failureReason: text("failure_reason"),
 });
 
 // Salon Owner Account Details for money transfers

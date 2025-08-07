@@ -9,7 +9,8 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions } from "@shared/schema";
+import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment } from "./payment";
 import { calculateRevenueShare } from "@shared/revenue";
@@ -195,6 +196,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Notification settings endpoints
+  app.get('/api/notifications/settings/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const currentUserId = req.user?.claims?.sub;
+      
+      // Users can only access their own notification settings
+      if (userId !== currentUserId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const [settings] = await db.select()
+        .from(notificationSettings)
+        .where(eq(notificationSettings.userId, userId));
+        
+      // Create default settings if none exist
+      if (!settings) {
+        const [newSettings] = await db.insert(notificationSettings)
+          .values({ userId })
+          .returning();
+        return res.json(newSettings);
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching notification settings:", error);
+      res.status(500).json({ message: "Failed to fetch notification settings" });
+    }
+  });
+
+  app.put('/api/notifications/settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const updateData = req.body;
+      
+      // Update or create notification settings
+      const [settings] = await db.insert(notificationSettings)
+        .values({ userId, ...updateData })
+        .onConflictDoUpdate({
+          target: notificationSettings.userId,
+          set: { ...updateData, updatedAt: new Date() }
+        })
+        .returning();
+        
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating notification settings:", error);
+      res.status(500).json({ message: "Failed to update notification settings" });
+    }
+  });
+
+  // Push subscription endpoints
+  app.post('/api/notifications/subscribe', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { subscription } = req.body;
+      const subscriptionData = JSON.parse(subscription);
+      
+      // Save push subscription
+      await db.insert(pushSubscriptions).values({
+        userId,
+        endpoint: subscriptionData.endpoint,
+        p256dhKey: subscriptionData.keys.p256dh,
+        authKey: subscriptionData.keys.auth,
+        userAgent: req.headers['user-agent']
+      });
+      
+      res.json({ success: true, message: "Push subscription saved" });
+    } catch (error) {
+      console.error("Error saving push subscription:", error);
+      res.status(500).json({ message: "Failed to save push subscription" });
+    }
+  });
+
+  // Notification history endpoints
+  app.get('/api/notifications/history/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const currentUserId = req.user?.claims?.sub;
+      
+      if (userId !== currentUserId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const history = await db.select()
+        .from(notificationHistory)
+        .where(eq(notificationHistory.userId, userId))
+        .orderBy(desc(notificationHistory.sentAt))
+        .limit(30);
+        
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching notification history:", error);
+      res.status(500).json({ message: "Failed to fetch notification history" });
+    }
+  });
+
   // Create booking endpoint
   // Create payment order for booking confirmation
   app.post('/api/bookings/create-payment-order', isAuthenticated, async (req: any, res) => {
@@ -373,6 +471,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transferStatus: 'pending'
       });
       
+      // Send booking confirmation notification
+      try {
+        await sendBookingConfirmationNotification(booking.id);
+      } catch (notificationError) {
+        console.error("Failed to send booking confirmation notification:", notificationError);
+        // Don't fail the booking if notification fails
+      }
+
       console.log("Created booking after payment:", booking);
       res.json({ 
         success: true, 
@@ -1399,6 +1505,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching reviews:", error);
       res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  // Notification settings endpoints
+  app.get('/api/notification-settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      const [settings] = await db.select()
+        .from(notificationSettings)
+        .where(eq(notificationSettings.userId, userId));
+      
+      if (!settings) {
+        // Create default settings if they don't exist
+        const [newSettings] = await db.insert(notificationSettings)
+          .values({ userId })
+          .returning();
+        return res.json(newSettings);
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching notification settings:", error);
+      res.status(500).json({ message: "Failed to fetch notification settings" });
+    }
+  });
+
+  app.put('/api/notification-settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const settings = req.body;
+      
+      const [updatedSettings] = await db.update(notificationSettings)
+        .set({ ...settings, updatedAt: new Date() })
+        .where(eq(notificationSettings.userId, userId))
+        .returning();
+      
+      if (!updatedSettings) {
+        // Create if doesn't exist
+        const [newSettings] = await db.insert(notificationSettings)
+          .values({ userId, ...settings })
+          .returning();
+        return res.json(newSettings);
+      }
+      
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Error updating notification settings:", error);
+      res.status(500).json({ message: "Failed to update notification settings" });
+    }
+  });
+
+  // Push subscription endpoints
+  app.post('/api/push-subscriptions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { endpoint, p256dhKey, authKey, userAgent } = req.body;
+      
+      // Check if subscription already exists
+      const [existingSubscription] = await db.select()
+        .from(pushSubscriptions)
+        .where(and(
+          eq(pushSubscriptions.userId, userId),
+          eq(pushSubscriptions.endpoint, endpoint)
+        ));
+      
+      if (existingSubscription) {
+        return res.json(existingSubscription);
+      }
+      
+      const [subscription] = await db.insert(pushSubscriptions)
+        .values({
+          userId,
+          endpoint,
+          p256dhKey,
+          authKey,
+          userAgent: userAgent || null
+        })
+        .returning();
+      
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error saving push subscription:", error);
+      res.status(500).json({ message: "Failed to save push subscription" });
+    }
+  });
+
+  app.delete('/api/push-subscriptions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { endpoint } = req.body;
+      
+      await db.update(pushSubscriptions)
+        .set({ isActive: false })
+        .where(and(
+          eq(pushSubscriptions.userId, userId),
+          eq(pushSubscriptions.endpoint, endpoint)
+        ));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing push subscription:", error);
+      res.status(500).json({ message: "Failed to remove push subscription" });
+    }
+  });
+
+  // Notification history endpoint
+  app.get('/api/notification-history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const limit = parseInt(req.query.limit as string) || 50;
+      
+      const notifications = await db.select()
+        .from(notificationHistory)
+        .where(eq(notificationHistory.userId, userId))
+        .orderBy(desc(notificationHistory.sentAt))
+        .limit(limit);
+      
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notification history:", error);
+      res.status(500).json({ message: "Failed to fetch notification history" });
     }
   });
 
