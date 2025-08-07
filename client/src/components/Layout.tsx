@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut } from "lucide-react";
+import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,12 +40,58 @@ export default function Layout({ children }: LayoutProps) {
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
-            <Link href="/">
-              <div className="flex items-center space-x-2 text-lg sm:text-2xl font-bold text-primary cursor-pointer">
-                <Scissors className="h-5 w-5 sm:h-6 sm:w-6" />
-                <span className="hidden xs:inline sm:inline">Sanwar</span>
-              </div>
-            </Link>
+            <div className="flex items-center space-x-6">
+              <Link href="/">
+                <div className="flex items-center space-x-2 text-lg sm:text-2xl font-bold text-primary cursor-pointer">
+                  <Scissors className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <span className="hidden xs:inline sm:inline">Sanwar</span>
+                </div>
+              </Link>
+              
+              {/* Navigation Links */}
+              {isAuthenticated && !isMobile && (
+                <nav className="flex items-center space-x-4">
+                  <Link 
+                    href="/" 
+                    className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                  >
+                    Home
+                  </Link>
+                  {userType === "customer" && (
+                    <>
+                      <Link 
+                        href="/salons" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Salons
+                      </Link>
+                      <Link 
+                        href="/bookings" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Bookings
+                      </Link>
+                    </>
+                  )}
+                  {userType === "salon_owner" && (
+                    <>
+                      <Link 
+                        href="/owner/dashboard" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Dashboard
+                      </Link>
+                      <Link 
+                        href="/owner/salon-setup" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Setup
+                      </Link>
+                    </>
+                  )}
+                </nav>
+              )}
+            </div>
             
             {/* Desktop Navigation */}
             {isAuthenticated && !isMobile && (
@@ -135,8 +181,60 @@ export default function Layout({ children }: LayoutProps) {
           {isAuthenticated && isMobile && mobileMenuOpen && (
             <div className="border-t border-gray-200 py-4">
               <div className="space-y-4">
-                {/* User Type Switcher Mobile */}
+                {/* Navigation Links Mobile */}
                 <div className="space-y-2">
+                  <Link 
+                    href="/" 
+                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Home className="h-4 w-4 mr-3" />
+                    Home
+                  </Link>
+                  {userType === "customer" && (
+                    <>
+                      <Link 
+                        href="/salons" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Store className="h-4 w-4 mr-3" />
+                        Salons
+                      </Link>
+                      <Link 
+                        href="/bookings" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Calendar className="h-4 w-4 mr-3" />
+                        My Bookings
+                      </Link>
+                    </>
+                  )}
+                  {userType === "salon_owner" && (
+                    <>
+                      <Link 
+                        href="/owner/dashboard" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <BarChart3 className="h-4 w-4 mr-3" />
+                        Dashboard
+                      </Link>
+                      <Link 
+                        href="/owner/salon-setup" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Settings className="h-4 w-4 mr-3" />
+                        Setup
+                      </Link>
+                    </>
+                  )}
+                </div>
+
+                {/* User Type Switcher Mobile */}
+                <div className="space-y-2 border-t pt-4">
                   <p className="text-sm font-medium text-gray-700">Switch Mode:</p>
                   <div className="flex space-x-2">
                     <Button
