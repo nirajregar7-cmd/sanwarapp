@@ -93,7 +93,7 @@ export function useAuth() {
       queryClient.clear(); // Clear all cached data on logout
       
       // Force a hard refresh to reset everything
-      window.location.href = window.location.origin;
+      window.location.href = '/';
     },
     onError: (error: Error) => {
       toast({

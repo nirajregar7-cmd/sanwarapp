@@ -19,7 +19,7 @@ export default function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logoutMutation } = useAuth();
   
   // Auto-detect user type based on current route or authenticated user
   const isOwnerRoute = location.includes('/owner');
@@ -156,10 +156,12 @@ export default function Layout({ children }: LayoutProps) {
                         </Link>
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem asChild>
-                      <a href="/api/logout">
-                        Logout
-                      </a>
+                    <DropdownMenuItem 
+                      onClick={() => logoutMutation.mutate()}
+                      className="cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -294,11 +296,17 @@ export default function Layout({ children }: LayoutProps) {
                       </Button>
                     </Link>
                   )}
-                  <a href="/api/logout">
-                    <Button variant="ghost" className="w-full justify-start text-sm">
-                      Logout
-                    </Button>
-                  </a>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => {
+                      logoutMutation.mutate();
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <LogOut className="h-4 w-4 mr-3" />
+                    Logout
+                  </Button>
                 </div>
               </div>
             </div>

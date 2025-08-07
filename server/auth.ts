@@ -163,25 +163,35 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  // Logout route
-  app.post("/api/logout", (req, res, next) => {
+  // Logout routes (support both GET and POST)
+  const logoutHandler = (req: any, res: any, next: any) => {
     console.log("Logout attempt for user:", req.user?.id);
-    req.logout((err) => {
+    req.logout((err: any) => {
       if (err) {
         console.error("Logout error:", err);
         return next(err);
       }
-      req.session.destroy((err) => {
+      req.session.destroy((err: any) => {
         if (err) {
           console.error("Session destroy error:", err);
           return next(err);
         }
         res.clearCookie('connect.sid', { path: '/' });
         console.log("User logged out successfully");
-        res.sendStatus(200);
+        
+        // For GET requests, redirect to home
+        if (req.method === 'GET') {
+          res.redirect('/');
+        } else {
+          // For POST requests, send JSON response
+          res.sendStatus(200);
+        }
       });
     });
-  });
+  };
+
+  app.post("/api/logout", logoutHandler);
+  app.get("/api/logout", logoutHandler);
 
   // Get current user route
   app.get("/api/auth/user", (req, res) => {
