@@ -22,6 +22,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
     try {
+      console.log("Auth check - isAuthenticated:", req.isAuthenticated?.(), "User:", req.user?.id);
+      
       // For development, return null if no session exists
       if (!req.isAuthenticated || !req.isAuthenticated()) {
         return res.json(null);

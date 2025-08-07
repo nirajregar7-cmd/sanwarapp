@@ -88,12 +88,12 @@ export function useAuth() {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Clear the cache immediately
       queryClient.setQueryData(["/api/auth/user"], null);
       queryClient.clear(); // Clear all cached data on logout
-      // Force a page reload to ensure complete logout
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      
+      // Force a hard refresh to reset everything
+      window.location.href = window.location.origin;
     },
     onError: (error: Error) => {
       toast({
