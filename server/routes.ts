@@ -445,8 +445,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Object storage routes
-  app.get("/objects/:objectPath(*)", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.get("/objects/:objectPath(*)", async (req: any, res) => {
+    // Get user ID if authenticated, but don't require authentication
+    const userId = req.isAuthenticated && req.isAuthenticated() ? req.user?.claims?.sub : undefined;
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
@@ -960,6 +961,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
   // Gallery routes
   app.post("/api/salons/:salonId/gallery", isAuthenticated, async (req: any, res) => {
     try {
@@ -981,6 +984,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set ACL policy for the uploaded image to make it public for customers
       const objectStorageService = new ObjectStorageService();
+      console.log("Original imageUrl:", imageUrl);
       const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
         imageUrl,
         {
@@ -988,6 +992,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           visibility: "public", // Make gallery images public so customers can view them
         },
       );
+      console.log("Normalized objectPath:", objectPath);
       
       const galleryImage = await storage.createGalleryImage({
         salonId,
