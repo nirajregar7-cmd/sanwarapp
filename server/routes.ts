@@ -284,10 +284,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phone: salonData.phone,
         address: salonData.address,
         imageUrl: salonData.imageUrl || null,
-        confirmationAmount: salonData.confirmationAmount || 0,
+        confirmationAmount: salonData.confirmationAmount ? Number(salonData.confirmationAmount) : 0,
         ownerId: userId,
         isActive: true,
-        averageRating: 0,
+        averageRating: "0",
         totalReviews: 0
       }).returning();
       
@@ -512,8 +512,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ uploadURL });
     } catch (error) {
       console.error("Error getting upload URL:", error);
-      console.error("Error details:", error.message, error.stack);
-      res.status(500).json({ error: "Failed to get upload URL", details: error.message });
+      console.error("Error details:", error instanceof Error ? error.message : "Unknown error", error instanceof Error ? error.stack : "");
+      res.status(500).json({ error: "Failed to get upload URL", details: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -727,7 +727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Time slot routes
   app.post("/api/salons/:salonId/time-slots", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const salon = await storage.getSalonById(req.params.salonId);
       
       if (!salon || salon.ownerId !== userId) {
