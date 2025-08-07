@@ -1,12 +1,47 @@
-# Sanwar - Salon Booking Application
+# Sanwar - Smart Salon Booking Platform
 
 ## Overview
 
-Sanwar is a comprehensive salon booking application that connects customers with salon owners through a seamless appointment scheduling platform. The application supports two distinct user types: customers who can discover and book salon services, and salon owners who can manage their businesses through a dedicated dashboard. Built with modern web technologies, it features real-time booking management, integrated payment processing, file uploads for salon media, and a responsive design that works across devices.
+Sanwar is a smart salon booking platform that helps local salon shopkeepers digitize their business and allows customers to easily discover and book services. Think of it like Zomato for salons, but with features inspired by IRCTC's booking system — showing live available slots, clear pricing, and instant confirmations. The platform serves two distinct user types: salon owners who want to go digital and attract more customers, and customers who want quick, online salon bookings without waiting lines.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Key Features Required
+
+### Landing Page Features
+- Display statistics: number of customers and salons using the platform
+- Show available services (Haircut, Facial, Bridal, etc.)
+- Live salon previews with images, ratings, and top services
+- Call-to-action buttons: "Join as a Shopkeeper" and "Book a Salon Now"
+- Platform explanation and how it works
+
+### Shopkeeper Features
+- Complete salon profile creation with photos and location mapping
+- Service management with pricing and duration
+- Staff management with photos and roles
+- Working hours and break time configuration
+- Auto-generated time slots based on timings and service durations
+- Confirmation amount setting for serious bookings (₹10, ₹20, etc.)
+- Booking management dashboard with customer info and payment status
+- Manual walk-in customer addition
+- Ratings and reviews management with reply capability
+- Analytics dashboard showing bookings, peak hours, top services, income estimates
+
+### Customer Features
+- Salon browsing by location, rating, distance, or service
+- Real-time availability viewing (IRCTC-style time slots)
+- Service booking with instant confirmation amount payment
+- Booking management (view, cancel, reschedule)
+- SMS/Email/WhatsApp confirmations
+- Rating and review system with photo uploads
+- Referral program with wallet credits
+
+### Payment Integration
+- Razorpay integration for confirmation amounts and full payments
+- Digital receipts and invoices
+- Wallet system for referral credits
 
 ## System Architecture
 
@@ -17,7 +52,19 @@ The client is built with React and TypeScript using a component-based architectu
 The server follows a RESTful API design built with Express.js and TypeScript. The architecture separates concerns through distinct modules: route handlers for API endpoints, storage services for database operations, and middleware for cross-cutting concerns like authentication and request logging. The application uses a service-oriented approach where business logic is encapsulated in service classes, promoting code reuse and maintainability.
 
 ### Database Design
-The application uses PostgreSQL as the primary database with Drizzle ORM for type-safe database operations. The schema includes tables for users, salons, services, working hours, time slots, bookings, and reviews. The database design supports multi-tenancy through owner-based data isolation and includes session storage for authentication. Key relationships include salon-to-owner (one-to-many), salon-to-services (one-to-many), and booking relationships that connect customers, salons, services, and time slots.
+The application uses PostgreSQL as the primary database with Drizzle ORM for type-safe database operations. The enhanced schema now includes:
+
+**Core Tables:**
+- users, salons, services, working hours, time slots, bookings, reviews
+
+**New Enhancement Tables (Added Jan 2025):**
+- staff: Salon employee management with roles and photos
+- wallets: Customer wallet system for referral credits
+- walletTransactions: Audit trail for all wallet activities  
+- referrals: Referral program tracking with rewards
+- platformStats: Real-time platform statistics for landing page
+
+The database design supports multi-tenancy through owner-based data isolation, includes session storage for authentication, and now supports advanced features like staff management, referral programs, and wallet systems with full transaction tracking.
 
 ### Authentication System
 Authentication is implemented using Replit's OpenID Connect (OIDC) provider with Passport.js for session management. The system uses express-session with PostgreSQL session storage for persistent login state. User roles are differentiated at the application level with "customer" and "salon_owner" types, enabling role-based access control throughout the application.

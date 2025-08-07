@@ -1,0 +1,157 @@
+✨ Sanwar – Explained App Prompt
+🧠 What is Sanwar?
+Sanwar is a smart salon booking platform that helps local salon shopkeepers digitize their business and allows customers to easily discover and book services. Think of it like Zomato for salons, but with features inspired by IRCTC’s booking system — showing live available slots, clear pricing, and instant confirmations.
+
+🎯 Target Users
+Shopkeepers (Salon Owners) who want to:
+
+Go digital
+
+Avoid manual booking confusion
+
+Look more professional
+
+Attract more customers
+
+Customers who want:
+
+Quick, online salon bookings
+
+No waiting lines
+
+Trusted salons with reviews and prices
+
+Instant confirmation
+
+🌐 Landing Page (Homepage) Features
+When someone visits the website, they will see:
+
+✅ How many customers and salons are already using the platform
+
+✅ What services are available (e.g., Haircut, Facial, Bridal, etc.)
+
+✅ Live salon previews (images, ratings, top services)
+
+✅ Call to Action buttons:
+
+“Join as a Shopkeeper”
+
+“Book a Salon Now”
+
+✅ Explanation of how the platform works
+
+🧑‍💼 Shopkeeper Features – What Can Salon Owners Do?
+Create a Salon Profile
+
+Add name, location (with map), photos, description
+
+Add services with pricing and time (e.g., Haircut – ₹200 – 30 mins)
+
+Add workers (name, photo, role)
+
+Define Working Hours
+
+Open/close time
+
+Break/lunch time
+
+Off days
+
+Auto-Generate Time Slots
+
+Based on the above timings and service durations
+
+Like: 10:00–10:30, 10:30–11:00 etc.
+
+Assigned to workers
+
+These slots will automatically appear to customers
+
+Set a Confirmation Amount
+
+Shopkeeper can choose a small amount (e.g., ₹10, ₹20)
+
+This amount is paid by the customer during booking
+
+Ensures serious bookings only
+
+Shows up clearly in customer flow (like: “Pay ₹20 to confirm”)
+
+Booking Management Dashboard
+
+See all bookings with:
+
+Customer info
+
+Selected service
+
+Staff assigned
+
+Paid status
+
+Can also add walk-in customers manually
+
+Ratings & Reviews
+
+View and reply to customer reviews
+
+Analytics Dashboard
+
+See number of bookings
+
+Peak hours
+
+Top-performing services or staff
+
+Income estimate
+
+Optional Platform Fee (For Monetization)
+
+Shopkeeper may need to pay a monthly fee (e.g., ₹100/month) to use the platform
+
+Can be managed through the admin panel
+
+🙋‍♂️ Customer Features – What Can Users Do?
+Browse Salons
+
+By location, rating, distance, or service
+
+See each salon’s:
+
+Photos
+
+Available services and prices
+
+Staff info
+
+Time slots (with real-time availability like IRCTC)
+
+Book a Time Slot
+
+Select service, time, staff (optional)
+
+If shopkeeper has set a confirmation amount, the customer must pay it instantly to confirm
+
+Booking status and payment receipt are shown clearly
+
+Manage Bookings
+
+View upcoming or past bookings
+
+Cancel or reschedule
+
+Download receipts/invoices
+
+Get SMS/Email/WhatsApp confirmations
+
+Leave Ratings & Reviews
+
+Rate the salon, service, and staff
+
+Upload photos if they want
+
+Referral Program
+
+Invite friends and get wallet credit
+
+Use credit to book next appointment

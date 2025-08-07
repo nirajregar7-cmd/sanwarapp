@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { db } from "./db";
+import { platformStats } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
@@ -28,6 +30,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(401).json(null);
+    }
+  });
+
+  // Platform statistics endpoint
+  app.get('/api/platform/stats', async (req, res) => {
+    try {
+      // Get or initialize platform stats
+      let [stats] = await db.select().from(platformStats).limit(1);
+      
+      if (!stats) {
+        // Initialize with default values for demo
+        [stats] = await db.insert(platformStats).values({
+          totalCustomers: 1250,
+          totalSalons: 87,
+          totalBookings: 3420,
+          totalServices: 342,
+        }).returning();
+      }
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching platform stats:", error);
+      res.status(500).json({ message: "Failed to fetch platform statistics" });
     }
   });
 

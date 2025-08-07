@@ -70,20 +70,10 @@ export default function Layout({ children }: LayoutProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center space-x-2">
-                      {user?.profileImageUrl ? (
-                        <img 
-                          src={user.profileImageUrl} 
-                          alt="Profile" 
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="h-4 w-4 text-primary" />
-                        </div>
-                      )}
-                      <span className="hidden sm:block">
-                        {user?.firstName} {user?.lastName}
-                      </span>
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="hidden sm:block">Profile</span>
                       <ChevronDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>

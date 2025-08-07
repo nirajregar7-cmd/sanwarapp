@@ -1,83 +1,377 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { PlatformStats } from "@shared/schema";
 
 export default function Landing() {
+  // Fetch platform statistics
+  const { data: stats, isLoading: statsLoading } = useQuery<PlatformStats>({
+    queryKey: ["/api/platform/stats"],
+    queryFn: async () => {
+      const response = await fetch("/api/platform/stats");
+      if (!response.ok) throw new Error("Failed to fetch stats");
+      return response.json();
+    },
+  });
+
   return (
     <div className="interface-panel">
       {/* Hero Section */}
-      <section className="gradient-primary text-white py-16">
+      <section className="gradient-primary text-white py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Book Your Perfect Salon Experience
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-90">
-            Discover top-rated salons near you and book appointments instantly
-          </p>
+          <div className="mb-8">
+            <div className="flex items-center justify-center mb-6">
+              <Scissors className="h-12 w-12 text-white mr-4" />
+              <h1 className="text-5xl md:text-7xl font-bold">Sanwar</h1>
+            </div>
+            <p className="text-xl md:text-2xl mb-4 opacity-90">
+              India's Smart Salon Booking Platform
+            </p>
+            <p className="text-lg md:text-xl mb-8 opacity-80">
+              Like Zomato for Salons • Real-time slots like IRCTC • Instant confirmations
+            </p>
+          </div>
+
+          {/* Platform Statistics */}
+          {!statsLoading && stats && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 max-w-4xl mx-auto">
+              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                <div className="text-2xl md:text-3xl font-bold">{stats.totalCustomers}+</div>
+                <div className="text-sm opacity-80">Happy Customers</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                <div className="text-2xl md:text-3xl font-bold">{stats.totalSalons}+</div>
+                <div className="text-sm opacity-80">Partner Salons</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                <div className="text-2xl md:text-3xl font-bold">{stats.totalBookings}+</div>
+                <div className="text-sm opacity-80">Bookings Made</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                <div className="text-2xl md:text-3xl font-bold">{stats.totalServices}+</div>
+                <div className="text-sm opacity-80">Services Available</div>
+              </div>
+            </div>
+          )}
           
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2">
+          <div className="max-w-2xl mx-auto bg-white rounded-xl p-3 flex flex-col sm:flex-row gap-3 shadow-2xl">
             <div className="flex-1 flex items-center px-4">
               <MapPin className="text-gray-400 mr-3 h-5 w-5" />
               <Input 
                 type="text" 
-                placeholder="Enter your location" 
+                placeholder="Enter your city or area..." 
                 className="w-full text-gray-700 text-lg bg-transparent border-none outline-none focus:ring-0"
               />
             </div>
-            <Button className="bg-primary text-white px-8 py-3 hover:bg-primary/90">
+            <Button className="bg-primary text-white px-8 py-3 hover:bg-primary/90 rounded-lg font-semibold">
               <Search className="h-4 w-4 mr-2" />
               Find Salons
             </Button>
           </div>
 
-          <div className="mt-8 flex gap-4">
-            <Button size="lg" asChild>
-              <Link href="/customer">Customer Portal</Link>
+          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="bg-white text-primary hover:bg-gray-100 text-lg px-8 py-4 rounded-xl font-semibold shadow-lg" asChild>
+              <Link href="/customer">
+                <Users className="h-5 w-5 mr-2" />
+                Book a Salon Now
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/owner">Salon Owner</Link>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-4 rounded-xl font-semibold" asChild>
+              <Link href="/owner">
+                <Scissors className="h-5 w-5 mr-2" />
+                Join as a Shopkeeper
+              </Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16">
+      {/* Available Services Section */}
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Sanwar?</h2>
-            <p className="text-xl text-gray-600">Everything you need for a perfect salon experience</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Available Services
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Discover a wide range of beauty and grooming services at your fingertips
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {[
+              { icon: Scissors, name: "Haircut & Styling", color: "bg-blue-100 text-blue-600" },
+              { icon: Star, name: "Facial Treatment", color: "bg-pink-100 text-pink-600" },
+              { icon: Users, name: "Bridal Package", color: "bg-purple-100 text-purple-600" },
+              { icon: Calendar, name: "Hair Color", color: "bg-green-100 text-green-600" },
+              { icon: Shield, name: "Spa & Massage", color: "bg-indigo-100 text-indigo-600" },
+              { icon: Smartphone, name: "Manicure & Pedicure", color: "bg-yellow-100 text-yellow-600" },
+            ].map((service, index) => (
+              <div key={index} className="text-center group cursor-pointer">
+                <div className={`mx-auto w-16 h-16 rounded-full ${service.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                  <service.icon className="h-8 w-8" />
+                </div>
+                <h3 className="font-semibold text-gray-900 text-sm">{service.name}</h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Live Salon Previews */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Top Rated Salons Near You
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Book instantly with our partner salons offering premium services
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Glamour Studio",
+                rating: 4.9,
+                reviews: 127,
+                image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400",
+                services: ["Haircut", "Facial", "Bridal"],
+                price: "₹500-₹2000",
+                location: "Connaught Place"
+              },
+              {
+                name: "Style Hub",
+                rating: 4.8,
+                reviews: 89,
+                image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400",
+                services: ["Hair Color", "Spa", "Manicure"],
+                price: "₹300-₹1500",
+                location: "Khan Market"
+              },
+              {
+                name: "Beauty Lounge",
+                rating: 4.7,
+                reviews: 156,
+                image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=400",
+                services: ["Bridal", "Makeup", "Massage"],
+                price: "₹800-₹3000",
+                location: "Saket"
+              }
+            ].map((salon, index) => (
+              <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
+                <div className="aspect-video bg-gray-200 overflow-hidden">
+                  <img 
+                    src={salon.image} 
+                    alt={salon.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold text-lg">{salon.name}</h3>
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="ml-1 text-sm font-medium">{salon.rating}</span>
+                      <span className="ml-1 text-sm text-gray-500">({salon.reviews})</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 mb-2">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    {salon.location}
+                  </div>
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {salon.services.map((service, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
+                        {service}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-green-600">{salon.price}</span>
+                    <Button size="sm" className="bg-primary hover:bg-primary/90">
+                      Book Now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              How Sanwar Works
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Simple steps to book your perfect salon experience
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="h-8 w-8 text-primary" />
+            {[
+              {
+                step: 1,
+                title: "Find & Choose",
+                description: "Browse salons near you, compare services, prices, and read reviews",
+                icon: Search
+              },
+              {
+                step: 2,
+                title: "Book Instantly",
+                description: "Select your preferred time slot and pay a small confirmation amount",
+                icon: Calendar
+              },
+              {
+                step: 3,
+                title: "Enjoy Service",
+                description: "Visit the salon at your booked time and enjoy premium services",
+                icon: CheckCircle
+              }
+            ].map((item, index) => (
+              <div key={index} className="text-center">
+                <div className="relative mb-6">
+                  <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-secondary rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {item.step}
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
+                <p className="text-gray-600">{item.description}</p>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Easy Discovery</h3>
-              <p className="text-gray-600">Find the best salons near you with detailed profiles and reviews</p>
-            </div>
-
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin className="h-8 w-8 text-accent" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Instant Booking</h3>
-              <p className="text-gray-600">Book appointments in real-time with available time slots</p>
-            </div>
-
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="h-8 w-8 text-secondary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Secure Payments</h3>
-              <p className="text-gray-600">Safe and secure online payments with multiple options</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
+
+      {/* Platform Features */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Why Choose Sanwar?
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                icon: Clock,
+                title: "Real-time Slots",
+                description: "Live availability like IRCTC booking system"
+              },
+              {
+                icon: Shield,
+                title: "Secure Payments",
+                description: "Safe and encrypted payment processing"
+              },
+              {
+                icon: Star,
+                title: "Verified Reviews",
+                description: "Authentic reviews from real customers"
+              },
+              {
+                icon: Smartphone,
+                title: "Mobile Friendly",
+                description: "Book anytime, anywhere from your mobile"
+              }
+            ].map((feature, index) => (
+              <Card key={index} className="text-center p-6 hover:shadow-lg transition-shadow">
+                <CardContent className="p-0">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <feature.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                  <p className="text-gray-600 text-sm">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="gradient-primary text-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Ready to Transform Your Beauty Experience?
+          </h2>
+          <p className="text-xl mb-8 opacity-90">
+            Join thousands of satisfied customers and partner salons on Sanwar
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="bg-white text-primary hover:bg-gray-100 text-lg px-8 py-4 rounded-xl font-semibold" asChild>
+              <Link href="/customer">
+                Start Booking Now
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-4 rounded-xl font-semibold" asChild>
+              <Link href="/owner">
+                Partner With Us
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center space-x-2 text-2xl font-bold mb-4">
+                <Scissors className="h-6 w-6" />
+                <span>Sanwar</span>
+              </div>
+              <p className="text-gray-400">
+                India's premier salon booking platform connecting customers with top-rated salons.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">For Customers</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white">Find Salons</a></li>
+                <li><a href="#" className="hover:text-white">Book Services</a></li>
+                <li><a href="#" className="hover:text-white">Manage Bookings</a></li>
+                <li><a href="#" className="hover:text-white">Refer & Earn</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">For Salon Owners</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white">List Your Salon</a></li>
+                <li><a href="#" className="hover:text-white">Manage Bookings</a></li>
+                <li><a href="#" className="hover:text-white">Business Analytics</a></li>
+                <li><a href="#" className="hover:text-white">Staff Management</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white">Help Center</a></li>
+                <li><a href="#" className="hover:text-white">Contact Us</a></li>
+                <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white">Terms of Service</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Sanwar. All rights reserved. Built for Indian salons.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

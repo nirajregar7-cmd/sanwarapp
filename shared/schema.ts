@@ -45,9 +45,17 @@ export const salons = pgTable("salons", {
   phone: varchar("phone", { length: 20 }),
   address: text("address").notNull(),
   imageUrl: varchar("image_url"),
+  // Location fields for map integration
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  // Rating fields
   averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0"),
   totalReviews: integer("total_reviews").default(0),
+  // Business settings
+  confirmationAmount: integer("confirmation_amount").default(0), // in paise (₹20 = 2000 paise)
+  monthlyFee: integer("monthly_fee").default(10000), // ₹100 in paise
   isActive: boolean("is_active").default(true),
+  isPremium: boolean("is_premium").default(false), // for premium features
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -245,6 +253,120 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   createdAt: true,
 });
 
+// Staff table - for salon employees
+export const staff = pgTable("staff", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(), // e.g., "Hair Stylist", "Makeup Artist"
+  photoUrl: varchar("photo_url"),
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Customer wallets for referral credits
+export const wallets = pgTable("wallets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull().unique(),
+  balance: integer("balance").default(0), // in paise
+  totalEarned: integer("total_earned").default(0), // lifetime referral earnings
+  totalSpent: integer("total_spent").default(0), // lifetime wallet spending
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Wallet transactions for audit trail
+export const walletTransactions = pgTable("wallet_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  walletId: varchar("wallet_id").references(() => wallets.id, { onDelete: "cascade" }).notNull(),
+  type: varchar("type", { enum: ["credit", "debit"] }).notNull(),
+  amount: integer("amount").notNull(), // in paise
+  description: text("description"),
+  referenceId: varchar("reference_id"), // booking ID or referral ID
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Referrals table for tracking referral program
+export const referrals = pgTable("referrals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  refereeId: varchar("referee_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  creditAmount: integer("credit_amount").default(5000), // ₹50 in paise
+  isRewardClaimed: boolean("is_reward_claimed").default(false),
+  firstBookingId: varchar("first_booking_id"), // when referee makes first booking
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Platform statistics for landing page
+export const platformStats = pgTable("platform_stats", {
+  id: varchar("id").primaryKey().default("stats"),
+  totalCustomers: integer("total_customers").default(0),
+  totalSalons: integer("total_salons").default(0),
+  totalBookings: integer("total_bookings").default(0),
+  totalServices: integer("total_services").default(0),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Additional insert schemas for new tables
+export const insertStaffSchema = createInsertSchema(staff).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertWalletSchema = createInsertSchema(wallets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWalletTransactionSchema = createInsertSchema(walletTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertReferralSchema = createInsertSchema(referrals).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Additional relations for new tables
+export const staffRelations = relations(staff, ({ one }) => ({
+  salon: one(salons, {
+    fields: [staff.salonId],
+    references: [salons.id],
+  }),
+}));
+
+export const walletsRelations = relations(wallets, ({ one, many }) => ({
+  customer: one(users, {
+    fields: [wallets.customerId],
+    references: [users.id],
+  }),
+  transactions: many(walletTransactions),
+}));
+
+export const walletTransactionsRelations = relations(walletTransactions, ({ one }) => ({
+  wallet: one(wallets, {
+    fields: [walletTransactions.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const referralsRelations = relations(referrals, ({ one }) => ({
+  referrer: one(users, {
+    fields: [referrals.referrerId],
+    references: [users.id],
+    relationName: "user_referrals_given",
+  }),
+  referee: one(users, {
+    fields: [referrals.refereeId],
+    references: [users.id],
+    relationName: "user_referrals_received",
+  }),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -261,3 +383,12 @@ export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Staff = typeof staff.$inferSelect;
+export type InsertStaff = z.infer<typeof insertStaffSchema>;
+export type Wallet = typeof wallets.$inferSelect;
+export type InsertWallet = z.infer<typeof insertWalletSchema>;
+export type WalletTransaction = typeof walletTransactions.$inferSelect;
+export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = z.infer<typeof insertReferralSchema>;
+export type PlatformStats = typeof platformStats.$inferSelect;
