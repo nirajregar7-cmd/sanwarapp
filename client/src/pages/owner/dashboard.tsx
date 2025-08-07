@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,8 +13,10 @@ import { toast } from "@/hooks/use-toast";
 import { 
   Store, Users, Calendar, IndianRupee, Clock, Star, Plus, 
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
-  BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle
+  BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload
 } from "lucide-react";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from '@uppy/core';
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -975,6 +977,9 @@ export default function OwnerDashboard() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{salon ? "Edit Salon" : "Create Salon Profile"}</DialogTitle>
+            <DialogDescription>
+              {salon ? "Update your salon information" : "Create your salon profile to start receiving bookings"}
+            </DialogDescription>
           </DialogHeader>
           <Form {...salonForm}>
             <form onSubmit={salonForm.handleSubmit((data) => salonMutation.mutate(data))} className="space-y-4">
@@ -1060,9 +1065,81 @@ export default function OwnerDashboard() {
                 name="imageUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Salon Image URL</FormLabel>
+                    <FormLabel>Salon Image</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://example.com/salon-image.jpg" {...field} />
+                      <div className="space-y-4">
+                        <Input 
+                          placeholder="Or paste image URL..." 
+                          {...field} 
+                        />
+                        <div className="flex items-center justify-center">
+                          <span className="text-sm text-gray-500">OR</span>
+                        </div>
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={10485760}
+                          onGetUploadParameters={async () => {
+                            const response = await fetch('/api/objects/upload', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                            });
+                            const data = await response.json();
+                            return {
+                              method: 'PUT' as const,
+                              url: data.uploadURL,
+                            };
+                          }}
+                          onComplete={async (result) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const uploadURL = result.successful[0].uploadURL;
+                              if (uploadURL) {
+                                try {
+                                  // Set ACL policy for the uploaded image
+                                  const response = await fetch('/api/salon-images', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ imageUrl: uploadURL }),
+                                  });
+                                  
+                                  if (response.ok) {
+                                    const data = await response.json();
+                                    field.onChange(data.objectPath);
+                                  } else {
+                                    field.onChange(uploadURL);
+                                  }
+                                  
+                                  toast({
+                                    title: "Image uploaded successfully",
+                                    description: "Your salon image has been uploaded.",
+                                  });
+                                } catch (error) {
+                                  console.error("Error setting image ACL:", error);
+                                  field.onChange(uploadURL);
+                                  toast({
+                                    title: "Image uploaded successfully",
+                                    description: "Your salon image has been uploaded.",
+                                  });
+                                }
+                              }
+                            }
+                          }}
+                          buttonClassName="w-full"
+                        >
+                          <div className="flex items-center justify-center space-x-2">
+                            <Upload className="h-4 w-4" />
+                            <span>Upload Image from Gallery</span>
+                          </div>
+                        </ObjectUploader>
+                        {field.value && (
+                          <div className="mt-4">
+                            <img 
+                              src={field.value} 
+                              alt="Salon preview" 
+                              className="w-full h-32 object-cover rounded-lg border"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
