@@ -52,42 +52,18 @@ export default function Layout({ children }: LayoutProps) {
               {isAuthenticated && !isMobile && (
                 <nav className="flex items-center space-x-4">
                   <Link 
-                    href="/landing" 
+                    href="/" 
                     className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                   >
                     Home
                   </Link>
                   {userType === "customer" && (
-                    <>
-                      <Link 
-                        href="/salons" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
-                      >
-                        Salons
-                      </Link>
-                      <Link 
-                        href="/bookings" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
-                      >
-                        Bookings
-                      </Link>
-                    </>
-                  )}
-                  {userType === "salon_owner" && (
-                    <>
-                      <Link 
-                        href="/owner/dashboard" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
-                      >
-                        Dashboard
-                      </Link>
-                      <Link 
-                        href="/owner/salon-setup" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
-                      >
-                        Setup
-                      </Link>
-                    </>
+                    <Link 
+                      href="/bookings" 
+                      className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                    >
+                      Bookings
+                    </Link>
                   )}
                 </nav>
               )}
@@ -97,7 +73,7 @@ export default function Layout({ children }: LayoutProps) {
             {isAuthenticated && !isMobile && (
               <div className="flex items-center space-x-2 sm:space-x-4">
                 {/* Home Button */}
-                <Link href="/landing">
+                <Link href="/">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -206,44 +182,14 @@ export default function Layout({ children }: LayoutProps) {
                     Home
                   </Link>
                   {userType === "customer" && (
-                    <>
-                      <Link 
-                        href="/salons" 
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Store className="h-4 w-4 mr-3" />
-                        Salons
-                      </Link>
-                      <Link 
-                        href="/bookings" 
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Calendar className="h-4 w-4 mr-3" />
-                        My Bookings
-                      </Link>
-                    </>
-                  )}
-                  {userType === "salon_owner" && (
-                    <>
-                      <Link 
-                        href="/owner/dashboard" 
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <BarChart3 className="h-4 w-4 mr-3" />
-                        Dashboard
-                      </Link>
-                      <Link 
-                        href="/owner/salon-setup" 
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Settings className="h-4 w-4 mr-3" />
-                        Setup
-                      </Link>
-                    </>
+                    <Link 
+                      href="/bookings" 
+                      className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Calendar className="h-4 w-4 mr-3" />
+                      My Bookings
+                    </Link>
                   )}
                 </div>
 

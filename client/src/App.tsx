@@ -38,9 +38,10 @@ function Router() {
       {/* Landing page - accessible to all users */}
       <Route path="/landing" component={Landing} />
       
-      {/* Landing page for non-authenticated users */}
+      {/* Main routes based on authentication */}
       {!user || !isAuthenticated ? (
         <>
+          {/* Home page for non-authenticated users */}
           <Route path="/" component={Landing} />
           <Route path="/salon/:salonId">
             <Layout>
@@ -51,6 +52,7 @@ function Router() {
       ) : (user as any)?.userType ? (
         // Authenticated users with user type set
         <>
+          {/* Home page - shows appropriate content based on user type */}
           <Route path="/">
             {(user as any).userType === 'salon_owner' ? (
               <Layout>
@@ -63,34 +65,21 @@ function Router() {
             )}
           </Route>
           
-          {/* Customer routes */}
-          <Route path="/customer">
-            <Layout>
-              <CustomerHome />
-            </Layout>
-          </Route>
+          {/* Salon detail pages */}
           <Route path="/salon/:salonId">
             <Layout>
               <SalonDetail />
             </Layout>
           </Route>
-          <Route path="/customer/salon/:salonId">
-            <Layout>
-              <SalonDetail />
-            </Layout>
-          </Route>
+          
+          {/* Customer-specific routes */}
           <Route path="/bookings">
             <Layout>
               <CustomerBookings />
             </Layout>
           </Route>
 
-          {/* Owner routes */}
-          <Route path="/owner">
-            <Layout>
-              <OwnerDashboard />
-            </Layout>
-          </Route>
+          {/* Owner-specific routes */}
           <Route path="/owner/time-slots">
             <Layout>
               <TimeSlots />
