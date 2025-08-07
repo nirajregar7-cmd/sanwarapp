@@ -106,19 +106,81 @@ export default function SalonDetail() {
       if (!isAuthenticated) {
         throw new Error("Please log in to book an appointment");
       }
-      const response = await apiRequest("POST", `/api/bookings`, {
-        salonId,
-        serviceId: data.serviceId,
-        staffId: data.staffId || null,
-        timeSlotId: data.timeSlotId,
-        date: data.date.toISOString().split('T')[0],
+
+      // Step 1: Create Razorpay payment order
+      const orderResponse = await apiRequest("/api/bookings/create-payment-order", {
+        method: 'POST',
+        body: JSON.stringify({
+          salonId,
+          serviceId: data.serviceId,
+          staffId: data.staffId || null,
+          timeSlotId: data.timeSlotId,
+          date: data.date.toISOString().split('T')[0],
+        }),
       });
-      return response.json();
+
+      const orderData = await orderResponse.json();
+      
+      // Step 2: Initialize Razorpay payment
+      return new Promise((resolve, reject) => {
+        const options = {
+          key: orderData.razorpayKeyId,
+          amount: orderData.order.amount,
+          currency: orderData.order.currency,
+          name: salon?.name || "Sanwar",
+          description: `Booking confirmation for ${services.find(s => s.id === data.serviceId)?.name || "service"}`,
+          order_id: orderData.order.id,
+          handler: async (response: any) => {
+            try {
+              // Step 3: Verify payment and create booking
+              const verifyResponse = await apiRequest("/api/bookings/verify-payment", {
+                method: 'POST',
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  salonId,
+                  serviceId: data.serviceId,
+                  staffId: data.staffId || null,
+                  timeSlotId: data.timeSlotId,
+                  date: data.date.toISOString().split('T')[0],
+                }),
+              });
+
+              const bookingData = await verifyResponse.json();
+              resolve(bookingData);
+            } catch (error) {
+              reject(error);
+            }
+          },
+          prefill: {
+            name: user?.firstName || "",
+            email: user?.email || "",
+          },
+          theme: {
+            color: "#3B82F6",
+          },
+          modal: {
+            ondismiss: () => {
+              reject(new Error("Payment cancelled"));
+            },
+          },
+        };
+
+        // @ts-ignore - Razorpay is loaded from CDN
+        if (typeof window !== 'undefined' && window.Razorpay) {
+          // @ts-ignore
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        } else {
+          reject(new Error("Payment system not available. Please refresh the page."));
+        }
+      });
     },
     onSuccess: () => {
       toast({
         title: "Booking Confirmed!",
-        description: "Your appointment has been successfully booked. You'll receive a confirmation shortly.",
+        description: "Your appointment has been successfully booked and payment received. You'll receive a confirmation shortly.",
       });
       setBookingDialogOpen(false);
       form.reset();
