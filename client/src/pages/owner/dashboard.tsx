@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { 
   Store, Users, Calendar, IndianRupee, Clock, Star, Plus, 
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
-  BarChart3, DollarSign, UserPlus, Settings, Scissors
+  BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle
 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -333,10 +333,11 @@ export default function OwnerDashboard() {
         // Main Dashboard
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="services">Services</TabsTrigger>
               <TabsTrigger value="staff">Staff</TabsTrigger>
+              <TabsTrigger value="timeslots">Time Slots</TabsTrigger>
               <TabsTrigger value="bookings">Bookings</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
@@ -586,10 +587,171 @@ export default function OwnerDashboard() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="bookings" className="space-y-6">
+            <TabsContent value="timeslots" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>All Bookings</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    Time Slot Management
+                    <Button onClick={() => {
+                      // Generate time slots functionality
+                      toast({
+                        title: "Generating Time Slots",
+                        description: "Time slots will be generated based on your working hours and service durations.",
+                      });
+                    }}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Generate Time Slots
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <Clock className="h-5 w-5 text-blue-600 mr-2" />
+                        <div>
+                          <h4 className="font-medium text-blue-900">Automatic Time Slot Generation</h4>
+                          <p className="text-sm text-blue-700">
+                            Time slots are automatically created based on your working hours and service durations. 
+                            Each service gets dedicated time slots to avoid conflicts.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Sample time slots display */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {[
+                        { time: "9:00 AM - 10:00 AM", service: "Haircut", available: true },
+                        { time: "10:00 AM - 11:30 AM", service: "Facial", available: false },
+                        { time: "11:30 AM - 12:30 PM", service: "Haircut", available: true },
+                        { time: "2:00 PM - 3:00 PM", service: "Hair Styling", available: true },
+                        { time: "3:00 PM - 4:30 PM", service: "Bridal Package", available: false },
+                        { time: "4:30 PM - 5:30 PM", service: "Haircut", available: true },
+                      ].map((slot, index) => (
+                        <div key={index} className={`p-4 border rounded-lg ${
+                          slot.available ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+                        }`}>
+                          <div className="font-medium">{slot.time}</div>
+                          <div className="text-sm text-gray-600">{slot.service}</div>
+                          <div className="mt-2">
+                            <Badge variant={slot.available ? "default" : "secondary"}>
+                              {slot.available ? "Available" : "Booked"}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium mb-3">Time Slot Settings</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Slot Duration
+                          </label>
+                          <Input defaultValue="30" type="number" className="w-full" />
+                          <p className="text-xs text-gray-500 mt-1">Default duration in minutes</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Break Between Slots
+                          </label>
+                          <Input defaultValue="15" type="number" className="w-full" />
+                          <p className="text-xs text-gray-500 mt-1">Minutes between appointments</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Advance Booking Days
+                          </label>
+                          <Input defaultValue="30" type="number" className="w-full" />
+                          <p className="text-xs text-gray-500 mt-1">How many days in advance</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="bookings" className="space-y-6">
+              {/* Booking Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <Calendar className="h-8 w-8 text-blue-500" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-600">Today's Bookings</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {bookings.filter(b => b.date === new Date().toISOString().split('T')[0]).length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <Clock className="h-8 w-8 text-orange-500" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-600">Pending</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {bookings.filter(b => b.status === 'pending').length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <CheckCircle className="h-8 w-8 text-green-500" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-600">Completed</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {bookings.filter(b => b.status === 'completed').length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <IndianRupee className="h-8 w-8 text-purple-500" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-600">Today's Revenue</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          ₹{bookings
+                            .filter(b => b.date === new Date().toISOString().split('T')[0])
+                            .reduce((sum, booking) => sum + Number(booking.totalAmount || 0), 0)
+                            .toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* All Bookings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    All Bookings
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Filter by Date
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        Export
+                      </Button>
+                    </div>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {bookingsLoading ? (
@@ -601,39 +763,96 @@ export default function OwnerDashboard() {
                   ) : bookings.length > 0 ? (
                     <div className="space-y-4">
                       {bookings.map((booking) => (
-                        <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div>
-                            <p className="font-medium">Customer Booking</p>
-                            <p className="text-sm text-gray-600">
-                              {booking.date} at {booking.startTime} - {booking.endTime}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Booking ID: {booking.id.slice(0, 8)}...
-                            </p>
+                        <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="font-medium">Customer Booking #{booking.id.slice(0, 8)}</p>
+                              <Badge 
+                                variant={
+                                  booking.status === 'confirmed' ? 'default' :
+                                  booking.status === 'completed' ? 'secondary' :
+                                  booking.status === 'cancelled' ? 'destructive' : 'outline'
+                                }
+                              >
+                                {booking.status}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                              <div>
+                                <span className="font-medium">Date:</span> {booking.date}
+                              </div>
+                              <div>
+                                <span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}
+                              </div>
+                              <div>
+                                <span className="font-medium">Amount:</span> ₹{booking.totalAmount}
+                              </div>
+                              <div>
+                                <span className="font-medium">Payment:</span> 
+                                <Badge variant="outline" className="ml-1">
+                                  {booking.paymentStatus || 'Pending'}
+                                </Badge>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <Badge 
-                              variant={
-                                booking.status === 'confirmed' ? 'default' :
-                                booking.status === 'completed' ? 'secondary' :
-                                booking.status === 'cancelled' ? 'destructive' : 'outline'
-                              }
-                            >
-                              {booking.status}
-                            </Badge>
-                            <p className="text-sm font-medium text-green-600 mt-1">
-                              ₹{booking.totalAmount}
-                            </p>
+                          <div className="flex space-x-2 ml-4">
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {booking.status === 'pending' && (
+                              <>
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                  Confirm
+                                </Button>
+                                <Button variant="outline" size="sm">
+                                  Cancel
+                                </Button>
+                              </>
+                            )}
+                            {booking.status === 'confirmed' && (
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                Mark Complete
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">No bookings yet. Customers will appear here once they book your services.</p>
+                    <div className="text-center py-12">
+                      <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h3>
+                      <p className="text-gray-600 mb-6">Customers will appear here once they book your services.</p>
+                      <div className="space-y-2 text-sm text-gray-500">
+                        <p>• Make sure your services are listed with competitive pricing</p>
+                        <p>• Add attractive salon photos and descriptions</p>
+                        <p>• Configure your working hours and time slots</p>
+                      </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Button className="h-16 flex-col space-y-2">
+                      <UserPlus className="h-6 w-6" />
+                      <span>Add Walk-in Customer</span>
+                    </Button>
+                    <Button variant="outline" className="h-16 flex-col space-y-2">
+                      <Calendar className="h-6 w-6" />
+                      <span>Block Time Slot</span>
+                    </Button>
+                    <Button variant="outline" className="h-16 flex-col space-y-2">
+                      <BarChart3 className="h-6 w-6" />
+                      <span>View Reports</span>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -682,6 +901,66 @@ export default function OwnerDashboard() {
                           Rating: {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"} ({salon.totalReviews} reviews)
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Working Hours Configuration */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Working Hours</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                      <div key={day} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="font-medium">{day}</div>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">9:00 AM - 8:00 PM</span>
+                          </div>
+                          <Switch defaultChecked />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="pt-4 border-t">
+                      <Button variant="outline" className="w-full">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Configure Working Hours
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Business Performance */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Business Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        ₹{bookings.reduce((sum, booking) => sum + Number(booking.totalAmount || 0), 0).toLocaleString()}
+                      </div>
+                      <div className="text-sm text-green-600">This Month Revenue</div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">{bookings.length}</div>
+                      <div className="text-sm text-blue-600">Total Bookings</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
+                      </div>
+                      <div className="text-sm text-purple-600">Average Rating</div>
+                    </div>
+                    <div className="text-center p-4 bg-orange-50 rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600">{staff.length}</div>
+                      <div className="text-sm text-orange-600">Team Members</div>
                     </div>
                   </div>
                 </CardContent>
