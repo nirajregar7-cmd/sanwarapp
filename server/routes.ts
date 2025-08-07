@@ -166,28 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Available time slots endpoint
-  app.get('/api/salons/:salonId/time-slots', async (req, res) => {
-    try {
-      const { salonId } = req.params;
-      const { date, serviceId } = req.query;
-      
-      let query = db.select()
-        .from(timeSlots)
-        .where(eq(timeSlots.salonId, salonId));
-      
-      if (date) {
-        query = query.where(eq(timeSlots.date, date as string)) as any;
-      }
-      
-      const slots = await query.orderBy(timeSlots.startTime);
-      
-      res.json(slots);
-    } catch (error) {
-      console.error("Error fetching time slots:", error);
-      res.status(500).json({ message: "Failed to fetch available time slots" });
-    }
-  });
+
 
   // Create booking endpoint
   app.post('/api/bookings', isAuthenticated, async (req: any, res) => {
@@ -734,19 +713,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Date parameter is required" });
       }
 
+      console.log(`Fetching time slots for salon ${req.params.salonId} on date ${date}`);
+
       // Check if time slots exist for this date
       let timeSlots = await storage.getAvailableTimeSlots(req.params.salonId, date);
+      console.log(`Found ${timeSlots.length} existing time slots`);
       
       // If no time slots exist for this date, auto-generate them
       if (timeSlots.length === 0) {
+        console.log("No existing time slots, checking if should generate...");
         const requestDate = new Date(date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
+        console.log(`Request date: ${requestDate.toISOString()}`);
+        console.log(`Today: ${today.toISOString()}`);
+        console.log(`Is future?: ${requestDate >= today}`);
+        
         // Only generate for future dates (not past dates)
         if (requestDate >= today) {
+          console.log("Generating time slots...");
           await generateTimeSlots(req.params.salonId, date);
           timeSlots = await storage.getAvailableTimeSlots(req.params.salonId, date);
+          console.log(`After generation: ${timeSlots.length} time slots`);
         }
       }
       
@@ -858,11 +847,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // Helper function to auto-generate time slots for a salon on a specific date
 async function generateTimeSlots(salonId: string, date: string) {
   try {
+    console.log(`Generating time slots for salon ${salonId} on date ${date}`);
+    
     // Check if working hours exist for this salon
     let workingHours = await storage.getWorkingHoursBySalon(salonId);
+    console.log('Existing working hours:', workingHours.length);
     
     // If no working hours exist, create default ones (9 AM to 6 PM, Monday to Saturday)
     if (workingHours.length === 0) {
+      console.log('Creating default working hours...');
       const defaultHours = [
         { dayOfWeek: 1, openTime: '09:00', closeTime: '18:00', isOpen: true }, // Monday
         { dayOfWeek: 2, openTime: '09:00', closeTime: '18:00', isOpen: true }, // Tuesday
@@ -873,27 +866,46 @@ async function generateTimeSlots(salonId: string, date: string) {
         { dayOfWeek: 0, openTime: '10:00', closeTime: '16:00', isOpen: false }, // Sunday
       ];
       
-      // Create default working hours
+      // Create default working hours using direct database insertion to avoid conflicts
       for (const hours of defaultHours) {
-        await storage.upsertWorkingHours({
-          salonId,
-          ...hours
-        });
+        try {
+          const result = await db.insert(workingHours).values({
+            salonId,
+            ...hours
+          }).execute();
+          console.log(`Successfully created working hours for day ${hours.dayOfWeek}:`, result);
+        } catch (error) {
+          console.log(`Failed to create working hours for day ${hours.dayOfWeek}:`, error);
+          // Try using storage method instead
+          try {
+            const result = await storage.upsertWorkingHours({
+              salonId,
+              ...hours
+            });
+            console.log(`Upserted working hours via storage:`, result);
+          } catch (storageError) {
+            console.log(`Storage upsert also failed:`, storageError);
+          }
+        }
       }
       
       // Refresh working hours
       workingHours = await storage.getWorkingHoursBySalon(salonId);
+      console.log('Working hours after creation:', workingHours.length);
     }
     
     // Get the day of week for the requested date (0 = Sunday, 1 = Monday, etc.)
     const requestDate = new Date(date);
     const dayOfWeek = requestDate.getDay();
+    console.log(`Day of week for ${date}: ${dayOfWeek}`);
     
     // Find working hours for this day
     const dayHours = workingHours.find(wh => wh.dayOfWeek === dayOfWeek);
+    console.log('Day hours found:', dayHours);
     
     // If salon is closed on this day, don't generate time slots
     if (!dayHours || !dayHours.isOpen) {
+      console.log('Salon is closed on this day or no hours found');
       return;
     }
     
@@ -922,11 +934,13 @@ async function generateTimeSlots(salonId: string, date: string) {
       const slotExists = existingSlots.some(slot => slot.startTime === startTime);
       
       if (!slotExists) {
+        const endTime = `${Math.floor((timeMinutes + 30) / 60).toString().padStart(2, '0')}:${((timeMinutes + 30) % 60).toString().padStart(2, '0')}`;
+        console.log(`Creating time slot: ${startTime} - ${endTime}`);
         await storage.createTimeSlot({
           salonId,
           date,
           startTime,
-          endTime: `${Math.floor((timeMinutes + 30) / 60).toString().padStart(2, '0')}:${((timeMinutes + 30) % 60).toString().padStart(2, '0')}`,
+          endTime,
           isAvailable: true
         });
       }
