@@ -130,22 +130,6 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
-            {isAuthenticated && isMobile && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 h-10 w-10 flex items-center justify-center"
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </Button>
-            )}
-
             {/* Right side items */}
             <div className="flex items-center space-x-2">
               {/* Language Switcher */}
@@ -154,6 +138,22 @@ export default function Layout({ children }: LayoutProps) {
               {!isAuthenticated && (
                 <Button asChild size="sm" className="bg-blue-600 text-white hover:bg-blue-700 text-xs sm:text-sm px-3 sm:px-4">
                   <a href="/api/login">{t('nav.login')}</a>
+                </Button>
+              )}
+
+              {/* Mobile Menu Button */}
+              {isAuthenticated && isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 h-10 w-10 flex items-center justify-center"
+                >
+                  {mobileMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
                 </Button>
               )}
             </div>
