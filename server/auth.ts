@@ -193,6 +193,11 @@ export function setupAuth(app: Express) {
   app.post("/api/logout", logoutHandler);
   app.get("/api/logout", logoutHandler);
 
+  // GET /api/login - redirect to auth page
+  app.get("/api/login", (req, res) => {
+    res.redirect('/auth');
+  });
+
   // Get current user route
   app.get("/api/auth/user", (req, res) => {
     if (!req.isAuthenticated()) {
