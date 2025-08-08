@@ -123,7 +123,7 @@ export default function CustomerBookings() {
 
   const handleReschedule = (booking: Booking) => {
     // Navigate to salon detail page with booking data for rescheduling
-    setLocation(`/salons/${booking.salonId}?reschedule=${booking.id}`);
+    setLocation(`/salon/${booking.salonId}?reschedule=${booking.id}`);
   };
 
   const handleCancel = (booking: Booking) => {
