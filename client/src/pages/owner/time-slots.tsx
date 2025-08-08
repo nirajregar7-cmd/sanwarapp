@@ -47,13 +47,31 @@ export default function TimeSlots() {
     startTime: "09:00",
     endTime: "18:00",
     duration: "30",
-    lunchStartTime: "13:00",
-    lunchEndTime: "14:00",
-    breakStartTime: "",
-    breakEndTime: "",
-    skipLunch: false,
-    skipBreak: true
+    breaks: [] as Array<{startTime: string, duration: string}>
   });
+
+  const addBreak = () => {
+    setBulkConfig({
+      ...bulkConfig,
+      breaks: [...bulkConfig.breaks, { startTime: "", duration: "5" }]
+    });
+  };
+
+  const removeBreak = (index: number) => {
+    setBulkConfig({
+      ...bulkConfig,
+      breaks: bulkConfig.breaks.filter((_, i) => i !== index)
+    });
+  };
+
+  const updateBreak = (index: number, field: 'startTime' | 'duration', value: string) => {
+    setBulkConfig({
+      ...bulkConfig,
+      breaks: bulkConfig.breaks.map((brk, i) => 
+        i === index ? { ...brk, [field]: value } : brk
+      )
+    });
+  };
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -296,74 +314,31 @@ export default function TimeSlots() {
                   </Select>
                 </div>
 
-                {/* Lunch Time Configuration */}
+                {/* Break Times Configuration */}
                 <div className="space-y-3 border-t pt-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="skip-lunch"
-                      checked={!bulkConfig.skipLunch}
-                      onChange={(e) => setBulkConfig({...bulkConfig, skipLunch: !e.target.checked})}
-                      className="rounded"
-                    />
-                    <Label htmlFor="skip-lunch" className="text-sm font-medium">Include Lunch Break</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Break Times</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addBreak}
+                      className="text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Break
+                    </Button>
                   </div>
                   
-                  {!bulkConfig.skipLunch && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="lunch-start" className="text-sm">Lunch Start Time</Label>
-                        <Select value={bulkConfig.lunchStartTime} onValueChange={(value) => setBulkConfig({...bulkConfig, lunchStartTime: value})}>
-                          <SelectTrigger className="h-10">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {generateTimeOptions().map((time) => (
-                              <SelectItem key={time} value={time}>
-                                {time}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="lunch-end" className="text-sm">Lunch End Time</Label>
-                        <Select value={bulkConfig.lunchEndTime} onValueChange={(value) => setBulkConfig({...bulkConfig, lunchEndTime: value})}>
-                          <SelectTrigger className="h-10">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {generateTimeOptions().map((time) => (
-                              <SelectItem key={time} value={time}>
-                                {time}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Additional Break Time Configuration */}
-                <div className="space-y-3 border-t pt-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="skip-break"
-                      checked={!bulkConfig.skipBreak}
-                      onChange={(e) => setBulkConfig({...bulkConfig, skipBreak: !e.target.checked})}
-                      className="rounded"
-                    />
-                    <Label htmlFor="skip-break" className="text-sm font-medium">Include Additional Break</Label>
-                  </div>
-                  
-                  {!bulkConfig.skipBreak && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="break-start" className="text-sm">Break Start Time</Label>
-                        <Select value={bulkConfig.breakStartTime} onValueChange={(value) => setBulkConfig({...bulkConfig, breakStartTime: value})}>
-                          <SelectTrigger className="h-10">
+                  {bulkConfig.breaks.map((brk, index) => (
+                    <div key={index} className="flex items-end gap-2 p-3 bg-gray-50 rounded">
+                      <div className="flex-1">
+                        <Label className="text-xs">Start Time</Label>
+                        <Select 
+                          value={brk.startTime} 
+                          onValueChange={(value) => updateBreak(index, 'startTime', value)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
                             <SelectValue placeholder="Select time" />
                           </SelectTrigger>
                           <SelectContent>
@@ -375,22 +350,38 @@ export default function TimeSlots() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
-                        <Label htmlFor="break-end" className="text-sm">Break End Time</Label>
-                        <Select value={bulkConfig.breakEndTime} onValueChange={(value) => setBulkConfig({...bulkConfig, breakEndTime: value})}>
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Select time" />
+                      <div className="flex-1">
+                        <Label className="text-xs">Duration</Label>
+                        <Select 
+                          value={brk.duration} 
+                          onValueChange={(value) => updateBreak(index, 'duration', value)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {generateTimeOptions().map((time) => (
-                              <SelectItem key={time} value={time}>
-                                {time}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="5">5 minutes</SelectItem>
+                            <SelectItem value="10">10 minutes</SelectItem>
+                            <SelectItem value="15">15 minutes</SelectItem>
+                            <SelectItem value="30">30 minutes</SelectItem>
+                            <SelectItem value="60">1 hour</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeBreak(index)}
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
+                  ))}
+                  
+                  {bulkConfig.breaks.length === 0 && (
+                    <p className="text-xs text-gray-500 italic">No breaks added. Click "Add Break" to add rest periods.</p>
                   )}
                 </div>
               </div>

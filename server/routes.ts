@@ -1386,12 +1386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startTime, 
         endTime, 
         duration,
-        lunchStartTime,
-        lunchEndTime,
-        breakStartTime,
-        breakEndTime,
-        skipLunch = false,
-        skipBreak = true
+        breaks = []
       } = req.body;
       
       if (!startDate || !endDate || !startTime || !endTime || !duration) {
@@ -1424,16 +1419,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         while (currentTime < dayEndTime) {
           const slotStartTime = currentTime.toTimeString().substring(0, 5);
           
-          // Check if this slot conflicts with lunch break
-          const isLunchTime = !skipLunch && lunchStartTime && lunchEndTime && 
-            slotStartTime >= lunchStartTime && slotStartTime < lunchEndTime;
+          // Check if this slot conflicts with any break
+          const isBreakTime = breaks.some((brk: any) => {
+            if (!brk.startTime || !brk.duration) return false;
+            
+            // Calculate break end time
+            const breakStart = new Date();
+            const [breakHour, breakMin] = brk.startTime.split(':').map(Number);
+            breakStart.setHours(breakHour, breakMin, 0, 0);
+            
+            const breakDuration = parseInt(brk.duration) * 60000; // Convert to milliseconds
+            const breakEnd = new Date(breakStart.getTime() + breakDuration);
+            const breakEndTime = breakEnd.toTimeString().substring(0, 5);
+            
+            // Check if slot starts during break period
+            return slotStartTime >= brk.startTime && slotStartTime < breakEndTime;
+          });
           
-          // Check if this slot conflicts with additional break
-          const isBreakTime = !skipBreak && breakStartTime && breakEndTime && 
-            slotStartTime >= breakStartTime && slotStartTime < breakEndTime;
-          
-          // Skip this slot if it's during lunch or break time
-          if (!isLunchTime && !isBreakTime) {
+          // Skip this slot if it's during break time
+          if (!isBreakTime) {
             // Calculate end time
             const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
             const slotEndTimeString = slotEndTime.toTimeString().substring(0, 5);
