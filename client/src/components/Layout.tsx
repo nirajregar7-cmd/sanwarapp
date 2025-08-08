@@ -163,14 +163,17 @@ export default function Layout({ children }: LayoutProps) {
               </Button>
             )}
 
-            {/* Language Switcher */}
-            <LanguageSwitcher />
+            {/* Right side items */}
+            <div className="flex items-center space-x-2">
+              {/* Language Switcher */}
+              <LanguageSwitcher />
 
-            {!isAuthenticated && (
-              <Button asChild size="sm" className="bg-blue-600 text-white hover:bg-blue-700 text-xs sm:text-sm px-3 sm:px-4">
-                <a href="/api/login">{t('nav.login')}</a>
-              </Button>
-            )}
+              {!isAuthenticated && (
+                <Button asChild size="sm" className="bg-blue-600 text-white hover:bg-blue-700 text-xs sm:text-sm px-3 sm:px-4">
+                  <a href="/api/login">{t('nav.login')}</a>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu */}

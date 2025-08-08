@@ -38,16 +38,18 @@ function Router() {
       {/* Landing page - accessible to all users */}
       <Route path="/landing" component={Landing} />
       
+      {/* Salon detail pages - accessible to all users */}
+      <Route path="/salon/:salonId">
+        <Layout>
+          <SalonDetail />
+        </Layout>
+      </Route>
+
       {/* Main routes based on authentication */}
       {!user || !isAuthenticated ? (
         <>
           {/* Home page for non-authenticated users */}
           <Route path="/" component={Landing} />
-          <Route path="/salon/:salonId">
-            <Layout>
-              <SalonDetail />
-            </Layout>
-          </Route>
         </>
       ) : (user as any)?.userType ? (
         // Authenticated users with user type set
