@@ -527,49 +527,49 @@ export default function OwnerDashboard() {
                   <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <Button 
                       variant="outline" 
-                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px]"
+                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
                       onClick={() => window.location.href = '/owner/time-slots'}
                     >
-                      <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 mb-2" />
-                      <div className="text-center">
-                        <p className="font-medium text-sm sm:text-base">Manage Time Slots</p>
-                        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Create and organize your salon's booking slots</p>
+                      <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 mb-2 flex-shrink-0" />
+                      <div className="text-center w-full px-2">
+                        <p className="font-medium text-sm sm:text-base mb-1">Manage Time Slots</p>
+                        <p className="text-xs text-gray-600 leading-tight break-words">Create and organize your salon's booking slots</p>
                       </div>
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px]"
+                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
                       onClick={() => setActiveTab('services')}
                     >
-                      <Scissors className="h-6 w-6 sm:h-8 sm:w-8 text-pink-600 mb-2" />
-                      <div className="text-center">
-                        <p className="font-medium text-sm sm:text-base">Manage Services</p>
-                        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Add or edit your salon's services and pricing</p>
+                      <Scissors className="h-6 w-6 sm:h-8 sm:w-8 text-pink-600 mb-2 flex-shrink-0" />
+                      <div className="text-center w-full px-2">
+                        <p className="font-medium text-sm sm:text-base mb-1">Manage Services</p>
+                        <p className="text-xs text-gray-600 leading-tight break-words">Add and organize your salon's services and pricing</p>
                       </div>
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px]"
+                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
                       onClick={() => setActiveTab('staff')}
                     >
-                      <UserPlus className="h-6 w-6 sm:h-8 sm:w-8 text-cyan-600 mb-2" />
-                      <div className="text-center">
-                        <p className="font-medium text-sm sm:text-base">Manage Staff</p>
-                        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Add and organize your salon team</p>
+                      <UserPlus className="h-6 w-6 sm:h-8 sm:w-8 text-cyan-600 mb-2 flex-shrink-0" />
+                      <div className="text-center w-full px-2">
+                        <p className="font-medium text-sm sm:text-base mb-1">Manage Staff</p>
+                        <p className="text-xs text-gray-600 leading-tight break-words">Add and organize your salon team</p>
                       </div>
                     </Button>
                     <Link href="/owner/account-details">
                       <Button 
                         variant="outline" 
-                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[100px] sm:min-h-[120px] w-full"
+                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
                       >
-                        <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mb-2" />
-                        <div className="text-center">
-                          <p className="font-medium text-sm sm:text-base">Account Details</p>
-                          <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Setup bank account for payment transfers</p>
+                        <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mb-2 flex-shrink-0" />
+                        <div className="text-center w-full px-2">
+                          <p className="font-medium text-sm sm:text-base mb-1">Account Details</p>
+                          <p className="text-xs text-gray-600 leading-tight break-words">Setup bank account for payment transfers</p>
                         </div>
                       </Button>
                     </Link>
