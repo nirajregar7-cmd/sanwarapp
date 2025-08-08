@@ -72,11 +72,28 @@ export default function AccountDetails() {
     mutationFn: async (data: AccountFormData) => {
       return await apiRequest('POST', '/api/owner/account', data);
     },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Account details saved successfully",
-      });
+    onSuccess: async (response: Response) => {
+      const data = await response.json();
+      const verificationResult = data.verificationResult;
+      
+      if (verificationResult?.verified) {
+        toast({
+          title: "Success ✓",
+          description: "Account details saved and verified successfully!",
+        });
+      } else if (verificationResult?.success === false) {
+        toast({
+          title: "Saved with Issues",
+          description: verificationResult.message || "Account saved but verification failed",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Account details saved. Verification in progress...",
+        });
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['/api/owner/account'] });
     },
     onError: (error: Error) => {
@@ -167,19 +184,33 @@ export default function AccountDetails() {
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
               Bank Account Details
-              {account?.isVerified && (
+              {account?.verificationStatus === 'verified' && (
                 <Badge variant="default" className="bg-green-500">
-                  Verified
+                  ✓ Verified
                 </Badge>
               )}
-              {account && !account.isVerified && (
-                <Badge variant="secondary">
-                  Pending Verification
+              {account?.verificationStatus === 'pending' && (
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                  ⏳ Verifying...
+                </Badge>
+              )}
+              {account?.verificationStatus === 'failed' && (
+                <Badge variant="destructive">
+                  ✗ Verification Failed
                 </Badge>
               )}
             </CardTitle>
             <CardDescription>
               Add your bank details to receive your share of booking confirmation payments
+              {account?.verificationMessage && (
+                <div className={`mt-2 text-sm ${
+                  account.verificationStatus === 'verified' ? 'text-green-600' : 
+                  account.verificationStatus === 'failed' ? 'text-red-600' : 
+                  'text-yellow-600'
+                }`}>
+                  {account.verificationMessage}
+                </div>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>

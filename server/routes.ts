@@ -12,7 +12,7 @@ import { ObjectPermission } from "./objectAcl";
 import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
-import { createRazorpayOrder, verifyRazorpayPayment } from "./payment";
+import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount } from "./payment";
 import { calculateRevenueShare } from "@shared/revenue";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -733,37 +733,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(salonOwnerAccounts)
         .where(eq(salonOwnerAccounts.salonId, salon.id));
       
+      // Start automatic bank verification
+      console.log('Starting bank account verification for:', accountData.accountNumber);
+      const verificationResult = await verifyBankAccount({
+        accountNumber: accountData.accountNumber,
+        ifscCode: accountData.ifscCode,
+        accountHolderName: accountData.accountHolderName
+      });
+
+      console.log('Verification result:', verificationResult);
+
       let account;
+      const updateData = {
+        bankName: accountData.bankName,
+        accountHolderName: accountData.accountHolderName,
+        accountNumber: accountData.accountNumber,
+        ifscCode: accountData.ifscCode,
+        branch: accountData.branch || null,
+        upiId: accountData.upiId || null,
+        // Update verification fields based on result
+        verificationStatus: verificationResult.verified ? 'verified' as const : 
+                           verificationResult.success ? 'failed' as const : 'pending' as const,
+        verificationMessage: verificationResult.message || verificationResult.error || null,
+        verifiedAccountHolderName: verificationResult.accountHolderName || null,
+        verifiedAt: verificationResult.verified ? new Date() : null,
+        verificationAttempts: (existingAccount?.verificationAttempts || 0) + 1,
+        lastVerificationAttempt: new Date(),
+        isVerified: verificationResult.verified,
+        updatedAt: new Date()
+      };
+
       if (existingAccount) {
         // Update existing account
         [account] = await db.update(salonOwnerAccounts)
-          .set({
-            bankName: accountData.bankName,
-            accountHolderName: accountData.accountHolderName,
-            accountNumber: accountData.accountNumber,
-            ifscCode: accountData.ifscCode,
-            branch: accountData.branch || null,
-            upiId: accountData.upiId || null,
-            isVerified: false, // Reset verification on update
-            updatedAt: new Date()
-          })
+          .set(updateData)
           .where(eq(salonOwnerAccounts.salonId, salon.id))
           .returning();
       } else {
         // Create new account
         [account] = await db.insert(salonOwnerAccounts).values({
           salonId: salon.id,
-          bankName: accountData.bankName,
-          accountHolderName: accountData.accountHolderName,
-          accountNumber: accountData.accountNumber,
-          ifscCode: accountData.ifscCode,
-          branch: accountData.branch || null,
-          upiId: accountData.upiId || null,
-          isVerified: false
+          ...updateData
         }).returning();
       }
       
-      res.json(account);
+      // Return account with verification status
+      res.json({
+        ...account,
+        verificationResult: {
+          success: verificationResult.success,
+          verified: verificationResult.verified,
+          message: verificationResult.message || verificationResult.error
+        }
+      });
     } catch (error) {
       console.error("Error saving account details:", error);
       res.status(500).json({ 

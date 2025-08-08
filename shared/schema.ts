@@ -228,6 +228,13 @@ export const salonOwnerAccounts = pgTable("salon_owner_accounts", {
   branch: varchar("branch"),
   upiId: varchar("upi_id"),
   isVerified: boolean("is_verified").default(false),
+  // Enhanced verification fields
+  verificationStatus: varchar("verification_status", { enum: ["pending", "verified", "failed"] }).default("pending"),
+  verificationMessage: text("verification_message"),
+  verifiedAccountHolderName: varchar("verified_account_holder_name"), // Name from bank records
+  verifiedAt: timestamp("verified_at"),
+  verificationAttempts: integer("verification_attempts").default(0),
+  lastVerificationAttempt: timestamp("last_verification_attempt"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
