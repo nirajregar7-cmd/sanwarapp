@@ -43,7 +43,7 @@ import {
   type InsertWalletTransaction,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, desc, asc, or } from "drizzle-orm";
+import { eq, and, gte, desc, asc, or, isNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for email/password auth)
@@ -519,7 +519,7 @@ export class DatabaseStorage implements IStorage {
         eq(freeBookingCredits.customerId, customerId),
         eq(freeBookingCredits.isUsed, false),
         or(
-          eq(freeBookingCredits.expiresAt, null),
+          isNull(freeBookingCredits.expiresAt),
           gte(freeBookingCredits.expiresAt, new Date())
         )
       ))
@@ -577,7 +577,7 @@ export class DatabaseStorage implements IStorage {
       return false; // Already counted
     }
 
-    const newCount = milestone.currentCount + 1;
+    const newCount = (milestone.currentCount || 0) + 1;
     const newCompletedBookingIds = [...(milestone.completedBookingIds || []), bookingId];
     const newRewardAmount = parseFloat(milestone.rewardAmount) + confirmationAmount;
     
@@ -622,7 +622,7 @@ export class DatabaseStorage implements IStorage {
     return newWallet;
   }
 
-  async addWalletCredit(customerId: string, amount: number, description: string, referenceId: string, referenceType: string): Promise<void> {
+  async addWalletCredit(customerId: string, amount: number, description: string, referenceId?: string, referenceType?: string): Promise<void> {
     const wallet = await this.getOrCreateWallet(customerId);
     const newBalance = parseFloat(wallet.balance) + amount;
 
@@ -638,8 +638,8 @@ export class DatabaseStorage implements IStorage {
       type: "credit",
       amount: amount.toString(),
       description,
-      referenceId,
-      referenceType,
+      referenceId: referenceId || null,
+      referenceType: referenceType as any || null,
     });
   }
 }

@@ -1805,7 +1805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create referral record without referredId (will be filled during signup)
       const newReferral = await storage.createReferral({
         referrerId,
-        referredId: "", // Will be filled during signup
+        referredId: null, // Will be filled during signup
         referralCode,
         referralType,
         status: "pending",

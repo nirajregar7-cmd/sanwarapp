@@ -266,7 +266,7 @@ export const walletTransactions = pgTable("wallet_transactions", {
 export const referrals = pgTable("referrals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   referrerId: varchar("referrer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  referredId: varchar("referred_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  referredId: varchar("referred_id").references(() => users.id, { onDelete: "cascade" }),
   referralCode: varchar("referral_code", { length: 10 }).notNull().unique(),
   referralType: varchar("referral_type", { enum: ["customer_to_shopkeeper", "customer_to_customer", "shopkeeper_milestone"] }).default("customer_to_customer"),
   status: varchar("status", { enum: ["pending", "completed", "expired"] }).default("pending"),
