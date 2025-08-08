@@ -46,7 +46,13 @@ export default function TimeSlots() {
     endDate: format(addDays(new Date(), 30), "yyyy-MM-dd"),
     startTime: "09:00",
     endTime: "18:00",
-    duration: "30"
+    duration: "30",
+    lunchStartTime: "13:00",
+    lunchEndTime: "14:00",
+    breakStartTime: "",
+    breakEndTime: "",
+    skipLunch: false,
+    skipBreak: true
   });
 
   const { toast } = useToast();
@@ -288,6 +294,104 @@ export default function TimeSlots() {
                       <SelectItem value="60">1 hour</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Lunch Time Configuration */}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="skip-lunch"
+                      checked={!bulkConfig.skipLunch}
+                      onChange={(e) => setBulkConfig({...bulkConfig, skipLunch: !e.target.checked})}
+                      className="rounded"
+                    />
+                    <Label htmlFor="skip-lunch" className="text-sm font-medium">Include Lunch Break</Label>
+                  </div>
+                  
+                  {!bulkConfig.skipLunch && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="lunch-start" className="text-sm">Lunch Start Time</Label>
+                        <Select value={bulkConfig.lunchStartTime} onValueChange={(value) => setBulkConfig({...bulkConfig, lunchStartTime: value})}>
+                          <SelectTrigger className="h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {generateTimeOptions().map((time) => (
+                              <SelectItem key={time} value={time}>
+                                {time}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="lunch-end" className="text-sm">Lunch End Time</Label>
+                        <Select value={bulkConfig.lunchEndTime} onValueChange={(value) => setBulkConfig({...bulkConfig, lunchEndTime: value})}>
+                          <SelectTrigger className="h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {generateTimeOptions().map((time) => (
+                              <SelectItem key={time} value={time}>
+                                {time}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Break Time Configuration */}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="skip-break"
+                      checked={!bulkConfig.skipBreak}
+                      onChange={(e) => setBulkConfig({...bulkConfig, skipBreak: !e.target.checked})}
+                      className="rounded"
+                    />
+                    <Label htmlFor="skip-break" className="text-sm font-medium">Include Additional Break</Label>
+                  </div>
+                  
+                  {!bulkConfig.skipBreak && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="break-start" className="text-sm">Break Start Time</Label>
+                        <Select value={bulkConfig.breakStartTime} onValueChange={(value) => setBulkConfig({...bulkConfig, breakStartTime: value})}>
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Select time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {generateTimeOptions().map((time) => (
+                              <SelectItem key={time} value={time}>
+                                {time}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="break-end" className="text-sm">Break End Time</Label>
+                        <Select value={bulkConfig.breakEndTime} onValueChange={(value) => setBulkConfig({...bulkConfig, breakEndTime: value})}>
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Select time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {generateTimeOptions().map((time) => (
+                              <SelectItem key={time} value={time}>
+                                {time}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               

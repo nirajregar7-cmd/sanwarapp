@@ -1380,7 +1380,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to manage time slots for this salon" });
       }
 
-      const { startDate, endDate, startTime, endTime, duration } = req.body;
+      const { 
+        startDate, 
+        endDate, 
+        startTime, 
+        endTime, 
+        duration,
+        lunchStartTime,
+        lunchEndTime,
+        breakStartTime,
+        breakEndTime,
+        skipLunch = false,
+        skipBreak = true
+      } = req.body;
       
       if (!startDate || !endDate || !startTime || !endTime || !duration) {
         return res.status(400).json({ message: "All fields are required for bulk generation" });
@@ -1412,20 +1424,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         while (currentTime < dayEndTime) {
           const slotStartTime = currentTime.toTimeString().substring(0, 5);
           
-          // Calculate end time
-          const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
-          const slotEndTimeString = slotEndTime.toTimeString().substring(0, 5);
+          // Check if this slot conflicts with lunch break
+          const isLunchTime = !skipLunch && lunchStartTime && lunchEndTime && 
+            slotStartTime >= lunchStartTime && slotStartTime < lunchEndTime;
           
-          // Create the time slot
-          const timeSlot = await storage.createTimeSlot({
-            salonId: req.params.salonId,
-            date: dateString,
-            startTime: slotStartTime,
-            endTime: slotEndTimeString,
-            isAvailable: true
-          });
+          // Check if this slot conflicts with additional break
+          const isBreakTime = !skipBreak && breakStartTime && breakEndTime && 
+            slotStartTime >= breakStartTime && slotStartTime < breakEndTime;
           
-          slotsCreated.push(timeSlot);
+          // Skip this slot if it's during lunch or break time
+          if (!isLunchTime && !isBreakTime) {
+            // Calculate end time
+            const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
+            const slotEndTimeString = slotEndTime.toTimeString().substring(0, 5);
+            
+            // Create the time slot
+            const timeSlot = await storage.createTimeSlot({
+              salonId: req.params.salonId,
+              date: dateString,
+              startTime: slotStartTime,
+              endTime: slotEndTimeString,
+              isAvailable: true
+            });
+            
+            slotsCreated.push(timeSlot);
+          }
           
           // Move to next slot
           currentTime.setTime(currentTime.getTime() + durationMinutes * 60000);
