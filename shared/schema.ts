@@ -25,16 +25,20 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
-// Users table for email/password authentication
+// Users table for email/password and social authentication
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique().notNull(),
-  password: varchar("password"), // For email/password auth
+  email: varchar("email").unique(),
+  password: varchar("password"), // For email/password auth (null for social auth)
   firstName: varchar("first_name").notNull(),
   lastName: varchar("last_name"),
   phone: varchar("phone", { length: 20 }),
   profileImageUrl: varchar("profile_image_url"),
   userType: varchar("user_type", { enum: ["customer", "salon_owner"] }).notNull().default("customer"),
+  // Social authentication fields
+  isSocialAuth: boolean("is_social_auth").default(false),
+  socialProvider: varchar("social_provider", { enum: ["google", "facebook"] }),
+  socialId: varchar("social_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

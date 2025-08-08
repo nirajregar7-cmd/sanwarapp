@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
+import { SocialLoginButtons } from "@/components/SocialLoginButtons";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -156,6 +157,22 @@ export default function AuthPage() {
               </TabsList>
 
               <TabsContent value="login" className="space-y-4">
+                {/* Social Login Options */}
+                <div className="space-y-4">
+                  <SocialLoginButtons userType="customer" isLogin={true} />
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">
+                        Or continue with email
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
@@ -212,32 +229,50 @@ export default function AuthPage() {
               </TabsContent>
 
               <TabsContent value="register" className="space-y-4">
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div className="space-y-3">
-                    <Label>I am a:</Label>
-                    <RadioGroup
-                      value={registerForm.userType}
-                      onValueChange={(value) => 
-                        setRegisterForm({ ...registerForm, userType: value as "customer" | "salon_owner" })
-                      }
-                      className="grid grid-cols-2 gap-4"
-                    >
-                      <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-gray-50">
-                        <RadioGroupItem value="customer" id="customer" />
-                        <Label htmlFor="customer" className="flex items-center cursor-pointer">
-                          <Users className="w-4 h-4 mr-2" />
-                          Customer
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-gray-50">
-                        <RadioGroupItem value="salon_owner" id="salon_owner" />
-                        <Label htmlFor="salon_owner" className="flex items-center cursor-pointer">
-                          <Scissors className="w-4 h-4 mr-2" />
-                          Salon Owner
-                        </Label>
-                      </div>
-                    </RadioGroup>
+                {/* User Type Selection First */}
+                <div className="space-y-3">
+                  <Label>I am a:</Label>
+                  <RadioGroup
+                    value={registerForm.userType}
+                    onValueChange={(value) => 
+                      setRegisterForm({ ...registerForm, userType: value as "customer" | "salon_owner" })
+                    }
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-gray-50">
+                      <RadioGroupItem value="customer" id="customer" />
+                      <Label htmlFor="customer" className="flex items-center cursor-pointer">
+                        <Users className="w-4 h-4 mr-2" />
+                        Customer
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-gray-50">
+                      <RadioGroupItem value="salon_owner" id="salon_owner" />
+                      <Label htmlFor="salon_owner" className="flex items-center cursor-pointer">
+                        <Scissors className="w-4 h-4 mr-2" />
+                        Salon Owner
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Social Login Options */}
+                <div className="space-y-4">
+                  <SocialLoginButtons userType={registerForm.userType} isLogin={false} />
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">
+                        Or continue with email
+                      </span>
+                    </div>
                   </div>
+                </div>
+
+                <form onSubmit={handleRegister} className="space-y-4">
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">

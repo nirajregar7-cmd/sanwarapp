@@ -9,7 +9,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment } from "./payment";
@@ -157,18 +157,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxPrice = '10000'
       } = req.query;
 
-      let query = db.select().from(salons).where(eq(salons.isActive, true));
+      let conditions = [eq(salons.isActive, true)];
       
       // Apply name filter
       if (name && typeof name === 'string') {
-        query = query.where(sql`LOWER(${salons.name}) LIKE LOWER(${'%' + name + '%'})`);
+        conditions.push(sql`LOWER(${salons.name}) LIKE LOWER(${'%' + name + '%'})`);
       }
       
       // Apply rating filter
       if (minRating && typeof minRating === 'string') {
         const minRatingValue = parseFloat(minRating);
         if (minRatingValue > 0) {
-          query = query.where(sql`${salons.averageRating} >= ${minRatingValue}`);
+          conditions.push(sql`${salons.averageRating} >= ${minRatingValue}`);
         }
       }
       
@@ -176,17 +176,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (maxPrice && typeof maxPrice === 'string') {
         const maxPriceValue = parseInt(maxPrice);
         if (maxPriceValue < 10000) {
-          query = query.where(sql`${salons.confirmationAmount} <= ${maxPriceValue}`);
+          conditions.push(sql`${salons.confirmationAmount} <= ${maxPriceValue}`);
         }
       }
 
-      const allSalons = await query;
+      const allSalons = await db.select().from(salons).where(and(...conditions));
       
       // If location is provided, filter by distance
       if (lat && lng && typeof lat === 'string' && typeof lng === 'string') {
         const userLat = parseFloat(lat);
         const userLng = parseFloat(lng);
-        const searchRadius = parseFloat(radius);
+        const searchRadius = parseFloat(typeof radius === 'string' ? radius : '50');
         
         if (!isNaN(userLat) && !isNaN(userLng)) {
           const salonsWithDistance = allSalons

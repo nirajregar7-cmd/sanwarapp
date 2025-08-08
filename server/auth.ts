@@ -10,6 +10,7 @@ import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
+import { setupSocialAuth } from "./socialAuth";
 
 declare global {
   namespace Express {
@@ -179,6 +180,9 @@ export function setupAuth(app: Express) {
       done(error);
     }
   });
+
+  // Setup social authentication strategies
+  setupSocialAuth(app);
 
   // Register route
   app.post("/api/register", async (req, res, next) => {
