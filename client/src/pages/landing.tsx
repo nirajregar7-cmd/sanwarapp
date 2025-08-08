@@ -153,9 +153,9 @@ export default function Landing() {
                   <div className="space-y-3">
                     <Button 
                       size="lg" 
-                      className="w-full bg-gradient-to-r from-white to-gray-100 hover:from-gray-100 hover:to-white text-blue-700 font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      className="w-full bg-white hover:bg-gray-50 text-blue-700 font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      {t('hero.signup_customer')}
+                      <span className="text-blue-700">{t('hero.signup_customer')}</span>
                     </Button>
                     <Button 
                       size="sm" 
@@ -205,9 +205,9 @@ export default function Landing() {
                   <div className="space-y-3">
                     <Button 
                       size="lg" 
-                      className="w-full bg-gradient-to-r from-white to-gray-100 hover:from-gray-100 hover:to-white text-purple-700 font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      className="w-full bg-white hover:bg-gray-50 text-purple-700 font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      {t('hero.signup_owner')}
+                      <span className="text-purple-700">{t('hero.signup_owner')}</span>
                     </Button>
                     <Button 
                       size="sm" 
