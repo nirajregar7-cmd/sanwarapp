@@ -12,10 +12,7 @@ export default function UserTypeSelection() {
 
   const setUserTypeMutation = useMutation({
     mutationFn: async (userType: "customer" | "salon_owner") => {
-      return await apiRequest("/api/auth/set-user-type", {
-        method: "POST",
-        body: { userType },
-      });
+      return await apiRequest("POST", "/api/auth/set-user-type", { userType });
     },
     onSuccess: () => {
       toast({

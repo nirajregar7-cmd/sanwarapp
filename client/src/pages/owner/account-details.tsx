@@ -70,10 +70,7 @@ export default function AccountDetails() {
 
   const saveAccountMutation = useMutation({
     mutationFn: async (data: AccountFormData) => {
-      return await apiRequest('/api/owner/account', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return await apiRequest('POST', '/api/owner/account', data);
     },
     onSuccess: () => {
       toast({

@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import type { Salon } from "@shared/schema";
 
 interface TimeSlot {
   id: string;
@@ -77,7 +78,7 @@ export default function TimeSlots() {
   const queryClient = useQueryClient();
 
   // Get salon info
-  const { data: salon } = useQuery({
+  const { data: salon } = useQuery<Salon>({
     queryKey: ['/api/owner/salon']
   });
 
