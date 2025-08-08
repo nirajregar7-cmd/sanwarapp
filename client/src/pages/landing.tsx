@@ -459,8 +459,14 @@ export default function Landing() {
       </section>
 
       {/* Call to Action Section */}
-      <section className="gradient-primary text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white py-16 relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-purple-300/20 rounded-full blur-2xl"></div>
+        </div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Ready to Transform Your Beauty Experience?
           </h2>
@@ -479,10 +485,10 @@ export default function Landing() {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-4 rounded-xl font-semibold" 
+              className="bg-white/10 border-white/40 text-white hover:bg-white hover:text-purple-700 text-lg px-8 py-4 rounded-xl font-semibold transition-all duration-300" 
               onClick={() => window.location.href = '/api/login?user_intent=salon_owner'}
             >
-              Partner With Us
+              <span className="text-white hover:text-purple-700">Partner With Us</span>
             </Button>
           </div>
         </div>
