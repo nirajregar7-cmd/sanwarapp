@@ -1,0 +1,132 @@
+{
+  "common": {
+    "welcome": "संवार में आपका स्वागत है",
+    "loading": "लोड हो रहा है...",
+    "error": "कुछ गलत हुआ",
+    "save": "सेव करें",
+    "cancel": "रद्द करें",
+    "edit": "संपादित करें",
+    "delete": "हटाएं",
+    "search": "खोजें",
+    "filter": "फिल्टर",
+    "book_now": "अभी बुक करें",
+    "view_details": "विवरण देखें",
+    "back": "वापस",
+    "next": "आगे",
+    "submit": "जमा करें",
+    "close": "बंद करें"
+  },
+  "nav": {
+    "home": "होम",
+    "find_salons": "सैलून खोजें",
+    "my_bookings": "मेरी बुकिंग",
+    "my_salon": "मेरा सैलून",
+    "login": "लॉगिन",
+    "register": "रजिस्टर",
+    "logout": "लॉगआउट",
+    "profile": "प्रोफाइल"
+  },
+  "hero": {
+    "title": "अपना परफेक्ट सैलून एक्सपीरियंस बुक करें",
+    "subtitle": "अपने क्षेत्र के सबसे अच्छे सैलून खोजें और लाइव उपलब्धता के साथ तुरंत बुक करें",
+    "join_shopkeeper": "दुकानदार के रूप में जुड़ें",
+    "book_salon": "अभी सैलून बुक करें",
+    "how_it_works": "यह कैसे काम करता है"
+  },
+  "features": {
+    "instant_booking": "तुरंत बुकिंग",
+    "instant_booking_desc": "लाइव स्लॉट उपलब्धता के साथ रियल-टाइम में अपॉइंटमेंट बुक करें",
+    "verified_salons": "सत्यापित सैलून",
+    "verified_salons_desc": "सभी सैलून असली समीक्षाओं और रेटिंग के साथ सत्यापित हैं",
+    "secure_payment": "सुरक्षित भुगतान",
+    "secure_payment_desc": "ऑनलाइन पुष्टि राशि का भुगतान करें, सैलून में सेवा राशि का भुगतान करें"
+  },
+  "stats": {
+    "customers": "खुश ग्राहक",
+    "salons": "पार्टनर सैलून",
+    "bookings": "बुकिंग पूरी हुई"
+  },
+  "services": {
+    "haircut": "हेयर कट",
+    "facial": "फेसियल",
+    "massage": "मसाज",
+    "manicure": "मैनीक्योर",
+    "pedicure": "पेडीक्योर",
+    "hair_color": "हेयर कलर",
+    "hair_wash": "हेयर वॉश",
+    "beard_trim": "दाढ़ी ट्रिम",
+    "bridal": "ब्राइडल",
+    "party_makeup": "पार्टी मेकअप"
+  },
+  "auth": {
+    "sign_in": "साइन इन",
+    "sign_up": "साइन अप",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "confirm_password": "पासवर्ड की पुष्टि करें",
+    "first_name": "पहला नाम",
+    "last_name": "अंतिम नाम",
+    "phone": "फोन नंबर",
+    "role": "मैं हूं",
+    "customer": "ग्राहक",
+    "salon_owner": "सैलून मालिक",
+    "already_have_account": "पहले से खाता है?",
+    "dont_have_account": "खाता नहीं है?",
+    "forgot_password": "पासवर्ड भूल गए?",
+    "signin_success": "सफलतापूर्वक साइन इन हो गए!",
+    "signup_success": "खाता सफलतापूर्वक बनाया गया!",
+    "logout_success": "सफलतापूर्वक लॉग आउट हो गए!"
+  },
+  "salon": {
+    "salon_details": "सैलून विवरण",
+    "services_pricing": "सेवाएं और मूल्य निर्धारण",
+    "available_slots": "उपलब्ध समय स्लॉट",
+    "reviews": "समीक्षाएं और रेटिंग",
+    "gallery": "गैलरी",
+    "contact_info": "संपर्क जानकारी",
+    "working_hours": "काम के घंटे",
+    "book_appointment": "अपॉइंटमेंट बुक करें",
+    "select_service": "सेवा चुनें",
+    "select_time": "समय चुनें",
+    "confirmation_amount": "पुष्टि राशि",
+    "total_service_cost": "कुल सेवा लागत",
+    "pay_at_salon": "सैलून में भुगतान करें"
+  },
+  "booking": {
+    "booking_confirmed": "बुकिंग कन्फर्म हो गई!",
+    "booking_details": "बुकिंग विवरण",
+    "customer_name": "ग्राहक का नाम",
+    "service": "सेवा",
+    "date_time": "दिनांक और समय",
+    "amount_paid": "भुगतान की गई राशि",
+    "remaining_amount": "शेष राशि",
+    "salon_address": "सैलून का पता",
+    "cancel_booking": "बुकिंग रद्द करें",
+    "reschedule": "पुनर्निर्धारित करें",
+    "booking_status": "स्थिति"
+  },
+  "dashboard": {
+    "welcome_back": "वापसी पर स्वागत है",
+    "recent_bookings": "हाल की बुकिंग",
+    "earnings": "कमाई",
+    "today": "आज",
+    "this_week": "इस सप्ताह",
+    "this_month": "इस महीने",
+    "manage_salon": "सैलून प्रबंधित करें",
+    "manage_services": "सेवाओं को प्रबंधित करें",
+    "manage_slots": "समय स्लॉट प्रबंधित करें",
+    "view_bookings": "बुकिंग देखें",
+    "analytics": "एनालिटिक्स"
+  },
+  "footer": {
+    "tagline": "ग्राहकों को अपने क्षेत्र की सर्वोत्तम सैलून सेवाओं से जोड़ना।",
+    "for_customers": "ग्राहकों के लिए",
+    "for_salon_owners": "सैलून मालिकों के लिए",
+    "contact": "संपर्क",
+    "help_support": "सहायता और सपोर्ट",
+    "list_salon": "अपना सैलून सूचीबद्ध करें",
+    "manage_bookings": "बुकिंग प्रबंधित करें",
+    "business_dashboard": "बिजनेस डैशबोर्ड",
+    "all_rights_reserved": "सभी अधिकार सुरक्षित।"
+  }
+}

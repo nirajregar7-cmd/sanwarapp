@@ -10,6 +10,8 @@ import {
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,6 +22,7 @@ export default function Layout({ children }: LayoutProps) {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, logoutMutation } = useAuth();
+  const { t } = useTranslation();
   
   // Auto-detect user type based on current route or authenticated user
   const isOwnerRoute = location.includes('/owner');
@@ -160,9 +163,12 @@ export default function Layout({ children }: LayoutProps) {
               </Button>
             )}
 
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {!isAuthenticated && (
               <Button asChild size="sm" className="bg-blue-600 text-white hover:bg-blue-700 text-xs sm:text-sm px-3 sm:px-4">
-                <a href="/api/login">Login</a>
+                <a href="/api/login">{t('nav.login')}</a>
               </Button>
             )}
           </div>

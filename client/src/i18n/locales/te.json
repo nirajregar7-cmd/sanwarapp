@@ -1,0 +1,132 @@
+{
+  "common": {
+    "welcome": "సన్వార్ కు స్వాగతం",
+    "loading": "లోడ్ అవుతోంది...",
+    "error": "ఏదో తప్పు జరిగింది",
+    "save": "సేవ్ చేయండి",
+    "cancel": "రద్దు చేయండి",
+    "edit": "సవరించండి",
+    "delete": "తొలగించండి",
+    "search": "వెతకండి",
+    "filter": "ఫిల్టర్",
+    "book_now": "ఇప్పుడే బుక్ చేయండి",
+    "view_details": "వివరాలు చూడండి",
+    "back": "వెనక్కి",
+    "next": "తర్వాత",
+    "submit": "సమర్పించండి",
+    "close": "మూసివేయండి"
+  },
+  "nav": {
+    "home": "హోమ్",
+    "find_salons": "సెలూన్లు కనుగొనండి",
+    "my_bookings": "నా బుకింగ్లు",
+    "my_salon": "నా సెలూన్",
+    "login": "లాగిన్",
+    "register": "నమోదు చేయండి",
+    "logout": "లాగ్ అవుట్",
+    "profile": "ప్రొఫైల్"
+  },
+  "hero": {
+    "title": "మీ పర్ఫెక్ట్ సెలూన్ అనుభవాన్ని బుక్ చేయండి",
+    "subtitle": "మీ ప్రాంతంలో అత్యుత్తమ సెలూన్లను కనుగొని లైవ్ అందుబాటుతో తక్షణం బుక్ చేయండి",
+    "join_shopkeeper": "దుకాణదారుగా చేరండి",
+    "book_salon": "ఇప్పుడే సెలూన్ బుక్ చేయండి",
+    "how_it_works": "ఇది ఎలా పనిచేస్తుంది"
+  },
+  "features": {
+    "instant_booking": "తక్షణ బుకింగ్",
+    "instant_booking_desc": "లైవ్ స్లాట్ అందుబాటుతో రియల్-టైమ్లో అపాయింట్మెంట్లు బుక్ చేయండి",
+    "verified_salons": "ధృవీకరించబడిన సెలూన్లు",
+    "verified_salons_desc": "అన్ని సెలూన్లు నిజమైన సమీక్షలు మరియు రేటింగ్లతో ధృవీకరించబడ్డాయి",
+    "secure_payment": "సురక్షిత చెల్లింపు",
+    "secure_payment_desc": "ఆన్లైన్లో నిర్ధారణ మొత్తం చెల్లించండి, సెలూన్లో సేవా మొత్తం చెల్లించండి"
+  },
+  "stats": {
+    "customers": "సంతోషకరమైన కస్టమర్లు",
+    "salons": "భాగస్వామి సెలూన్లు",
+    "bookings": "పూర్తి చేసిన బుకింగ్లు"
+  },
+  "services": {
+    "haircut": "హెయిర్ కట్",
+    "facial": "ఫేషియల్",
+    "massage": "మసాజ్",
+    "manicure": "మానిక్యూర్",
+    "pedicure": "పెడిక్యూర్",
+    "hair_color": "హెయిర్ కలర్",
+    "hair_wash": "హెయిర్ వాష్",
+    "beard_trim": "గడ్డం ట్రిమ్",
+    "bridal": "వధువు",
+    "party_makeup": "పార్టీ మేకప్"
+  },
+  "auth": {
+    "sign_in": "సైన్ ఇన్",
+    "sign_up": "సైన్ అప్",
+    "email": "ఇమెయిల్",
+    "password": "పాస్వర్డ్",
+    "confirm_password": "పాస్వర్డ్ నిర్ధారించండి",
+    "first_name": "మొదటి పేరు",
+    "last_name": "చివరి పేరు",
+    "phone": "ఫోన్ నంబర్",
+    "role": "నేను",
+    "customer": "కస్టమర్",
+    "salon_owner": "సెలూన్ యజమాని",
+    "already_have_account": "ఇప్పటికే ఖాతా ఉందా?",
+    "dont_have_account": "ఖాతా లేదా?",
+    "forgot_password": "పాస్వర్డ్ మర్చిపోయారా?",
+    "signin_success": "విజయవంతంగా సైన్ ఇన్ అయ్యారు!",
+    "signup_success": "ఖాతా విజయవంతంగా సృష్టించబడింది!",
+    "logout_success": "విజయవంతంగా లాగ్ అవుట్ అయ్యారు!"
+  },
+  "salon": {
+    "salon_details": "సెలూన్ వివరాలు",
+    "services_pricing": "సేవలు & ధరలు",
+    "available_slots": "అందుబాటులో ఉన్న టైమ్ స్లాట్లు",
+    "reviews": "సమీక్షలు & రేటింగ్లు",
+    "gallery": "గ్యాలరీ",
+    "contact_info": "సంప్రదింపు సమాచారం",
+    "working_hours": "పని గంటలు",
+    "book_appointment": "అపాయింట్మెంట్ బుక్ చేయండి",
+    "select_service": "సేవ ఎంచుకోండి",
+    "select_time": "సమయం ఎంచుకోండి",
+    "confirmation_amount": "నిర్ధారణ మొత్తం",
+    "total_service_cost": "మొత్తం సేవా ఖర్చు",
+    "pay_at_salon": "సెలూన్లో చెల్లించండి"
+  },
+  "booking": {
+    "booking_confirmed": "బుకింగ్ నిర్ధారించబడింది!",
+    "booking_details": "బుకింగ్ వివరాలు",
+    "customer_name": "కస్టమర్ పేరు",
+    "service": "సేవ",
+    "date_time": "తేదీ & సమయం",
+    "amount_paid": "చెల్లించిన మొత్తం",
+    "remaining_amount": "మిగిలిన మొత్తం",
+    "salon_address": "సెలూన్ చిరునామా",
+    "cancel_booking": "బుకింగ్ రద్దు చేయండి",
+    "reschedule": "మళ్లీ షెడ్యూల్ చేయండి",
+    "booking_status": "స్థితి"
+  },
+  "dashboard": {
+    "welcome_back": "తిరిగి స్వాగతం",
+    "recent_bookings": "ఇటీవలి బుకింగ్లు",
+    "earnings": "ఆదాయాలు",
+    "today": "ఈరోజు",
+    "this_week": "ఈ వారం",
+    "this_month": "ఈ నెల",
+    "manage_salon": "సెలూన్ నిర్వహించండి",
+    "manage_services": "సేవలను నిర్వహించండి",
+    "manage_slots": "టైమ్ స్లాట్లను నిర్వహించండి",
+    "view_bookings": "బుకింగ్లు చూడండి",
+    "analytics": "విశ్లేషణలు"
+  },
+  "footer": {
+    "tagline": "కస్టమర్లను వారి ప్రాంతంలోని ఉత్తమ సెలూన్ సేవలతో కనెక్ట్ చేయడం.",
+    "for_customers": "కస్టమర్ల కోసం",
+    "for_salon_owners": "సెలూన్ యజమానుల కోసం",
+    "contact": "సంప్రదింపు",
+    "help_support": "సహాయం & మద్దతు",
+    "list_salon": "మీ సెలూన్ను జాబితా చేయండి",
+    "manage_bookings": "బుకింగ్లను నిర్వహించండి",
+    "business_dashboard": "వ్యాపార డాష్బోర్డ్",
+    "all_rights_reserved": "అన్ని హక్కులు కలిగి ఉన్నాయి."
+  }
+}
