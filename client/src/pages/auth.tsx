@@ -31,12 +31,15 @@ export default function AuthPage() {
     userType: "customer" as "customer" | "salon_owner",
     referralCode: "",
   });
+  
+  const [returnTo, setReturnTo] = useState<string | null>(null);
 
-  // Get referral code from URL on page load
+  // Get referral code and returnTo from URL on page load
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refCode = urlParams.get('ref');
     const userType = urlParams.get('type');
+    const returnToParam = urlParams.get('returnTo');
     
     if (refCode) {
       setRegisterForm(prev => ({ ...prev, referralCode: refCode }));
@@ -46,14 +49,19 @@ export default function AuthPage() {
     if (userType && (userType === "customer" || userType === "salon_owner")) {
       setRegisterForm(prev => ({ ...prev, userType: userType as "customer" | "salon_owner" }));
     }
+    
+    if (returnToParam) {
+      setReturnTo(returnToParam);
+    }
   }, []);
 
-  // Redirect to home if user is already logged in
+  // Redirect if user is already logged in
   useEffect(() => {
     if (!isLoading && user) {
-      setLocation("/");
+      // Redirect to returnTo path if specified, otherwise home
+      setLocation(returnTo || "/");
     }
-  }, [user, isLoading, setLocation]);
+  }, [user, isLoading, setLocation, returnTo]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +80,8 @@ export default function AuthPage() {
           title: "Welcome back!",
           description: "You've been logged in successfully",
         });
-        setLocation("/");
+        // Redirect to returnTo path if specified, otherwise home
+        setLocation(returnTo || "/");
       },
     });
   };
@@ -108,7 +117,8 @@ export default function AuthPage() {
           title: "Account Created!",
           description: successMessage,
         });
-        setLocation("/");
+        // Redirect to returnTo path if specified, otherwise home
+        setLocation(returnTo || "/");
       },
     });
   };

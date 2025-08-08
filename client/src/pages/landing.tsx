@@ -3,13 +3,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee } from "lucide-react";
+import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee, Gift } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Landing() {
   const { t } = useTranslation();
+  const { isAuthenticated, user } = useAuth();
+
+  // Handle refer & earn button clicks
+  const handleReferEarnClick = (userType: string) => {
+    if (isAuthenticated) {
+      // User is logged in, redirect to refer & earn page
+      window.location.href = "/refer-earn";
+    } else {
+      // User not logged in, redirect to auth with return path
+      window.location.href = "/auth?returnTo=/refer-earn";
+    }
+  };
   // Fetch platform statistics
   const { data: stats, isLoading: statsLoading } = useQuery<PlatformStats>({
     queryKey: ["/api/platform/stats"],
@@ -116,12 +129,26 @@ export default function Landing() {
                     <li>• Manage bookings</li>
                     <li>• Leave reviews & earn rewards</li>
                   </ul>
-                  <Button 
-                    size="lg" 
-                    className="w-full bg-white hover:bg-gray-100 text-blue-600 font-semibold py-3 rounded-lg"
-                  >
-                    {t('hero.signup_customer')}
-                  </Button>
+                  <div className="space-y-3">
+                    <Button 
+                      size="lg" 
+                      className="w-full bg-white hover:bg-gray-100 text-blue-600 font-semibold py-3 rounded-lg"
+                    >
+                      {t('hero.signup_customer')}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="w-full bg-white/10 border-white/30 hover:bg-white/20 text-white font-medium py-2 rounded-lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReferEarnClick('customer');
+                      }}
+                    >
+                      <Gift className="h-4 w-4 mr-2" />
+                      Refer & Earn
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -142,12 +169,26 @@ export default function Landing() {
                     <li>• Create time slots</li>
                     <li>• Handle bookings & earnings</li>
                   </ul>
-                  <Button 
-                    size="lg" 
-                    className="w-full bg-white hover:bg-gray-100 text-purple-600 font-semibold py-3 rounded-lg"
-                  >
-                    {t('hero.signup_owner')}
-                  </Button>
+                  <div className="space-y-3">
+                    <Button 
+                      size="lg" 
+                      className="w-full bg-white hover:bg-gray-100 text-purple-600 font-semibold py-3 rounded-lg"
+                    >
+                      {t('hero.signup_owner')}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="w-full bg-white/10 border-white/30 hover:bg-white/20 text-white font-medium py-2 rounded-lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReferEarnClick('salon_owner');
+                      }}
+                    >
+                      <Gift className="h-4 w-4 mr-2" />
+                      Refer & Earn
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
