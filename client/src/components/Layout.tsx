@@ -31,9 +31,9 @@ export default function Layout({ children }: LayoutProps) {
   const handleUserTypeSwitch = (type: "customer" | "salon_owner") => {
     // Navigate to the appropriate route
     if (type === "salon_owner") {
-      window.location.href = "/owner";
+      window.location.href = "/";
     } else {
-      window.location.href = "/customer";
+      window.location.href = "/";
     }
   };
 

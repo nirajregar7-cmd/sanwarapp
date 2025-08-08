@@ -6,6 +6,8 @@ Sanwar is a smart salon booking platform that helps local salon shopkeepers digi
 
 **Latest Update (August 2025):** Successfully transitioned from Replit Auth to traditional email/password authentication, making the platform accessible to everyone without requiring Replit accounts. Users can now sign up by choosing their role and login with email and password. Platform is configured for production deployment with custom domain sanwarhub.in ready for connection.
 
+**Navigation System Update:** Implemented complete role-based separation - salon owners see only Dashboard, Time Slots, and Account Details navigation. Customers see only Home, Find Salons, Bookings, and Refer & Earn. No user type switcher for salon owners ensures focused business interface. Both mobile and desktop navigation are role-specific with protected routes preventing cross-access.
+
 **Special Referral Milestone System:** Implemented advanced referral reward system for shopkeepers - when a salon owner refers 5 unique paying customers, they receive 100% of the confirmation fees from those 5 bookings credited to their wallet. Progress tracking shows current status (e.g., "3/5 customers") and automatically resets for the next cycle after completion.
 
 **Important:** The system uses completely manual time slot creation - only slots explicitly created by salon owners appear for customer booking. No automatic generation occurs.

@@ -105,16 +105,20 @@ function Router() {
           )}
 
           {/* Owner-specific routes */}
-          <Route path="/owner/time-slots">
-            <Layout>
-              <TimeSlots />
-            </Layout>
-          </Route>
-          <Route path="/owner/account-details">
-            <Layout>
-              <AccountDetails />
-            </Layout>
-          </Route>
+          {(user as any)?.userType === 'salon_owner' && (
+            <>
+              <Route path="/owner/time-slots">
+                <Layout>
+                  <TimeSlots />
+                </Layout>
+              </Route>
+              <Route path="/owner/account-details">
+                <Layout>
+                  <AccountDetails />
+                </Layout>
+              </Route>
+            </>
+          )}
           
           {/* Notification settings route */}
           <Route path="/notifications">
