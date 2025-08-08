@@ -631,7 +631,12 @@ export default function SalonDetail() {
                                         Loading available slots...
                                       </p>
                                     ) : timeSlots && timeSlots.length > 0 ? (
-                                      timeSlots.filter((slot: TimeSlot) => slot.isAvailable).map((slot: TimeSlot) => (
+                                      // Group time slots by unique start times and show only one button per time
+                                      Array.from(new Map(
+                                        timeSlots
+                                          .filter((slot: TimeSlot) => slot.isAvailable)
+                                          .map((slot: TimeSlot) => [slot.startTime, slot])
+                                      ).values()).map((slot: TimeSlot) => (
                                         <Button
                                           key={slot.id}
                                           type="button"
