@@ -473,6 +473,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transferStatus: 'pending'
       });
       
+      // Handle referral milestone tracking for shopkeepers
+      // Check if the customer was referred by a salon owner
+      try {
+        const [referralRecord] = await db.select()
+          .from(referrals)
+          .where(and(
+            eq(referrals.referredId, userId),
+            eq(referrals.status, "pending")
+          ));
+
+        if (referralRecord) {
+          // Complete the referral
+          await storage.completeReferral(referralRecord.id, booking.id);
+          
+          // Check if referrer is a salon owner and update milestone progress
+          const [referrer] = await db.select()
+            .from(users)
+            .where(eq(users.id, referralRecord.referrerId));
+
+          if (referrer && referrer.userType === "salon_owner") {
+            const milestoneCompleted = await storage.updateReferralMilestoneProgress(
+              referralRecord.referrerId,
+              booking.id,
+              confirmationAmount
+            );
+
+            if (milestoneCompleted) {
+              console.log(`🎉 Milestone completed for referrer ${referrer.firstName}! 5-customer reward credited.`);
+            }
+          }
+
+          // Add regular referral reward to customer wallet
+          await storage.addWalletCredit(
+            userId,
+            parseFloat(referralRecord.rewardAmount),
+            "Referral reward for completing first booking",
+            referralRecord.id,
+            "referral"
+          );
+        }
+      } catch (referralError) {
+        console.error("Error processing referral:", referralError);
+        // Don't fail the booking if referral processing fails
+      }
+
       // Send booking confirmation notification
       try {
         await sendBookingConfirmationNotification(booking.id);
@@ -1507,6 +1552,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching reviews:", error);
       res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  // Referral milestone endpoint for shopkeepers
+  app.get('/api/referral-milestone', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Check if user is a salon owner
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user || user.userType !== "salon_owner") {
+        return res.status(403).json({ message: "Access denied. Only salon owners can view referral milestones." });
+      }
+
+      const milestone = await storage.getOrCreateReferralMilestone(userId);
+      res.json(milestone);
+    } catch (error) {
+      console.error("Error fetching referral milestone:", error);
+      res.status(500).json({ message: "Failed to fetch referral milestone" });
     }
   });
 

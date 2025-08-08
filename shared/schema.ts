@@ -271,8 +271,25 @@ export const referrals = pgTable("referrals", {
   status: varchar("status", { enum: ["pending", "completed", "expired"] }).default("pending"),
   rewardAmount: decimal("reward_amount", { precision: 10, scale: 2 }).default("50"), // ₹50 default
   isRewardClaimed: boolean("is_reward_claimed").default(false),
+  bookingId: varchar("booking_id").references(() => bookings.id, { onDelete: "set null" }), // Track which booking completed the referral
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
+});
+
+// Referral milestones table for tracking special rewards (like 5-customer milestone)
+export const referralMilestones = pgTable("referral_milestones", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  milestoneType: varchar("milestone_type", { enum: ["5_customer_full_fee"] }).notNull(),
+  targetCount: integer("target_count").notNull(), // e.g., 5 for 5-customer milestone
+  currentCount: integer("current_count").default(0),
+  isCompleted: boolean("is_completed").default(false),
+  rewardAmount: decimal("reward_amount", { precision: 10, scale: 2 }).notNull(), // Total confirmation fees from 5 bookings
+  completedBookingIds: text("completed_booking_ids").array().default([]), // Track which bookings contributed
+  completedAt: timestamp("completed_at"),
+  rewardClaimed: boolean("reward_claimed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Relations
@@ -410,6 +427,17 @@ export const referralsRelations = relations(referrals, ({ one }) => ({
     references: [users.id],
     relationName: "user_referrals_received",
   }),
+  booking: one(bookings, {
+    fields: [referrals.bookingId],
+    references: [bookings.id],
+  }),
+}));
+
+export const referralMilestonesRelations = relations(referralMilestones, ({ one }) => ({
+  referrer: one(users, {
+    fields: [referralMilestones.referrerId],
+    references: [users.id],
+  }),
 }));
 
 export const salonGalleryRelations = relations(salonGallery, ({ one }) => ({
@@ -491,6 +519,13 @@ export const insertReferralSchema = createInsertSchema(referrals).omit({
   completedAt: true,
 });
 
+export const insertReferralMilestoneSchema = createInsertSchema(referralMilestones).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+});
+
 export const insertSalonGallerySchema = createInsertSchema(salonGallery).omit({
   id: true,
   createdAt: true,
@@ -520,9 +555,11 @@ export type InsertWallet = z.infer<typeof insertWalletSchema>;
 export type WalletTransaction = typeof walletTransactions.$inferSelect;
 export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
 export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = z.infer<typeof insertReferralSchema>;
+export type ReferralMilestone = typeof referralMilestones.$inferSelect;
+export type InsertReferralMilestone = z.infer<typeof insertReferralMilestoneSchema>;
 export type SalonOwnerAccount = typeof salonOwnerAccounts.$inferSelect;
 export type InsertSalonOwnerAccount = typeof salonOwnerAccounts.$inferInsert;
 export type RevenueShare = typeof revenueShares.$inferSelect;
-export type InsertReferral = z.infer<typeof insertReferralSchema>;
 export type SalonGallery = typeof salonGallery.$inferSelect;
 export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;

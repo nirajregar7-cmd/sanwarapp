@@ -7,6 +7,10 @@ import {
   bookings,
   reviews,
   salonGallery,
+  referrals,
+  referralMilestones,
+  wallets,
+  walletTransactions,
   type User,
   type UpsertUser,
   type Salon,
@@ -23,6 +27,14 @@ import {
   type InsertReview,
   type SalonGallery,
   type InsertSalonGallery,
+  type Referral,
+  type InsertReferral,
+  type ReferralMilestone,
+  type InsertReferralMilestone,
+  type Wallet,
+  type InsertWallet,
+  type WalletTransaction,
+  type InsertWalletTransaction,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, asc, or } from "drizzle-orm";
@@ -74,6 +86,19 @@ export interface IStorage {
   getGalleryImagesBySalon(salonId: string): Promise<SalonGallery[]>;
   updateGalleryImage(id: string, galleryImage: Partial<InsertSalonGallery>): Promise<SalonGallery | undefined>;
   deleteGalleryImage(id: string): Promise<void>;
+
+  // Referral operations
+  getReferralByCode(referralCode: string): Promise<Referral | undefined>;
+  createReferral(referral: InsertReferral): Promise<Referral>;
+  completeReferral(referralId: string, bookingId: string): Promise<void>;
+  
+  // Referral milestone operations
+  getOrCreateReferralMilestone(referrerId: string): Promise<ReferralMilestone>;
+  updateReferralMilestoneProgress(referrerId: string, bookingId: string, confirmationAmount: number): Promise<boolean>; // Returns true if milestone completed
+  
+  // Wallet operations
+  getOrCreateWallet(customerId: string): Promise<Wallet>;
+  addWalletCredit(customerId: string, amount: number, description: string, referenceId: string, referenceType: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -360,6 +385,126 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGalleryImage(id: string): Promise<void> {
     await db.update(salonGallery).set({ isActive: false }).where(eq(salonGallery.id, id));
+  }
+
+  // Referral operations
+  async getReferralByCode(referralCode: string): Promise<Referral | undefined> {
+    const [referral] = await db.select().from(referrals).where(eq(referrals.referralCode, referralCode));
+    return referral;
+  }
+
+  async createReferral(referral: InsertReferral): Promise<Referral> {
+    const [newReferral] = await db.insert(referrals).values(referral).returning();
+    return newReferral;
+  }
+
+  async completeReferral(referralId: string, bookingId: string): Promise<void> {
+    await db.update(referrals).set({
+      status: "completed",
+      bookingId: bookingId,
+      completedAt: new Date(),
+    }).where(eq(referrals.id, referralId));
+  }
+
+  // Referral milestone operations
+  async getOrCreateReferralMilestone(referrerId: string): Promise<ReferralMilestone> {
+    // Try to get existing active milestone
+    const [existingMilestone] = await db.select().from(referralMilestones)
+      .where(and(
+        eq(referralMilestones.referrerId, referrerId),
+        eq(referralMilestones.isCompleted, false),
+        eq(referralMilestones.milestoneType, "5_customer_full_fee")
+      ));
+
+    if (existingMilestone) {
+      return existingMilestone;
+    }
+
+    // Create new milestone
+    const [newMilestone] = await db.insert(referralMilestones).values({
+      referrerId,
+      milestoneType: "5_customer_full_fee",
+      targetCount: 5,
+      currentCount: 0,
+      rewardAmount: "0",
+      completedBookingIds: [],
+    }).returning();
+
+    return newMilestone;
+  }
+
+  async updateReferralMilestoneProgress(referrerId: string, bookingId: string, confirmationAmount: number): Promise<boolean> {
+    const milestone = await this.getOrCreateReferralMilestone(referrerId);
+    
+    // Check if this booking is already counted
+    if (milestone.completedBookingIds && milestone.completedBookingIds.includes(bookingId)) {
+      return false; // Already counted
+    }
+
+    const newCount = milestone.currentCount + 1;
+    const newCompletedBookingIds = [...(milestone.completedBookingIds || []), bookingId];
+    const newRewardAmount = parseFloat(milestone.rewardAmount) + confirmationAmount;
+    
+    const isCompleted = newCount >= milestone.targetCount;
+
+    await db.update(referralMilestones).set({
+      currentCount: newCount,
+      completedBookingIds: newCompletedBookingIds,
+      rewardAmount: newRewardAmount.toString(),
+      isCompleted,
+      completedAt: isCompleted ? new Date() : undefined,
+    }).where(eq(referralMilestones.id, milestone.id));
+
+    // If milestone completed, credit the reward to referrer's wallet
+    if (isCompleted) {
+      await this.addWalletCredit(
+        referrerId,
+        newRewardAmount,
+        `5-Customer Milestone Reward: 100% confirmation fees from ${milestone.targetCount} bookings`,
+        milestone.id,
+        "referral_milestone"
+      );
+    }
+
+    return isCompleted;
+  }
+
+  // Wallet operations
+  async getOrCreateWallet(customerId: string): Promise<Wallet> {
+    const [existingWallet] = await db.select().from(wallets)
+      .where(eq(wallets.customerId, customerId));
+
+    if (existingWallet) {
+      return existingWallet;
+    }
+
+    const [newWallet] = await db.insert(wallets).values({
+      customerId,
+      balance: "0",
+    }).returning();
+
+    return newWallet;
+  }
+
+  async addWalletCredit(customerId: string, amount: number, description: string, referenceId: string, referenceType: string): Promise<void> {
+    const wallet = await this.getOrCreateWallet(customerId);
+    const newBalance = parseFloat(wallet.balance) + amount;
+
+    // Update wallet balance
+    await db.update(wallets).set({
+      balance: newBalance.toString(),
+      updatedAt: new Date(),
+    }).where(eq(wallets.id, wallet.id));
+
+    // Record transaction
+    await db.insert(walletTransactions).values({
+      walletId: wallet.id,
+      type: "credit",
+      amount: amount.toString(),
+      description,
+      referenceId,
+      referenceType,
+    });
   }
 }
 
