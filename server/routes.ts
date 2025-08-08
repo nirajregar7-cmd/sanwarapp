@@ -115,6 +115,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Location-based salon search endpoint
+  app.get('/api/salons/search', async (req, res) => {
+    try {
+      const { 
+        lat, 
+        lng, 
+        radius = '50', // Default 50km radius
+        name,
+        minRating = '0',
+        maxPrice = '10000'
+      } = req.query;
+
+      let query = db.select().from(salons).where(eq(salons.isActive, true));
+      
+      // Apply name filter
+      if (name && typeof name === 'string') {
+        query = query.where(sql`LOWER(${salons.name}) LIKE LOWER(${'%' + name + '%'})`);
+      }
+      
+      // Apply rating filter
+      if (minRating && typeof minRating === 'string') {
+        const minRatingValue = parseFloat(minRating);
+        if (minRatingValue > 0) {
+          query = query.where(sql`${salons.averageRating} >= ${minRatingValue}`);
+        }
+      }
+      
+      // Apply price filter
+      if (maxPrice && typeof maxPrice === 'string') {
+        const maxPriceValue = parseInt(maxPrice);
+        if (maxPriceValue < 10000) {
+          query = query.where(sql`${salons.confirmationAmount} <= ${maxPriceValue}`);
+        }
+      }
+
+      const allSalons = await query;
+      
+      // If location is provided, filter by distance
+      if (lat && lng && typeof lat === 'string' && typeof lng === 'string') {
+        const userLat = parseFloat(lat);
+        const userLng = parseFloat(lng);
+        const searchRadius = parseFloat(radius);
+        
+        if (!isNaN(userLat) && !isNaN(userLng)) {
+          const salonsWithDistance = allSalons
+            .filter(salon => salon.latitude && salon.longitude)
+            .map(salon => {
+              const salonLat = parseFloat(salon.latitude!);
+              const salonLng = parseFloat(salon.longitude!);
+              
+              // Calculate distance using Haversine formula
+              const R = 6371; // Earth's radius in kilometers
+              const dLat = (salonLat - userLat) * Math.PI / 180;
+              const dLng = (salonLng - userLng) * Math.PI / 180;
+              const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(userLat * Math.PI / 180) * Math.cos(salonLat * Math.PI / 180) * 
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              const distance = R * c;
+              
+              return {
+                ...salon,
+                distance
+              };
+            })
+            .filter(salon => salon.distance <= searchRadius)
+            .sort((a, b) => a.distance - b.distance);
+          
+          return res.json(salonsWithDistance);
+        }
+      }
+      
+      // If no location or invalid coordinates, return all matching salons
+      res.json(allSalons);
+    } catch (error) {
+      console.error("Error searching salons:", error);
+      res.status(500).json({ message: "Failed to search salons" });
+    }
+  });
+
   // Individual salon details endpoint  
   app.get('/api/salons/:salonId', async (req, res) => {
     try {

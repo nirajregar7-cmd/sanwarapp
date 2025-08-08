@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift } from "lucide-react";
+import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,6 +62,12 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                   {userType === "customer" && (
                     <>
+                      <Link 
+                        href="/search" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Find Salons
+                      </Link>
                       <Link 
                         href="/bookings" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
@@ -200,6 +206,14 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                   {userType === "customer" && (
                     <>
+                      <Link 
+                        href="/search" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Search className="h-4 w-4 mr-3" />
+                        Find Salons
+                      </Link>
                       <Link 
                         href="/bookings" 
                         className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"

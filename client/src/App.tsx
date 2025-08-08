@@ -15,6 +15,7 @@ import NotificationSettingsPage from "@/pages/NotificationSettingsPage";
 import SalonDetail from "@/pages/customer/salon-detail";
 import CustomerBookings from "@/pages/customer/bookings";
 import ReferEarnPage from "@/pages/customer/refer-earn";
+import SalonSearchPage from "@/pages/customer/salon-search";
 import OwnerDashboard from "@/pages/owner/dashboard";
 import TimeSlots from "@/pages/owner/time-slots";
 import AccountDetails from "@/pages/owner/account-details";
@@ -91,6 +92,13 @@ function Router() {
           <Route path="/refer-earn">
             <Layout>
               <ReferEarnPage />
+            </Layout>
+          </Route>
+
+          {/* Salon Search page */}
+          <Route path="/search">
+            <Layout>
+              <SalonSearchPage />
             </Layout>
           </Route>
 
