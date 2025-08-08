@@ -2065,7 +2065,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(referrals.referrerId, userId))
         .limit(1);
 
-      const referralCode = referralRecord?.referralCode || `SALON${userId.slice(-6).toUpperCase()}`;
+      const referralCode = referralRecord?.referralCode || `S${userId.slice(-8).toUpperCase()}`;
 
       const campaign = {
         id: milestone.id,
@@ -2101,18 +2101,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only salon owners can create referral campaigns" });
       }
 
-      // Check if campaign already exists
+      // Check if campaign already exists and reset if completed
       const [existingMilestone] = await db.select()
         .from(referralMilestones)
         .where(eq(referralMilestones.referrerId, userId))
         .limit(1);
 
       if (existingMilestone) {
-        return res.status(400).json({ message: "Referral campaign already exists" });
+        // If milestone is completed, allow creating a new one by deleting the old
+        if (existingMilestone.isCompleted) {
+          await db.delete(referralMilestones)
+            .where(eq(referralMilestones.referrerId, userId));
+        } else {
+          return res.status(400).json({ message: "Referral campaign already exists" });
+        }
       }
 
-      // Generate referral code
-      const referralCode = `SALON${userId.slice(-6).toUpperCase()}`;
+      // Generate referral code (max 10 characters)
+      const referralCode = `S${userId.slice(-8).toUpperCase()}`;
 
       // Create referral milestone record
       const [milestone] = await db.insert(referralMilestones).values({
@@ -2127,20 +2133,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }).returning();
 
       // Also create/update referral record for the code
-      await db.insert(referrals).values({
-        referrerId: userId,
-        referralCode: referralCode,
-        referralType: "shopkeeper_milestone",
-        status: "pending",
-        rewardAmount: "0",
-        isRewardClaimed: false,
-      }).onConflictDoUpdate({
-        target: referrals.referrerId,
-        set: {
+      try {
+        await db.insert(referrals).values({
+          referrerId: userId,
           referralCode: referralCode,
           referralType: "shopkeeper_milestone",
-        },
-      });
+          status: "pending",
+          rewardAmount: "0",
+          isRewardClaimed: false,
+        });
+      } catch (error) {
+        // If referral already exists, update it
+        await db.update(referrals)
+          .set({
+            referralCode: referralCode,
+            referralType: "shopkeeper_milestone",
+          })
+          .where(eq(referrals.referrerId, userId));
+      }
 
       const campaign = {
         id: milestone.id,
@@ -2216,6 +2226,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching referral history:", error);
       res.status(500).json({ message: "Failed to fetch referral history" });
+    }
+  });
+
+  // Reset referral campaign (for testing purposes)
+  app.delete('/api/owner/referral-campaign', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if user is salon owner
+      const user = await storage.getUser(userId);
+      if (!user || user.userType !== 'salon_owner') {
+        return res.status(403).json({ message: "Only salon owners can reset referral campaigns" });
+      }
+
+      // Delete milestone and referral records
+      await db.delete(referralMilestones).where(eq(referralMilestones.referrerId, userId));
+      await db.delete(referrals).where(eq(referrals.referrerId, userId));
+
+      res.json({ message: "Referral campaign reset successfully" });
+    } catch (error) {
+      console.error("Error resetting referral campaign:", error);
+      res.status(500).json({ message: "Failed to reset referral campaign" });
     }
   });
 
