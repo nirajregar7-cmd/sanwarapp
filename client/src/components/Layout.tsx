@@ -58,7 +58,7 @@ export default function Layout({ children }: LayoutProps) {
                     href="/" 
                     className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                   >
-                    Home
+                    {userType === "salon_owner" ? "Dashboard" : "Home"}
                   </Link>
                   {userType === "customer" && (
                     <>
@@ -82,6 +82,22 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                     </>
                   )}
+                  {userType === "salon_owner" && (
+                    <>
+                      <Link 
+                        href="/owner/time-slots" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Time Slots
+                      </Link>
+                      <Link 
+                        href="/owner/account-details" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Account Details
+                      </Link>
+                    </>
+                  )}
                 </nav>
               )}
             </div>
@@ -101,33 +117,30 @@ export default function Layout({ children }: LayoutProps) {
                   </Button>
                 </Link>
                 
-                {/* User Type Switcher */}
-                <div className="bg-gray-100 p-1 rounded-lg flex">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-700 hover:text-gray-900 ${
-                      userType === "customer" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-200"
-                    }`}
-                    onClick={() => handleUserTypeSwitch("customer")}
-                  >
-                    <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">Customer</span>
-                    <span className="sm:hidden">User</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-700 hover:text-gray-900 ${
-                      userType === "salon_owner" ? "bg-green-100 text-green-700" : "hover:bg-gray-200"
-                    }`}
-                    onClick={() => handleUserTypeSwitch("salon_owner")}
-                  >
-                    <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">Salon Owner</span>
-                    <span className="sm:hidden">Owner</span>
-                  </Button>
-                </div>
+                {/* User Type Switcher - Only show for customers */}
+                {userType === "customer" && (
+                  <div className="bg-gray-100 p-1 rounded-lg flex">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all bg-blue-100 text-blue-700"
+                    >
+                      <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Customer</span>
+                      <span className="sm:hidden">User</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-700 hover:text-gray-900 hover:bg-gray-200"
+                      onClick={() => handleUserTypeSwitch("salon_owner")}
+                    >
+                      <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Salon Owner</span>
+                      <span className="sm:hidden">Owner</span>
+                    </Button>
+                  </div>
+                )}
                 
                 {/* Profile Menu */}
                 <DropdownMenu>
@@ -202,7 +215,7 @@ export default function Layout({ children }: LayoutProps) {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Home className="h-4 w-4 mr-3" />
-                    Home
+                    {userType === "salon_owner" ? "Dashboard" : "Home"}
                   </Link>
                   {userType === "customer" && (
                     <>
@@ -232,42 +245,56 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                     </>
                   )}
+                  {userType === "salon_owner" && (
+                    <>
+                      <Link 
+                        href="/owner/time-slots" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Calendar className="h-4 w-4 mr-3" />
+                        Time Slots
+                      </Link>
+                      <Link 
+                        href="/owner/account-details" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Settings className="h-4 w-4 mr-3" />
+                        Account Details
+                      </Link>
+                    </>
+                  )}
                 </div>
 
-                {/* User Type Switcher Mobile */}
-                <div className="space-y-2 border-t pt-4">
-                  <p className="text-sm font-medium text-gray-700">Switch Mode:</p>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`flex-1 text-xs font-medium ${
-                        userType === "customer" ? "bg-blue-100 text-blue-700" : "text-gray-700"
-                      }`}
-                      onClick={() => {
-                        handleUserTypeSwitch("customer");
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Customer
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`flex-1 text-xs font-medium ${
-                        userType === "salon_owner" ? "bg-green-100 text-green-700" : "text-gray-700"
-                      }`}
-                      onClick={() => {
-                        handleUserTypeSwitch("salon_owner");
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <Store className="h-4 w-4 mr-2" />
-                      Salon Owner
-                    </Button>
+                {/* User Type Switcher Mobile - Only show for customers */}
+                {userType === "customer" && (
+                  <div className="space-y-2 border-t pt-4">
+                    <p className="text-sm font-medium text-gray-700">Switch Mode:</p>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 text-xs font-medium bg-blue-100 text-blue-700"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Customer
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 text-xs font-medium text-gray-700"
+                        onClick={() => {
+                          handleUserTypeSwitch("salon_owner");
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <Store className="h-4 w-4 mr-2" />
+                        Salon Owner
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Mobile Menu Items */}
                 <div className="border-t border-gray-200 pt-4 space-y-2">

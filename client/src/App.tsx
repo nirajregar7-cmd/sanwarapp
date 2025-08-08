@@ -82,25 +82,27 @@ function Router() {
           </Route>
           
           {/* Customer-specific routes */}
-          <Route path="/bookings">
-            <Layout>
-              <CustomerBookings />
-            </Layout>
-          </Route>
+          {(user as any)?.userType === 'customer' && (
+            <>
+              <Route path="/bookings">
+                <Layout>
+                  <CustomerBookings />
+                </Layout>
+              </Route>
 
-          {/* Customer Refer & Earn page */}
-          <Route path="/refer-earn">
-            <Layout>
-              <ReferEarnPage />
-            </Layout>
-          </Route>
+              <Route path="/refer-earn">
+                <Layout>
+                  <ReferEarnPage />
+                </Layout>
+              </Route>
 
-          {/* Salon Search page */}
-          <Route path="/search">
-            <Layout>
-              <SalonSearchPage />
-            </Layout>
-          </Route>
+              <Route path="/search">
+                <Layout>
+                  <SalonSearchPage />
+                </Layout>
+              </Route>
+            </>
+          )}
 
           {/* Owner-specific routes */}
           <Route path="/owner/time-slots">
