@@ -84,6 +84,12 @@ export default function Layout({ children }: LayoutProps) {
                         Time Slots
                       </Link>
                       <Link 
+                        href="/owner/refer-earn" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Refer & Earn
+                      </Link>
+                      <Link 
                         href="/owner/account-details" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
@@ -210,6 +216,14 @@ export default function Layout({ children }: LayoutProps) {
                       >
                         <Calendar className="h-4 w-4 mr-3" />
                         Time Slots
+                      </Link>
+                      <Link 
+                        href="/owner/refer-earn" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Gift className="h-4 w-4 mr-3" />
+                        Refer & Earn
                       </Link>
                       <Link 
                         href="/owner/account-details" 

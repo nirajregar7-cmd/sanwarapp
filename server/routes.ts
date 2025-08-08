@@ -9,7 +9,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount } from "./payment";
@@ -2027,6 +2027,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching notification history:", error);
       res.status(500).json({ message: "Failed to fetch notification history" });
+    }
+  });
+
+  // Salon Owner Referral Campaign Endpoints
+  app.get('/api/owner/referral-campaign', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if user is salon owner
+      const user = await storage.getUser(userId);
+      if (!user || user.userType !== 'salon_owner') {
+        return res.status(403).json({ message: "Only salon owners can access referral campaigns" });
+      }
+
+      // Check for existing milestone campaign
+      const [milestone] = await db.select()
+        .from(referralMilestones)
+        .where(eq(referralMilestones.referrerId, userId))
+        .limit(1);
+
+      if (!milestone) {
+        return res.json(null);
+      }
+
+      // Calculate progress and reward info
+      const progressToMilestone = milestone.currentCount || 0;
+      const nextMilestone = milestone.targetCount;
+      const milestoneReward = milestone.rewardAmount || "0";
+
+      // Get referral code from referrals table
+      const [referralRecord] = await db.select()
+        .from(referrals)
+        .where(eq(referrals.referrerId, userId))
+        .limit(1);
+
+      const referralCode = referralRecord?.referralCode || `SALON${userId.slice(-6).toUpperCase()}`;
+
+      const campaign = {
+        id: milestone.id,
+        referrerId: milestone.referrerId,
+        referralCode: referralCode,
+        totalReferred: milestone.currentCount || 0,
+        completedReferrals: milestone.currentCount || 0,
+        totalEarned: milestone.rewardClaimed ? milestone.rewardAmount : "0",
+        isActive: !milestone.isCompleted,
+        nextMilestone: nextMilestone,
+        progressToMilestone: Math.min(progressToMilestone, nextMilestone),
+        milestoneReward: milestoneReward,
+        createdAt: milestone.createdAt?.toISOString() || new Date().toISOString(),
+      };
+
+      res.json(campaign);
+    } catch (error) {
+      console.error("Error fetching referral campaign:", error);
+      res.status(500).json({ message: "Failed to fetch referral campaign" });
+    }
+  });
+
+  app.post('/api/owner/referral-campaign', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if user is salon owner
+      const user = await storage.getUser(userId);
+      if (!user || user.userType !== 'salon_owner') {
+        return res.status(403).json({ message: "Only salon owners can create referral campaigns" });
+      }
+
+      // Check if campaign already exists
+      const [existingMilestone] = await db.select()
+        .from(referralMilestones)
+        .where(eq(referralMilestones.referrerId, userId))
+        .limit(1);
+
+      if (existingMilestone) {
+        return res.status(400).json({ message: "Referral campaign already exists" });
+      }
+
+      // Generate referral code
+      const referralCode = `SALON${userId.slice(-6).toUpperCase()}`;
+
+      // Create referral milestone record
+      const [milestone] = await db.insert(referralMilestones).values({
+        referrerId: userId,
+        milestoneType: "5_customer_full_fee",
+        targetCount: 3, // Changed to 3 as per requirement
+        currentCount: 0,
+        isCompleted: false,
+        rewardAmount: "0", // Will be calculated when milestone is reached
+        completedBookingIds: [],
+        rewardClaimed: false,
+      }).returning();
+
+      // Also create/update referral record for the code
+      await db.insert(referrals).values({
+        referrerId: userId,
+        referralCode: referralCode,
+        referralType: "shopkeeper_milestone",
+        status: "pending",
+        rewardAmount: "0",
+        isRewardClaimed: false,
+      }).onConflictDoUpdate({
+        target: referrals.referrerId,
+        set: {
+          referralCode: referralCode,
+          referralType: "shopkeeper_milestone",
+        },
+      });
+
+      const campaign = {
+        id: milestone.id,
+        referrerId: milestone.referrerId,
+        referralCode: referralCode,
+        totalReferred: 0,
+        completedReferrals: 0,
+        totalEarned: "0",
+        isActive: true,
+        nextMilestone: 3,
+        progressToMilestone: 0,
+        milestoneReward: "0",
+        createdAt: milestone.createdAt?.toISOString() || new Date().toISOString(),
+      };
+
+      res.json(campaign);
+    } catch (error) {
+      console.error("Error creating referral campaign:", error);
+      res.status(500).json({ message: "Failed to create referral campaign" });
+    }
+  });
+
+  app.get('/api/owner/referral-history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if user is salon owner
+      const user = await storage.getUser(userId);
+      if (!user || user.userType !== 'salon_owner') {
+        return res.status(403).json({ message: "Only salon owners can access referral history" });
+      }
+
+      // Get referral code for this salon owner
+      const [referralRecord] = await db.select()
+        .from(referrals)
+        .where(eq(referrals.referrerId, userId))
+        .limit(1);
+
+      if (!referralRecord) {
+        return res.json([]);
+      }
+
+      // Get bookings made with this referral code
+      const referredBookings = await db.select({
+        id: bookings.id,
+        customerName: users.name,
+        customerPhone: users.phone,
+        customerEmail: users.email,
+        confirmationAmount: bookings.confirmationAmount,
+        paymentStatus: bookings.paymentStatus,
+        createdAt: bookings.createdAt,
+        completedAt: bookings.createdAt,
+      })
+        .from(bookings)
+        .innerJoin(users, eq(bookings.customerId, users.id))
+        .where(eq(bookings.referralCode, referralRecord.referralCode))
+        .orderBy(desc(bookings.createdAt));
+
+      const history = referredBookings.map(booking => ({
+        id: booking.id,
+        referredCustomerName: booking.customerName || booking.customerEmail || "Unknown Customer",
+        referredCustomerPhone: booking.customerPhone || "Not provided",
+        status: booking.paymentStatus === "completed" ? "completed" : "pending",
+        rewardAmount: booking.paymentStatus === "completed" ? booking.confirmationAmount : "0",
+        completedAt: booking.paymentStatus === "completed" ? booking.completedAt?.toISOString() : undefined,
+        bookingId: booking.id,
+      }));
+
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching referral history:", error);
+      res.status(500).json({ message: "Failed to fetch referral history" });
     }
   });
 

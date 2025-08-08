@@ -19,6 +19,7 @@ import SalonSearchPage from "@/pages/customer/salon-search";
 import OwnerDashboard from "@/pages/owner/dashboard";
 import TimeSlots from "@/pages/owner/time-slots";
 import AccountDetails from "@/pages/owner/account-details";
+import ReferEarn from "@/pages/owner/refer-earn";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -110,6 +111,11 @@ function Router() {
               <Route path="/owner/time-slots">
                 <Layout>
                   <TimeSlots />
+                </Layout>
+              </Route>
+              <Route path="/owner/refer-earn">
+                <Layout>
+                  <ReferEarn />
                 </Layout>
               </Route>
               <Route path="/owner/account-details">
