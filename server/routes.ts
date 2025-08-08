@@ -115,6 +115,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's salon (for salon owners)
+  app.get('/api/user/salon', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Check if user is salon owner
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+        
+      if (!user || user.userType !== "salon_owner") {
+        return res.status(404).json({ message: "No salon found for this user" });
+      }
+      
+      // Get user's salon
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+        
+      if (!salon) {
+        return res.status(404).json({ message: "No salon found for this user" });
+      }
+      
+      res.json(salon);
+    } catch (error) {
+      console.error("Error fetching user salon:", error);
+      res.status(500).json({ message: "Failed to fetch salon" });
+    }
+  });
+
   // Location-based salon search endpoint
   app.get('/api/salons/search', async (req, res) => {
     try {

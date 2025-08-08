@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import Map from '@/components/Map';
 import LocationSearch from '@/components/LocationSearch';
+import { useAuth } from '@/hooks/useAuth';
 import type { Salon } from '@shared/schema';
 
 interface SalonWithDistance extends Salon {
@@ -17,6 +18,7 @@ interface SalonWithDistance extends Salon {
 }
 
 export default function SalonSearchPage() {
+  const { user } = useAuth();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null);
   const [searchRadius, setSearchRadius] = useState([5]); // km
   const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'price'>('distance');
@@ -25,6 +27,12 @@ export default function SalonSearchPage() {
     name: '',
     minRating: 0,
     maxPrice: 1000,
+  });
+
+  // Get user's salon if they are a salon owner
+  const { data: userSalon } = useQuery({
+    queryKey: ['/api/user/salon'],
+    enabled: !!user && user.userType === 'salon_owner',
   });
 
   // Fetch salons based on location
@@ -274,6 +282,7 @@ export default function SalonSearchPage() {
               <Map
                 salons={sortedSalons || []}
                 userLocation={userLocation || undefined}
+                ownedSalonId={userSalon?.id}
                 onSalonClick={handleSalonClick}
                 height="500px"
                 className="rounded-lg"

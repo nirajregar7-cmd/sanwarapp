@@ -23,12 +23,13 @@ interface Salon {
 interface MapProps {
   salons: Salon[];
   userLocation?: { lat: number; lng: number };
+  ownedSalonId?: string; // ID of salon owned by current user (for red marker)
   onSalonClick?: (salon: Salon) => void;
   className?: string;
   height?: string;
 }
 
-export default function Map({ salons, userLocation, onSalonClick, className = "", height = "400px" }: MapProps) {
+export default function Map({ salons, userLocation, ownedSalonId, onSalonClick, className = "", height = "400px" }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
@@ -100,13 +101,17 @@ export default function Map({ salons, userLocation, onSalonClick, className = ""
     validSalons.forEach(salon => {
       const lat = parseFloat(salon.latitude!);
       const lng = parseFloat(salon.longitude!);
+      const isOwnedSalon = ownedSalonId && salon.id === ownedSalonId;
 
-      // Create custom salon marker
+      // Create custom salon marker with different colors for owned salons
       const salonIcon = L.divIcon({
-        className: 'salon-marker',
+        className: `salon-marker ${isOwnedSalon ? 'owned-salon' : ''}`,
         html: `
           <div style="
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            background: ${isOwnedSalon 
+              ? 'linear-gradient(135deg, #dc2626, #ef4444)' 
+              : 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+            };
             width: 32px;
             height: 32px;
             border: 3px solid white;
@@ -116,6 +121,7 @@ export default function Map({ salons, userLocation, onSalonClick, className = ""
             justify-content: center;
             box-shadow: 0 3px 12px rgba(0,0,0,0.3);
             cursor: pointer;
+            ${isOwnedSalon ? 'animation: pulse 2s infinite;' : ''}
           ">
             <div style="
               color: white;
@@ -134,7 +140,9 @@ export default function Map({ salons, userLocation, onSalonClick, className = ""
       // Create popup content
       const popupContent = `
         <div class="salon-popup" style="min-width: 200px;">
-          <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #1f2937;">${salon.name}</h3>
+          <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #1f2937;">
+            ${salon.name} ${isOwnedSalon ? '(Your Salon)' : ''}
+          </h3>
           <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280; line-height: 1.4;">${salon.address}</p>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
             <div style="display: flex; align-items: center;">
@@ -143,7 +151,7 @@ export default function Map({ salons, userLocation, onSalonClick, className = ""
                 ${salon.averageRating ? Number(salon.averageRating).toFixed(1) : 'New'}
               </span>
             </div>
-            <div style="color: #10b981; font-weight: bold; font-size: 14px;">
+            <div style="color: ${isOwnedSalon ? '#dc2626' : '#10b981'}; font-weight: bold; font-size: 14px;">
               ₹${salon.confirmationAmount || 0}
             </div>
           </div>
@@ -165,7 +173,7 @@ export default function Map({ salons, userLocation, onSalonClick, className = ""
       const group = new L.FeatureGroup(markersRef.current);
       mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
     }
-  }, [salons, onSalonClick, userLocation]);
+  }, [salons, onSalonClick, userLocation, ownedSalonId]);
 
   return (
     <div 
