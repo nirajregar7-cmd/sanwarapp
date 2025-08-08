@@ -132,23 +132,35 @@ export default function Landing() {
                   <p className="text-white/85 text-sm mb-4 leading-relaxed">
                     {t('hero.customer_desc')}
                   </p>
-                  <ul className="text-white/70 text-sm space-y-1 mb-6">
-                    <li>• Find nearby salons</li>
-                    <li>• Book appointments instantly</li>
-                    <li>• Manage bookings</li>
-                    <li>• Leave reviews & earn rewards</li>
+                  <ul className="text-white/90 text-sm space-y-2 mb-6 text-left">
+                    <li className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      Find nearby salons
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      Book appointments instantly
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      Manage bookings
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      Leave reviews & earn rewards
+                    </li>
                   </ul>
                   <div className="space-y-3">
                     <Button 
                       size="lg" 
-                      className="w-full bg-white hover:bg-gray-100 text-blue-600 font-semibold py-3 rounded-lg"
+                      className="w-full bg-gradient-to-r from-white to-gray-100 hover:from-gray-100 hover:to-white text-blue-700 font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                       {t('hero.signup_customer')}
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="w-full bg-white/10 border-white/30 hover:bg-white/20 text-white font-medium py-2 rounded-lg"
+                      className="w-full bg-white/15 border-white/40 hover:bg-white/25 text-white font-medium py-2 rounded-xl transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleReferEarnClick('customer');
@@ -172,7 +184,7 @@ export default function Landing() {
                   <p className="text-white/85 text-sm mb-4 leading-relaxed">
                     {t('hero.owner_desc')}
                   </p>
-                  <ul className="text-white/75 text-sm space-y-2 mb-6 text-left">
+                  <ul className="text-white/90 text-sm space-y-2 mb-6 text-left">
                     <li className="flex items-center">
                       <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
                       Setup salon profile
