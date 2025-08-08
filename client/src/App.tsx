@@ -71,6 +71,11 @@ function Router() {
               <SalonDetail />
             </Layout>
           </Route>
+          <Route path="/customer/salon/:salonId">
+            <Layout>
+              <SalonDetail />
+            </Layout>
+          </Route>
           
           {/* Customer-specific routes */}
           <Route path="/bookings">

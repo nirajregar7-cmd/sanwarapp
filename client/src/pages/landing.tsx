@@ -214,7 +214,7 @@ export default function Landing() {
               ))
             ) : topSalons && topSalons.length > 0 ? (
               topSalons.map((salon) => (
-              <Link key={salon.id} href={`/customer/salon/${salon.id}`}>
+              <Link key={salon.id} href={`/salon/${salon.id}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
                   <div className="aspect-video bg-gray-200 overflow-hidden">
                     {salon.imageUrl ? (
