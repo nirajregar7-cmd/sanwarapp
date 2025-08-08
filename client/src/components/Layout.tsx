@@ -98,20 +98,6 @@ export default function Layout({ children }: LayoutProps) {
             {/* Desktop Navigation */}
             {isAuthenticated && !isMobile && (
               <div className="flex items-center space-x-2 sm:space-x-4">
-                {/* Home Button */}
-                <Link href="/">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-700 hover:text-gray-900 hover:bg-gray-200"
-                  >
-                    <Home className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">Home</span>
-                  </Button>
-                </Link>
-                
-
-                
                 {/* Profile Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
