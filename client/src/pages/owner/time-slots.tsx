@@ -86,7 +86,7 @@ export default function TimeSlots() {
     queryKey: [`/api/salons/${salon?.id}/time-slots`, selectedDate],
     enabled: !!salon?.id,
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/salons/${salon!.id}/time-slots?date=${format(selectedDate, "yyyy-MM-dd")}`);
+      const response = await apiRequest("GET", `/api/salons/${salon?.id}/time-slots?date=${format(selectedDate, "yyyy-MM-dd")}`);
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     },
@@ -95,7 +95,7 @@ export default function TimeSlots() {
   // Create single time slot
   const createSlotMutation = useMutation({
     mutationFn: async (slotData: { date: string; startTime: string; endTime: string }) => {
-      return await fetch(`/api/salons/${salon!.id}/time-slots`, {
+      return await fetch(`/api/salons/${salon?.id}/time-slots`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(slotData),
@@ -122,7 +122,7 @@ export default function TimeSlots() {
   // Create bulk time slots
   const createBulkSlotsMutation = useMutation({
     mutationFn: async (bulkData: any) => {
-      return await fetch(`/api/salons/${salon!.id}/time-slots/bulk`, {
+      return await fetch(`/api/salons/${salon?.id}/time-slots/bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bulkData),

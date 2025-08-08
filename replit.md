@@ -6,11 +6,13 @@ Sanwar is a smart salon booking platform that helps local salon shopkeepers digi
 
 **Latest Update (August 2025):** Successfully transitioned from Replit Auth to traditional email/password authentication, making the platform accessible to everyone without requiring Replit accounts. Users can now sign up by choosing their role and login with email and password. Platform is configured for production deployment with custom domain sanwarhub.in ready for connection.
 
+**Break Management Enhancement:** Implemented flexible break system allowing salon owners to add unlimited custom breaks during bulk slot generation. Each break has configurable start time and duration (5-60 minutes), perfect for lunch breaks, tea breaks, prayer times, or any rest periods. System automatically skips break periods during slot creation.
+
 **Navigation System Update:** Implemented complete role-based separation - salon owners see only Dashboard, Time Slots, and Account Details navigation. Customers see only Home, Find Salons, Bookings, and Refer & Earn. No user type switcher for salon owners ensures focused business interface. Both mobile and desktop navigation are role-specific with protected routes preventing cross-access.
 
 **Special Referral Milestone System:** Implemented advanced referral reward system for shopkeepers - when a salon owner refers 5 unique paying customers, they receive 100% of the confirmation fees from those 5 bookings credited to their wallet. Progress tracking shows current status (e.g., "3/5 customers") and automatically resets for the next cycle after completion.
 
-**Important:** The system uses completely manual time slot creation - only slots explicitly created by salon owners appear for customer booking. No automatic generation occurs.
+**Important:** The system uses completely manual time slot creation - only slots explicitly created by salon owners appear for customer booking. Bulk generation supports flexible break management with multiple custom breaks (5-60 minutes each) that automatically skip break periods during slot creation.
 
 ## User Preferences
 
@@ -30,7 +32,7 @@ Preferred communication style: Simple, everyday language.
 - Service management with pricing and duration ✓
 - Staff management with photos and roles ✓
 - Working hours and break time configuration ✓
-- **Time slot management system with 100% manual control only** ✓
+- **Time slot management system with 100% manual control and flexible break management** ✓
 - Confirmation amount setting for serious bookings (₹10, ₹20, etc.) ✓
 - Booking management dashboard with customer info and payment status ✓
 - Manual walk-in customer addition → PENDING
