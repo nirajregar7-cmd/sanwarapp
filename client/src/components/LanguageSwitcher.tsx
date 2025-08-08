@@ -13,8 +13,12 @@ const languages = [
   { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
   { code: 'te', name: 'తెలుగు', flag: '🇮🇳' },
   { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
+  { code: 'mr', name: 'मराठी', flag: '🇮🇳' },
+  { code: 'gu', name: 'ગુજરાતી', flag: '🇮🇳' },
+  { code: 'bn', name: 'বাংলা', flag: '🇮🇳' },
   { code: 'kn', name: 'ಕನ್ನಡ', flag: '🇮🇳' },
   { code: 'ml', name: 'മലയാളം', flag: '🇮🇳' },
+  { code: 'pa', name: 'ਪੰਜਾਬੀ', flag: '🇮🇳' },
 ];
 
 export function LanguageSwitcher() {

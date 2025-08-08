@@ -76,14 +76,14 @@ export default function Landing() {
               <MapPin className="text-gray-400 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
               <Input 
                 type="text" 
-                placeholder="Enter your city or area..." 
+                placeholder={t('search.placeholder')} 
                 className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
               />
             </div>
             <Button className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 rounded-lg font-semibold text-sm sm:text-base">
               <Search className="h-4 w-4 mr-2" />
               <span className="hidden xs:inline">{t('nav.find_salons')}</span>
-              <span className="xs:hidden">Find</span>
+              <span className="xs:hidden">{t('search.find')}</span>
             </Button>
           </div>
 
@@ -132,9 +132,9 @@ export default function Landing() {
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                     <Scissors className="h-8 w-8 text-purple-600" />
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-3">I'm a Salon Owner</h4>
+                  <h4 className="text-xl font-bold text-white mb-3">{t('hero.owner_title')}</h4>
                   <p className="text-white/80 text-sm mb-4">
-                    I want to manage my salon business online
+                    {t('hero.owner_desc')}
                   </p>
                   <ul className="text-white/70 text-sm space-y-1 mb-6">
                     <li>• Setup salon profile</li>
@@ -146,7 +146,7 @@ export default function Landing() {
                     size="lg" 
                     className="w-full bg-white hover:bg-gray-100 text-purple-600 font-semibold py-3 rounded-lg"
                   >
-                    Sign Up / Login as Salon Owner
+                    {t('hero.signup_owner')}
                   </Button>
                 </div>
               </div>

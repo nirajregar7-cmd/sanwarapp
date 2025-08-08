@@ -26,6 +26,10 @@
     "logout": "Logout",
     "profile": "Profile"
   },
+  "search": {
+    "placeholder": "Enter your city or area...",
+    "find": "Find"
+  },
   "hero": {
     "title": "India's Smart Salon Booking Platform",
     "subtitle": "Like Zomato for Salons • Real-time slots like IRCTC • Instant confirmations",
