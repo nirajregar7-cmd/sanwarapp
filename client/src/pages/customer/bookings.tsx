@@ -9,10 +9,12 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Calendar, Clock, MapPin, Star } from "lucide-react";
 import type { Booking } from "@shared/schema";
+import { useLocation } from "wouter";
 
 export default function CustomerBookings() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
 
   const { data: bookings, isLoading, error } = useQuery({
     queryKey: ["/api/bookings/my"],
@@ -119,6 +121,20 @@ export default function CustomerBookings() {
     return bookingDateTime > new Date();
   };
 
+  const handleReschedule = (booking: Booking) => {
+    // Navigate to salon detail page with booking data for rescheduling
+    setLocation(`/salons/${booking.salonId}?reschedule=${booking.id}`);
+  };
+
+  const handleCancel = (booking: Booking) => {
+    // TODO: Implement booking cancellation
+    toast({
+      title: "Cancellation",
+      description: "Booking cancellation feature coming soon",
+      variant: "default",
+    });
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
       <div className="mb-6 sm:mb-8">
@@ -171,10 +187,20 @@ export default function CustomerBookings() {
                       </Button>
                     ) : booking.status === "confirmed" || booking.status === "pending" ? (
                       <>
-                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full sm:w-auto"
+                          onClick={() => handleReschedule(booking)}
+                        >
                           Reschedule
                         </Button>
-                        <Button variant="outline" size="sm" className="w-full sm:w-auto text-red-600 hover:text-red-700">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full sm:w-auto text-red-600 hover:text-red-700"
+                          onClick={() => handleCancel(booking)}
+                        >
                           Cancel
                         </Button>
                       </>

@@ -41,6 +41,10 @@ export default function SalonDetail() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedService, setSelectedService] = useState<string>("");
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  
+  // Check if this is a reschedule operation
+  const searchParams = new URLSearchParams(window.location.search);
+  const rescheduleBookingId = searchParams.get('reschedule');
 
   // Fetch salon details
   const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
@@ -533,9 +537,13 @@ export default function SalonDetail() {
                     </DialogTrigger>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>Book Your Appointment</DialogTitle>
+                        <DialogTitle>
+                          {rescheduleBookingId ? "Reschedule Your Appointment" : "Book Your Appointment"}
+                        </DialogTitle>
                         <DialogDescription>
-                          Choose your service, date and time to book an appointment at {salon.name}
+                          {rescheduleBookingId 
+                            ? `Select new service, date and time for your appointment at ${salon.name}` 
+                            : `Choose your service, date and time to book an appointment at ${salon.name}`}
                         </DialogDescription>
                       </DialogHeader>
                       
@@ -692,7 +700,9 @@ export default function SalonDetail() {
                             className="w-full" 
                             disabled={bookingMutation.isPending}
                           >
-                            {bookingMutation.isPending ? "Booking..." : "Confirm Booking"}
+                            {bookingMutation.isPending 
+                              ? (rescheduleBookingId ? "Rescheduling..." : "Booking...") 
+                              : (rescheduleBookingId ? "Reschedule Booking" : "Confirm Booking")}
                           </Button>
                         </form>
                       </Form>
