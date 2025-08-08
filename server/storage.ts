@@ -9,6 +9,8 @@ import {
   salonGallery,
   referrals,
   referralMilestones,
+  customerReferralCampaigns,
+  freeBookingCredits,
   wallets,
   walletTransactions,
   type User,
@@ -31,6 +33,10 @@ import {
   type InsertReferral,
   type ReferralMilestone,
   type InsertReferralMilestone,
+  type CustomerReferralCampaign,
+  type InsertCustomerReferralCampaign,
+  type FreeBookingCredit,
+  type InsertFreeBookingCredit,
   type Wallet,
   type InsertWallet,
   type WalletTransaction,
@@ -91,8 +97,19 @@ export interface IStorage {
   getReferralByCode(referralCode: string): Promise<Referral | undefined>;
   createReferral(referral: InsertReferral): Promise<Referral>;
   completeReferral(referralId: string, bookingId: string): Promise<void>;
+  generateUniqueReferralCode(): Promise<string>;
   
-  // Referral milestone operations
+  // Customer referral campaign operations  
+  getOrCreateCustomerReferralCampaign(referrerId: string): Promise<CustomerReferralCampaign>;
+  updateCustomerReferralProgress(referrerId: string, referralId: string): Promise<boolean>; // Returns true if milestone completed
+  
+  // Free booking credit operations
+  createFreeBookingCredit(credit: InsertFreeBookingCredit): Promise<FreeBookingCredit>;
+  getAvailableFreeCredits(customerId: string): Promise<FreeBookingCredit[]>;
+  useFreeBookingCredit(creditId: string, bookingId: string): Promise<void>;
+  calculateAverageServicePrice(): Promise<number>;
+  
+  // Referral milestone operations (for shopkeepers)
   getOrCreateReferralMilestone(referrerId: string): Promise<ReferralMilestone>;
   updateReferralMilestoneProgress(referrerId: string, bookingId: string, confirmationAmount: number): Promise<boolean>; // Returns true if milestone completed
   
@@ -404,6 +421,125 @@ export class DatabaseStorage implements IStorage {
       bookingId: bookingId,
       completedAt: new Date(),
     }).where(eq(referrals.id, referralId));
+  }
+
+  async generateUniqueReferralCode(): Promise<string> {
+    let code: string;
+    let isUnique = false;
+    
+    while (!isUnique) {
+      // Generate 6-character alphanumeric code
+      code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      const existingReferral = await this.getReferralByCode(code);
+      if (!existingReferral) {
+        isUnique = true;
+      }
+    }
+    
+    return code!;
+  }
+
+  // Customer referral campaign operations
+  async getOrCreateCustomerReferralCampaign(referrerId: string): Promise<CustomerReferralCampaign> {
+    // Try to get existing active campaign
+    const [existingCampaign] = await db.select().from(customerReferralCampaigns)
+      .where(and(
+        eq(customerReferralCampaigns.referrerId, referrerId),
+        eq(customerReferralCampaigns.isCompleted, false),
+        eq(customerReferralCampaigns.campaignType, "10_customer_free_booking")
+      ));
+
+    if (existingCampaign) {
+      return existingCampaign;
+    }
+
+    // Create new campaign
+    const [newCampaign] = await db.insert(customerReferralCampaigns).values({
+      referrerId,
+      campaignType: "10_customer_free_booking",
+      targetCount: 10,
+      currentCount: 0,
+      completedReferralIds: [],
+      freeBookingCredits: 0,
+    }).returning();
+
+    return newCampaign;
+  }
+
+  async updateCustomerReferralProgress(referrerId: string, referralId: string): Promise<boolean> {
+    const campaign = await this.getOrCreateCustomerReferralCampaign(referrerId);
+    
+    // Check if this referral is already counted
+    if (campaign.completedReferralIds && campaign.completedReferralIds.includes(referralId)) {
+      return false; // Already counted
+    }
+
+    const newCount = campaign.currentCount + 1;
+    const newCompletedReferralIds = [...(campaign.completedReferralIds || []), referralId];
+    
+    const isCompleted = newCount >= campaign.targetCount;
+    const newCredits = isCompleted ? campaign.freeBookingCredits + 1 : campaign.freeBookingCredits;
+
+    await db.update(customerReferralCampaigns).set({
+      currentCount: newCount,
+      completedReferralIds: newCompletedReferralIds,
+      freeBookingCredits: newCredits,
+      isCompleted,
+      completedAt: isCompleted ? new Date() : undefined,
+      updatedAt: new Date(),
+    }).where(eq(customerReferralCampaigns.id, campaign.id));
+
+    // If milestone completed, create a free booking credit
+    if (isCompleted) {
+      const avgServicePrice = await this.calculateAverageServicePrice();
+      
+      await this.createFreeBookingCredit({
+        customerId: referrerId,
+        creditType: "customer_milestone",
+        maxAmount: avgServicePrice.toString(),
+        referenceId: campaign.id,
+        description: `Free booking credit for referring 10 customers (up to ₹${avgServicePrice})`,
+        expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days expiry
+      });
+    }
+
+    return isCompleted;
+  }
+
+  // Free booking credit operations
+  async createFreeBookingCredit(credit: InsertFreeBookingCredit): Promise<FreeBookingCredit> {
+    const [newCredit] = await db.insert(freeBookingCredits).values(credit).returning();
+    return newCredit;
+  }
+
+  async getAvailableFreeCredits(customerId: string): Promise<FreeBookingCredit[]> {
+    return await db.select().from(freeBookingCredits)
+      .where(and(
+        eq(freeBookingCredits.customerId, customerId),
+        eq(freeBookingCredits.isUsed, false),
+        or(
+          eq(freeBookingCredits.expiresAt, null),
+          gte(freeBookingCredits.expiresAt, new Date())
+        )
+      ))
+      .orderBy(asc(freeBookingCredits.expiresAt));
+  }
+
+  async useFreeBookingCredit(creditId: string, bookingId: string): Promise<void> {
+    await db.update(freeBookingCredits).set({
+      isUsed: true,
+      bookingId: bookingId,
+      usedAt: new Date(),
+    }).where(eq(freeBookingCredits.id, creditId));
+  }
+
+  async calculateAverageServicePrice(): Promise<number> {
+    const [result] = await db.select({
+      avgPrice: sql<number>`AVG(${services.price}::numeric)::float`
+    }).from(services);
+    
+    return Math.round(result?.avgPrice || 300); // Default to ₹300 if no services
   }
 
   // Referral milestone operations

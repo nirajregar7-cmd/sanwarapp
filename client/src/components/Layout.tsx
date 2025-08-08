@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings } from "lucide-react";
+import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,12 +61,20 @@ export default function Layout({ children }: LayoutProps) {
                     Home
                   </Link>
                   {userType === "customer" && (
-                    <Link 
-                      href="/bookings" 
-                      className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
-                    >
-                      Bookings
-                    </Link>
+                    <>
+                      <Link 
+                        href="/bookings" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Bookings
+                      </Link>
+                      <Link 
+                        href="/refer-earn" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Refer & Earn
+                      </Link>
+                    </>
                   )}
                 </nav>
               )}
@@ -191,14 +199,24 @@ export default function Layout({ children }: LayoutProps) {
                     Home
                   </Link>
                   {userType === "customer" && (
-                    <Link 
-                      href="/bookings" 
-                      className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Calendar className="h-4 w-4 mr-3" />
-                      My Bookings
-                    </Link>
+                    <>
+                      <Link 
+                        href="/bookings" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Calendar className="h-4 w-4 mr-3" />
+                        My Bookings
+                      </Link>
+                      <Link 
+                        href="/refer-earn" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Gift className="h-4 w-4 mr-3" />
+                        Refer & Earn
+                      </Link>
+                    </>
                   )}
                 </div>
 
@@ -240,16 +258,28 @@ export default function Layout({ children }: LayoutProps) {
                 {/* Mobile Menu Items */}
                 <div className="border-t border-gray-200 pt-4 space-y-2">
                   {userType === "customer" && (
-                    <Link href="/bookings">
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-sm"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Calendar className="h-4 w-4 mr-3" />
-                        My Bookings
-                      </Button>
-                    </Link>
+                    <>
+                      <Link href="/bookings">
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-sm"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Calendar className="h-4 w-4 mr-3" />
+                          My Bookings
+                        </Button>
+                      </Link>
+                      <Link href="/refer-earn">
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-sm"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Gift className="h-4 w-4 mr-3" />
+                          Refer & Earn
+                        </Button>
+                      </Link>
+                    </>
                   )}
                   <Button 
                     variant="ghost" 

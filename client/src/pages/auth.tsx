@@ -10,6 +10,7 @@ import { Scissors, Users, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -28,7 +29,24 @@ export default function AuthPage() {
     firstName: "",
     lastName: "",
     userType: "customer" as "customer" | "salon_owner",
+    referralCode: "",
   });
+
+  // Get referral code from URL on page load
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    const userType = urlParams.get('type');
+    
+    if (refCode) {
+      setRegisterForm(prev => ({ ...prev, referralCode: refCode }));
+      setActiveTab("register"); // Switch to register tab if referral code present
+    }
+    
+    if (userType && (userType === "customer" || userType === "salon_owner")) {
+      setRegisterForm(prev => ({ ...prev, userType: userType as "customer" | "salon_owner" }));
+    }
+  }, []);
 
   // Redirect to home if user is already logged in
   useEffect(() => {
@@ -80,10 +98,15 @@ export default function AuthPage() {
     }
 
     registerMutation.mutate(registerForm, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        let successMessage = "Welcome to Sanwar! Your account has been created successfully";
+        if (data.referralUsed) {
+          successMessage += " Your referral has been applied!";
+        }
+        
         toast({
           title: "Account Created!",
-          description: "Welcome to Sanwar! Your account has been created successfully",
+          description: successMessage,
         });
         setLocation("/");
       },
@@ -269,6 +292,12 @@ export default function AuthPage() {
                       Password must be at least 6 characters long
                     </p>
                   </div>
+
+                  <ReferralCodeInput
+                    value={registerForm.referralCode}
+                    onChange={(value) => setRegisterForm({ ...registerForm, referralCode: value })}
+                    disabled={registerMutation.isPending}
+                  />
 
                   {registerMutation.isError && (
                     <Alert variant="destructive">

@@ -473,8 +473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transferStatus: 'pending'
       });
       
-      // Handle referral milestone tracking for shopkeepers
-      // Check if the customer was referred by a salon owner
+      // Handle referral tracking for all referral types
       try {
         const [referralRecord] = await db.select()
           .from(referrals)
@@ -487,31 +486,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Complete the referral
           await storage.completeReferral(referralRecord.id, booking.id);
           
-          // Check if referrer is a salon owner and update milestone progress
+          // Check referral type and handle accordingly
           const [referrer] = await db.select()
             .from(users)
             .where(eq(users.id, referralRecord.referrerId));
 
-          if (referrer && referrer.userType === "salon_owner") {
-            const milestoneCompleted = await storage.updateReferralMilestoneProgress(
-              referralRecord.referrerId,
-              booking.id,
-              confirmationAmount
-            );
+          if (referrer) {
+            if (referralRecord.referralType === "customer_to_shopkeeper") {
+              // Customer referred a shopkeeper - give customer 1 free booking credit immediately
+              const avgServicePrice = await storage.calculateAverageServicePrice();
+              
+              await storage.createFreeBookingCredit({
+                customerId: referralRecord.referrerId, // Give to the referrer (customer)
+                creditType: "shopkeeper_referral",
+                maxAmount: avgServicePrice.toString(),
+                referenceId: referralRecord.id,
+                description: `Free booking for referring a shopkeeper (up to ₹${avgServicePrice})`,
+                expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+              });
 
-            if (milestoneCompleted) {
-              console.log(`🎉 Milestone completed for referrer ${referrer.firstName}! 5-customer reward credited.`);
+              console.log(`✅ Customer ${referrer.firstName} earned free booking for referring shopkeeper!`);
+              
+            } else if (referralRecord.referralType === "customer_to_customer") {
+              // Customer referred another customer - update 10-customer milestone
+              const milestoneCompleted = await storage.updateCustomerReferralProgress(
+                referralRecord.referrerId,
+                referralRecord.id
+              );
+
+              if (milestoneCompleted) {
+                console.log(`🎉 Customer ${referrer.firstName} completed 10-customer milestone!`);
+              }
+
+              // Add regular referral reward to customer wallet
+              await storage.addWalletCredit(
+                userId,
+                parseFloat(referralRecord.rewardAmount.toString()),
+                "Referral reward for completing first booking",
+                referralRecord.id,
+                "referral"
+              );
+              
+            } else if (referralRecord.referralType === "shopkeeper_milestone" && referrer.userType === "salon_owner") {
+              // Shopkeeper milestone referral - existing logic
+              const milestoneCompleted = await storage.updateReferralMilestoneProgress(
+                referralRecord.referrerId,
+                booking.id,
+                confirmationAmount
+              );
+
+              if (milestoneCompleted) {
+                console.log(`🎉 Shopkeeper milestone completed for ${referrer.firstName}! 5-customer reward credited.`);
+              }
             }
           }
-
-          // Add regular referral reward to customer wallet
-          await storage.addWalletCredit(
-            userId,
-            parseFloat(referralRecord.rewardAmount),
-            "Referral reward for completing first booking",
-            referralRecord.id,
-            "referral"
-          );
         }
       } catch (referralError) {
         console.error("Error processing referral:", referralError);
@@ -1574,6 +1602,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching referral milestone:", error);
       res.status(500).json({ message: "Failed to fetch referral milestone" });
+    }
+  });
+
+  // Customer referral system endpoints
+  app.post('/api/referrals/generate-code', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Check if user is a customer
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user || user.userType !== "customer") {
+        return res.status(403).json({ message: "Only customers can generate referral codes." });
+      }
+
+      const referralCode = await storage.generateUniqueReferralCode();
+      res.json({ referralCode, shareUrl: `${req.protocol}://${req.hostname}/signup?ref=${referralCode}` });
+    } catch (error) {
+      console.error("Error generating referral code:", error);
+      res.status(500).json({ message: "Failed to generate referral code" });
+    }
+  });
+
+  app.get('/api/referrals/campaign', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Check if user is a customer
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user || user.userType !== "customer") {
+        return res.status(403).json({ message: "Only customers can view referral campaigns." });
+      }
+
+      const campaign = await storage.getOrCreateCustomerReferralCampaign(userId);
+      res.json(campaign);
+    } catch (error) {
+      console.error("Error fetching referral campaign:", error);
+      res.status(500).json({ message: "Failed to fetch referral campaign" });
+    }
+  });
+
+  app.get('/api/free-credits', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Check if user is a customer
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user || user.userType !== "customer") {
+        return res.status(403).json({ message: "Only customers can view free booking credits." });
+      }
+
+      const credits = await storage.getAvailableFreeCredits(userId);
+      res.json(credits);
+    } catch (error) {
+      console.error("Error fetching free credits:", error);
+      res.status(500).json({ message: "Failed to fetch free credits" });
+    }
+  });
+
+  app.get('/api/referral/:code', async (req, res) => {
+    try {
+      const { code } = req.params;
+      const referral = await storage.getReferralByCode(code);
+      
+      if (!referral) {
+        return res.status(404).json({ message: "Referral code not found" });
+      }
+
+      // Get referrer info
+      const [referrer] = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        userType: users.userType,
+      }).from(users).where(eq(users.id, referral.referrerId));
+
+      res.json({ 
+        code,
+        referrer: referrer || null,
+        referralType: referral.referralType,
+        isValid: referral.status === "pending"
+      });
+    } catch (error) {
+      console.error("Error validating referral code:", error);
+      res.status(500).json({ message: "Failed to validate referral code" });
+    }
+  });
+
+  // Create referral code endpoint
+  app.post('/api/referrals/create', isAuthenticated, async (req: any, res) => {
+    try {
+      const { referralType, targetUserType } = req.body;
+      const referrerId = req.user?.id;
+
+      // Validate referral type
+      const validTypes = ["customer_to_customer", "customer_to_shopkeeper"];
+      if (!validTypes.includes(referralType)) {
+        return res.status(400).json({ message: "Invalid referral type" });
+      }
+
+      // Only customers can create referrals
+      const [referrer] = await db.select()
+        .from(users)
+        .where(eq(users.id, referrerId));
+
+      if (!referrer || referrer.userType !== "customer") {
+        return res.status(403).json({ message: "Only customers can create referral codes" });
+      }
+
+      // Generate unique referral code
+      const referralCode = await storage.generateUniqueReferralCode();
+
+      // Create referral record without referredId (will be filled during signup)
+      const newReferral = await storage.createReferral({
+        referrerId,
+        referredId: "", // Will be filled during signup
+        referralCode,
+        referralType,
+        status: "pending",
+        rewardAmount: referralType === "customer_to_customer" ? "50" : "0",
+      });
+
+      const shareUrl = `${req.protocol}://${req.hostname}/signup?ref=${referralCode}&type=${targetUserType || 'customer'}`;
+      
+      res.json({
+        id: newReferral.id,
+        referralCode,
+        referralType,
+        shareUrl,
+        message: referralType === "customer_to_customer" 
+          ? "Share this code with friends! You'll earn 1 free booking when 10 friends complete their first booking."
+          : "Share this code with salon owners! You'll earn 1 free booking when they sign up."
+      });
+    } catch (error) {
+      console.error("Error creating referral:", error);
+      res.status(500).json({ message: "Failed to create referral code" });
     }
   });
 

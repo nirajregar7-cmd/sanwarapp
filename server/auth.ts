@@ -5,7 +5,9 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser, referrals, customerReferralCampaigns, freeBookingCredits } from "@shared/schema";
+import { db } from "./db";
+import { eq, sql, and } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 
@@ -16,6 +18,99 @@ declare global {
 }
 
 const scryptAsync = promisify(scrypt);
+
+// Process referral rewards based on type and rules
+async function processReferralRewards(referralRecord: any, newUser: any) {
+  const referrerId = referralRecord.referrerId;
+  
+  try {
+    if (referralRecord.referralType === "customer_to_shopkeeper") {
+      // Immediate reward for shopkeeper referrals
+      if (newUser.userType === "salon_owner") {
+        // Create free booking credit for referrer
+        await db.insert(freeBookingCredits).values({
+          id: `credit_${Date.now()}_${referrerId}`,
+          customerId: referrerId,
+          creditType: "shopkeeper_referral",
+          maxAmount: "100", // Free booking up to ₹100
+          isUsed: false,
+          referenceId: referralRecord.id,
+          description: "Free booking for referring a salon owner",
+          expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+        });
+
+        // Update referral status
+        await db.update(referrals).set({
+          status: "completed",
+          completedAt: new Date(),
+        }).where(eq(referrals.id, referralRecord.id));
+
+        console.log(`🎉 Shopkeeper referral reward: ₹100 free booking credit for user ${referrerId}`);
+      }
+    } else if (referralRecord.referralType === "customer_to_customer") {
+      // Track progress for customer milestone rewards
+      if (newUser.userType === "customer") {
+        // Get or create referral campaign
+        const [existingCampaign] = await db.select()
+          .from(customerReferralCampaigns)
+          .where(eq(customerReferralCampaigns.referrerId, referrerId));
+
+        if (existingCampaign) {
+          // Update existing campaign count
+          const newCount = existingCampaign.currentCount + 1;
+          const isCompleted = newCount >= existingCampaign.targetCount;
+
+          await db.update(customerReferralCampaigns).set({
+            currentCount: newCount,
+            isCompleted,
+            completedAt: isCompleted ? new Date() : undefined,
+            updatedAt: new Date(),
+          }).where(eq(customerReferralCampaigns.id, existingCampaign.id));
+
+          // Award milestone reward if completed
+          if (isCompleted) {
+            await db.insert(freeBookingCredits).values({
+              id: `milestone_${Date.now()}_${referrerId}`,
+              customerId: referrerId,
+              creditType: "customer_milestone",
+              maxAmount: "150", // Free booking up to ₹150 for milestone
+              isUsed: false,
+              referenceId: existingCampaign.id,
+              description: "Free booking for 10-customer milestone",
+              expiresAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000), // 180 days
+            });
+
+            console.log(`🎉 Milestone reward: ₹150 free booking credit for user ${referrerId} (10 customers completed)`);
+          } else {
+            console.log(`📈 Customer referral progress: ${newCount}/10 for user ${referrerId}`);
+          }
+        } else {
+          // Create new campaign
+          await db.insert(customerReferralCampaigns).values({
+            id: `campaign_${Date.now()}_${referrerId}`,
+            referrerId,
+            campaignType: "10_customer_milestone",
+            targetCount: 10,
+            currentCount: 1,
+            isCompleted: false,
+            freeBookingCredits: 1,
+            creditsUsed: 0,
+          });
+
+          console.log(`📈 New customer referral campaign started for user ${referrerId} (1/10)`);
+        }
+
+        // Update referral status to completed
+        await db.update(referrals).set({
+          status: "completed",
+          completedAt: new Date(),
+        }).where(eq(referrals.id, referralRecord.id));
+      }
+    }
+  } catch (error) {
+    console.error("Error processing referral rewards:", error);
+  }
+}
 
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -88,7 +183,7 @@ export function setupAuth(app: Express) {
   // Register route
   app.post("/api/register", async (req, res, next) => {
     try {
-      const { email, password, firstName, lastName, userType } = req.body;
+      const { email, password, firstName, lastName, userType, referralCode } = req.body;
 
       // Validate input
       if (!email || !password || !firstName || !userType) {
@@ -109,6 +204,18 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ error: "Email already registered" });
       }
 
+      // Validate referral code if provided
+      let referralRecord: any = null;
+      if (referralCode) {
+        referralRecord = await storage.getReferralByCode(referralCode);
+        if (!referralRecord) {
+          return res.status(400).json({ error: "Invalid referral code" });
+        }
+        if (referralRecord.status !== "pending") {
+          return res.status(400).json({ error: "Referral code has already been used" });
+        }
+      }
+
       // Create user
       const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({
@@ -120,6 +227,18 @@ export function setupAuth(app: Express) {
         profileImageUrl: null,
       });
 
+      // Handle referral logic after user creation
+      if (referralRecord) {
+        // Update the existing referral with the new user
+        await db.update(referrals).set({
+          referredId: user.id,
+        }).where(eq(referrals.id, referralRecord.id));
+
+        // Process referral rewards based on type
+        await processReferralRewards(referralRecord, user);
+        console.log(`✅ Referral processed: ${referralRecord.referralType} for user ${user.firstName}`);
+      }
+
       // Log in the user
       req.login(user, (err) => {
         if (err) return next(err);
@@ -130,6 +249,7 @@ export function setupAuth(app: Express) {
           lastName: user.lastName,
           userType: user.userType,
           profileImageUrl: user.profileImageUrl,
+          referralUsed: !!referralRecord,
         });
       });
     } catch (error) {

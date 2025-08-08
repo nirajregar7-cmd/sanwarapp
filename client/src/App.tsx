@@ -14,6 +14,7 @@ import CustomerHome from "@/pages/customer/home";
 import NotificationSettingsPage from "@/pages/NotificationSettingsPage";
 import SalonDetail from "@/pages/customer/salon-detail";
 import CustomerBookings from "@/pages/customer/bookings";
+import ReferEarnPage from "@/pages/customer/refer-earn";
 import OwnerDashboard from "@/pages/owner/dashboard";
 import TimeSlots from "@/pages/owner/time-slots";
 import AccountDetails from "@/pages/owner/account-details";
@@ -83,6 +84,13 @@ function Router() {
           <Route path="/bookings">
             <Layout>
               <CustomerBookings />
+            </Layout>
+          </Route>
+
+          {/* Customer Refer & Earn page */}
+          <Route path="/refer-earn">
+            <Layout>
+              <ReferEarnPage />
             </Layout>
           </Route>
 

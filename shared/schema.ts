@@ -268,12 +268,44 @@ export const referrals = pgTable("referrals", {
   referrerId: varchar("referrer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   referredId: varchar("referred_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   referralCode: varchar("referral_code", { length: 10 }).notNull().unique(),
+  referralType: varchar("referral_type", { enum: ["customer_to_shopkeeper", "customer_to_customer", "shopkeeper_milestone"] }).default("customer_to_customer"),
   status: varchar("status", { enum: ["pending", "completed", "expired"] }).default("pending"),
   rewardAmount: decimal("reward_amount", { precision: 10, scale: 2 }).default("50"), // ₹50 default
   isRewardClaimed: boolean("is_reward_claimed").default(false),
   bookingId: varchar("booking_id").references(() => bookings.id, { onDelete: "set null" }), // Track which booking completed the referral
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
+});
+
+// Customer referral campaigns table - For tracking 10-customer milestones
+export const customerReferralCampaigns = pgTable("customer_referral_campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  campaignType: varchar("campaign_type").notNull().default("10_customer_free_booking"),
+  targetCount: integer("target_count").notNull().default(10),
+  currentCount: integer("current_count").notNull().default(0),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  completedReferralIds: text("completed_referral_ids").array().default([]),
+  freeBookingCredits: integer("free_booking_credits").notNull().default(0),
+  creditsUsed: integer("credits_used").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Free booking credits table
+export const freeBookingCredits = pgTable("free_booking_credits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  creditType: varchar("credit_type", { enum: ["shopkeeper_referral", "customer_milestone"] }).notNull(),
+  maxAmount: decimal("max_amount", { precision: 10, scale: 2 }).notNull(), // Maximum service price covered
+  isUsed: boolean("is_used").notNull().default(false),
+  bookingId: varchar("booking_id").references(() => bookings.id, { onDelete: "set null" }),
+  referenceId: varchar("reference_id").notNull(), // ID of referral or campaign
+  description: text("description").notNull(),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  usedAt: timestamp("used_at"),
 });
 
 // Referral milestones table for tracking special rewards (like 5-customer milestone)
@@ -531,6 +563,19 @@ export const insertSalonGallerySchema = createInsertSchema(salonGallery).omit({
   createdAt: true,
 });
 
+export const insertCustomerReferralCampaignSchema = createInsertSchema(customerReferralCampaigns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+});
+
+export const insertFreeBookingCreditSchema = createInsertSchema(freeBookingCredits).omit({
+  id: true,
+  createdAt: true,
+  usedAt: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -558,6 +603,10 @@ export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = z.infer<typeof insertReferralSchema>;
 export type ReferralMilestone = typeof referralMilestones.$inferSelect;
 export type InsertReferralMilestone = z.infer<typeof insertReferralMilestoneSchema>;
+export type CustomerReferralCampaign = typeof customerReferralCampaigns.$inferSelect;
+export type InsertCustomerReferralCampaign = z.infer<typeof insertCustomerReferralCampaignSchema>;
+export type FreeBookingCredit = typeof freeBookingCredits.$inferSelect;
+export type InsertFreeBookingCredit = z.infer<typeof insertFreeBookingCreditSchema>;
 export type SalonOwnerAccount = typeof salonOwnerAccounts.$inferSelect;
 export type InsertSalonOwnerAccount = typeof salonOwnerAccounts.$inferInsert;
 export type RevenueShare = typeof revenueShares.$inferSelect;
