@@ -28,14 +28,7 @@ export default function Layout({ children }: LayoutProps) {
   const isOwnerRoute = location.includes('/owner');
   const userType = (user as any)?.userType || (isOwnerRoute ? "salon_owner" : "customer");
 
-  const handleUserTypeSwitch = (type: "customer" | "salon_owner") => {
-    // Navigate to the appropriate route
-    if (type === "salon_owner") {
-      window.location.href = "/";
-    } else {
-      window.location.href = "/";
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -117,30 +110,7 @@ export default function Layout({ children }: LayoutProps) {
                   </Button>
                 </Link>
                 
-                {/* User Type Switcher - Only show for customers */}
-                {userType === "customer" && (
-                  <div className="bg-gray-100 p-1 rounded-lg flex">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all bg-blue-100 text-blue-700"
-                    >
-                      <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Customer</span>
-                      <span className="sm:hidden">User</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-700 hover:text-gray-900 hover:bg-gray-200"
-                      onClick={() => handleUserTypeSwitch("salon_owner")}
-                    >
-                      <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Salon Owner</span>
-                      <span className="sm:hidden">Owner</span>
-                    </Button>
-                  </div>
-                )}
+
                 
                 {/* Profile Menu */}
                 <DropdownMenu>
@@ -267,34 +237,7 @@ export default function Layout({ children }: LayoutProps) {
                   )}
                 </div>
 
-                {/* User Type Switcher Mobile - Only show for customers */}
-                {userType === "customer" && (
-                  <div className="space-y-2 border-t pt-4">
-                    <p className="text-sm font-medium text-gray-700">Switch Mode:</p>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex-1 text-xs font-medium bg-blue-100 text-blue-700"
-                      >
-                        <User className="h-4 w-4 mr-2" />
-                        Customer
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex-1 text-xs font-medium text-gray-700"
-                        onClick={() => {
-                          handleUserTypeSwitch("salon_owner");
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        <Store className="h-4 w-4 mr-2" />
-                        Salon Owner
-                      </Button>
-                    </div>
-                  </div>
-                )}
+
 
                 {/* Mobile Menu Items */}
                 <div className="border-t border-gray-200 pt-4 space-y-2">
