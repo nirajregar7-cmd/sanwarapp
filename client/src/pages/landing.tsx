@@ -46,17 +46,26 @@ export default function Landing() {
   return (
     <div className="interface-panel">
       {/* Hero Section */}
-      <section className="gradient-primary text-white py-12 sm:py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white py-12 sm:py-16 lg:py-24 relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute top-40 right-20 w-32 h-32 bg-purple-300/20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-blue-300/20 rounded-full blur-3xl"></div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center justify-center mb-4 sm:mb-6">
-              <Scissors className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-white mr-3 sm:mr-4" />
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold">Sanwar</h1>
+              <div className="p-3 bg-white/20 rounded-full mr-4">
+                <Scissors className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-white" />
+              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">Sanwar</h1>
             </div>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-3 sm:mb-4 opacity-90">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-3 sm:mb-4 opacity-95 font-medium">
               {t('hero.title')}
             </p>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-80 px-4">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-85 px-4 max-w-3xl mx-auto">
               {t('hero.subtitle')}
             </p>
           </div>
@@ -64,36 +73,36 @@ export default function Landing() {
           {/* Platform Statistics */}
           {!statsLoading && stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12 max-w-4xl mx-auto">
-              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white">{stats.totalCustomers}+</div>
-                <div className="text-xs sm:text-sm text-white/90">{t('stats.customers')}</div>
+              <div className="bg-gradient-to-br from-white/25 to-white/15 backdrop-blur-md border border-white/40 rounded-xl p-4 sm:p-5 hover:from-white/30 hover:to-white/20 transition-all duration-300 group">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white group-hover:scale-110 transition-transform duration-300">{stats.totalCustomers}+</div>
+                <div className="text-xs sm:text-sm text-white/95 font-medium">{t('stats.customers')}</div>
               </div>
-              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white">{stats.totalSalons}+</div>
-                <div className="text-xs sm:text-sm text-white/90">{t('stats.salons')}</div>
+              <div className="bg-gradient-to-br from-purple-400/25 to-purple-600/15 backdrop-blur-md border border-purple-300/40 rounded-xl p-4 sm:p-5 hover:from-purple-400/30 hover:to-purple-600/20 transition-all duration-300 group">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white group-hover:scale-110 transition-transform duration-300">{stats.totalSalons}+</div>
+                <div className="text-xs sm:text-sm text-white/95 font-medium">{t('stats.salons')}</div>
               </div>
-              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white">{stats.totalBookings}+</div>
-                <div className="text-xs sm:text-sm text-white/90">{t('stats.bookings')}</div>
+              <div className="bg-gradient-to-br from-blue-400/25 to-blue-600/15 backdrop-blur-md border border-blue-300/40 rounded-xl p-4 sm:p-5 hover:from-blue-400/30 hover:to-blue-600/20 transition-all duration-300 group">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white group-hover:scale-110 transition-transform duration-300">{stats.totalBookings}+</div>
+                <div className="text-xs sm:text-sm text-white/95 font-medium">{t('stats.bookings')}</div>
               </div>
-              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white">{stats.totalServices}+</div>
-                <div className="text-xs sm:text-sm text-white/90">{t('stats.services')}</div>
+              <div className="bg-gradient-to-br from-indigo-400/25 to-indigo-600/15 backdrop-blur-md border border-indigo-300/40 rounded-xl p-4 sm:p-5 hover:from-indigo-400/30 hover:to-indigo-600/20 transition-all duration-300 group">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white group-hover:scale-110 transition-transform duration-300">{stats.totalServices}+</div>
+                <div className="text-xs sm:text-sm text-white/95 font-medium">{t('stats.services')}</div>
               </div>
             </div>
           )}
           
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto bg-white rounded-xl p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 shadow-2xl">
+          <div className="max-w-2xl mx-auto bg-white/95 backdrop-blur-sm rounded-2xl p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 shadow-2xl border border-white/20">
             <div className="flex-1 flex items-center px-3 sm:px-4 py-2 sm:py-0">
-              <MapPin className="text-gray-400 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
+              <MapPin className="text-gray-500 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
               <Input 
                 type="text" 
                 placeholder={t('search.placeholder')} 
-                className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
+                className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-500"
               />
             </div>
-            <Button className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 rounded-lg font-semibold text-sm sm:text-base">
+            <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 hover:from-purple-700 hover:to-blue-700 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300">
               <Search className="h-4 w-4 mr-2" />
               <span className="hidden xs:inline">{t('nav.find_salons')}</span>
               <span className="xs:hidden">{t('search.find')}</span>
@@ -113,14 +122,14 @@ export default function Landing() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Customer Card */}
-              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-6 hover:bg-white/30 transition-all cursor-pointer group"
+              <div className="bg-gradient-to-br from-blue-500/25 to-cyan-600/15 backdrop-blur-md border border-blue-300/40 rounded-2xl p-6 hover:from-blue-500/35 hover:to-cyan-600/25 transition-all duration-300 cursor-pointer group hover:scale-105"
                    onClick={() => window.location.href = '/auth'}>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                    <Users className="h-8 w-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Users className="h-8 w-8 text-white" />
                   </div>
                   <h4 className="text-xl font-bold text-white mb-3">{t('hero.customer_title')}</h4>
-                  <p className="text-white/80 text-sm mb-4">
+                  <p className="text-white/85 text-sm mb-4 leading-relaxed">
                     {t('hero.customer_desc')}
                   </p>
                   <ul className="text-white/70 text-sm space-y-1 mb-6">
@@ -153,33 +162,45 @@ export default function Landing() {
               </div>
 
               {/* Salon Owner Card */}
-              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-6 hover:bg-white/30 transition-all cursor-pointer group"
+              <div className="bg-gradient-to-br from-purple-500/25 to-pink-600/15 backdrop-blur-md border border-purple-300/40 rounded-2xl p-6 hover:from-purple-500/35 hover:to-pink-600/25 transition-all duration-300 cursor-pointer group hover:scale-105"
                    onClick={() => window.location.href = '/auth'}>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                    <Scissors className="h-8 w-8 text-purple-600" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Scissors className="h-8 w-8 text-white" />
                   </div>
                   <h4 className="text-xl font-bold text-white mb-3">{t('hero.owner_title')}</h4>
-                  <p className="text-white/80 text-sm mb-4">
+                  <p className="text-white/85 text-sm mb-4 leading-relaxed">
                     {t('hero.owner_desc')}
                   </p>
-                  <ul className="text-white/70 text-sm space-y-1 mb-6">
-                    <li>• Setup salon profile</li>
-                    <li>• Manage services & staff</li>
-                    <li>• Create time slots</li>
-                    <li>• Handle bookings & earnings</li>
+                  <ul className="text-white/75 text-sm space-y-2 mb-6 text-left">
+                    <li className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      Setup salon profile
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      Manage services & staff
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      Create time slots
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      Handle bookings & earnings
+                    </li>
                   </ul>
                   <div className="space-y-3">
                     <Button 
                       size="lg" 
-                      className="w-full bg-white hover:bg-gray-100 text-purple-600 font-semibold py-3 rounded-lg"
+                      className="w-full bg-gradient-to-r from-white to-gray-100 hover:from-gray-100 hover:to-white text-purple-700 font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                       {t('hero.signup_owner')}
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="w-full bg-white/10 border-white/30 hover:bg-white/20 text-white font-medium py-2 rounded-lg"
+                      className="w-full bg-white/15 border-white/40 hover:bg-white/25 text-white font-medium py-2 rounded-xl transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleReferEarnClick('salon_owner');
