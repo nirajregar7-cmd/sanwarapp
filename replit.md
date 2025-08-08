@@ -4,7 +4,7 @@
 
 Sanwar is a smart salon booking platform that helps local salon shopkeepers digitize their business and allows customers to easily discover and book services. Think of it like Zomato for salons, but with features inspired by IRCTC's booking system — showing live available slots, clear pricing, and instant confirmations. The platform serves two distinct user types: salon owners who want to go digital and attract more customers, and customers who want quick, online salon bookings without waiting lines.
 
-**Latest Update (August 2025):** Successfully transitioned from Replit Auth to traditional email/password authentication, making the platform accessible to everyone without requiring Replit accounts. Users can now sign up by choosing their role and login with email and password. Platform is configured for production deployment with custom domain sanwarhub.in ready for connection.
+**Latest Update (August 2025):** Successfully transitioned from Replit Auth to traditional email/password authentication, making the platform accessible to everyone without requiring Replit accounts. Users can now sign up by choosing their role and login with email and password. Implemented complete social login integration with Google and Facebook OAuth. Platform is now deployment-ready for Render platform with custom domain sanwarhub.in (purchased from Hostinger) ready for connection.
 
 **Break Management Enhancement:** Implemented flexible break system allowing salon owners to add unlimited custom breaks during bulk slot generation. Each break has configurable start time and duration (5-60 minutes), perfect for lunch breaks, tea breaks, prayer times, or any rest periods. System automatically skips break periods during slot creation.
 
