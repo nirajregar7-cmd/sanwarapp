@@ -253,32 +253,8 @@ export default function Layout({ children }: LayoutProps) {
 
 
 
-                {/* Mobile Menu Items */}
-                <div className="border-t border-gray-200 pt-4 space-y-2">
-                  {userType === "customer" && (
-                    <>
-                      <Link href="/bookings">
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start text-sm"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <Calendar className="h-4 w-4 mr-3" />
-                          My Bookings
-                        </Button>
-                      </Link>
-                      <Link href="/refer-earn">
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start text-sm"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <Gift className="h-4 w-4 mr-3" />
-                          Refer & Earn
-                        </Button>
-                      </Link>
-                    </>
-                  )}
+                {/* Logout Button */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 px-4">
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-sm text-red-600 hover:text-red-700 hover:bg-red-50"

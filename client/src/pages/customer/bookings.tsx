@@ -144,18 +144,19 @@ export default function CustomerBookings() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Bookings</h1>
-        <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">Manage your salon appointments</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Bookings</h1>
+          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">Manage your salon appointments</p>
+        </div>
 
       {bookings && bookings.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {bookings.map((booking: Booking) => (
             <Card 
               key={booking.id} 
-              className={`${isUpcoming(booking.date || '', booking.startTime || '') ? 'border-l-4 border-l-accent' : ''}`}
+              className={`dark:bg-gray-800 dark:border-gray-700 ${isUpcoming(booking.date || '', booking.startTime || '') ? 'border-l-4 border-l-accent' : ''}`}
             >
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 space-y-2 sm:space-y-0">
@@ -221,11 +222,11 @@ export default function CustomerBookings() {
         </div>
       ) : (
         <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Calendar className="h-8 w-8 text-gray-400" />
+          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Calendar className="h-8 w-8 text-gray-400 dark:text-gray-500" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings yet</h3>
-          <p className="text-gray-600 mb-6">You haven't made any salon appointments yet.</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No bookings yet</h3>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">You haven't made any salon appointments yet.</p>
           <Button asChild>
             <a href="/">Find Salons</a>
           </Button>
@@ -234,9 +235,9 @@ export default function CustomerBookings() {
 
       {/* Liked Salons Section */}
       <div className="mt-8 sm:mt-12">
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center text-lg sm:text-xl font-semibold text-gray-900">
+            <CardTitle className="flex items-center text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
               <Heart className="h-5 w-5 text-red-500 mr-2" />
               Liked Salons
             </CardTitle>
@@ -256,7 +257,7 @@ export default function CustomerBookings() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {likedSalons.map((salon: any) => (
                   <Link key={salon.id} href={`/salon/${salon.id}`}>
-                    <div className="group cursor-pointer bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="group cursor-pointer bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                       <div className="relative h-32 bg-gray-100">
                         {salon.imageUrl ? (
                           <img
@@ -273,14 +274,14 @@ export default function CustomerBookings() {
                         )}
                       </div>
                       <div className="p-3">
-                        <h3 className="font-semibold text-gray-900 truncate">{salon.name || 'Unknown Salon'}</h3>
-                        <p className="text-sm text-gray-600 truncate mb-2">{salon.address || 'Address not available'}</p>
+                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">{salon.name || 'Unknown Salon'}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 truncate mb-2">{salon.address || 'Address not available'}</p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             {salon.averageRating > 0 && (
                               <>
                                 <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                <span className="text-sm text-gray-600 ml-1">
+                                <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">
                                   {salon.averageRating.toFixed(1)}
                                 </span>
                               </>
@@ -298,11 +299,11 @@ export default function CustomerBookings() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                  <Heart className="h-6 w-6 text-gray-400" />
+                <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-3">
+                  <Heart className="h-6 w-6 text-gray-400 dark:text-gray-500" />
                 </div>
-                <h3 className="text-base font-medium text-gray-900 mb-1">No liked salons yet</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1">No liked salons yet</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                   Start exploring and save your favorite salons
                 </p>
                 <Button variant="outline" size="sm" onClick={() => setLocation("/")}>
@@ -312,6 +313,7 @@ export default function CustomerBookings() {
             )}
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

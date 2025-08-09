@@ -72,7 +72,7 @@ export default function Landing() {
 
           {/* Platform Statistics */}
           {!statsLoading && stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12 max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12 max-w-4xl mx-auto">
               <div className="bg-gradient-to-br from-white/25 to-white/15 backdrop-blur-md border border-white/40 rounded-xl p-4 sm:p-5 hover:from-white/30 hover:to-white/20 transition-all duration-300 group">
                 <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white group-hover:scale-110 transition-transform duration-300">{stats.totalCustomers}+</div>
                 <div className="text-xs sm:text-sm text-white/95 font-medium">{t('stats.customers')}</div>

@@ -131,7 +131,7 @@ export default function CustomerProfile() {
       lastName: formData.lastName,
       phone: formData.phone,
     };
-    console.log('Saving profile data:', profileData);
+
     updateProfileMutation.mutate(profileData);
   };
 
@@ -149,12 +149,12 @@ export default function CustomerProfile() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Customer Profile</h2>
-          <p className="text-gray-600 mb-6">Please log in to access your profile</p>
-          <Button asChild>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <User className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">Customer Profile</h2>
+          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base mb-6">Please log in to access your profile</p>
+          <Button asChild className="w-full sm:w-auto">
             <a href="/api/login">Log In</a>
           </Button>
         </div>
@@ -164,11 +164,11 @@ export default function CustomerProfile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-300 rounded w-1/4"></div>
-            <div className="h-64 bg-gray-300 rounded"></div>
+            <div className="h-6 sm:h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3 sm:w-1/4"></div>
+            <div className="h-48 sm:h-64 bg-gray-300 dark:bg-gray-700 rounded"></div>
           </div>
         </div>
       </div>
@@ -218,7 +218,7 @@ export default function CustomerProfile() {
             <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
               <div className="relative">
                 <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
-                  <AvatarImage src={formData.profileImageUrl || profile?.profileImageUrl} />
+                  <AvatarImage src={formData.profileImageUrl || profile?.profileImageUrl || undefined} />
                   <AvatarFallback className="text-lg sm:text-xl">
                     {(formData.firstName || profile?.firstName || 'U')[0].toUpperCase()}
                   </AvatarFallback>
