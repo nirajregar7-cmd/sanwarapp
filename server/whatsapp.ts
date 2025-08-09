@@ -1,10 +1,23 @@
 import twilio from 'twilio';
 
-// Initialize Twilio client
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// Check if we have valid Twilio credentials
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+if (!accountSid || !authToken || !twilioPhoneNumber) {
+  console.warn('Twilio credentials not configured. WhatsApp OTP service will not work.');
+}
+
+// Only initialize Twilio client if credentials are available and valid
+let client: any = null;
+if (accountSid && authToken && accountSid.startsWith('AC')) {
+  try {
+    client = twilio(accountSid, authToken);
+  } catch (error) {
+    console.error('Failed to initialize Twilio client:', error);
+  }
+}
 
 export interface WhatsAppMessage {
   to: string;
@@ -13,9 +26,14 @@ export interface WhatsAppMessage {
 
 export async function sendWhatsAppMessage({ to, body }: WhatsAppMessage): Promise<boolean> {
   try {
+    if (!client) {
+      console.error('Twilio client not initialized. Please check your credentials.');
+      return false;
+    }
+
     // Ensure phone number is in correct format
     const phoneNumber = to.startsWith('+') ? to : `+91${to}`;
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER || 'whatsapp:+14155238886'; // Twilio sandbox number
+    const fromNumber = twilioPhoneNumber || 'whatsapp:+14155238886'; // Twilio sandbox number
 
     const message = await client.messages.create({
       body,
