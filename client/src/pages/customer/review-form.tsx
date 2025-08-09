@@ -216,6 +216,7 @@ export function ReviewForm({ salonId, bookingId, onSubmitSuccess, trigger }: Rev
                   }}
                   onComplete={handlePhotoUploadComplete}
                   buttonClassName="w-full"
+                  buttonType="button"
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   Add Photos
