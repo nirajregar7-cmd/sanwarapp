@@ -103,10 +103,10 @@ export default function SalonManagement() {
 
   // Fetch detailed salon profile for admin review
   const { data: salonProfile, isLoading: profileLoading } = useQuery({
-    queryKey: ["/api/salon", viewingProfile],
+    queryKey: ["/api/salons", viewingProfile],
     queryFn: async () => {
       if (!viewingProfile) return null;
-      const response = await fetch(`/api/salon/${viewingProfile}`);
+      const response = await fetch(`/api/salons/${viewingProfile}`);
       if (!response.ok) throw new Error('Failed to fetch salon profile');
       return response.json();
     },
@@ -115,10 +115,10 @@ export default function SalonManagement() {
   });
 
   const { data: salonServices } = useQuery<SalonService[]>({
-    queryKey: ["/api/salon", viewingProfile, "services"],
+    queryKey: ["/api/salons", viewingProfile, "services"],
     queryFn: async () => {
       if (!viewingProfile) return [];
-      const response = await fetch(`/api/salon/${viewingProfile}/services`);
+      const response = await fetch(`/api/salons/${viewingProfile}/services`);
       if (!response.ok) return [];
       return response.json();
     },
@@ -127,10 +127,10 @@ export default function SalonManagement() {
   });
 
   const { data: salonStaff } = useQuery<SalonStaff[]>({
-    queryKey: ["/api/salon", viewingProfile, "staff"],
+    queryKey: ["/api/salons", viewingProfile, "staff"],
     queryFn: async () => {
       if (!viewingProfile) return [];
-      const response = await fetch(`/api/salon/${viewingProfile}/staff`);
+      const response = await fetch(`/api/salons/${viewingProfile}/staff`);
       if (!response.ok) return [];
       return response.json();
     },
@@ -139,10 +139,10 @@ export default function SalonManagement() {
   });
 
   const { data: salonReviews } = useQuery<SalonReview[]>({
-    queryKey: ["/api/salon", viewingProfile, "reviews"],
+    queryKey: ["/api/salons", viewingProfile, "reviews"],
     queryFn: async () => {
       if (!viewingProfile) return [];
-      const response = await fetch(`/api/salon/${viewingProfile}/reviews`);
+      const response = await fetch(`/api/salons/${viewingProfile}/reviews`);
       if (!response.ok) return [];
       return response.json();
     },
@@ -151,10 +151,10 @@ export default function SalonManagement() {
   });
 
   const { data: salonGallery } = useQuery<SalonGalleryItem[]>({
-    queryKey: ["/api/salon", viewingProfile, "gallery"],
+    queryKey: ["/api/salons", viewingProfile, "gallery"],
     queryFn: async () => {
       if (!viewingProfile) return [];
-      const response = await fetch(`/api/salon/${viewingProfile}/gallery`);
+      const response = await fetch(`/api/salons/${viewingProfile}/gallery`);
       if (!response.ok) return [];
       return response.json();
     },
@@ -163,10 +163,10 @@ export default function SalonManagement() {
   });
 
   const { data: workingHours } = useQuery<WorkingHours[]>({
-    queryKey: ["/api/salon", viewingProfile, "working-hours"],
+    queryKey: ["/api/salons", viewingProfile, "working-hours"],
     queryFn: async () => {
       if (!viewingProfile) return [];
-      const response = await fetch(`/api/salon/${viewingProfile}/working-hours`);
+      const response = await fetch(`/api/salons/${viewingProfile}/working-hours`);
       if (!response.ok) return [];
       return response.json();
     },
@@ -481,6 +481,9 @@ export default function SalonManagement() {
         {viewingProfile && (
           <Dialog open={!!viewingProfile} onOpenChange={() => setViewingProfile(null)}>
             <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
+              <DialogDescription className="sr-only">
+                Preview of salon profile as seen by customers for admin verification
+              </DialogDescription>
               <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
                 <DialogTitle className="text-xl font-semibold">
                   Salon Profile Preview - Customer View
