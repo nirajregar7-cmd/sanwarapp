@@ -27,7 +27,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
     try {
-      console.log("Auth check - isAuthenticated:", req.isAuthenticated?.(), "User:", req.user?.id);
+
       
       // For development, return null if no session exists
       if (!req.isAuthenticated || !req.isAuthenticated()) {
@@ -707,7 +707,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
               });
 
-              console.log(`✅ Customer ${referrer.firstName} earned free booking for referring shopkeeper!`);
+
               
             } else if (referralRecord.referralType === "customer_to_customer") {
               // Customer referred another customer - update 10-customer milestone
@@ -717,7 +717,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               );
 
               if (milestoneCompleted) {
-                console.log(`🎉 Customer ${referrer.firstName} completed 10-customer milestone!`);
+
               }
 
               // Add regular referral reward to customer wallet
@@ -738,13 +738,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               );
 
               if (milestoneCompleted) {
-                console.log(`🎉 Shopkeeper milestone completed for ${referrer.firstName}! 5-customer reward credited.`);
+
               }
             }
           }
         }
       } catch (referralError) {
-        console.error("Error processing referral:", referralError);
+
         // Don't fail the booking if referral processing fails
       }
 

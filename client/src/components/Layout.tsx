@@ -31,25 +31,25 @@ export default function Layout({ children }: LayoutProps) {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header Navigation */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center space-x-6">
               <Link href="/">
                 <div className="flex items-center space-x-2 text-lg sm:text-2xl font-bold text-primary cursor-pointer">
                   <Scissors className="h-5 w-5 sm:h-6 sm:w-6" />
-                  <span className="hidden xs:inline sm:inline">Sanwar</span>
+                  <span className="hidden sm:inline">Sanwar</span>
                 </div>
               </Link>
               
               {/* Navigation Links */}
               {isAuthenticated && !isMobile && (
-                <nav className="flex items-center space-x-4">
+                <nav className="flex items-center space-x-2 lg:space-x-4">
                   <Link 
                     href="/" 
-                    className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     {userType === "salon_owner" ? "Dashboard" : "Home"}
                   </Link>
@@ -57,25 +57,25 @@ export default function Layout({ children }: LayoutProps) {
                     <>
                       <Link 
                         href="/customer/search" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
                         Find Salons
                       </Link>
                       <Link 
                         href="/customer/bookings" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
                         Bookings
                       </Link>
                       <Link 
                         href="/customer/profile" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
                         Profile
                       </Link>
                       <Link 
                         href="/customer/refer-earn" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
                         Refer & Earn
                       </Link>
@@ -173,13 +173,13 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Mobile Menu */}
           {isAuthenticated && isMobile && mobileMenuOpen && (
-            <div className="border-t border-gray-200 py-3 bg-white">
+            <div className="border-t border-gray-200 dark:border-gray-700 py-3 bg-white dark:bg-gray-900">
               <div className="space-y-3">
                 {/* Navigation Links Mobile */}
-                <div className="space-y-2">
+                <div className="space-y-2 px-4">
                   <Link 
                     href="/" 
-                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Home className="h-4 w-4 mr-3" />
@@ -189,7 +189,7 @@ export default function Layout({ children }: LayoutProps) {
                     <>
                       <Link 
                         href="/customer/search" 
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <Search className="h-4 w-4 mr-3" />
@@ -197,7 +197,7 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                       <Link 
                         href="/customer/bookings" 
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <Calendar className="h-4 w-4 mr-3" />
@@ -205,7 +205,7 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                       <Link 
                         href="/customer/profile" 
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <User className="h-4 w-4 mr-3" />
@@ -213,7 +213,7 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                       <Link 
                         href="/customer/refer-earn" 
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <Gift className="h-4 w-4 mr-3" />

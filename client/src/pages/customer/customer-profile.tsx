@@ -89,16 +89,9 @@ export default function CustomerProfile() {
   };
 
   const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    console.log('Customer photo upload result:', result);
-    console.log('Upload successful files:', result.successful);
-    console.log('Upload failed files:', result.failed);
-    
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
-      console.log('Customer uploaded file object:', uploadedFile);
-      
       const uploadURL = uploadedFile.uploadURL;
-      console.log('Customer extracted uploadURL:', uploadURL);
       
       if (uploadURL) {
         // Convert Google Storage URL to our object path format
@@ -114,8 +107,6 @@ export default function CustomerProfile() {
           }
         }
         
-        console.log('Customer final URL to use:', finalUrl);
-        
         // Update profile with the new image URL, including required firstName
         await updateProfileMutation.mutateAsync({
           firstName: formData.firstName || profile?.firstName || '',
@@ -130,14 +121,6 @@ export default function CustomerProfile() {
           profileImageUrl: finalUrl || ''
         }));
         
-        console.log('Customer profile updated with photo URL:', finalUrl);
-      } else {
-        console.error('Customer upload: No uploadURL found in result');
-      }
-    } else {
-      console.error('Customer upload: No successful uploads found');
-      if (result.failed && result.failed.length > 0) {
-        console.error('Customer failed uploads:', result.failed);
       }
     }
   };
@@ -193,48 +176,50 @@ export default function CustomerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600">Manage your profile information and photo</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">My Profile</h1>
+          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">Manage your profile information and photo</p>
         </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Profile Information</CardTitle>
-            <div className="space-x-2">
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
+            <CardTitle className="dark:text-white">Profile Information</CardTitle>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
               {isEditing ? (
                 <>
                   <Button 
                     variant="outline" 
                     onClick={handleCancel}
                     disabled={updateProfileMutation.isPending}
+                    className="w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
                   <Button 
                     onClick={handleSave}
                     disabled={updateProfileMutation.isPending}
+                    className="w-full sm:w-auto"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     Save Changes
                   </Button>
                 </>
               ) : (
-                <Button onClick={() => setIsEditing(true)}>
+                <Button onClick={() => setIsEditing(true)} className="w-full sm:w-auto">
                   Edit Profile
                 </Button>
               )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 p-4 sm:p-6">
             {/* Profile Picture Section */}
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
               <div className="relative">
-                <Avatar className="h-24 w-24">
+                <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
                   <AvatarImage src={formData.profileImageUrl || profile?.profileImageUrl} />
-                  <AvatarFallback className="text-xl">
+                  <AvatarFallback className="text-lg sm:text-xl">
                     {(formData.firstName || profile?.firstName || 'U')[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -252,57 +237,60 @@ export default function CustomerProfile() {
                   </div>
                 )}
               </div>
-              <div>
-                <h3 className="text-lg font-medium">Profile Picture</h3>
-                <p className="text-sm text-gray-600">
+              <div className="text-center sm:text-left">
+                <h3 className="text-lg font-medium dark:text-white">Profile Picture</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                   {isEditing ? "Click the camera icon to upload a new photo" : "Your profile photo"}
                 </p>
               </div>
             </div>
 
             {/* Profile Form */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName" className="dark:text-gray-300">First Name</Label>
                 <Input
                   id="firstName"
                   value={formData.firstName}
                   onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                   disabled={!isEditing}
                   placeholder="Enter your first name"
+                  className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName" className="dark:text-gray-300">Last Name</Label>
                 <Input
                   id="lastName"
                   value={formData.lastName}
                   onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                   disabled={!isEditing}
                   placeholder="Enter your last name"
+                  className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="dark:text-gray-300">Email</Label>
                 <Input
                   id="email"
                   value={profile?.email || user?.email || ''}
                   disabled={true}
-                  className="bg-gray-50"
+                  className="bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600"
                 />
-                <p className="text-xs text-gray-500">Email cannot be changed</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Email cannot be changed</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone" className="dark:text-gray-300">Phone Number</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                   disabled={!isEditing}
                   placeholder="Enter your phone number"
+                  className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 />
               </div>
             </div>

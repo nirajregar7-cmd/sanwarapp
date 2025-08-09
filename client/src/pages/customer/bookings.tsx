@@ -146,8 +146,8 @@ export default function CustomerBookings() {
   return (
     <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
-        <p className="text-gray-600 text-sm sm:text-base">Manage your salon appointments</p>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Bookings</h1>
+        <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">Manage your salon appointments</p>
       </div>
 
       {bookings && bookings.length > 0 ? (
@@ -160,19 +160,19 @@ export default function CustomerBookings() {
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 space-y-2 sm:space-y-0">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
                       Salon Booking #{booking.id.slice(-6)}
                     </h3>
-                    <p className="text-gray-600 text-sm">Service booked</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm">Service booked</p>
                   </div>
                   <Badge className={`${getStatusColor(booking.status || '')} flex-shrink-0 self-start`}>
                     {getStatusText(booking.status || '')}
                   </Badge>
                 </div>
                 
-                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
                   <div className="flex items-center">
-                    <Calendar className="h-4 w-4 text-gray-400 mr-2" />
+                    <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
                     <span>{new Date(booking.date).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center">

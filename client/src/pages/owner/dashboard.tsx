@@ -443,14 +443,14 @@ export default function OwnerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
           <div className="flex flex-col space-y-3 sm:space-y-4 lg:space-y-0 lg:flex-row lg:justify-between lg:items-center">
             <div className="min-w-0 flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
                   {salon ? salon.name : "Setup Your Salon"}
                 </h1>
                 {salon && (
@@ -471,7 +471,7 @@ export default function OwnerDashboard() {
                   </div>
                 )}
               </div>
-              <p className="text-gray-600 text-sm sm:text-base mt-1">
+              <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base mt-1">
                 {salon ? "Manage your salon and grow your business" : "Create your salon profile to get started"}
               </p>
               {salon?.verificationNotes && (
@@ -1795,17 +1795,9 @@ export default function OwnerDashboard() {
                             };
                           }}
                           onComplete={(result) => {
-                            console.log('Staff photo upload result:', result);
-                            console.log('Upload successful files:', result.successful);
-                            console.log('Upload failed files:', result.failed);
-                            
                             if (result.successful && result.successful.length > 0) {
                               const uploadedFile = result.successful[0];
-                              console.log('Staff uploaded file object:', uploadedFile);
-                              
-                              // Use direct uploadURL access like customer profile
                               const imageUrl = uploadedFile.uploadURL;
-                              console.log('Staff extracted uploadURL:', imageUrl);
                               
                               if (imageUrl) {
                                 // Convert Google Storage URL to our object path format
@@ -1821,25 +1813,11 @@ export default function OwnerDashboard() {
                                   }
                                 }
                                 
-                                console.log('Staff final URL to set:', finalUrl);
                                 field.onChange(finalUrl);
-                                console.log('Staff photo URL set in form:', finalUrl);
                                 toast({
                                   title: "Photo uploaded!",
                                   description: "Staff profile picture has been uploaded successfully.",
                                 });
-                              } else {
-                                console.error('Staff upload: No uploadURL found in result');
-                                toast({
-                                  title: "Upload Warning",
-                                  description: "Photo uploaded but URL not found. Please try again.",
-                                  variant: "destructive"
-                                });
-                              }
-                            } else {
-                              console.error('Staff upload: No successful uploads found');
-                              if (result.failed && result.failed.length > 0) {
-                                console.error('Staff failed uploads:', result.failed);
                               }
                             }
                           }}
