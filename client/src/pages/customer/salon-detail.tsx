@@ -22,6 +22,7 @@ import type { Salon, Service, Staff, WorkingHours, TimeSlot, Review } from "@sha
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
+import { ReviewPhotoGallery } from "@/components/ReviewPhotoGallery";
 import { ReviewForm } from "./review-form";
 
 const bookingSchema = z.object({
@@ -615,6 +616,14 @@ export default function SalonDetail() {
                           </span>
                         </div>
                         <p className="text-gray-700">{review.comment}</p>
+                        {/* Display review photos */}
+                        {review.photos && review.photos.length > 0 && (
+                          <ReviewPhotoGallery 
+                            photos={review.photos}
+                            reviewId={review.id}
+                            className="mt-3"
+                          />
+                        )}
                       </div>
                     ))}
                     

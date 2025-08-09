@@ -136,6 +136,7 @@ export const reviews = pgTable("reviews", {
   rating: integer("rating").notNull(), // 1-5
   moodRating: varchar("mood_rating", { enum: ["very_happy", "happy", "neutral", "sad", "very_sad"] }), // emoji mood rating
   comment: text("comment"),
+  photos: text("photos").array(), // Array of photo URLs
   createdAt: timestamp("created_at").defaultNow(),
 });
 

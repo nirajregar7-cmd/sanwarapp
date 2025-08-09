@@ -51,8 +51,8 @@ interface ObjectUploaderProps {
  * @param props.children - Content to be rendered inside the button
  */
 export function ObjectUploader({
-  maxNumberOfFiles = 1,
-  maxFileSize = 10485760, // 10MB default
+  maxNumberOfFiles = 3,
+  maxFileSize = 5485760, // 5MB default for photos
   onGetUploadParameters,
   onComplete,
   buttonClassName,
@@ -64,18 +64,13 @@ export function ObjectUploader({
       restrictions: {
         maxNumberOfFiles,
         maxFileSize,
-        allowedFileTypes: ['image/*'], // Only allow images
+        allowedFileTypes: ['image/*'], // Only allow images for reviews
       },
       autoProceed: false,
     })
       .use(AwsS3, {
         shouldUseMultipart: false,
-        getUploadParameters: async (file) => {
-          console.log("Getting upload parameters for file:", file.name);
-          const result = await onGetUploadParameters();
-          console.log("Upload parameters result:", result);
-          return result;
-        },
+        getUploadParameters: onGetUploadParameters,
       })
       .on("complete", (result) => {
         onComplete?.(result);
@@ -85,7 +80,7 @@ export function ObjectUploader({
 
   return (
     <div>
-      <Button onClick={() => setShowModal(true)} className={buttonClassName}>
+      <Button onClick={() => setShowModal(true)} className={buttonClassName} variant="outline">
         {children}
       </Button>
 
@@ -94,7 +89,6 @@ export function ObjectUploader({
         open={showModal}
         onRequestClose={() => setShowModal(false)}
         proudlyDisplayPoweredByUppy={false}
-        note="Images only, up to 10MB"
       />
     </div>
   );

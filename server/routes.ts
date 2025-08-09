@@ -1234,6 +1234,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update review photos with ACL policy
+  app.put("/api/review-photos", isAuthenticated, async (req: any, res) => {
+    const { photoUrls } = req.body;
+    if (!photoUrls || !Array.isArray(photoUrls)) {
+      return res.status(400).json({ error: "photoUrls array is required" });
+    }
+
+    const userId = req.user?.id;
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const processedPhotos = [];
+
+      for (const photoUrl of photoUrls) {
+        const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+          photoUrl,
+          {
+            owner: userId,
+            visibility: "public", // Review photos should be public
+          }
+        );
+        processedPhotos.push(objectPath);
+      }
+
+      res.status(200).json({
+        objectPaths: processedPhotos,
+      });
+    } catch (error) {
+      console.error("Error setting review photos:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Salon routes
   app.post("/api/salons", isAuthenticated, async (req: any, res) => {
     try {
@@ -1817,8 +1850,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.id;
       const { getMoodFromRating } = await import("@shared/schema");
       
+      // Handle photo processing
+      let processedPhotos: string[] = [];
+      if (req.body.photos && Array.isArray(req.body.photos)) {
+        try {
+          const objectStorageService = new ObjectStorageService();
+          for (const photoUrl of req.body.photos) {
+            if (photoUrl && typeof photoUrl === 'string') {
+              const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+                photoUrl,
+                {
+                  owner: userId,
+                  visibility: "public", // Review photos should be public
+                }
+              );
+              processedPhotos.push(objectPath);
+            }
+          }
+        } catch (photoError) {
+          console.error("Error processing review photos:", photoError);
+          // Continue with review creation even if photo processing fails
+        }
+      }
+      
       // Auto-set mood rating if not provided but rating is available
-      const reviewData = { ...req.body, customerId: userId };
+      const reviewData = { ...req.body, customerId: userId, photos: processedPhotos };
       if (!reviewData.moodRating && reviewData.rating) {
         reviewData.moodRating = getMoodFromRating(reviewData.rating);
       }
