@@ -131,7 +131,7 @@ export function ReviewForm({ salonId, bookingId, onSubmitSuccess, trigger }: Rev
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <MessageSquare className="h-5 w-5 mr-2" />
@@ -224,23 +224,49 @@ export function ReviewForm({ salonId, bookingId, onSubmitSuccess, trigger }: Rev
                 
                 {/* Display uploaded photos */}
                 {uploadedPhotos.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 mt-3">
-                    {uploadedPhotos.map((photoUrl, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={photoUrl}
-                          alt={`Review photo ${index + 1}`}
-                          className="w-full h-20 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removePhoto(photoUrl)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+                    {uploadedPhotos.map((photoUrl, index) => {
+                      // Convert storage URLs to object URLs for display
+                      let displayUrl = photoUrl;
+                      
+                      if (photoUrl.startsWith('https://storage.googleapis.com/')) {
+                        // Extract the object ID from the storage URL
+                        const match = photoUrl.match(/\/uploads\/([^?]+)/);
+                        if (match && match[1]) {
+                          displayUrl = `/objects/uploads/${match[1]}`;
+                        }
+                      } else if (photoUrl.startsWith('/objects/')) {
+                        displayUrl = photoUrl;
+                      }
+                      
+                      return (
+                        <div key={index} className="relative group">
+                          <img
+                            src={displayUrl}
+                            alt={`Review photo ${index + 1}`}
+                            className="w-full h-16 sm:h-20 object-cover rounded-lg border"
+                            onError={(e) => {
+                              console.log('Image load error for:', displayUrl, 'Original:', photoUrl);
+                              const target = e.target as HTMLImageElement;
+                              // Try the original URL as fallback
+                              if (target.src.includes('/objects/') && !target.src.includes('fallback')) {
+                                target.src = photoUrl + '?fallback=true';
+                              }
+                            }}
+                            onLoad={() => {
+                              console.log('Image loaded successfully:', displayUrl);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(photoUrl)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
