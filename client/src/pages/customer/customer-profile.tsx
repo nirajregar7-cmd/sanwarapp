@@ -101,9 +101,19 @@ export default function CustomerProfile() {
           const url = new URL(uploadURL);
           const pathParts = url.pathname.split('/');
           if (pathParts.length >= 4) {
-            // Extract bucket and object path
-            const objectPath = pathParts.slice(3).join('/');
-            finalUrl = `/objects/uploads/${objectPath}`;
+            // Extract the full object path after bucket name
+            const fullObjectPath = pathParts.slice(3).join('/');
+            
+            // The object path in GCS is like: .private/uploads/UUID
+            // We want to convert it to: /objects/uploads/UUID
+            if (fullObjectPath.includes('.private/uploads/')) {
+              const objectId = fullObjectPath.replace('.private/uploads/', '');
+              finalUrl = `/objects/uploads/${objectId}`;
+            } else {
+              // Fallback: just use the object ID part
+              const objectId = pathParts[pathParts.length - 1];
+              finalUrl = `/objects/uploads/${objectId}`;
+            }
           }
         }
         

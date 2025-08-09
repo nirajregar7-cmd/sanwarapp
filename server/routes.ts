@@ -1266,6 +1266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Object storage routes
   app.get("/objects/:objectPath(*)", async (req: any, res) => {
+    console.log("Accessing object:", req.path);
     // Get user ID if authenticated, but don't require authentication
     const userId = req.isAuthenticated && req.isAuthenticated() ? req.user?.id : undefined;
     const objectStorageService = new ObjectStorageService();
@@ -1277,12 +1278,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requestedPermission: ObjectPermission.READ,
       });
       if (!canAccess) {
+        console.log("Access denied for object:", req.path);
         return res.sendStatus(401);
       }
+      console.log("Serving object:", req.path);
       objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
       console.error("Error checking object access:", error);
       if (error instanceof ObjectNotFoundError) {
+        console.log("Object not found:", req.path);
         return res.sendStatus(404);
       }
       return res.sendStatus(500);
@@ -1349,16 +1353,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Set ACL policy for profile image if provided
-      if (profileImageUrl) {
+      if (profileImageUrl && profileImageUrl.startsWith('/objects/')) {
         const objectStorageService = new ObjectStorageService();
         try {
-          await objectStorageService.trySetObjectEntityAclPolicy(
+          const normalizedPath = await objectStorageService.trySetObjectEntityAclPolicy(
             profileImageUrl,
             {
               owner: userId,
               visibility: "public", // Profile pictures should be public
             }
           );
+          console.log('Successfully set ACL policy for profile image:', normalizedPath);
         } catch (error) {
           console.error('Error setting profile image ACL:', error);
           // Don't fail the request if ACL setting fails
