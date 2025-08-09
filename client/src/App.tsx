@@ -63,10 +63,12 @@ function Router() {
       ) : (user as any)?.userType ? (
         // Authenticated users with user type set
         <>
-          {/* Home page - shows appropriate content based on user type */}
+          {/* Home page redirects based on user type */}
           <Route path="/">
             {(user as any).userType === 'admin' || (user as any).userType === 'super_admin' ? (
-              <AdminDashboard />
+              <Layout>
+                <AdminDashboard />
+              </Layout>
             ) : (user as any).userType === 'salon_owner' ? (
               <Layout>
                 <OwnerDashboard />
@@ -77,6 +79,28 @@ function Router() {
               </Layout>
             )}
           </Route>
+
+          {/* Dedicated Customer Routes */}
+          {(user as any)?.userType === 'customer' && (
+            <>
+              <Route path="/customer/home">
+                <Layout>
+                  <CustomerHome />
+                </Layout>
+              </Route>
+            </>
+          )}
+
+          {/* Dedicated Shopkeeper Routes */}
+          {(user as any)?.userType === 'salon_owner' && (
+            <>
+              <Route path="/shopkeeper/dashboard">
+                <Layout>
+                  <OwnerDashboard />
+                </Layout>
+              </Route>
+            </>
+          )}
           
           {/* Salon detail pages */}
           <Route path="/salon/:salonId">
@@ -93,6 +117,25 @@ function Router() {
           {/* Customer-specific routes */}
           {(user as any)?.userType === 'customer' && (
             <>
+              <Route path="/customer/bookings">
+                <Layout>
+                  <CustomerBookings />
+                </Layout>
+              </Route>
+
+              <Route path="/customer/refer-earn">
+                <Layout>
+                  <ReferEarnPage />
+                </Layout>
+              </Route>
+
+              <Route path="/customer/search">
+                <Layout>
+                  <SalonSearchPage />
+                </Layout>
+              </Route>
+              
+              {/* Legacy customer routes for backward compatibility */}
               <Route path="/bookings">
                 <Layout>
                   <CustomerBookings />
@@ -139,9 +182,26 @@ function Router() {
             </>
           )}
 
-          {/* Owner-specific routes */}
+          {/* Shopkeeper-specific routes */}
           {(user as any)?.userType === 'salon_owner' && (
             <>
+              <Route path="/shopkeeper/time-slots">
+                <Layout>
+                  <TimeSlots />
+                </Layout>
+              </Route>
+              <Route path="/shopkeeper/refer-earn">
+                <Layout>
+                  <ReferEarn />
+                </Layout>
+              </Route>
+              <Route path="/shopkeeper/account-details">
+                <Layout>
+                  <AccountDetails />
+                </Layout>
+              </Route>
+              
+              {/* Legacy owner routes for backward compatibility */}
               <Route path="/owner/time-slots">
                 <Layout>
                   <TimeSlots />

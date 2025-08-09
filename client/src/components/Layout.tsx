@@ -56,19 +56,19 @@ export default function Layout({ children }: LayoutProps) {
                   {userType === "customer" && (
                     <>
                       <Link 
-                        href="/search" 
+                        href="/customer/search" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
                         Find Salons
                       </Link>
                       <Link 
-                        href="/bookings" 
+                        href="/customer/bookings" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
                         Bookings
                       </Link>
                       <Link 
-                        href="/refer-earn" 
+                        href="/customer/refer-earn" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
                         Refer & Earn
@@ -78,19 +78,19 @@ export default function Layout({ children }: LayoutProps) {
                   {userType === "salon_owner" && (
                     <>
                       <Link 
-                        href="/owner/time-slots" 
+                        href="/shopkeeper/time-slots" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
                         Time Slots
                       </Link>
                       <Link 
-                        href="/owner/refer-earn" 
+                        href="/shopkeeper/refer-earn" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
                         Refer & Earn
                       </Link>
                       <Link 
-                        href="/owner/account-details" 
+                        href="/shopkeeper/account-details" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
                         Account Details
@@ -182,7 +182,7 @@ export default function Layout({ children }: LayoutProps) {
                   {userType === "customer" && (
                     <>
                       <Link 
-                        href="/search" 
+                        href="/customer/search" 
                         className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -190,7 +190,7 @@ export default function Layout({ children }: LayoutProps) {
                         Find Salons
                       </Link>
                       <Link 
-                        href="/bookings" 
+                        href="/customer/bookings" 
                         className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -198,7 +198,7 @@ export default function Layout({ children }: LayoutProps) {
                         My Bookings
                       </Link>
                       <Link 
-                        href="/refer-earn" 
+                        href="/customer/refer-earn" 
                         className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -210,7 +210,7 @@ export default function Layout({ children }: LayoutProps) {
                   {userType === "salon_owner" && (
                     <>
                       <Link 
-                        href="/owner/time-slots" 
+                        href="/shopkeeper/time-slots" 
                         className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -218,7 +218,7 @@ export default function Layout({ children }: LayoutProps) {
                         Time Slots
                       </Link>
                       <Link 
-                        href="/owner/refer-earn" 
+                        href="/shopkeeper/refer-earn" 
                         className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -226,7 +226,7 @@ export default function Layout({ children }: LayoutProps) {
                         Refer & Earn
                       </Link>
                       <Link 
-                        href="/owner/account-details" 
+                        href="/shopkeeper/account-details" 
                         className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
                         onClick={() => setMobileMenuOpen(false)}
                       >

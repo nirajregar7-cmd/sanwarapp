@@ -18,6 +18,7 @@ import {
   adminActivityLogs,
   contentModerations,
   platformAnalytics,
+  revenueShares,
   type User,
   type UpsertUser,
   type Salon,
@@ -1016,8 +1017,9 @@ export class DatabaseStorage implements IStorage {
       .from(bookings);
 
     const [totalRevenue] = await db
-      .select({ total: sql<number>`coalesce(sum(confirmation_amount), 0)` })
-      .from(bookings)
+      .select({ total: sql<number>`coalesce(sum(${revenueShares.platformShare}), 0)` })
+      .from(revenueShares)
+      .innerJoin(bookings, eq(revenueShares.bookingId, bookings.id))
       .where(eq(bookings.paymentStatus, 'completed'));
 
     return {
