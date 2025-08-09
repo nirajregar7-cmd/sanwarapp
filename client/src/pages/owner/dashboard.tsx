@@ -274,6 +274,36 @@ export default function OwnerDashboard() {
     },
   });
 
+  // Update booking status mutations
+  const updateBookingStatusMutation = useMutation({
+    mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
+      return apiRequest("PATCH", `/api/bookings/${bookingId}/status`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/owner/bookings"] });
+      toast({ title: "Booking status updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to update booking", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    }
+  });
+
+  const confirmBooking = (bookingId: string) => {
+    updateBookingStatusMutation.mutate({ bookingId, status: "confirmed" });
+  };
+
+  const cancelBooking = (bookingId: string) => {
+    updateBookingStatusMutation.mutate({ bookingId, status: "cancelled" });
+  };
+
+  const completeBooking = (bookingId: string) => {
+    updateBookingStatusMutation.mutate({ bookingId, status: "completed" });
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -1140,16 +1170,31 @@ export default function OwnerDashboard() {
                             </Button>
                             {booking.status === 'pending' && (
                               <>
-                                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                <Button 
+                                  size="sm" 
+                                  className="bg-green-600 hover:bg-green-700"
+                                  onClick={() => confirmBooking(booking.id)}
+                                  disabled={updateBookingStatusMutation.isPending}
+                                >
                                   Confirm
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => cancelBooking(booking.id)}
+                                  disabled={updateBookingStatusMutation.isPending}
+                                >
                                   Cancel
                                 </Button>
                               </>
                             )}
                             {booking.status === 'confirmed' && (
-                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                              <Button 
+                                size="sm" 
+                                className="bg-blue-600 hover:bg-blue-700"
+                                onClick={() => completeBooking(booking.id)}
+                                disabled={updateBookingStatusMutation.isPending}
+                              >
                                 Mark Complete
                               </Button>
                             )}

@@ -1159,6 +1159,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update booking status (confirm/cancel/complete)
+  app.patch('/api/bookings/:bookingId/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { bookingId } = req.params;
+      const { status } = req.body;
+
+      if (!status || !['pending', 'confirmed', 'completed', 'cancelled'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      // Verify that this booking belongs to the user's salon
+      const [bookingWithSalon] = await db.select({
+        booking: bookings,
+        salon: salons
+      })
+        .from(bookings)
+        .innerJoin(salons, eq(bookings.salonId, salons.id))
+        .where(eq(bookings.id, bookingId));
+
+      if (!bookingWithSalon || bookingWithSalon.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this booking" });
+      }
+
+      // Update the booking status
+      const [updatedBooking] = await db.update(bookings)
+        .set({ 
+          status, 
+          updatedAt: new Date() 
+        })
+        .where(eq(bookings.id, bookingId))
+        .returning();
+
+      res.json(updatedBooking);
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      res.status(500).json({ message: "Failed to update booking status" });
+    }
+  });
+
   // Object storage routes
   app.get("/objects/:objectPath(*)", async (req: any, res) => {
     // Get user ID if authenticated, but don't require authentication
