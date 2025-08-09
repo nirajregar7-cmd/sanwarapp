@@ -11,6 +11,7 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.40.0",
     "@clerk/clerk-sdk-node": "^4.13.23",
     "@clerk/nextjs": "^6.30.0",
     "@clerk/types": "^4.74.0",
