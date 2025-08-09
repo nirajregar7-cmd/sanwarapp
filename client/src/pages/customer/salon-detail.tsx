@@ -1,4 +1,4 @@
-import { useParams, useLocation, Link } from "wouter";
+import { useParams, useLocation, Link, useLocation as useWouterLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import {
   ArrowLeft, Star, MapPin, Phone, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,6 +41,8 @@ export default function SalonDetail() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedService, setSelectedService] = useState<string>("");
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   
   // Check if this is a reschedule operation
   const searchParams = new URLSearchParams(window.location.search);
@@ -97,6 +99,25 @@ export default function SalonDetail() {
       return Array.isArray(data) ? data : [];
     },
   });
+
+  // Fetch salon like status for authenticated customers
+  const { data: likeStatus } = useQuery({
+    queryKey: [`/api/salons/${salonId}/like-status`],
+    enabled: !!salonId && !!isAuthenticated && user?.userType === 'customer',
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/salons/${salonId}/like-status`);
+      return await response.json();
+    },
+    retry: false,
+  });
+
+  // Update local state when like status is fetched
+  useEffect(() => {
+    if (likeStatus) {
+      setIsLiked(likeStatus.isLiked || false);
+      setLikesCount(likeStatus.likesCount || 0);
+    }
+  }, [likeStatus]);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -197,6 +218,85 @@ export default function SalonDetail() {
     },
   });
 
+  // Like toggle mutation
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/salons/${salonId}/like`);
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setIsLiked(data.isLiked);
+      setLikesCount(data.likesCount);
+      toast({
+        title: data.isLiked ? "Salon Saved!" : "Salon Removed",
+        description: data.message,
+      });
+      // Invalidate the like status query to refresh
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/like-status`] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Share functionality
+  const handleShare = async () => {
+    try {
+      const response = await apiRequest("GET", `/api/salons/${salonId}/share`);
+      const data = await response.json();
+      
+      if (navigator.share && /mobile|android|iphone/i.test(navigator.userAgent)) {
+        // Use native share API on mobile
+        await navigator.share({
+          title: data.salonName,
+          text: data.message,
+          url: data.shareableLink,
+        });
+      } else {
+        // Copy to clipboard on desktop
+        await navigator.clipboard.writeText(data.shareableLink);
+        toast({
+          title: "Link Copied!",
+          description: "Salon link copied to clipboard. Share it with friends!",
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      toast({
+        title: "Share Failed",
+        description: "Could not share salon link. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLikeToggle = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to save salons to your favorites.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+    
+    if (user?.userType !== 'customer') {
+      toast({
+        title: "Customer Account Required",
+        description: "Only customers can save salons.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    likeMutation.mutate();
+  };
+
   const onSubmit = (data: BookingFormData) => {
     bookingMutation.mutate(data);
   };
@@ -244,13 +344,24 @@ export default function SalonDetail() {
               Back to Salons
             </Button>
             <div className="flex items-center gap-2 sm:space-x-2">
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleShare}>
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                <Heart className="h-4 w-4 mr-2" />
-                Save
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1 sm:flex-none" 
+                onClick={handleLikeToggle}
+                disabled={likeMutation.isPending}
+              >
+                <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                {isLiked ? 'Saved' : 'Save'}
+                {likesCount > 0 && (
+                  <span className="ml-1 text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">
+                    {likesCount}
+                  </span>
+                )}
               </Button>
             </div>
           </div>

@@ -335,12 +335,26 @@ export const referralMilestones = pgTable("referral_milestones", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Salon likes table for customers to like/save salons
+export const salonLikes = pgTable("salon_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  isLiked: boolean("is_liked").default(true), // For future unlike functionality
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  // Ensure one like per customer per salon
+  index("unique_customer_salon_like").on(table.customerId, table.salonId)
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   ownedSalons: many(salons, { relationName: "salon_owner" }),
   bookings: many(bookings, { relationName: "customer_bookings" }),
   reviews: many(reviews, { relationName: "customer_reviews" }),
   wallet: one(wallets),
+  likedSalons: many(salonLikes),
 }));
 
 export const salonsRelations = relations(salons, ({ one, many }) => ({
@@ -357,6 +371,7 @@ export const salonsRelations = relations(salons, ({ one, many }) => ({
   reviews: many(reviews),
   gallery: many(salonGallery),
   account: one(salonOwnerAccounts),
+  likes: many(salonLikes),
 }));
 
 export const salonOwnerAccountsRelations = relations(salonOwnerAccounts, ({ one }) => ({
@@ -490,6 +505,17 @@ export const salonGalleryRelations = relations(salonGallery, ({ one }) => ({
   }),
 }));
 
+export const salonLikesRelations = relations(salonLikes, ({ one }) => ({
+  customer: one(users, {
+    fields: [salonLikes.customerId],
+    references: [users.id],
+  }),
+  salon: one(salons, {
+    fields: [salonLikes.salonId],
+    references: [salons.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -587,6 +613,12 @@ export const insertFreeBookingCreditSchema = createInsertSchema(freeBookingCredi
   usedAt: true,
 });
 
+export const insertSalonLikeSchema = createInsertSchema(salonLikes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -617,6 +649,8 @@ export type InsertReferralMilestone = z.infer<typeof insertReferralMilestoneSche
 export type CustomerReferralCampaign = typeof customerReferralCampaigns.$inferSelect;
 export type InsertCustomerReferralCampaign = z.infer<typeof insertCustomerReferralCampaignSchema>;
 export type FreeBookingCredit = typeof freeBookingCredits.$inferSelect;
+export type SalonLike = typeof salonLikes.$inferSelect;
+export type InsertSalonLike = z.infer<typeof insertSalonLikeSchema>;
 export type InsertFreeBookingCredit = z.infer<typeof insertFreeBookingCreditSchema>;
 export type SalonOwnerAccount = typeof salonOwnerAccounts.$inferSelect;
 export type InsertSalonOwnerAccount = typeof salonOwnerAccounts.$inferInsert;

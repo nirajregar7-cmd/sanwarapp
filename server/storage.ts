@@ -7,6 +7,7 @@ import {
   bookings,
   reviews,
   salonGallery,
+  salonLikes,
   referrals,
   referralMilestones,
   customerReferralCampaigns,
@@ -29,6 +30,8 @@ import {
   type InsertReview,
   type SalonGallery,
   type InsertSalonGallery,
+  type SalonLike,
+  type InsertSalonLike,
   type Referral,
   type InsertReferral,
   type ReferralMilestone,
@@ -117,6 +120,13 @@ export interface IStorage {
   // Wallet operations
   getOrCreateWallet(customerId: string): Promise<Wallet>;
   addWalletCredit(customerId: string, amount: number, description: string, referenceId: string, referenceType: string): Promise<void>;
+  
+  // Salon likes operations
+  toggleSalonLike(customerId: string, salonId: string): Promise<{ isLiked: boolean; likesCount: number }>;
+  getSalonLikeStatus(customerId: string, salonId: string): Promise<boolean>;
+  getSalonLikesCount(salonId: string): Promise<number>;
+  getSalonLikesByCustomer(customerId: string): Promise<SalonLike[]>;
+  getSalonLikesForOwner(salonId: string): Promise<SalonLike[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -633,7 +643,7 @@ export class DatabaseStorage implements IStorage {
     return newWallet;
   }
 
-  async addWalletCredit(customerId: string, amount: number, description: string, referenceId?: string, referenceType?: string): Promise<void> {
+  async addWalletCredit(customerId: string, amount: number, description: string, referenceId: string, referenceType: string): Promise<void> {
     const wallet = await this.getOrCreateWallet(customerId);
     const newBalance = parseFloat(wallet.balance) + amount;
 
@@ -649,9 +659,71 @@ export class DatabaseStorage implements IStorage {
       type: "credit",
       amount: amount.toString(),
       description,
-      referenceId: referenceId || null,
-      referenceType: referenceType as any || null,
+      referenceId,
+      referenceType: referenceType as any,
     });
+  }
+
+  // Salon likes operations
+  async toggleSalonLike(customerId: string, salonId: string): Promise<{ isLiked: boolean; likesCount: number }> {
+    // Check if like already exists
+    const [existingLike] = await db.select().from(salonLikes)
+      .where(and(eq(salonLikes.customerId, customerId), eq(salonLikes.salonId, salonId)));
+
+    if (existingLike) {
+      // Unlike - remove the like
+      await db.delete(salonLikes)
+        .where(and(eq(salonLikes.customerId, customerId), eq(salonLikes.salonId, salonId)));
+      
+      const likesCount = await this.getSalonLikesCount(salonId);
+      return { isLiked: false, likesCount };
+    } else {
+      // Like - add the like
+      await db.insert(salonLikes).values({
+        customerId,
+        salonId,
+        isLiked: true,
+      });
+      
+      const likesCount = await this.getSalonLikesCount(salonId);
+      return { isLiked: true, likesCount };
+    }
+  }
+
+  async getSalonLikeStatus(customerId: string, salonId: string): Promise<boolean> {
+    const [like] = await db.select().from(salonLikes)
+      .where(and(eq(salonLikes.customerId, customerId), eq(salonLikes.salonId, salonId)));
+    return !!like && like.isLiked;
+  }
+
+  async getSalonLikesCount(salonId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(salonLikes)
+      .where(and(eq(salonLikes.salonId, salonId), eq(salonLikes.isLiked, true)));
+    return result[0]?.count || 0;
+  }
+
+  async getSalonLikesByCustomer(customerId: string): Promise<SalonLike[]> {
+    return await db.select().from(salonLikes)
+      .where(and(eq(salonLikes.customerId, customerId), eq(salonLikes.isLiked, true)))
+      .orderBy(desc(salonLikes.createdAt));
+  }
+
+  async getSalonLikesForOwner(salonId: string): Promise<SalonLike[]> {
+    return await db.select({
+      id: salonLikes.id,
+      customerId: salonLikes.customerId,
+      salonId: salonLikes.salonId,
+      isLiked: salonLikes.isLiked,
+      createdAt: salonLikes.createdAt,
+      updatedAt: salonLikes.updatedAt,
+      customerName: sql<string>`${users.firstName} || ' ' || COALESCE(${users.lastName}, '')`,
+      customerEmail: users.email,
+    }).from(salonLikes)
+      .innerJoin(users, eq(salonLikes.customerId, users.id))
+      .where(and(eq(salonLikes.salonId, salonId), eq(salonLikes.isLiked, true)))
+      .orderBy(desc(salonLikes.createdAt));
   }
 }
 

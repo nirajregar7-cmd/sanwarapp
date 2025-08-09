@@ -2254,6 +2254,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Salon likes/save functionality
+  
+  // Toggle salon like/save (for customers)
+  app.post('/api/salons/:salonId/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user is customer
+      const user = await storage.getUser(userId);
+      if (!user || user.userType !== 'customer') {
+        return res.status(403).json({ message: "Only customers can like salons" });
+      }
+      
+      // Check if salon exists
+      const salon = await storage.getSalonById(salonId);
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      const result = await storage.toggleSalonLike(userId, salonId);
+      res.json({
+        success: true,
+        isLiked: result.isLiked,
+        likesCount: result.likesCount,
+        message: result.isLiked ? "Salon liked successfully" : "Salon unliked successfully"
+      });
+    } catch (error) {
+      console.error("Error toggling salon like:", error);
+      res.status(500).json({ message: "Failed to update salon like status" });
+    }
+  });
+  
+  // Get salon like status for current user
+  app.get('/api/salons/:salonId/like-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const isLiked = await storage.getSalonLikeStatus(userId, salonId);
+      const likesCount = await storage.getSalonLikesCount(salonId);
+      
+      res.json({
+        isLiked,
+        likesCount
+      });
+    } catch (error) {
+      console.error("Error getting salon like status:", error);
+      res.status(500).json({ message: "Failed to get salon like status" });
+    }
+  });
+  
+  // Get customer's liked salons
+  app.get('/api/customer/liked-salons', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user is customer
+      const user = await storage.getUser(userId);
+      if (!user || user.userType !== 'customer') {
+        return res.status(403).json({ message: "Only customers can view liked salons" });
+      }
+      
+      const likedSalons = await storage.getSalonLikesByCustomer(userId);
+      
+      // Get full salon details for each liked salon
+      const salonsWithDetails = await Promise.all(
+        likedSalons.map(async (like) => {
+          const salon = await storage.getSalonById(like.salonId);
+          return {
+            ...like,
+            salon
+          };
+        })
+      );
+      
+      res.json(salonsWithDetails);
+    } catch (error) {
+      console.error("Error fetching liked salons:", error);
+      res.status(500).json({ message: "Failed to fetch liked salons" });
+    }
+  });
+  
+  // Get salon likes for salon owner (see who liked their salon)
+  app.get('/api/owner/salon/:salonId/likes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user owns this salon
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to view likes for this salon" });
+      }
+      
+      const likes = await storage.getSalonLikesForOwner(salonId);
+      const likesCount = await storage.getSalonLikesCount(salonId);
+      
+      res.json({
+        likes,
+        likesCount,
+        salonName: salon.name
+      });
+    } catch (error) {
+      console.error("Error fetching salon likes:", error);
+      res.status(500).json({ message: "Failed to fetch salon likes" });
+    }
+  });
+  
+  // Share salon functionality (for now, just return shareable link)
+  app.get('/api/salons/:salonId/share', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      
+      // Check if salon exists
+      const salon = await storage.getSalonById(salonId);
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Generate shareable link
+      const shareableLink = `${req.protocol}://${req.get('host')}/salon/${salonId}`;
+      
+      res.json({
+        shareableLink,
+        salonName: salon.name,
+        description: salon.description || `Book appointments at ${salon.name}`,
+        message: `Check out ${salon.name} on Sanwar! Book your appointment easily.`
+      });
+    } catch (error) {
+      console.error("Error generating share link:", error);
+      res.status(500).json({ message: "Failed to generate share link" });
+    }
+  });
+
   // Payment webhook (Razorpay)
   app.post("/api/payment/webhook", async (req, res) => {
     try {
