@@ -21,6 +21,8 @@ import { z } from "zod";
 import type { Salon, Service, Staff, WorkingHours, TimeSlot, Review } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
+import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
+import { ReviewForm } from "./review-form";
 
 const bookingSchema = z.object({
   serviceId: z.string().min(1, "Please select a service"),
@@ -588,7 +590,12 @@ export default function SalonDetail() {
                     {reviews.slice(0, 5).map((review) => (
                       <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center">
+                          <div className="flex items-center space-x-3">
+                            {/* Show mood rating if available */}
+                            {review.moodRating && (
+                              <MoodRatingDisplay mood={review.moodRating} size="sm" />
+                            )}
+                            {/* Traditional star rating */}
                             <div className="flex">
                               {Array.from({ length: 5 }).map((_, i) => (
                                 <Star
@@ -601,7 +608,7 @@ export default function SalonDetail() {
                                 />
                               ))}
                             </div>
-                            <span className="ml-2 font-medium">Customer Review</span>
+                            <span className="font-medium">Customer Review</span>
                           </div>
                           <span className="text-sm text-gray-500">
                             {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "Recently"}
@@ -610,9 +617,21 @@ export default function SalonDetail() {
                         <p className="text-gray-700">{review.comment}</p>
                       </div>
                     ))}
+                    
+                    {/* Add Review Button for logged in customers */}
+                    {isAuthenticated && user?.userType === 'customer' && (
+                      <div className="pt-4 border-t border-gray-200">
+                        <ReviewForm salonId={salonId!} />
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-center py-8">No reviews yet. Be the first to review!</p>
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 mb-4">No reviews yet. Be the first to review!</p>
+                    {isAuthenticated && user?.userType === 'customer' && (
+                      <ReviewForm salonId={salonId!} />
+                    )}
+                  </div>
                 )}
               </CardContent>
             </Card>

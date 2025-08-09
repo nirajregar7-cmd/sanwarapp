@@ -1815,8 +1815,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/reviews", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const reviewData = insertReviewSchema.parse({ ...req.body, customerId: userId });
-      const review = await storage.createReview(reviewData);
+      const { getMoodFromRating } = await import("@shared/schema");
+      
+      // Auto-set mood rating if not provided but rating is available
+      const reviewData = { ...req.body, customerId: userId };
+      if (!reviewData.moodRating && reviewData.rating) {
+        reviewData.moodRating = getMoodFromRating(reviewData.rating);
+      }
+      
+      const validatedData = insertReviewSchema.parse(reviewData);
+      const review = await storage.createReview(validatedData);
       res.json(review);
     } catch (error) {
       console.error("Error creating review:", error);

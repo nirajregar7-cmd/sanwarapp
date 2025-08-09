@@ -134,6 +134,7 @@ export const reviews = pgTable("reviews", {
   salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
   bookingId: varchar("booking_id").references(() => bookings.id, { onDelete: "cascade" }),
   rating: integer("rating").notNull(), // 1-5
+  moodRating: varchar("mood_rating", { enum: ["very_happy", "happy", "neutral", "sad", "very_sad"] }), // emoji mood rating
   comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -680,6 +681,36 @@ export type SalonGallery = typeof salonGallery.$inferSelect;
 export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;
 export type PasswordResetOtp = typeof passwordResetOtps.$inferSelect;
 export type InsertPasswordResetOtp = z.infer<typeof insertPasswordResetOtpSchema>;
+
+// Mood rating utility types and functions
+export type MoodRating = "very_happy" | "happy" | "neutral" | "sad" | "very_sad";
+
+export const MOOD_EMOJIS: Record<MoodRating, { emoji: string; label: string; color: string }> = {
+  very_happy: { emoji: "😍", label: "Absolutely Amazing", color: "text-green-600" },
+  happy: { emoji: "😊", label: "Really Good", color: "text-green-500" },
+  neutral: { emoji: "😐", label: "It's Okay", color: "text-yellow-500" },
+  sad: { emoji: "😔", label: "Not Great", color: "text-orange-500" },
+  very_sad: { emoji: "😞", label: "Very Disappointed", color: "text-red-500" }
+};
+
+export function getMoodFromRating(rating: number): MoodRating {
+  if (rating >= 5) return "very_happy";
+  if (rating >= 4) return "happy"; 
+  if (rating >= 3) return "neutral";
+  if (rating >= 2) return "sad";
+  return "very_sad";
+}
+
+export function getRatingFromMood(mood: MoodRating): number {
+  const moodToRating: Record<MoodRating, number> = {
+    very_happy: 5,
+    happy: 4,
+    neutral: 3,
+    sad: 2,
+    very_sad: 1
+  };
+  return moodToRating[mood];
+}
 
 // Verification Documents table for shopkeeper document uploads
 export const verificationDocuments = pgTable("verification_documents", {
