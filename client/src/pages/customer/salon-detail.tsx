@@ -24,6 +24,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
 import { ReviewPhotoGallery } from "@/components/ReviewPhotoGallery";
 import { ReviewForm } from "./review-form";
+import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 
 const bookingSchema = z.object({
   serviceId: z.string().min(1, "Please select a service"),
@@ -46,6 +47,7 @@ export default function SalonDetail() {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [appliedReferralCode, setAppliedReferralCode] = useState<any>(null);
   
   // Check if this is a reschedule operation
   const searchParams = new URLSearchParams(window.location.search);
@@ -138,17 +140,38 @@ export default function SalonDetail() {
         throw new Error("Please log in to book an appointment");
       }
 
-      // Step 1: Create Razorpay payment order
+      // Step 1: Create payment order (with referral code support)
       const orderResponse = await apiRequest("POST", "/api/bookings/create-payment-order", {
         salonId,
         serviceId: data.serviceId,
         staffId: data.staffId || null,
         timeSlotId: data.timeSlotId,
         date: data.date.toISOString().split('T')[0],
+        referralCode: appliedReferralCode?.code || null,
       });
 
       const orderData = await orderResponse.json();
       console.log("Order data received:", orderData);
+      
+      // Handle free bookings (when referral code covers full amount)
+      if (orderData.isFreeBooking) {
+        const freeBookingResponse = await apiRequest("POST", "/api/bookings/create-free", {
+          salonId,
+          serviceId: data.serviceId,
+          staffId: data.staffId || null,
+          timeSlotId: data.timeSlotId,
+          date: data.date.toISOString().split('T')[0],
+          referralCodeData: orderData.referralCodeData,
+        });
+        
+        const freeBookingData = await freeBookingResponse.json();
+        
+        if (!freeBookingResponse.ok) {
+          throw new Error(freeBookingData.message || "Failed to create free booking");
+        }
+        
+        return freeBookingData;
+      }
       
       // Step 2: Initialize Razorpay payment
       return new Promise((resolve, reject) => {
@@ -171,6 +194,8 @@ export default function SalonDetail() {
                 staffId: data.staffId || null,
                 timeSlotId: data.timeSlotId,
                 date: data.date.toISOString().split('T')[0],
+                referralCodeData: orderData.referralCodeApplied ? appliedReferralCode : null,
+                discountApplied: orderData.discountApplied || 0,
               });
 
               const bookingData = await verifyResponse.json();
@@ -203,12 +228,16 @@ export default function SalonDetail() {
         }
       });
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      const isFreebook = result?.referralCodeUsed;
       toast({
-        title: "Booking Confirmed!",
-        description: "Your appointment has been successfully booked and payment received. You'll receive a confirmation shortly.",
+        title: isFreebook ? "Free Booking Confirmed!" : "Booking Confirmed!",
+        description: isFreebook 
+          ? `Your appointment has been booked for free using referral code ${result.referralCodeUsed}!`
+          : "Your appointment has been successfully booked and payment received. You'll receive a confirmation shortly.",
       });
       setBookingDialogOpen(false);
+      setAppliedReferralCode(null); // Reset referral code
       form.reset();
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/time-slots`] });
     },
@@ -835,6 +864,14 @@ export default function SalonDetail() {
                             />
                           )}
 
+                          {/* Referral Code Input */}
+                          <ReferralCodeInput
+                            onCodeApplied={setAppliedReferralCode}
+                            onCodeRemoved={() => setAppliedReferralCode(null)}
+                            appliedCode={appliedReferralCode}
+                            disabled={bookingMutation.isPending}
+                          />
+
                           {selectedServiceData && (
                             <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
                               <h4 className="font-semibold mb-2 text-sm sm:text-base">Booking Summary</h4>
@@ -851,6 +888,31 @@ export default function SalonDetail() {
                                   <span>Price:</span>
                                   <span>₹{selectedServiceData.price}</span>
                                 </div>
+                                {appliedReferralCode && (
+                                  <>
+                                    <Separator className="my-2" />
+                                    <div className="flex justify-between text-green-600">
+                                      <span>Referral Discount:</span>
+                                      <span>
+                                        {appliedReferralCode.discountType === 'free' 
+                                          ? 'FREE BOOKING' 
+                                          : appliedReferralCode.discountType === 'percentage'
+                                          ? `${appliedReferralCode.discountValue}% OFF`
+                                          : `₹${appliedReferralCode.discountValue} OFF`
+                                        }
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between font-semibold">
+                                      <span>Final Amount:</span>
+                                      <span>
+                                        {appliedReferralCode.discountType === 'free' 
+                                          ? '₹0 (FREE)' 
+                                          : '₹10 (Confirmation)'
+                                        }
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             </div>
                           )}
@@ -862,6 +924,8 @@ export default function SalonDetail() {
                           >
                             {bookingMutation.isPending 
                               ? (rescheduleBookingId ? "Rescheduling..." : "Booking...") 
+                              : appliedReferralCode?.discountType === 'free'
+                              ? "Book for FREE!"
                               : (rescheduleBookingId ? "Reschedule Booking" : "Confirm Booking")}
                           </Button>
                         </form>

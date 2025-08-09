@@ -561,12 +561,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Referral code validation endpoint
+  app.post('/api/referral-codes/validate', isAuthenticated, async (req, res) => {
+    try {
+      const { code } = req.body;
+      const userId = req.user?.id;
+      
+      if (!code) {
+        return res.status(400).json({ error: 'Referral code is required' });
+      }
+      
+      // Find the referral code
+      const [referralCode] = await db.execute(sql`
+        SELECT * FROM referral_codes 
+        WHERE code = ${code} AND is_active = true
+      `);
+      
+      if (!referralCode) {
+        return res.status(404).json({ error: 'Invalid or expired referral code' });
+      }
+      
+      // Check if user has already used this code
+      const [existingUsage] = await db.execute(sql`
+        SELECT * FROM referral_code_usages 
+        WHERE referral_code_id = ${referralCode.id} AND used_by = ${userId}
+      `);
+      
+      if (existingUsage) {
+        return res.status(400).json({ error: 'You have already used this referral code' });
+      }
+      
+      // Check if code has exceeded max uses
+      if (referralCode.current_uses >= referralCode.max_uses) {
+        return res.status(400).json({ error: 'This referral code has reached its usage limit' });
+      }
+      
+      // Check validity period
+      if (referralCode.valid_until && new Date() > new Date(referralCode.valid_until)) {
+        return res.status(400).json({ error: 'This referral code has expired' });
+      }
+      
+      res.json({
+        valid: true,
+        code: referralCode.code,
+        discountType: referralCode.discount_type,
+        discountValue: referralCode.discount_value,
+        description: referralCode.description
+      });
+    } catch (error) {
+      console.error("Error validating referral code:", error);
+      res.status(500).json({ error: "Failed to validate referral code" });
+    }
+  });
+
   // Create booking endpoint
-  // Create payment order for booking confirmation
+  // Create payment order for booking confirmation with referral code support
   app.post('/api/bookings/create-payment-order', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const { salonId, serviceId, timeSlotId, date, staffId } = req.body;
+      const { salonId, serviceId, timeSlotId, date, staffId, referralCode } = req.body;
       
       // Validate required fields
       if (!salonId || !serviceId || !timeSlotId || !date) {
@@ -616,9 +669,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Time slot is already booked" });
       }
       
-      // Create Razorpay order for confirmation amount
+      let finalAmount = salon.confirmationAmount || 10;
+      let validReferralCode = null;
+      let appliedDiscount = 0;
+      
+      // Process referral code if provided
+      if (referralCode) {
+        const [refCode] = await db.execute(sql`
+          SELECT * FROM referral_codes 
+          WHERE code = ${referralCode} AND is_active = true
+        `);
+        
+        if (refCode) {
+          // Check if user hasn't used this code before
+          const [existingUsage] = await db.execute(sql`
+            SELECT * FROM referral_code_usages 
+            WHERE referral_code_id = ${refCode.id} AND used_by = ${userId}
+          `);
+          
+          if (!existingUsage && refCode.current_uses < refCode.max_uses) {
+            const originalAmount = finalAmount;
+            
+            // Calculate discount
+            if (refCode.discount_type === 'free') {
+              appliedDiscount = originalAmount;
+              finalAmount = 1; // Minimum amount for Razorpay (₹1)
+            } else if (refCode.discount_type === 'percentage') {
+              appliedDiscount = originalAmount * (parseFloat(refCode.discount_value || '0') / 100);
+              finalAmount = Math.max(1, originalAmount - appliedDiscount);
+            } else if (refCode.discount_type === 'fixed') {
+              appliedDiscount = Math.min(originalAmount, parseFloat(refCode.discount_value || '0'));
+              finalAmount = Math.max(1, originalAmount - appliedDiscount);
+            }
+            
+            validReferralCode = refCode;
+          }
+        }
+      }
+      
+      // For free bookings (referral code covers full amount), skip payment
+      if (appliedDiscount >= (salon.confirmationAmount || 10)) {
+        return res.json({
+          isFreeBooking: true,
+          referralCode: validReferralCode?.code,
+          discountApplied: appliedDiscount,
+          originalAmount: salon.confirmationAmount || 10,
+          finalAmount: 0,
+          salonName: salon.name,
+          serviceName: service.name,
+          servicePrice: service.price,
+          referralCodeData: validReferralCode
+        });
+      }
+      
+      // Create Razorpay order for remaining amount
       const order = await createRazorpayOrder({
-        amount: salon.confirmationAmount || 10, // Default ₹10 if not set
+        amount: finalAmount,
         receipt: `booking_${Date.now()}`,
         notes: {
           salonId,
@@ -629,7 +735,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customerId: userId,
           salonName: salon.name,
           serviceName: service.name,
-          servicePrice: service.price
+          servicePrice: service.price,
+          referralCode: validReferralCode?.code || null,
+          discountApplied: appliedDiscount
         }
       });
       
@@ -639,6 +747,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency: order.currency,
         keyId: process.env.RAZORPAY_KEY_ID,
         confirmationAmount: salon.confirmationAmount || 10,
+        finalAmount,
+        discountApplied,
+        referralCodeApplied: validReferralCode?.code || null,
         servicePrice: service.price,
         salonName: salon.name,
         serviceName: service.name
@@ -652,6 +763,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Create free booking with referral code
+  app.post('/api/bookings/create-free', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const {
+        salonId,
+        serviceId,
+        timeSlotId,
+        date,
+        staffId,
+        referralCodeData
+      } = req.body;
+      
+      // Validate required fields
+      if (!salonId || !serviceId || !timeSlotId || !date || !referralCodeData) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Double-check slot availability
+      const [existingBooking] = await db.select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.timeSlotId, timeSlotId),
+            eq(bookings.date, date)
+          )
+        );
+        
+      if (existingBooking) {
+        return res.status(400).json({ message: "Time slot is no longer available" });
+      }
+      
+      // Get time slot and service details
+      const [timeSlot] = await db.select()
+        .from(timeSlots)
+        .where(eq(timeSlots.id, timeSlotId));
+        
+      const [service] = await db.select()
+        .from(services)
+        .where(eq(services.id, serviceId));
+      
+      if (!timeSlot || !service) {
+        return res.status(400).json({ message: "Service or time slot not found" });
+      }
+      
+      // Create free booking
+      const [booking] = await db.insert(bookings).values({
+        customerId: userId,
+        salonId,
+        serviceId,
+        staffId: staffId || null,
+        timeSlotId,
+        date,
+        startTime: timeSlot.startTime,
+        endTime: timeSlot.endTime,
+        totalAmount: service.price,
+        confirmationAmount: '0',
+        paymentStatus: 'completed',
+        status: 'confirmed',
+        notes: `Free booking with referral code: ${referralCodeData.code}`
+      }).returning();
+      
+      // Record referral code usage
+      await db.execute(sql`
+        INSERT INTO referral_code_usages (referral_code_id, used_by, booking_id, discount_amount)
+        VALUES (${referralCodeData.id}, ${userId}, ${booking.id}, ${referralCodeData.discount_value || 0})
+      `);
+      
+      // Update referral code usage count
+      await db.execute(sql`
+        UPDATE referral_codes 
+        SET current_uses = current_uses + 1, updated_at = NOW()
+        WHERE id = ${referralCodeData.id}
+      `);
+      
+      // Mark time slot as unavailable for this date
+      await db.execute(sql`
+        UPDATE time_slots 
+        SET is_available = false 
+        WHERE id = ${timeSlotId}
+      `);
+      
+      // Send booking confirmation notification
+      await sendBookingConfirmationNotification(booking.id);
+      
+      res.status(201).json({
+        ...booking,
+        referralCodeUsed: referralCodeData.code,
+        discountApplied: referralCodeData.discount_value || 0,
+        message: "Free booking created successfully!"
+      });
+    } catch (error) {
+      console.error("Error creating free booking:", error);
+      res.status(500).json({ message: "Failed to create free booking" });
+    }
+  });
+
   // Verify payment and create booking
   app.post('/api/bookings/verify-payment', isAuthenticated, async (req: any, res) => {
     try {
@@ -665,7 +873,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timeSlotId,
         date,
         staffId,
-        notes
+        notes,
+        referralCodeData,
+        discountApplied
       } = req.body;
       
       // Verify payment signature
