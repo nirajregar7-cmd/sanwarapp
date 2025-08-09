@@ -127,6 +127,7 @@ export interface IStorage {
   getSalonLikesCount(salonId: string): Promise<number>;
   getSalonLikesByCustomer(customerId: string): Promise<SalonLike[]>;
   getSalonLikesForOwner(salonId: string): Promise<SalonLike[]>;
+  getCustomerLikedSalons(customerId: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -190,8 +191,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSalonById(id: string): Promise<Salon | undefined> {
-    const [salon] = await db.select().from(salons).where(eq(salons.id, id));
-    return salon;
+    const [salonWithLikes] = await db
+      .select({
+        ...salons,
+        likesCount: sql<number>`COALESCE(COUNT(${salonLikes.id}), 0)::int`
+      })
+      .from(salons)
+      .leftJoin(salonLikes, and(eq(salons.id, salonLikes.salonId), eq(salonLikes.isLiked, true)))
+      .where(eq(salons.id, id))
+      .groupBy(salons.id);
+    
+    return salonWithLikes as any;
   }
 
   async getSalonsByOwner(ownerId: string): Promise<Salon[]> {
@@ -199,7 +209,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllSalons(): Promise<Salon[]> {
-    return await db.select().from(salons).where(eq(salons.isActive, true)).orderBy(desc(salons.averageRating));
+    const salonsWithLikes = await db
+      .select({
+        ...salons,
+        likesCount: sql<number>`COALESCE(COUNT(${salonLikes.id}), 0)::int`
+      })
+      .from(salons)
+      .leftJoin(salonLikes, and(eq(salons.id, salonLikes.salonId), eq(salonLikes.isLiked, true)))
+      .where(eq(salons.isActive, true))
+      .groupBy(salons.id)
+      .orderBy(desc(salons.averageRating));
+    
+    return salonsWithLikes as any[];
   }
 
   async updateSalon(id: string, salonData: Partial<InsertSalon>): Promise<Salon | undefined> {
@@ -723,6 +744,32 @@ export class DatabaseStorage implements IStorage {
     }).from(salonLikes)
       .innerJoin(users, eq(salonLikes.customerId, users.id))
       .where(and(eq(salonLikes.salonId, salonId), eq(salonLikes.isLiked, true)))
+      .orderBy(desc(salonLikes.createdAt));
+  }
+
+  async getCustomerLikedSalons(customerId: string): Promise<any[]> {
+    return await db.select({
+      id: salons.id,
+      name: salons.name,
+      address: salons.address,
+      imageUrl: salons.imageUrl,
+      averageRating: salons.averageRating,
+      confirmationAmount: salons.confirmationAmount,
+      likesCount: sql<number>`(
+        SELECT COUNT(*)::int 
+        FROM ${salonLikes} 
+        WHERE ${salonLikes.salonId} = ${salons.id} 
+        AND ${salonLikes.isLiked} = true
+      )`,
+      likedAt: salonLikes.createdAt
+    })
+      .from(salonLikes)
+      .innerJoin(salons, eq(salonLikes.salonId, salons.id))
+      .where(and(
+        eq(salonLikes.customerId, customerId),
+        eq(salonLikes.isLiked, true),
+        eq(salons.isActive, true)
+      ))
       .orderBy(desc(salonLikes.createdAt));
   }
 }

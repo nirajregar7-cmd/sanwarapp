@@ -1,23 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Calendar, Clock, MapPin, Star } from "lucide-react";
+import { Calendar, Clock, MapPin, Star, Heart } from "lucide-react";
 import type { Booking } from "@shared/schema";
 import { useLocation } from "wouter";
+import { Link } from "wouter";
 
 export default function CustomerBookings() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
 
-  const { data: bookings, isLoading, error } = useQuery({
+  const { data: bookings, isLoading, error } = useQuery<Booking[]>({
     queryKey: ["/api/bookings/my"],
+    retry: false,
+  });
+
+  // Fetch liked salons for the customer
+  const { data: likedSalons, isLoading: likedSalonsLoading } = useQuery<any[]>({
+    queryKey: ["/api/customer/liked-salons"],
+    enabled: !!isAuthenticated,
     retry: false,
   });
 
@@ -147,7 +155,7 @@ export default function CustomerBookings() {
           {bookings.map((booking: Booking) => (
             <Card 
               key={booking.id} 
-              className={`${isUpcoming(booking.date, booking.startTime) ? 'border-l-4 border-l-accent' : ''}`}
+              className={`${isUpcoming(booking.date || '', booking.startTime || '') ? 'border-l-4 border-l-accent' : ''}`}
             >
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 space-y-2 sm:space-y-0">
@@ -157,8 +165,8 @@ export default function CustomerBookings() {
                     </h3>
                     <p className="text-gray-600 text-sm">Service booked</p>
                   </div>
-                  <Badge className={`${getStatusColor(booking.status)} flex-shrink-0 self-start`}>
-                    {getStatusText(booking.status)}
+                  <Badge className={`${getStatusColor(booking.status || '')} flex-shrink-0 self-start`}>
+                    {getStatusText(booking.status || '')}
                   </Badge>
                 </div>
                 
@@ -223,6 +231,88 @@ export default function CustomerBookings() {
           </Button>
         </div>
       )}
+
+      {/* Liked Salons Section */}
+      <div className="mt-8 sm:mt-12">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center text-lg sm:text-xl font-semibold text-gray-900">
+              <Heart className="h-5 w-5 text-red-500 mr-2" />
+              Liked Salons
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {likedSalonsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="h-32 w-full rounded-lg" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : likedSalons && likedSalons.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {likedSalons.map((salon: any) => (
+                  <Link key={salon.id} href={`/salon/${salon.id}`}>
+                    <div className="group cursor-pointer bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="relative h-32 bg-gray-100">
+                        {salon.imageUrl ? (
+                          <img
+                            src={salon.imageUrl}
+                            alt={salon.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center">
+                            <span className="text-accent text-lg font-semibold">
+                              {salon.name.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <h3 className="font-semibold text-gray-900 truncate">{salon.name}</h3>
+                        <p className="text-sm text-gray-600 truncate mb-2">{salon.address}</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            {salon.averageRating > 0 && (
+                              <>
+                                <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                                <span className="text-sm text-gray-600 ml-1">
+                                  {salon.averageRating.toFixed(1)}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Heart className="h-3 w-3 text-red-500 mr-1" />
+                            <span>{salon.likesCount || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                  <Heart className="h-6 w-6 text-gray-400" />
+                </div>
+                <h3 className="text-base font-medium text-gray-900 mb-1">No liked salons yet</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Start exploring and save your favorite salons
+                </p>
+                <Button variant="outline" size="sm" onClick={() => setLocation("/")}>
+                  Discover Salons
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

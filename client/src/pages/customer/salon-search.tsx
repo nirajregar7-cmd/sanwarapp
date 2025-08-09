@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { MapPin, Star, Navigation, Filter, Search, Loader2, Map as MapIcon } from 'lucide-react';
+import { MapPin, Star, Navigation, Filter, Search, Loader2, Map as MapIcon, Heart } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import Map from '@/components/Map';
@@ -327,11 +327,21 @@ export default function SalonSearchPage() {
                       <h3 className="font-semibold text-lg text-gray-900 group-hover:text-primary transition-colors">
                         {salon.name}
                       </h3>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">
-                          {salon.averageRating ? Number(salon.averageRating).toFixed(1) : 'New'}
-                        </span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 text-sm">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">
+                            {salon.averageRating ? Number(salon.averageRating).toFixed(1) : 'New'}
+                          </span>
+                        </div>
+                        {(salon as any).likesCount > 0 && (
+                          <div className="flex items-center gap-1 text-sm text-red-500">
+                            <Heart className="h-4 w-4 fill-current" />
+                            <span className="font-medium">
+                              {(salon as any).likesCount}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     

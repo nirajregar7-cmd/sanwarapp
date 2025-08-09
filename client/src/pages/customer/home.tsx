@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Star, Clock, MapPin, Search } from "lucide-react";
+import { Star, Clock, MapPin, Search, Heart } from "lucide-react";
 import type { Salon } from "@shared/schema";
 
 export default function CustomerHome() {
@@ -135,11 +135,21 @@ export default function CustomerHome() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-xl font-semibold text-gray-900">{salon.name}</h3>
-                      <div className="flex items-center text-yellow-500">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="ml-1 text-gray-600">
-                          {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
-                        </span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center text-yellow-500">
+                          <Star className="h-4 w-4 fill-current" />
+                          <span className="ml-1 text-gray-600">
+                            {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
+                          </span>
+                        </div>
+                        {(salon as any).likesCount > 0 && (
+                          <div className="flex items-center text-red-500">
+                            <Heart className="h-4 w-4 fill-current" />
+                            <span className="ml-1 text-gray-600 text-sm">
+                              {(salon as any).likesCount}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     

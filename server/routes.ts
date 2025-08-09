@@ -2379,6 +2379,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get customer's liked salons for dashboard display
+  app.get('/api/customer/liked-salons', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const likedSalons = await storage.getCustomerLikedSalons(userId);
+      res.json(likedSalons);
+    } catch (error) {
+      console.error("Error fetching customer liked salons:", error);
+      res.status(500).json({ message: "Failed to fetch liked salons" });
+    }
+  });
+
   // Share salon functionality (for now, just return shareable link)
   app.get('/api/salons/:salonId/share', async (req, res) => {
     try {
