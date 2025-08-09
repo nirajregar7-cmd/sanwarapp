@@ -23,7 +23,8 @@ import {
   Calendar,
   FileText,
   User,
-  ArrowLeft
+  ArrowLeft,
+  Scissors
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -39,6 +40,9 @@ interface Salon {
   verificationNotes?: string;
   verifiedAt?: string;
   createdAt: string;
+  description?: string;
+  totalReviews: number;
+  isPremium: boolean;
   owner: {
     id: string;
     firstName: string;
@@ -48,6 +52,43 @@ interface Salon {
   };
 }
 
+interface SalonService {
+  id: string;
+  name: string;
+  price: number;
+  duration: number;
+  description?: string;
+}
+
+interface SalonStaff {
+  id: string;
+  name: string;
+  role: string;
+  imageUrl?: string;
+  experience?: string;
+}
+
+interface SalonReview {
+  id: string;
+  customerName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+interface SalonGalleryItem {
+  id: string;
+  imageUrl: string;
+  caption?: string;
+}
+
+interface WorkingHours {
+  dayOfWeek: string;
+  openTime: string;
+  closeTime: string;
+  isOpen: boolean;
+}
+
 export default function SalonManagement() {
   const [location] = useLocation();
   const [selectedSalon, setSelectedSalon] = useState<Salon | null>(null);
@@ -55,9 +96,83 @@ export default function SalonManagement() {
   const [statusFilter, setStatusFilter] = useState(
     new URLSearchParams(location.split('?')[1] || '').get('status') || 'all'
   );
+  const [viewingProfile, setViewingProfile] = useState<string | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch detailed salon profile for admin review
+  const { data: salonProfile, isLoading: profileLoading } = useQuery({
+    queryKey: ["/api/salon", viewingProfile],
+    queryFn: async () => {
+      if (!viewingProfile) return null;
+      const response = await fetch(`/api/salon/${viewingProfile}`);
+      if (!response.ok) throw new Error('Failed to fetch salon profile');
+      return response.json();
+    },
+    enabled: !!viewingProfile,
+    retry: false,
+  });
+
+  const { data: salonServices } = useQuery<SalonService[]>({
+    queryKey: ["/api/salon", viewingProfile, "services"],
+    queryFn: async () => {
+      if (!viewingProfile) return [];
+      const response = await fetch(`/api/salon/${viewingProfile}/services`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!viewingProfile,
+    retry: false,
+  });
+
+  const { data: salonStaff } = useQuery<SalonStaff[]>({
+    queryKey: ["/api/salon", viewingProfile, "staff"],
+    queryFn: async () => {
+      if (!viewingProfile) return [];
+      const response = await fetch(`/api/salon/${viewingProfile}/staff`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!viewingProfile,
+    retry: false,
+  });
+
+  const { data: salonReviews } = useQuery<SalonReview[]>({
+    queryKey: ["/api/salon", viewingProfile, "reviews"],
+    queryFn: async () => {
+      if (!viewingProfile) return [];
+      const response = await fetch(`/api/salon/${viewingProfile}/reviews`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!viewingProfile,
+    retry: false,
+  });
+
+  const { data: salonGallery } = useQuery<SalonGalleryItem[]>({
+    queryKey: ["/api/salon", viewingProfile, "gallery"],
+    queryFn: async () => {
+      if (!viewingProfile) return [];
+      const response = await fetch(`/api/salon/${viewingProfile}/gallery`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!viewingProfile,
+    retry: false,
+  });
+
+  const { data: workingHours } = useQuery<WorkingHours[]>({
+    queryKey: ["/api/salon", viewingProfile, "working-hours"],
+    queryFn: async () => {
+      if (!viewingProfile) return [];
+      const response = await fetch(`/api/salon/${viewingProfile}/working-hours`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!viewingProfile,
+    retry: false,
+  });
 
   const { data: salons, isLoading } = useQuery<Salon[]>({
     queryKey: ["/api/admin/salons", statusFilter],
@@ -252,6 +367,16 @@ export default function SalonManagement() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setViewingProfile(salon.id)}
+                        className="flex items-center"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Full Profile
+                      </Button>
+                      
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button 
@@ -351,6 +476,320 @@ export default function SalonManagement() {
             ))
           )}
         </div>
+
+        {/* Salon Profile Preview Modal */}
+        {viewingProfile && (
+          <Dialog open={!!viewingProfile} onOpenChange={() => setViewingProfile(null)}>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
+              <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
+                <DialogTitle className="text-xl font-semibold">
+                  Salon Profile Preview - Customer View
+                </DialogTitle>
+                <div className="flex items-center space-x-2">
+                  {salonProfile && (
+                    <>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          if (!actionNotes.trim()) {
+                            toast({
+                              title: "Notes Required",
+                              description: "Please provide rejection notes.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          rejectMutation.mutate({ 
+                            salonId: viewingProfile, 
+                            notes: actionNotes 
+                          });
+                          setViewingProfile(null);
+                        }}
+                        disabled={rejectMutation.isPending}
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Reject
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          approveMutation.mutate({ 
+                            salonId: viewingProfile, 
+                            notes: actionNotes 
+                          });
+                          setViewingProfile(null);
+                        }}
+                        disabled={approveMutation.isPending}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Approve
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6">
+                {profileLoading ? (
+                  <div className="space-y-6">
+                    <div className="animate-pulse">
+                      <div className="h-48 bg-gray-200 rounded-lg mb-6"></div>
+                      <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-6"></div>
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="h-20 bg-gray-200 rounded"></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : salonProfile ? (
+                  <div className="space-y-6">
+                    {/* Admin Notes Input */}
+                    <Card className="border-blue-200 bg-blue-50">
+                      <CardContent className="p-4">
+                        <Label htmlFor="admin-notes" className="text-sm font-medium text-blue-900">
+                          Admin Verification Notes
+                        </Label>
+                        <Textarea
+                          id="admin-notes"
+                          placeholder="Add notes about your verification decision..."
+                          value={actionNotes}
+                          onChange={(e) => setActionNotes(e.target.value)}
+                          className="mt-2 bg-white"
+                        />
+                      </CardContent>
+                    </Card>
+
+                    {/* Salon Header - Customer View */}
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex flex-col md:flex-row gap-6">
+                          <div className="w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden">
+                            {salonProfile.imageUrl ? (
+                              <img
+                                src={salonProfile.imageUrl}
+                                alt={salonProfile.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Building2 className="h-16 w-16 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <h1 className="text-3xl font-bold text-gray-900 mb-2">{salonProfile.name}</h1>
+                                <div className="flex items-center mb-2">
+                                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                                  <span className="ml-1 text-lg font-medium">
+                                    {salonProfile.averageRating ? Number(salonProfile.averageRating).toFixed(1) : "New"}
+                                  </span>
+                                  <span className="ml-1 text-gray-500">
+                                    ({salonProfile.totalReviews || 0} reviews)
+                                  </span>
+                                </div>
+                                <div className="flex items-center text-gray-600 mb-4">
+                                  <MapPin className="h-4 w-4 mr-2" />
+                                  {salonProfile.address}
+                                </div>
+                              </div>
+                              {salonProfile.isPremium && (
+                                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">
+                                  Premium
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {salonProfile.description && (
+                              <p className="text-gray-700 mb-4">{salonProfile.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Services */}
+                    {salonServices && salonServices.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Services</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid gap-4 md:grid-cols-2">
+                            {salonServices.map((service) => (
+                              <div key={service.id} className="border rounded-lg p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h4 className="font-medium">{service.name}</h4>
+                                  <span className="text-lg font-semibold text-primary">₹{service.price}</span>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">{service.duration} minutes</p>
+                                {service.description && (
+                                  <p className="text-sm text-gray-700">{service.description}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Staff */}
+                    {salonStaff && salonStaff.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Our Team</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {salonStaff.map((staff) => (
+                              <div key={staff.id} className="text-center">
+                                <div className="w-20 h-20 mx-auto mb-3 bg-gray-200 rounded-full overflow-hidden">
+                                  {staff.imageUrl ? (
+                                    <img
+                                      src={staff.imageUrl}
+                                      alt={staff.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <User className="h-8 w-8 text-gray-400" />
+                                    </div>
+                                  )}
+                                </div>
+                                <h4 className="font-medium">{staff.name}</h4>
+                                <p className="text-sm text-gray-600">{staff.role}</p>
+                                {staff.experience && (
+                                  <p className="text-xs text-gray-500 mt-1">{staff.experience}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Gallery */}
+                    {salonGallery && salonGallery.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Gallery</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {salonGallery.map((item) => (
+                              <div key={item.id} className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.caption || "Gallery image"}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Working Hours */}
+                    {workingHours && workingHours.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Working Hours</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {workingHours.map((hours) => (
+                              <div key={hours.dayOfWeek} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                                <span className="font-medium capitalize">{hours.dayOfWeek}</span>
+                                <span className={`${hours.isOpen ? 'text-green-600' : 'text-red-600'}`}>
+                                  {hours.isOpen 
+                                    ? `${hours.openTime} - ${hours.closeTime}`
+                                    : 'Closed'
+                                  }
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Reviews */}
+                    {salonReviews && salonReviews.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Customer Reviews</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {salonReviews.map((review) => (
+                              <div key={review.id} className="border-b pb-4 last:border-b-0">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center">
+                                    <span className="font-medium">{review.customerName}</span>
+                                    <div className="flex items-center ml-2">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          className={`h-4 w-4 ${
+                                            i < review.rating
+                                              ? 'fill-yellow-400 text-yellow-400'
+                                              : 'text-gray-300'
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <span className="text-sm text-gray-500">
+                                    {new Date(review.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-gray-700">{review.comment}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Contact Information */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Contact Information</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex items-center">
+                            <Phone className="h-4 w-4 mr-3 text-gray-500" />
+                            <span>{salonProfile.phone}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Mail className="h-4 w-4 mr-3 text-gray-500" />
+                            <span>{salonProfile.email}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <MapPin className="h-4 w-4 mr-3 text-gray-500" />
+                            <span>{salonProfile.address}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">Failed to load salon profile</p>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );
