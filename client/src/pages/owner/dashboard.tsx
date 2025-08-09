@@ -1224,7 +1224,10 @@ export default function OwnerDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Button className="h-16 flex-col space-y-2">
+                    <Button 
+                      className="h-16 flex-col space-y-2"
+                      onClick={() => window.location.href = '/owner/walk-in-bookings'}
+                    >
                       <UserPlus className="h-6 w-6" />
                       <span>Add Walk-in Customer</span>
                     </Button>
