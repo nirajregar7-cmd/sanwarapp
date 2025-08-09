@@ -1782,6 +1782,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const slotsCreated = [];
+      const skippedDuplicates = [];
+      const skippedBreaks = [];
       const durationMinutes = parseInt(duration);
       
       // Generate dates between startDate and endDate
@@ -1824,12 +1826,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return slotStartTime >= brk.startTime && slotStartTime < breakEndTime;
           });
           
+          // Calculate end time first for all checks
+          const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
+          const slotEndTimeString = slotEndTime.toTimeString().substring(0, 5);
+          
           // Skip this slot if it's during break time
-          if (!isBreakTime) {
-            // Calculate end time
-            const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
-            const slotEndTimeString = slotEndTime.toTimeString().substring(0, 5);
-            
+          if (isBreakTime) {
+            skippedBreaks.push({ date: dateString, startTime: slotStartTime, endTime: slotEndTimeString, reason: 'break_time' });
+          } else {
             // Check if this exact time slot already exists
             const existingSlot = await db.select()
               .from(timeSlots)
@@ -1852,6 +1856,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
               
               slotsCreated.push(timeSlot);
+            } else {
+              skippedDuplicates.push({ date: dateString, startTime: slotStartTime, endTime: slotEndTimeString, reason: 'duplicate' });
             }
           }
           
@@ -1861,8 +1867,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ 
-        message: `Created ${slotsCreated.length} new time slots`,
-        slots: slotsCreated 
+        message: `Bulk generation complete: ${slotsCreated.length} new slots created`,
+        slotsCreated: slotsCreated.length,
+        skippedDuplicates: skippedDuplicates.length,
+        skippedBreaks: skippedBreaks.length,
+        details: {
+          created: slotsCreated,
+          duplicates: skippedDuplicates,
+          breaks: skippedBreaks
+        }
       });
     } catch (error) {
       console.error("Error creating bulk time slots:", error);

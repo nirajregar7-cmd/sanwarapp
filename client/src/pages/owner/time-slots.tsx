@@ -129,12 +129,23 @@ export default function TimeSlots() {
         body: JSON.stringify(bulkData),
       }).then(res => res.json());
     },
-    onSuccess: () => {
+    onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/time-slots`] });
       setBulkDialogOpen(false);
+      
+      const { slotsCreated, skippedDuplicates, skippedBreaks } = response;
+      let description = `Created ${slotsCreated} new time slots.`;
+      
+      if (skippedDuplicates > 0) {
+        description += ` ${skippedDuplicates} duplicates skipped.`;
+      }
+      if (skippedBreaks > 0) {
+        description += ` ${skippedBreaks} slots skipped due to breaks.`;
+      }
+      
       toast({
-        title: "Time slots generated",
-        description: "Bulk time slots have been created successfully.",
+        title: "Bulk Generation Complete",
+        description,
       });
     },
     onError: (error: any) => {
