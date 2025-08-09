@@ -225,6 +225,12 @@ export default function AuthPage() {
                   >
                     {loginMutation.isPending ? "Signing In..." : "Sign In"}
                   </Button>
+                  
+                  <div className="text-center">
+                    <Link href="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
+                      Forgot your password?
+                    </Link>
+                  </div>
                 </form>
               </TabsContent>
 

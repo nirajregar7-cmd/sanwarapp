@@ -9,6 +9,7 @@ import Layout from "@/components/Layout";
 // Pages
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth";
+import ForgotPasswordPage from "@/pages/forgot-password";
 import UserTypeSelection from "@/pages/user-type-selection";
 import CustomerHome from "@/pages/customer/home";
 import NotificationSettingsPage from "@/pages/NotificationSettingsPage";
@@ -43,6 +44,9 @@ function Router() {
     <Switch>
       {/* Authentication page */}
       <Route path="/auth" component={AuthPage} />
+      
+      {/* Password reset page */}
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
       
       {/* Landing page - accessible to all users */}
       <Route path="/landing" component={Landing} />

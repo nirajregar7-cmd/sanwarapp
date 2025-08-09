@@ -177,6 +177,17 @@ export const platformStats = pgTable("platform_stats", {
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
+// Password reset OTP table
+export const passwordResetOtps = pgTable("password_reset_otps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email").notNull(),
+  otp: varchar("otp", { length: 6 }).notNull(),
+  isUsed: boolean("is_used").default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Notification settings table
 export const notificationSettings = pgTable("notification_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -624,6 +635,11 @@ export const insertSalonLikeSchema = createInsertSchema(salonLikes).omit({
   updatedAt: true,
 });
 
+export const insertPasswordResetOtpSchema = createInsertSchema(passwordResetOtps).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -662,6 +678,8 @@ export type InsertSalonOwnerAccount = typeof salonOwnerAccounts.$inferInsert;
 export type RevenueShare = typeof revenueShares.$inferSelect;
 export type SalonGallery = typeof salonGallery.$inferSelect;
 export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;
+export type PasswordResetOtp = typeof passwordResetOtps.$inferSelect;
+export type InsertPasswordResetOtp = z.infer<typeof insertPasswordResetOtpSchema>;
 
 // Verification Documents table for shopkeeper document uploads
 export const verificationDocuments = pgTable("verification_documents", {

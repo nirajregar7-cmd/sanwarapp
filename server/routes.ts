@@ -9,11 +9,16 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount } from "./payment";
 import { calculateRevenueShare } from "@shared/revenue";
+import { sendPasswordResetOTP, generateOTP } from "./whatsapp";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -64,6 +69,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error setting user type:", error);
       res.status(500).json({ message: "Failed to set user type" });
+    }
+  });
+
+  // Password reset endpoints
+  async function hashPassword(password: string) {
+    const salt = randomBytes(16).toString("hex");
+    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+    return `${buf.toString("hex")}.${salt}`;
+  }
+
+  // Step 1: Request OTP for password reset
+  app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+      const { phone, email } = req.body;
+      
+      if (!phone || !email) {
+        return res.status(400).json({ message: "Phone and email are required" });
+      }
+
+      // Check if user exists with this email and phone
+      const user = await storage.getUserByEmail(email);
+      if (!user || user.phone !== phone) {
+        return res.status(404).json({ message: "No account found with this email and phone combination" });
+      }
+
+      // Generate OTP
+      const otp = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Save OTP to database
+      await storage.createPasswordResetOtp({
+        phone,
+        email,
+        otp,
+        expiresAt,
+      });
+
+      // Send OTP via WhatsApp
+      const success = await sendPasswordResetOTP(phone, otp);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to send OTP. Please try again." });
+      }
+
+      res.json({ message: "OTP sent to your WhatsApp number" });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Step 2: Verify OTP and reset password
+  app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+      const { phone, email, otp, newPassword } = req.body;
+      
+      if (!phone || !email || !otp || !newPassword) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
+
+      // Verify OTP
+      const otpRecord = await storage.getValidPasswordResetOtp(phone, otp);
+      if (!otpRecord || otpRecord.email !== email) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Update user password
+      const updatedUser = await storage.updateUserPassword(email, hashedPassword);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Mark OTP as used
+      await storage.markPasswordResetOtpUsed(otpRecord.id);
+
+      res.json({ message: "Password reset successful" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

@@ -19,6 +19,7 @@ import {
   contentModerations,
   platformAnalytics,
   revenueShares,
+  passwordResetOtps,
   type User,
   type UpsertUser,
   type Salon,
@@ -57,6 +58,8 @@ import {
   type InsertContentModeration,
   type PlatformAnalytics,
   type InsertPlatformAnalytics,
+  type PasswordResetOtp,
+  type InsertPasswordResetOtp,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, asc, or, isNull, sql } from "drizzle-orm";
@@ -159,6 +162,12 @@ export interface IStorage {
   updateContentModeration(id: string, updates: Partial<ContentModeration>): Promise<void>;
   getAdminDashboardStats(): Promise<any>;
   getPlatformAnalytics(days?: number): Promise<PlatformAnalytics[]>;
+
+  // Password reset OTP operations
+  createPasswordResetOtp(otp: InsertPasswordResetOtp): Promise<PasswordResetOtp>;
+  getValidPasswordResetOtp(phone: string, otp: string): Promise<PasswordResetOtp | undefined>;
+  markPasswordResetOtpUsed(id: string): Promise<void>;
+  updateUserPassword(email: string, hashedPassword: string): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1037,6 +1046,43 @@ export class DatabaseStorage implements IStorage {
       .from(platformAnalytics)
       .orderBy(desc(platformAnalytics.date))
       .limit(days);
+  }
+
+  // Password reset OTP operations
+  async createPasswordResetOtp(otpData: InsertPasswordResetOtp): Promise<PasswordResetOtp> {
+    const [otp] = await db.insert(passwordResetOtps).values(otpData).returning();
+    return otp;
+  }
+
+  async getValidPasswordResetOtp(phone: string, otp: string): Promise<PasswordResetOtp | undefined> {
+    const [otpRecord] = await db
+      .select()
+      .from(passwordResetOtps)
+      .where(
+        and(
+          eq(passwordResetOtps.phone, phone),
+          eq(passwordResetOtps.otp, otp),
+          eq(passwordResetOtps.isUsed, false),
+          gte(passwordResetOtps.expiresAt, new Date())
+        )
+      );
+    return otpRecord;
+  }
+
+  async markPasswordResetOtpUsed(id: string): Promise<void> {
+    await db
+      .update(passwordResetOtps)
+      .set({ isUsed: true })
+      .where(eq(passwordResetOtps.id, id));
+  }
+
+  async updateUserPassword(email: string, hashedPassword: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ password: hashedPassword, updatedAt: new Date() })
+      .where(eq(users.email, email))
+      .returning();
+    return user;
   }
 }
 
