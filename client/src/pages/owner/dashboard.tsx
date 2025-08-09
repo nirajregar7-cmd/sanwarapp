@@ -1796,22 +1796,50 @@ export default function OwnerDashboard() {
                           }}
                           onComplete={(result) => {
                             console.log('Staff photo upload result:', result);
+                            console.log('Upload successful files:', result.successful);
+                            console.log('Upload failed files:', result.failed);
+                            
                             if (result.successful && result.successful.length > 0) {
                               const uploadedFile = result.successful[0];
-                              let imageUrl = (uploadedFile as any).uploadURL || (uploadedFile as any).response?.uploadURL;
-                              console.log('Extracted image URL:', imageUrl);
+                              console.log('Staff uploaded file object:', uploadedFile);
                               
-                              if (imageUrl && imageUrl.includes('?')) {
-                                imageUrl = imageUrl.split('?')[0];
-                              }
+                              // Use direct uploadURL access like customer profile
+                              const imageUrl = uploadedFile.uploadURL;
+                              console.log('Staff extracted uploadURL:', imageUrl);
                               
                               if (imageUrl) {
-                                field.onChange(imageUrl);
-                                console.log('Staff photo URL set in form:', imageUrl);
+                                // Convert Google Storage URL to our object path format
+                                let finalUrl = imageUrl;
+                                if (imageUrl.startsWith('https://storage.googleapis.com/')) {
+                                  // Extract path and convert to /objects/ format
+                                  const url = new URL(imageUrl);
+                                  const pathParts = url.pathname.split('/');
+                                  if (pathParts.length >= 4) {
+                                    // Extract bucket and object path
+                                    const objectPath = pathParts.slice(3).join('/');
+                                    finalUrl = `/objects/uploads/${objectPath}`;
+                                  }
+                                }
+                                
+                                console.log('Staff final URL to set:', finalUrl);
+                                field.onChange(finalUrl);
+                                console.log('Staff photo URL set in form:', finalUrl);
                                 toast({
                                   title: "Photo uploaded!",
                                   description: "Staff profile picture has been uploaded successfully.",
                                 });
+                              } else {
+                                console.error('Staff upload: No uploadURL found in result');
+                                toast({
+                                  title: "Upload Warning",
+                                  description: "Photo uploaded but URL not found. Please try again.",
+                                  variant: "destructive"
+                                });
+                              }
+                            } else {
+                              console.error('Staff upload: No successful uploads found');
+                              if (result.failed && result.failed.length > 0) {
+                                console.error('Staff failed uploads:', result.failed);
                               }
                             }
                           }}

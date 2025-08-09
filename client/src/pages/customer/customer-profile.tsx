@@ -89,22 +89,56 @@ export default function CustomerProfile() {
   };
 
   const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    console.log('Customer photo upload result:', result);
+    console.log('Upload successful files:', result.successful);
+    console.log('Upload failed files:', result.failed);
+    
     if (result.successful && result.successful.length > 0) {
-      const uploadURL = result.successful[0].uploadURL;
+      const uploadedFile = result.successful[0];
+      console.log('Customer uploaded file object:', uploadedFile);
       
-      // Update profile with the new image URL, including required firstName
-      await updateProfileMutation.mutateAsync({
-        firstName: formData.firstName || profile?.firstName || '',
-        lastName: formData.lastName || profile?.lastName || '',
-        phone: formData.phone || profile?.phone || '',
-        profileImageUrl: uploadURL
-      });
+      const uploadURL = uploadedFile.uploadURL;
+      console.log('Customer extracted uploadURL:', uploadURL);
       
-      // Update local form data
-      setFormData(prev => ({
-        ...prev,
-        profileImageUrl: uploadURL || ''
-      }));
+      if (uploadURL) {
+        // Convert Google Storage URL to our object path format
+        let finalUrl = uploadURL;
+        if (uploadURL.startsWith('https://storage.googleapis.com/')) {
+          // Extract path and convert to /objects/ format
+          const url = new URL(uploadURL);
+          const pathParts = url.pathname.split('/');
+          if (pathParts.length >= 4) {
+            // Extract bucket and object path
+            const objectPath = pathParts.slice(3).join('/');
+            finalUrl = `/objects/uploads/${objectPath}`;
+          }
+        }
+        
+        console.log('Customer final URL to use:', finalUrl);
+        
+        // Update profile with the new image URL, including required firstName
+        await updateProfileMutation.mutateAsync({
+          firstName: formData.firstName || profile?.firstName || '',
+          lastName: formData.lastName || profile?.lastName || '',
+          phone: formData.phone || profile?.phone || '',
+          profileImageUrl: finalUrl
+        });
+        
+        // Update local form data
+        setFormData(prev => ({
+          ...prev,
+          profileImageUrl: finalUrl || ''
+        }));
+        
+        console.log('Customer profile updated with photo URL:', finalUrl);
+      } else {
+        console.error('Customer upload: No uploadURL found in result');
+      }
+    } else {
+      console.error('Customer upload: No successful uploads found');
+      if (result.failed && result.failed.length > 0) {
+        console.error('Customer failed uploads:', result.failed);
+      }
     }
   };
 
