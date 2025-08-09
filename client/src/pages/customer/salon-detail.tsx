@@ -773,38 +773,58 @@ export default function SalonDetail() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Available Time Slots</FormLabel>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                     {timeSlotsLoading ? (
-                                      <p className="col-span-2 sm:col-span-3 text-sm text-gray-500 text-center py-4">
-                                        Loading available slots...
-                                      </p>
+                                      <>
+                                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                                          <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                                        ))}
+                                      </>
                                     ) : timeSlots && timeSlots.length > 0 ? (
-                                      // Group time slots by unique start times and show only one button per time
-                                      Array.from(new Map(
-                                        timeSlots
-                                          .filter((slot: TimeSlot) => slot.isAvailable)
-                                          .map((slot: TimeSlot) => [slot.startTime, slot])
-                                      ).values()).map((slot: TimeSlot) => (
-                                        <Button
-                                          key={slot.id}
-                                          type="button"
-                                          variant={field.value === slot.id ? "default" : "outline"}
-                                          size="sm"
-                                          className="text-xs sm:text-sm"
-                                          onClick={() => field.onChange(slot.id)}
-                                          disabled={!slot.isAvailable}
-                                        >
-                                          {slot.startTime}
-                                        </Button>
-                                      ))
+                                      // Filter and show only available slots with enhanced styling
+                                      timeSlots
+                                        .filter((slot: TimeSlot) => slot.isAvailable)
+                                        .map((slot: TimeSlot) => (
+                                          <div
+                                            key={slot.id}
+                                            onClick={() => field.onChange(slot.id)}
+                                            className={`
+                                              relative border rounded-lg p-3 cursor-pointer transition-all duration-200 hover:shadow-md
+                                              ${field.value === slot.id 
+                                                ? 'border-primary bg-primary/5 shadow-sm' 
+                                                : 'border-gray-200 bg-white hover:border-primary/50'
+                                              }
+                                            `}
+                                          >
+                                            <div className="text-center">
+                                              <div className="text-sm font-medium text-gray-900 mb-1">
+                                                {slot.startTime} - {slot.endTime}
+                                              </div>
+                                              <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center
+                                                ${field.value === slot.id 
+                                                  ? 'bg-primary text-white' 
+                                                  : 'bg-green-100 text-green-700'
+                                                }
+                                              `}>
+                                                <CheckCircle className="h-3 w-3 mr-1" />
+                                                Available
+                                              </div>
+                                            </div>
+                                            {field.value === slot.id && (
+                                              <div className="absolute top-2 right-2">
+                                                <CheckCircle className="h-4 w-4 text-primary" />
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))
                                     ) : (
-                                      <div className="col-span-2 sm:col-span-3 text-center py-6">
-                                        <Clock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                        <p className="text-sm text-gray-500 mb-2">
-                                          No time slots available for this date
+                                      <div className="col-span-1 sm:col-span-2 lg:col-span-4 text-center py-8">
+                                        <Clock className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                                        <p className="text-lg font-medium text-gray-600 mb-2">
+                                          No time slots available
                                         </p>
-                                        <p className="text-xs text-gray-400">
-                                          The salon owner needs to create time slots for this date
+                                        <p className="text-sm text-gray-500">
+                                          Please select a different date or contact the salon
                                         </p>
                                       </div>
                                     )}
