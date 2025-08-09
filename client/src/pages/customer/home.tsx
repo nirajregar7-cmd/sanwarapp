@@ -7,8 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, Clock, MapPin, Search, Heart } from "lucide-react";
 import type { Salon } from "@shared/schema";
+import { useAuth } from "@/hooks/useAuth";
+import SalonLikeButton from "@/components/SalonLikeButton";
 
 export default function CustomerHome() {
+  const { user } = useAuth();
   const { data: salons, isLoading } = useQuery<Salon[]>({
     queryKey: ["/api/salons"],
     queryFn: async () => {
@@ -142,13 +145,8 @@ export default function CustomerHome() {
                             {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
                           </span>
                         </div>
-                        {(salon as any).likesCount > 0 && (
-                          <div className="flex items-center text-red-500">
-                            <Heart className="h-4 w-4 fill-current" />
-                            <span className="ml-1 text-gray-600 text-sm">
-                              {(salon as any).likesCount}
-                            </span>
-                          </div>
+                        {user?.userType === 'customer' && (
+                          <SalonLikeButton salonId={salon.id} />
                         )}
                       </div>
                     </div>

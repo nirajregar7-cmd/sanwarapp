@@ -35,11 +35,14 @@ export const users = pgTable("users", {
   phone: varchar("phone", { length: 20 }),
   profileImageUrl: varchar("profile_image_url"),
   userType: varchar("user_type", { enum: ["customer", "salon_owner", "admin", "super_admin"] }).notNull().default("customer"),
+  role: varchar("role").default("user"), // Added role field for backward compatibility
   isBlocked: boolean("is_blocked").default(false),
   // Social authentication fields
   isSocialAuth: boolean("is_social_auth").default(false),
   socialProvider: varchar("social_provider", { enum: ["google", "facebook"] }),
   socialId: varchar("social_id"),
+  // Clerk authentication field
+  clerkId: varchar("clerk_id").unique(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

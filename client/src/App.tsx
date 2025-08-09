@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+
 import Layout from "@/components/Layout";
 
 // Pages
@@ -31,6 +32,9 @@ import SalonManagement from "@/pages/admin/salon-management";
 import UserManagement from "@/pages/admin/user-management";
 import ActivityLogs from "@/pages/admin/activity-logs";
 
+// Clerk Auth Pages
+import ClerkSignInPage, { ClerkSignUpPage } from "@/pages/clerk-auth";
+
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
@@ -44,8 +48,11 @@ function Router() {
 
   return (
     <Switch>
-      {/* Authentication page */}
+      {/* Authentication pages */}
       <Route path="/auth" component={AuthPage} />
+      <Route path="/clerk-signin" component={ClerkSignInPage} />
+      <Route path="/clerk-signup" component={ClerkSignUpPage} />
+      <Route path="/user-type-selection" component={UserTypeSelection} />
       
       {/* Password reset page */}
       <Route path="/forgot-password" component={ForgotPasswordPage} />

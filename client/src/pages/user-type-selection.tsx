@@ -1,137 +1,137 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Scissors, Users } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Users, Store } from "lucide-react";
+import { useAuth } from "@clerk/clerk-react";
+import { useClerkAuth } from "@/hooks/useClerkAuth";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function UserTypeSelection() {
-  const [selectedType, setSelectedType] = useState<"customer" | "salon_owner" | null>(null);
+  const [userType, setUserType] = useState<"customer" | "salon_owner">("customer");
+  const { isSignedIn } = useAuth();
+  const { user } = useClerkAuth();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const setUserTypeMutation = useMutation({
-    mutationFn: async (userType: "customer" | "salon_owner") => {
-      return await apiRequest("POST", "/api/auth/set-user-type", { userType });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Welcome!",
-        description: "Your account has been set up successfully.",
+  const updateUserTypeMutation = useMutation({
+    mutationFn: async (selectedUserType: "customer" | "salon_owner") => {
+      const response = await apiRequest("PUT", "/api/user/type", {
+        userType: selectedUserType,
       });
-      // Invalidate the user query to refetch user data
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      return await response.json();
     },
-    onError: (error) => {
+    onSuccess: (data) => {
       toast({
-        title: "Error",
-        description: "Failed to set user type. Please try again.",
+        title: "Account Setup Complete!",
+        description: `Welcome to Sanwar as a ${userType === 'customer' ? 'customer' : 'salon owner'}!`,
+      });
+      
+      // Navigate based on user type
+      if (userType === 'customer') {
+        navigate('/customer/home');
+      } else {
+        navigate('/salon-owner/dashboard');
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Setup Failed",
+        description: error.message,
         variant: "destructive",
       });
-      console.error("Error setting user type:", error);
     },
   });
 
-  const handleContinue = () => {
-    if (selectedType) {
-      setUserTypeMutation.mutate(selectedType);
-    }
+  const handleSubmit = () => {
+    updateUserTypeMutation.mutate(userType);
   };
 
+  // Redirect if not signed in
+  if (!isSignedIn) {
+    navigate('/clerk-signin');
+    return null;
+  }
+
+  // If user already has a type, redirect to appropriate page
+  if (user?.userType && user.userType !== 'customer') {
+    if (user.userType === 'salon_owner') {
+      navigate('/salon-owner/dashboard');
+    } else if (user.userType === 'admin' || user.userType === 'super_admin') {
+      navigate('/admin/dashboard');
+    }
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Scissors className="h-12 w-12 text-white mr-4" />
-            <h1 className="text-4xl font-bold text-white">Welcome to Sanwar</h1>
-          </div>
-          <p className="text-xl text-white/90">
-            Choose your account type to get started
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card 
-            className={`cursor-pointer transition-all hover:shadow-lg ${
-              selectedType === "customer" 
-                ? "ring-4 ring-white shadow-xl" 
-                : "hover:shadow-md"
-            }`}
-            onClick={() => setSelectedType("customer")}
-          >
-            <CardHeader className="text-center pb-4">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-10 w-10 text-blue-600" />
-              </div>
-              <CardTitle className="text-2xl">I'm a Customer</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-600 mb-4">
-                I want to discover and book salon services
-              </p>
-              <ul className="text-sm text-gray-500 space-y-2">
-                <li>• Find nearby salons</li>
-                <li>• Book appointments instantly</li>
-                <li>• Manage bookings</li>
-                <li>• Leave reviews</li>
-                <li>• Earn referral rewards</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className={`cursor-pointer transition-all hover:shadow-lg ${
-              selectedType === "salon_owner" 
-                ? "ring-4 ring-white shadow-xl" 
-                : "hover:shadow-md"
-            }`}
-            onClick={() => setSelectedType("salon_owner")}
-          >
-            <CardHeader className="text-center pb-4">
-              <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Scissors className="h-10 w-10 text-purple-600" />
-              </div>
-              <CardTitle className="text-2xl">I'm a Salon Owner</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-600 mb-4">
-                I want to manage my salon business online
-              </p>
-              <ul className="text-sm text-gray-500 space-y-2">
-                <li>• Setup salon profile</li>
-                <li>• Manage services & staff</li>
-                <li>• Create time slots</li>
-                <li>• Handle bookings</li>
-                <li>• Track earnings</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="text-center">
-          <Button
-            size="lg"
-            className="bg-white text-purple-600 hover:bg-gray-100 px-12 py-4 text-lg font-semibold rounded-xl"
-            onClick={handleContinue}
-            disabled={!selectedType || setUserTypeMutation.isPending}
-          >
-            {setUserTypeMutation.isPending ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-2"></div>
-                Setting up...
-              </>
-            ) : (
-              "Continue"
-            )}
-          </Button>
-          
-          {!selectedType && (
-            <p className="text-white/80 text-sm mt-2">
-              Please select an account type to continue
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="max-w-md w-full">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Choose Your Account Type
+            </CardTitle>
+            <p className="text-gray-600 mt-2">
+              Help us personalize your Sanwar experience
             </p>
-          )}
-        </div>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            <RadioGroup value={userType} onValueChange={(value) => setUserType(value as "customer" | "salon_owner")}>
+              <div className="space-y-4">
+                {/* Customer Option */}
+                <Label
+                  htmlFor="customer"
+                  className={`flex items-center space-x-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                    userType === 'customer'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <RadioGroupItem value="customer" id="customer" />
+                  <Users className="h-8 w-8 text-primary" />
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-900">Customer</div>
+                    <div className="text-sm text-gray-600">
+                      Book salon appointments and discover new services
+                    </div>
+                  </div>
+                </Label>
+
+                {/* Salon Owner Option */}
+                <Label
+                  htmlFor="salon_owner"
+                  className={`flex items-center space-x-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                    userType === 'salon_owner'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <RadioGroupItem value="salon_owner" id="salon_owner" />
+                  <Store className="h-8 w-8 text-primary" />
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-900">Salon Owner</div>
+                    <div className="text-sm text-gray-600">
+                      Manage your salon, services, and bookings
+                    </div>
+                  </div>
+                </Label>
+              </div>
+            </RadioGroup>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={updateUserTypeMutation.isPending}
+              className="w-full"
+            >
+              {updateUserTypeMutation.isPending ? "Setting up..." : "Continue"}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
+import { withClerkAuth, isAuthenticated as clerkIsAuthenticated } from "./clerk";
 import {
   ObjectStorageService,
   ObjectNotFoundError,
@@ -23,6 +24,69 @@ const scryptAsync = promisify(scrypt);
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+  
+  // Add Clerk middleware
+  app.use(withClerkAuth);
+
+  // Clerk sync route
+  app.get('/api/clerk/sync-user', clerkIsAuthenticated, async (req: any, res) => {
+    try {
+      if (!req.auth?.userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // Get or create user in our database based on Clerk user data
+      const clerkUserId = req.auth.userId;
+      const clerkUser = req.auth.sessionClaims;
+
+      let user = await storage.getUserByClerkId(clerkUserId);
+      
+      if (!user) {
+        // Create new user with Clerk data
+        user = await storage.createUserFromClerk({
+          clerkId: clerkUserId,
+          email: clerkUser?.email || '',
+          firstName: clerkUser?.firstName || clerkUser?.given_name || '',
+          lastName: clerkUser?.lastName || clerkUser?.family_name || '',
+          phone: clerkUser?.phoneNumber || clerkUser?.phone_number || '',
+          profileImageUrl: clerkUser?.imageUrl || clerkUser?.image_url || null,
+          userType: 'customer', // Default role
+        });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error('Error syncing Clerk user:', error);
+      res.status(500).json({ error: 'Failed to sync user' });
+    }
+  });
+
+  // Update user type for Clerk users
+  app.put('/api/user/type', clerkIsAuthenticated, async (req: any, res) => {
+    try {
+      if (!req.auth?.userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { userType } = req.body;
+      if (!userType || !['customer', 'salon_owner'].includes(userType)) {
+        return res.status(400).json({ error: 'Invalid user type' });
+      }
+
+      const clerkUserId = req.auth.userId;
+      let user = await storage.getUserByClerkId(clerkUserId);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      user = await storage.updateUserType(user.id, userType);
+      res.json(user);
+    } catch (error) {
+      console.error('Error updating user type:', error);
+      res.status(500).json({ error: 'Failed to update user type' });
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
