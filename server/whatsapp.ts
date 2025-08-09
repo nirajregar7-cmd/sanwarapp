@@ -45,18 +45,20 @@ export async function sendWhatsAppMessage({ to, body }: WhatsAppMessage): Promis
 
     // Ensure phone number is in correct format
     const phoneNumber = to.startsWith('+') ? to : `+91${to}`;
-    const fromNumber = twilioPhoneNumber || 'whatsapp:+14155238886'; // Twilio sandbox number
+    
+    console.log(`Attempting to send SMS to ${phoneNumber}`);
 
+    // Try SMS first as it's more reliable than WhatsApp sandbox
     const message = await client.messages.create({
       body,
-      from: fromNumber.startsWith('whatsapp:') ? fromNumber : `whatsapp:${fromNumber}`,
-      to: `whatsapp:${phoneNumber}`,
+      from: twilioPhoneNumber,
+      to: phoneNumber,
     });
 
-    console.log(`WhatsApp message sent successfully: ${message.sid}`);
+    console.log(`SMS sent successfully: ${message.sid}`);
     return true;
   } catch (error) {
-    console.error('Failed to send WhatsApp message:', error);
+    console.error('Failed to send SMS:', error);
     return false;
   }
 }
@@ -66,7 +68,7 @@ export function generateOTP(): string {
 }
 
 export async function sendPasswordResetOTP(phone: string, otp: string): Promise<boolean> {
-  const message = `🔐 Sanwar Password Reset\n\nYour OTP is: ${otp}\n\nThis code will expire in 10 minutes. Do not share this code with anyone.\n\n- Sanwar Team`;
+  const message = `Sanwar Password Reset OTP: ${otp}. Valid for 10 minutes. Do not share this code. - Sanwar Team`;
   
   return await sendWhatsAppMessage({
     to: phone,
