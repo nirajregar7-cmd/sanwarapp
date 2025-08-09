@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle, Gift } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ReferralCodeInputProps {
   onCodeApplied: (codeData: any) => void;
@@ -20,6 +21,7 @@ export function ReferralCodeInput({
   appliedCode, 
   disabled = false 
 }: ReferralCodeInputProps) {
+  const { user } = useAuth();
   const [code, setCode] = useState("");
   const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState("");
@@ -34,8 +36,9 @@ export function ReferralCodeInput({
     setError("");
 
     try {
-      const response = await apiRequest("POST", "/api/referral-codes/validate", {
-        code: code.trim().toUpperCase()
+      const response = await apiRequest("POST", "/api/validate-referral", {
+        code: code.trim().toUpperCase(),
+        userId: user?.id
       });
       
       const codeData = await response.json();

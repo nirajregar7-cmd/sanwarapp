@@ -561,11 +561,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Referral code validation endpoint
-  app.post('/api/referral-codes/validate', isAuthenticated, async (req, res) => {
+  // Referral code validation endpoint (public - no auth required)
+  app.post('/api/validate-referral', async (req, res) => {
     try {
-      const { code } = req.body;
-      const userId = req.user?.id;
+      const { code, userId } = req.body;
       
       if (!code) {
         return res.status(400).json({ error: 'Referral code is required' });
@@ -583,27 +582,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const referral = referralResults[0];
       
-      // Check if the user is trying to use their own referral code
-      if (referral.referrerId === userId) {
-        return res.status(400).json({ error: 'You cannot use your own referral code' });
-      }
-      
       // Check if referral is still pending (not already used)
       if (referral.status !== 'pending') {
         return res.status(400).json({ error: 'This referral code has already been used' });
       }
       
-      // Check if user already has a completed referral (one per customer)
-      const existingReferralResults = await db.select()
-        .from(referrals)
-        .where(and(
-          eq(referrals.referredId, userId), 
-          eq(referrals.status, 'completed')
-        ))
-        .limit(1);
-      
-      if (existingReferralResults.length > 0) {
-        return res.status(400).json({ error: 'You have already used a referral code before' });
+      // If userId is provided, do additional checks
+      if (userId) {
+        // Check if the user is trying to use their own referral code
+        if (referral.referrerId === userId) {
+          return res.status(400).json({ error: 'You cannot use your own referral code' });
+        }
+        
+        // Check if user already has a completed referral (one per customer)
+        const existingReferralResults = await db.select()
+          .from(referrals)
+          .where(and(
+            eq(referrals.referredId, userId), 
+            eq(referrals.status, 'completed')
+          ))
+          .limit(1);
+        
+        if (existingReferralResults.length > 0) {
+          return res.status(400).json({ error: 'You have already used a referral code before' });
+        }
       }
       
       // Valid referral code - return success with free booking offer
@@ -758,7 +760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         keyId: process.env.RAZORPAY_KEY_ID,
         confirmationAmount: salon.confirmationAmount || 10,
         finalAmount,
-        discountApplied,
+        discountApplied: appliedDiscount,
         referralCodeApplied: validReferralCode?.code || null,
         servicePrice: service.price,
         salonName: salon.name,
