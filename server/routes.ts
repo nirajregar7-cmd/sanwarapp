@@ -88,9 +88,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Phone and email are required" });
       }
 
-      // Check if user exists with this email and phone
-      const user = await storage.getUserByEmail(email);
-      if (!user || user.phone !== phone) {
+      // Check if user exists with this email and phone combination
+      const user = await storage.findUserForPasswordReset(email, phone);
+      if (!user) {
         return res.status(404).json({ message: "No account found with this email and phone combination" });
       }
 
