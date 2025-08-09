@@ -133,8 +133,8 @@ export default function WalkInBookings() {
             <p className="text-muted-foreground mb-4">
               You need to create a salon first before managing walk-in customers.
             </p>
-            <Button asChild className="w-full">
-              <a href="/dashboard">Go to Dashboard</a>
+            <Button className="w-full" onClick={() => window.location.href = '/'}>
+              Go to Dashboard
             </Button>
           </CardContent>
         </Card>
