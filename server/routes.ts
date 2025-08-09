@@ -2436,6 +2436,192 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin middleware to check admin permissions
+  const isAdmin = async (req: any, res: any, next: any) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || (user.userType !== 'admin' && user.userType !== 'super_admin')) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      req.adminUser = user;
+      next();
+    } catch (error) {
+      console.error("Error checking admin permissions:", error);
+      res.status(500).json({ error: "Permission check failed" });
+    }
+  };
+
+  // Admin API endpoints
+  app.get("/api/admin/dashboard", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getAdminDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin dashboard stats:", error);
+      res.status(500).json({ error: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  app.get("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userType, search } = req.query;
+      const users = await storage.getAllUsers(userType as string, search as string);
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/admin/users/:userId/block", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const adminId = req.adminUser.id;
+      
+      await storage.blockUser(userId, adminId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error blocking user:", error);
+      res.status(500).json({ error: "Failed to block user" });
+    }
+  });
+
+  app.post("/api/admin/users/:userId/unblock", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const adminId = req.adminUser.id;
+      
+      await storage.unblockUser(userId, adminId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unblocking user:", error);
+      res.status(500).json({ error: "Failed to unblock user" });
+    }
+  });
+
+  app.get("/api/admin/salons", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { status } = req.query;
+      
+      let salons;
+      if (status === 'pending') {
+        salons = await storage.getPendingSalons();
+      } else {
+        salons = await storage.getAllSalonsForAdmin();
+      }
+      
+      res.json(salons);
+    } catch (error) {
+      console.error("Error fetching salons for admin:", error);
+      res.status(500).json({ error: "Failed to fetch salons" });
+    }
+  });
+
+  app.post("/api/admin/salons/:salonId/approve", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const { notes } = req.body;
+      const adminId = req.adminUser.id;
+      
+      await storage.approveSalon(salonId, adminId, notes);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error approving salon:", error);
+      res.status(500).json({ error: "Failed to approve salon" });
+    }
+  });
+
+  app.post("/api/admin/salons/:salonId/reject", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const { notes } = req.body;
+      const adminId = req.adminUser.id;
+      
+      if (!notes) {
+        return res.status(400).json({ error: "Rejection notes are required" });
+      }
+      
+      await storage.rejectSalon(salonId, adminId, notes);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error rejecting salon:", error);
+      res.status(500).json({ error: "Failed to reject salon" });
+    }
+  });
+
+  app.get("/api/admin/salons/:salonId/documents", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const documents = await storage.getVerificationDocuments(salonId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching verification documents:", error);
+      res.status(500).json({ error: "Failed to fetch documents" });
+    }
+  });
+
+  app.get("/api/admin/activity-logs", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { limit } = req.query;
+      const logs = await storage.getAdminActivityLogs(limit ? parseInt(limit as string) : 50);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+      res.status(500).json({ error: "Failed to fetch activity logs" });
+    }
+  });
+
+  app.get("/api/admin/content-moderations", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { status } = req.query;
+      const moderations = await storage.getContentModerations(status as string);
+      res.json(moderations);
+    } catch (error) {
+      console.error("Error fetching content moderations:", error);
+      res.status(500).json({ error: "Failed to fetch content moderations" });
+    }
+  });
+
+  app.post("/api/admin/content-moderations", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const moderation = await storage.createContentModeration(req.body);
+      res.json(moderation);
+    } catch (error) {
+      console.error("Error creating content moderation:", error);
+      res.status(500).json({ error: "Failed to create content moderation" });
+    }
+  });
+
+  app.put("/api/admin/content-moderations/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = { ...req.body, moderatedBy: req.adminUser.id, moderatedAt: new Date() };
+      
+      await storage.updateContentModeration(id, updates);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating content moderation:", error);
+      res.status(500).json({ error: "Failed to update content moderation" });
+    }
+  });
+
+  app.get("/api/admin/analytics", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { days } = req.query;
+      const analytics = await storage.getPlatformAnalytics(days ? parseInt(days as string) : 30);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -34,7 +34,8 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   phone: varchar("phone", { length: 20 }),
   profileImageUrl: varchar("profile_image_url"),
-  userType: varchar("user_type", { enum: ["customer", "salon_owner"] }).notNull().default("customer"),
+  userType: varchar("user_type", { enum: ["customer", "salon_owner", "admin", "super_admin"] }).notNull().default("customer"),
+  isBlocked: boolean("is_blocked").default(false),
   // Social authentication fields
   isSocialAuth: boolean("is_social_auth").default(false),
   socialProvider: varchar("social_provider", { enum: ["google", "facebook"] }),
@@ -63,6 +64,10 @@ export const salons = pgTable("salons", {
   monthlyFee: integer("monthly_fee").default(10000), // ₹100 in paise
   isActive: boolean("is_active").default(true),
   isPremium: boolean("is_premium").default(false), // for premium features
+  verificationStatus: varchar("verification_status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
+  verificationNotes: text("verification_notes"),
+  verifiedAt: timestamp("verified_at"),
+  verifiedBy: varchar("verified_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -657,3 +662,76 @@ export type InsertSalonOwnerAccount = typeof salonOwnerAccounts.$inferInsert;
 export type RevenueShare = typeof revenueShares.$inferSelect;
 export type SalonGallery = typeof salonGallery.$inferSelect;
 export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;
+
+// Verification Documents table for shopkeeper document uploads
+export const verificationDocuments = pgTable("verification_documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  documentType: varchar("document_type", { enum: ["business_license", "id_proof", "address_proof", "other"] }).notNull(),
+  documentUrl: varchar("document_url").notNull(),
+  documentName: varchar("document_name"),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
+// Admin Activity Logs table for tracking admin actions
+export const adminActivityLogs = pgTable("admin_activity_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminId: varchar("admin_id").references(() => users.id).notNull(),
+  action: varchar("action").notNull(), // approve_salon, reject_salon, block_user, etc.
+  targetType: varchar("target_type", { enum: ["salon", "user", "booking", "review", "content"] }),
+  targetId: varchar("target_id"),
+  details: text("details"), // JSON string with action details
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Content Moderation table for flagged content
+export const contentModerations = pgTable("content_moderations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contentType: varchar("content_type", { enum: ["review", "salon_image", "service", "user_profile"] }).notNull(),
+  contentId: varchar("content_id").notNull(),
+  reportedBy: varchar("reported_by").references(() => users.id),
+  reason: varchar("reason", { enum: ["inappropriate", "spam", "fake", "offensive", "other"] }).notNull(),
+  description: text("description"),
+  status: varchar("status", { enum: ["pending", "approved", "removed", "resolved"] }).default("pending"),
+  moderatedBy: varchar("moderated_by").references(() => users.id),
+  moderatedAt: timestamp("moderated_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Platform Analytics table for tracking key metrics
+export const platformAnalytics = pgTable("platform_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: varchar("date").notNull(), // YYYY-MM-DD format
+  totalCustomers: integer("total_customers").default(0),
+  totalSalons: integer("total_salons").default(0),
+  totalBookings: integer("total_bookings").default(0),
+  totalRevenue: integer("total_revenue").default(0), // in paise
+  newCustomers: integer("new_customers").default(0),
+  newSalons: integer("new_salons").default(0),
+  newBookings: integer("new_bookings").default(0),
+  dailyRevenue: integer("daily_revenue").default(0), // in paise
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_platform_analytics_date").on(table.date)
+]);
+
+// Zod schemas for new admin tables
+export const insertVerificationDocumentSchema = createInsertSchema(verificationDocuments);
+export const insertAdminActivityLogSchema = createInsertSchema(adminActivityLogs);
+export const insertContentModerationSchema = createInsertSchema(contentModerations);
+export const insertPlatformAnalyticsSchema = createInsertSchema(platformAnalytics);
+
+// Type exports for admin tables
+export type InsertVerificationDocument = z.infer<typeof insertVerificationDocumentSchema>;
+export type VerificationDocument = typeof verificationDocuments.$inferSelect;
+
+export type InsertAdminActivityLog = z.infer<typeof insertAdminActivityLogSchema>;
+export type AdminActivityLog = typeof adminActivityLogs.$inferSelect;
+
+export type InsertContentModeration = z.infer<typeof insertContentModerationSchema>;
+export type ContentModeration = typeof contentModerations.$inferSelect;
+
+export type InsertPlatformAnalytics = z.infer<typeof insertPlatformAnalyticsSchema>;
+export type PlatformAnalytics = typeof platformAnalytics.$inferSelect;

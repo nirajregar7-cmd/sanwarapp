@@ -14,6 +14,10 @@ import {
   freeBookingCredits,
   wallets,
   walletTransactions,
+  verificationDocuments,
+  adminActivityLogs,
+  contentModerations,
+  platformAnalytics,
   type User,
   type UpsertUser,
   type Salon,
@@ -44,6 +48,14 @@ import {
   type InsertWallet,
   type WalletTransaction,
   type InsertWalletTransaction,
+  type VerificationDocument,
+  type InsertVerificationDocument,
+  type AdminActivityLog,
+  type InsertAdminActivityLog,
+  type ContentModeration,
+  type InsertContentModeration,
+  type PlatformAnalytics,
+  type InsertPlatformAnalytics,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, asc, or, isNull, sql } from "drizzle-orm";
@@ -128,6 +140,24 @@ export interface IStorage {
   getSalonLikesByCustomer(customerId: string): Promise<SalonLike[]>;
   getSalonLikesForOwner(salonId: string): Promise<SalonLike[]>;
   getCustomerLikedSalons(customerId: string): Promise<any[]>;
+
+  // Admin operations
+  getAllUsers(userType?: string, search?: string): Promise<User[]>;
+  blockUser(userId: string, adminId: string): Promise<void>;
+  unblockUser(userId: string, adminId: string): Promise<void>;
+  getAllSalonsForAdmin(): Promise<any[]>;
+  getPendingSalons(): Promise<any[]>;
+  approveSalon(salonId: string, adminId: string, notes?: string): Promise<void>;
+  rejectSalon(salonId: string, adminId: string, notes: string): Promise<void>;
+  uploadVerificationDocument(doc: InsertVerificationDocument): Promise<VerificationDocument>;
+  getVerificationDocuments(salonId: string): Promise<VerificationDocument[]>;
+  logAdminActivity(log: InsertAdminActivityLog): Promise<AdminActivityLog>;
+  getAdminActivityLogs(limit?: number): Promise<AdminActivityLog[]>;
+  createContentModeration(moderation: InsertContentModeration): Promise<ContentModeration>;
+  getContentModerations(status?: string): Promise<ContentModeration[]>;
+  updateContentModeration(id: string, updates: Partial<ContentModeration>): Promise<void>;
+  getAdminDashboardStats(): Promise<any>;
+  getPlatformAnalytics(days?: number): Promise<PlatformAnalytics[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -771,6 +801,240 @@ export class DatabaseStorage implements IStorage {
         eq(salons.isActive, true)
       ))
       .orderBy(desc(salonLikes.createdAt));
+  }
+
+  // Admin operations implementation
+  async getAllUsers(userType?: string, search?: string): Promise<User[]> {
+    let query = db.select().from(users);
+    
+    const conditions = [];
+    if (userType) {
+      conditions.push(eq(users.userType, userType as any));
+    }
+    
+    if (search) {
+      conditions.push(
+        or(
+          sql`${users.firstName} ILIKE ${`%${search}%`}`,
+          sql`${users.lastName} ILIKE ${`%${search}%`}`,
+          sql`${users.email} ILIKE ${`%${search}%`}`
+        )
+      );
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    return await query.orderBy(desc(users.createdAt));
+  }
+
+  async blockUser(userId: string, adminId: string): Promise<void> {
+    await db.update(users)
+      .set({ isBlocked: true })
+      .where(eq(users.id, userId));
+    
+    await this.logAdminActivity({
+      adminId,
+      action: 'block_user',
+      targetType: 'user',
+      targetId: userId,
+      details: JSON.stringify({ action: 'User blocked' })
+    });
+  }
+
+  async unblockUser(userId: string, adminId: string): Promise<void> {
+    await db.update(users)
+      .set({ isBlocked: false })
+      .where(eq(users.id, userId));
+    
+    await this.logAdminActivity({
+      adminId,
+      action: 'unblock_user',
+      targetType: 'user',
+      targetId: userId,
+      details: JSON.stringify({ action: 'User unblocked' })
+    });
+  }
+
+  async getAllSalonsForAdmin(): Promise<any[]> {
+    const result = await db
+      .select({
+        salon: salons,
+        owner: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          phone: users.phone
+        }
+      })
+      .from(salons)
+      .leftJoin(users, eq(salons.ownerId, users.id))
+      .orderBy(desc(salons.createdAt));
+
+    return result.map(row => ({
+      ...row.salon,
+      owner: row.owner
+    }));
+  }
+
+  async getPendingSalons(): Promise<any[]> {
+    const result = await db
+      .select({
+        salon: salons,
+        owner: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          phone: users.phone
+        }
+      })
+      .from(salons)
+      .leftJoin(users, eq(salons.ownerId, users.id))
+      .where(eq(salons.verificationStatus, 'pending'))
+      .orderBy(desc(salons.createdAt));
+
+    return result.map(row => ({
+      ...row.salon,
+      owner: row.owner
+    }));
+  }
+
+  async approveSalon(salonId: string, adminId: string, notes?: string): Promise<void> {
+    await db.update(salons)
+      .set({
+        verificationStatus: 'approved',
+        verificationNotes: notes,
+        verifiedAt: new Date(),
+        verifiedBy: adminId
+      })
+      .where(eq(salons.id, salonId));
+    
+    await this.logAdminActivity({
+      adminId,
+      action: 'approve_salon',
+      targetType: 'salon',
+      targetId: salonId,
+      details: JSON.stringify({ notes })
+    });
+  }
+
+  async rejectSalon(salonId: string, adminId: string, notes: string): Promise<void> {
+    await db.update(salons)
+      .set({
+        verificationStatus: 'rejected',
+        verificationNotes: notes,
+        verifiedAt: new Date(),
+        verifiedBy: adminId
+      })
+      .where(eq(salons.id, salonId));
+    
+    await this.logAdminActivity({
+      adminId,
+      action: 'reject_salon',
+      targetType: 'salon',
+      targetId: salonId,
+      details: JSON.stringify({ notes })
+    });
+  }
+
+  async uploadVerificationDocument(doc: InsertVerificationDocument): Promise<VerificationDocument> {
+    const [document] = await db
+      .insert(verificationDocuments)
+      .values(doc)
+      .returning();
+    return document;
+  }
+
+  async getVerificationDocuments(salonId: string): Promise<VerificationDocument[]> {
+    return await db
+      .select()
+      .from(verificationDocuments)
+      .where(eq(verificationDocuments.salonId, salonId))
+      .orderBy(desc(verificationDocuments.uploadedAt));
+  }
+
+  async logAdminActivity(log: InsertAdminActivityLog): Promise<AdminActivityLog> {
+    const [activity] = await db
+      .insert(adminActivityLogs)
+      .values(log)
+      .returning();
+    return activity;
+  }
+
+  async getAdminActivityLogs(limit: number = 50): Promise<AdminActivityLog[]> {
+    return await db
+      .select()
+      .from(adminActivityLogs)
+      .orderBy(desc(adminActivityLogs.createdAt))
+      .limit(limit);
+  }
+
+  async createContentModeration(moderation: InsertContentModeration): Promise<ContentModeration> {
+    const [mod] = await db
+      .insert(contentModerations)
+      .values(moderation)
+      .returning();
+    return mod;
+  }
+
+  async getContentModerations(status?: string): Promise<ContentModeration[]> {
+    let query = db.select().from(contentModerations);
+    
+    if (status) {
+      query = query.where(eq(contentModerations.status, status as any));
+    }
+    
+    return await query.orderBy(desc(contentModerations.createdAt));
+  }
+
+  async updateContentModeration(id: string, updates: Partial<ContentModeration>): Promise<void> {
+    await db.update(contentModerations)
+      .set(updates)
+      .where(eq(contentModerations.id, id));
+  }
+
+  async getAdminDashboardStats(): Promise<any> {
+    const [customersCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(eq(users.userType, 'customer'));
+
+    const [salonsCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(salons);
+
+    const [pendingSalonsCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(salons)
+      .where(eq(salons.verificationStatus, 'pending'));
+
+    const [bookingsCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(bookings);
+
+    const [totalRevenue] = await db
+      .select({ total: sql<number>`coalesce(sum(confirmation_amount), 0)` })
+      .from(bookings)
+      .where(eq(bookings.paymentStatus, 'completed'));
+
+    return {
+      totalCustomers: customersCount?.count || 0,
+      totalSalons: salonsCount?.count || 0,
+      pendingSalons: pendingSalonsCount?.count || 0,
+      totalBookings: bookingsCount?.count || 0,
+      totalRevenue: totalRevenue?.total || 0
+    };
+  }
+
+  async getPlatformAnalytics(days: number = 30): Promise<PlatformAnalytics[]> {
+    return await db
+      .select()
+      .from(platformAnalytics)
+      .orderBy(desc(platformAnalytics.date))
+      .limit(days);
   }
 }
 

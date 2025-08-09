@@ -22,6 +22,12 @@ import AccountDetails from "@/pages/owner/account-details";
 import ReferEarn from "@/pages/owner/refer-earn";
 import NotFound from "@/pages/not-found";
 
+// Admin Pages
+import AdminDashboard from "@/pages/admin/admin-dashboard";
+import SalonManagement from "@/pages/admin/salon-management";
+import UserManagement from "@/pages/admin/user-management";
+import ActivityLogs from "@/pages/admin/activity-logs";
+
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
@@ -59,7 +65,9 @@ function Router() {
         <>
           {/* Home page - shows appropriate content based on user type */}
           <Route path="/">
-            {(user as any).userType === 'salon_owner' ? (
+            {(user as any).userType === 'admin' || (user as any).userType === 'super_admin' ? (
+              <AdminDashboard />
+            ) : (user as any).userType === 'salon_owner' ? (
               <Layout>
                 <OwnerDashboard />
               </Layout>
@@ -102,6 +110,16 @@ function Router() {
                   <SalonSearchPage />
                 </Layout>
               </Route>
+            </>
+          )}
+
+          {/* Admin specific routes */}
+          {((user as any)?.userType === 'admin' || (user as any)?.userType === 'super_admin') && (
+            <>
+              <Route path="/admin/dashboard" component={AdminDashboard} />
+              <Route path="/admin/salons" component={SalonManagement} />
+              <Route path="/admin/users" component={UserManagement} />
+              <Route path="/admin/activity-logs" component={ActivityLogs} />
             </>
           )}
 
