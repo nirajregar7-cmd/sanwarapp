@@ -30,6 +30,27 @@ export default function CustomerBookings() {
     retry: false,
   });
 
+  // Move the cancelBookingMutation hook here, before any early returns
+  const cancelBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      return await apiRequest("PATCH", `/api/customer/bookings/${bookingId}/cancel`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customer/bookings"] });
+      toast({
+        title: "Booking cancelled",
+        description: "Your booking has been cancelled successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Cancellation failed",
+        description: error.message || "Failed to cancel booking",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle unauthorized errors
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -134,26 +155,6 @@ export default function CustomerBookings() {
     // Navigate to salon detail page with booking data for rescheduling
     setLocation(`/salon/${booking.salonId}?reschedule=${booking.id}`);
   };
-
-  const cancelBookingMutation = useMutation({
-    mutationFn: async (bookingId: string) => {
-      return await apiRequest("PATCH", `/api/customer/bookings/${bookingId}/cancel`, {});
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/customer/bookings"] });
-      toast({
-        title: "Booking cancelled",
-        description: "Your booking has been cancelled successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Cancellation failed",
-        description: error.message || "Failed to cancel booking",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleCancel = (booking: Booking) => {
     // Check if booking can be cancelled
