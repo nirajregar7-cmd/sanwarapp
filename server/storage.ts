@@ -32,6 +32,7 @@ import {
   type InsertTimeSlot,
   type Booking,
   type InsertBooking,
+  type InsertWalkInBooking,
   type Review,
   type InsertReview,
   type SalonGallery,
@@ -97,8 +98,10 @@ export interface IStorage {
 
   // Booking operations
   createBooking(booking: InsertBooking): Promise<Booking>;
+  createWalkInBooking(booking: InsertWalkInBooking): Promise<Booking>;
   getBookingsByCustomer(customerId: string): Promise<Booking[]>;
   getBookingsBySalon(salonId: string): Promise<Booking[]>;
+  getWalkInBookingsBySalon(salonId: string): Promise<Booking[]>;
   getBookingById(id: string): Promise<Booking | undefined>;
   updateBookingStatus(id: string, status: string, paymentId?: string, paymentStatus?: string): Promise<void>;
 
@@ -423,6 +426,29 @@ export class DatabaseStorage implements IStorage {
     if (paymentStatus) updateData.paymentStatus = paymentStatus;
 
     await db.update(bookings).set(updateData).where(eq(bookings.id, id));
+  }
+
+  async createWalkInBooking(booking: InsertWalkInBooking): Promise<Booking> {
+    // Walk-in bookings are immediately confirmed and paid (cash/card/upi)
+    const walkInBookingData = {
+      ...booking,
+      status: "confirmed" as const,
+      paymentStatus: booking.walkInPaymentMethod === "online" ? "pending" : "completed" as const,
+      // Leave customerId and timeSlotId null for walk-ins
+      customerId: null,
+      timeSlotId: null,
+    };
+
+    const [newBooking] = await db.insert(bookings).values(walkInBookingData).returning();
+    return newBooking;
+  }
+
+  async getWalkInBookingsBySalon(salonId: string): Promise<Booking[]> {
+    return await db
+      .select()
+      .from(bookings)
+      .where(and(eq(bookings.salonId, salonId), eq(bookings.isWalkIn, true)))
+      .orderBy(desc(bookings.createdAt));
   }
 
   // Review operations

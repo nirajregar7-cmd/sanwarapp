@@ -9,7 +9,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount } from "./payment";
@@ -1733,6 +1733,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating booking status:", error);
       res.status(500).json({ message: "Failed to update booking status" });
+    }
+  });
+
+  // Walk-in booking routes
+  app.post("/api/walk-in-bookings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Validate the walk-in booking data using schema
+      const validationResult = insertWalkInBookingSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid walk-in booking data",
+          errors: validationResult.error.errors
+        });
+      }
+
+      const walkInData = validationResult.data;
+
+      // Verify the salon belongs to the authenticated user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, walkInData.salonId));
+        
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized: You can only add walk-ins for your own salon" });
+      }
+
+      // Get service details for validation
+      const [service] = await db.select()
+        .from(services)
+        .where(eq(services.id, walkInData.serviceId));
+        
+      if (!service || service.salonId !== walkInData.salonId) {
+        return res.status(400).json({ message: "Service not found or doesn't belong to this salon" });
+      }
+
+      // Create the walk-in booking
+      const newBooking = await storage.createWalkInBooking(walkInData);
+
+      res.status(201).json({
+        message: "Walk-in booking created successfully",
+        booking: newBooking
+      });
+    } catch (error) {
+      console.error("Error creating walk-in booking:", error);
+      res.status(500).json({ 
+        message: "Failed to create walk-in booking",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get walk-in bookings for a salon
+  app.get("/api/salons/:salonId/walk-in-bookings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+
+      // Verify the salon belongs to the authenticated user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+        
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized: You can only view walk-ins for your own salon" });
+      }
+
+      const walkInBookings = await storage.getWalkInBookingsBySalon(salonId);
+      res.json(walkInBookings);
+    } catch (error) {
+      console.error("Error fetching walk-in bookings:", error);
+      res.status(500).json({ message: "Failed to fetch walk-in bookings" });
     }
   });
 

@@ -111,10 +111,10 @@ export const timeSlots = pgTable("time_slots", {
 // Bookings table
 export const bookings = pgTable("bookings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }),
   salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
   serviceId: varchar("service_id").references(() => services.id, { onDelete: "cascade" }).notNull(),
-  timeSlotId: varchar("time_slot_id").references(() => timeSlots.id, { onDelete: "cascade" }).notNull(),
+  timeSlotId: varchar("time_slot_id").references(() => timeSlots.id, { onDelete: "cascade" }),
   staffId: varchar("staff_id").references(() => staff.id, { onDelete: "set null" }),
   date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
   startTime: varchar("start_time", { length: 5 }).notNull(), // HH:MM format
@@ -123,6 +123,12 @@ export const bookings = pgTable("bookings", {
   status: varchar("status", { enum: ["pending", "confirmed", "completed", "cancelled"] }).default("pending"),
   paymentId: varchar("payment_id"),
   paymentStatus: varchar("payment_status", { enum: ["pending", "completed", "failed"] }).default("pending"),
+  // Walk-in booking fields
+  isWalkIn: boolean("is_walk_in").default(false),
+  walkInPaymentMethod: varchar("walk_in_payment_method", { enum: ["cash", "card", "upi", "online"] }),
+  walkInCustomerName: varchar("walk_in_customer_name"), // For walk-ins without user accounts
+  walkInCustomerPhone: varchar("walk_in_customer_phone"), // For walk-ins without user accounts
+  notes: text("notes"), // General notes for any booking type
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -584,6 +590,20 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
   updatedAt: true,
 });
 
+export const insertWalkInBookingSchema = createInsertSchema(bookings).omit({
+  id: true,
+  customerId: true, // Walk-ins may not have user accounts
+  timeSlotId: true, // Walk-ins may not use predefined slots
+  paymentId: true,  // Walk-ins use different payment tracking
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  isWalkIn: z.literal(true),
+  walkInPaymentMethod: z.enum(["cash", "card", "upi", "online"]),
+  walkInCustomerName: z.string().min(1, "Customer name is required"),
+  walkInCustomerPhone: z.string().min(10, "Valid phone number is required"),
+});
+
 export const insertReviewSchema = createInsertSchema(reviews).omit({
   id: true,
   createdAt: true,
@@ -658,6 +678,7 @@ export type TimeSlot = typeof timeSlots.$inferSelect;
 export type InsertTimeSlot = z.infer<typeof insertTimeSlotSchema>;
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
+export type InsertWalkInBooking = z.infer<typeof insertWalkInBookingSchema>;
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type PlatformStats = typeof platformStats.$inferSelect;
