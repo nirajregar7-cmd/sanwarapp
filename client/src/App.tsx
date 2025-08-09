@@ -116,10 +116,26 @@ function Router() {
           {/* Admin specific routes */}
           {((user as any)?.userType === 'admin' || (user as any)?.userType === 'super_admin') && (
             <>
-              <Route path="/admin/dashboard" component={AdminDashboard} />
-              <Route path="/admin/salons" component={SalonManagement} />
-              <Route path="/admin/users" component={UserManagement} />
-              <Route path="/admin/activity-logs" component={ActivityLogs} />
+              <Route path="/admin/dashboard">
+                <Layout>
+                  <AdminDashboard />
+                </Layout>
+              </Route>
+              <Route path="/admin/salons">
+                <Layout>
+                  <SalonManagement />
+                </Layout>
+              </Route>
+              <Route path="/admin/users">
+                <Layout>
+                  <UserManagement />
+                </Layout>
+              </Route>
+              <Route path="/admin/activity-logs">
+                <Layout>
+                  <ActivityLogs />
+                </Layout>
+              </Route>
             </>
           )}
 
