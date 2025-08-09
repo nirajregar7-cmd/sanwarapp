@@ -571,42 +571,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Referral code is required' });
       }
       
-      // Find the referral code
-      const [referralCode] = await db.execute(sql`
-        SELECT * FROM referral_codes 
-        WHERE code = ${code} AND is_active = true
-      `);
+      // Find the referral code in referrals table
+      const referralResults = await db.select()
+        .from(referrals)
+        .where(eq(referrals.referralCode, code.toUpperCase()))
+        .limit(1);
       
-      if (!referralCode) {
-        return res.status(404).json({ error: 'Invalid or expired referral code' });
+      if (referralResults.length === 0) {
+        return res.status(404).json({ error: 'Invalid referral code' });
       }
       
-      // Check if user has already used this code
-      const [existingUsage] = await db.execute(sql`
-        SELECT * FROM referral_code_usages 
-        WHERE referral_code_id = ${referralCode.id} AND used_by = ${userId}
-      `);
+      const referral = referralResults[0];
       
-      if (existingUsage) {
-        return res.status(400).json({ error: 'You have already used this referral code' });
+      // Check if the user is trying to use their own referral code
+      if (referral.referrerId === userId) {
+        return res.status(400).json({ error: 'You cannot use your own referral code' });
       }
       
-      // Check if code has exceeded max uses
-      if (referralCode.current_uses >= referralCode.max_uses) {
-        return res.status(400).json({ error: 'This referral code has reached its usage limit' });
+      // Check if referral is still pending (not already used)
+      if (referral.status !== 'pending') {
+        return res.status(400).json({ error: 'This referral code has already been used' });
       }
       
-      // Check validity period
-      if (referralCode.valid_until && new Date() > new Date(referralCode.valid_until)) {
-        return res.status(400).json({ error: 'This referral code has expired' });
+      // Check if user already has a completed referral (one per customer)
+      const existingReferralResults = await db.select()
+        .from(referrals)
+        .where(and(
+          eq(referrals.referredId, userId), 
+          eq(referrals.status, 'completed')
+        ))
+        .limit(1);
+      
+      if (existingReferralResults.length > 0) {
+        return res.status(400).json({ error: 'You have already used a referral code before' });
       }
       
+      // Valid referral code - return success with free booking offer
       res.json({
         valid: true,
-        code: referralCode.code,
-        discountType: referralCode.discount_type,
-        discountValue: referralCode.discount_value,
-        description: referralCode.description
+        code: referral.referralCode,
+        discountType: 'free',
+        discountValue: 0,
+        description: 'Get your first booking completely free!',
+        referralId: referral.id,
+        referrerId: referral.referrerId
       });
     } catch (error) {
       console.error("Error validating referral code:", error);
@@ -675,34 +683,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Process referral code if provided
       if (referralCode) {
-        const [refCode] = await db.execute(sql`
-          SELECT * FROM referral_codes 
-          WHERE code = ${referralCode} AND is_active = true
-        `);
+        const referralResults = await db.select()
+          .from(referrals)
+          .where(eq(referrals.referralCode, referralCode.toUpperCase()))
+          .limit(1);
         
-        if (refCode) {
-          // Check if user hasn't used this code before
-          const [existingUsage] = await db.execute(sql`
-            SELECT * FROM referral_code_usages 
-            WHERE referral_code_id = ${refCode.id} AND used_by = ${userId}
-          `);
+        if (referralResults.length > 0) {
+          const referral = referralResults[0];
           
-          if (!existingUsage && refCode.current_uses < refCode.max_uses) {
-            const originalAmount = finalAmount;
+          // Check if referral is valid and can be used
+          if (referral.status === 'pending' && referral.referrerId !== userId) {
+            // Check if user hasn't used a referral code before
+            const existingReferralResults = await db.select()
+              .from(referrals)
+              .where(and(
+                eq(referrals.referredId, userId), 
+                eq(referrals.status, 'completed')
+              ))
+              .limit(1);
             
-            // Calculate discount
-            if (refCode.discount_type === 'free') {
-              appliedDiscount = originalAmount;
-              finalAmount = 1; // Minimum amount for Razorpay (₹1)
-            } else if (refCode.discount_type === 'percentage') {
-              appliedDiscount = originalAmount * (parseFloat(refCode.discount_value || '0') / 100);
-              finalAmount = Math.max(1, originalAmount - appliedDiscount);
-            } else if (refCode.discount_type === 'fixed') {
-              appliedDiscount = Math.min(originalAmount, parseFloat(refCode.discount_value || '0'));
-              finalAmount = Math.max(1, originalAmount - appliedDiscount);
+            if (existingReferralResults.length === 0) {
+              // Valid referral code - apply full discount (free booking)
+              appliedDiscount = finalAmount;
+              finalAmount = 0; // Completely free
+              validReferralCode = {
+                id: referral.id,
+                code: referral.referralCode,
+                referrerId: referral.referrerId,
+                rewardAmount: referral.rewardAmount
+              };
             }
-            
-            validReferralCode = refCode;
           }
         }
       }
@@ -825,18 +835,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: `Free booking with referral code: ${referralCodeData.code}`
       }).returning();
       
-      // Record referral code usage
-      await db.execute(sql`
-        INSERT INTO referral_code_usages (referral_code_id, used_by, booking_id, discount_amount)
-        VALUES (${referralCodeData.id}, ${userId}, ${booking.id}, ${referralCodeData.discount_value || 0})
-      `);
-      
-      // Update referral code usage count
-      await db.execute(sql`
-        UPDATE referral_codes 
-        SET current_uses = current_uses + 1, updated_at = NOW()
-        WHERE id = ${referralCodeData.id}
-      `);
+      // Update referral record - mark as completed and link to booking
+      await db.update(referrals)
+        .set({
+          referredId: userId,
+          status: 'completed',
+          bookingId: booking.id,
+          completedAt: new Date()
+        })
+        .where(eq(referrals.id, referralCodeData.id));
       
       // Mark time slot as unavailable for this date
       await db.execute(sql`
