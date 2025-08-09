@@ -1264,6 +1264,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Customer booking cancellation endpoint
+  app.patch('/api/customer/bookings/:bookingId/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { bookingId } = req.params;
+
+      // Verify that this booking belongs to the customer
+      const [booking] = await db.select()
+        .from(bookings)
+        .where(eq(bookings.id, bookingId));
+
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      if (booking.customerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to cancel this booking" });
+      }
+
+      // Check if booking can be cancelled (not already completed or cancelled)
+      if (booking.status === 'completed' || booking.status === 'cancelled') {
+        return res.status(400).json({ message: `Cannot cancel ${booking.status} booking` });
+      }
+
+      // Check if booking is not in the past
+      const bookingDateTime = new Date(`${booking.date} ${booking.startTime}`);
+      const now = new Date();
+      if (bookingDateTime <= now) {
+        return res.status(400).json({ message: "Cannot cancel past bookings" });
+      }
+
+      // Update the booking status to cancelled
+      const [updatedBooking] = await db.update(bookings)
+        .set({ 
+          status: 'cancelled', 
+          updatedAt: new Date() 
+        })
+        .where(eq(bookings.id, bookingId))
+        .returning();
+
+      // Send cancellation notification
+      try {
+        const { sendBookingCancellationNotification } = await import('./notifications');
+        await sendBookingCancellationNotification(bookingId);
+      } catch (notificationError) {
+        console.error("Failed to send booking cancellation notification:", notificationError);
+        // Don't fail the cancellation if notification fails
+      }
+
+      res.json(updatedBooking);
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      res.status(500).json({ message: "Failed to cancel booking" });
+    }
+  });
+
   // Object storage routes
   app.get("/objects/:objectPath(*)", async (req: any, res) => {
     console.log("Accessing object:", req.path);
@@ -3172,6 +3228,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching analytics:", error);
       res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  // Get notification history for a user
+  app.get('/api/notifications/history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      const notifications = await db.select()
+        .from(notificationHistory)
+        .where(eq(notificationHistory.userId, userId))
+        .orderBy(desc(notificationHistory.sentAt))
+        .limit(50);
+
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notification history:", error);
+      res.status(500).json({ message: "Failed to fetch notification history" });
+    }
+  });
+
+  // Get user's notification settings
+  app.get('/api/notifications/settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      const [settings] = await db.select()
+        .from(notificationSettings)
+        .where(eq(notificationSettings.userId, userId));
+
+      if (!settings) {
+        // Create default settings if none exist
+        const [defaultSettings] = await db.insert(notificationSettings)
+          .values({
+            userId,
+            bookingConfirmation: true,
+            bookingReminder: true,
+            dayBeforeReminder: true,
+            hourBeforeReminder: true,
+            promotionalNotifications: false,
+            emailNotifications: true,
+            smsNotifications: true,
+            webPushNotifications: false
+          })
+          .returning();
+        
+        return res.json(defaultSettings);
+      }
+
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching notification settings:", error);
+      res.status(500).json({ message: "Failed to fetch notification settings" });
+    }
+  });
+
+  // Update notification settings
+  app.put('/api/notifications/settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const settingsData = req.body;
+      
+      const [updatedSettings] = await db.update(notificationSettings)
+        .set({
+          ...settingsData,
+          updatedAt: new Date()
+        })
+        .where(eq(notificationSettings.userId, userId))
+        .returning();
+
+      if (!updatedSettings) {
+        // Create settings if they don't exist
+        const [newSettings] = await db.insert(notificationSettings)
+          .values({
+            userId,
+            ...settingsData
+          })
+          .returning();
+        
+        return res.json(newSettings);
+      }
+
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Error updating notification settings:", error);
+      res.status(500).json({ message: "Failed to update notification settings" });
     }
   });
 

@@ -207,13 +207,15 @@ export async function sendEmailNotification(payload: NotificationPayload) {
       return null;
     }
 
-    // For now, we'll log the email notification
-    // In production, integrate with email service like SendGrid, SES, etc.
-    console.log(`EMAIL NOTIFICATION:
-      To: ${user.email}
-      Subject: ${payload.title}
-      Body: ${payload.message}
-    `);
+    // Import email service
+    const { sendEmail } = await import('./emailService');
+    
+    // Send the email
+    const emailSent = await sendEmail({
+      to: user.email,
+      subject: payload.title,
+      html: payload.message
+    });
 
     await logNotification({
       userId: payload.userId,
@@ -221,11 +223,12 @@ export async function sendEmailNotification(payload: NotificationPayload) {
       title: payload.title,
       message: payload.message,
       channel: 'email',
-      status: 'sent',
-      bookingId: payload.bookingId
+      status: emailSent ? 'sent' : 'failed',
+      bookingId: payload.bookingId,
+      failureReason: emailSent ? undefined : 'Email service failed'
     });
 
-    return { success: true, channel: 'email' };
+    return { success: emailSent, channel: 'email' };
 
   } catch (error) {
     console.error('Error sending email notification:', error);
@@ -236,7 +239,8 @@ export async function sendEmailNotification(payload: NotificationPayload) {
       message: payload.message,
       channel: 'email',
       status: 'failed',
-      bookingId: payload.bookingId
+      bookingId: payload.bookingId,
+      failureReason: error instanceof Error ? error.message : 'Unknown error'
     });
     return { success: false, channel: 'email', error: error };
   }
@@ -256,27 +260,38 @@ export async function sendSMSNotification(payload: NotificationPayload) {
       return null;
     }
 
-    // For now, we'll log the SMS notification
-    // In production, integrate with SMS service like Twilio, AWS SNS, etc.
-    console.log(`SMS NOTIFICATION:
-      To: ${user.phone || 'No phone number'}
-      Message: ${payload.title} - ${payload.message}
-    `);
+    // Import WhatsApp/SMS service
+    const { sendWhatsAppMessage } = await import('./whatsapp');
+    
+    // Create concise SMS message (no HTML)
+    const smsMessage = payload.type === 'booking_confirmation' 
+      ? `Booking Confirmed! Your appointment has been confirmed. Check your email for full details. - Sanwar`
+      : `Booking Cancelled. Your appointment has been cancelled. Check your email for details. - Sanwar`;
+    
+    // Send SMS if phone number is available
+    let smsSent = false;
+    if (user.phone) {
+      smsSent = await sendWhatsAppMessage({
+        to: user.phone,
+        body: smsMessage
+      });
+    }
 
     await logNotification({
       userId: payload.userId,
       type: payload.type,
       title: payload.title,
-      message: payload.message,
+      message: smsMessage,
       channel: 'sms',
-      status: user.phone ? 'sent' : 'failed',
-      bookingId: payload.bookingId
+      status: smsSent ? 'sent' : 'failed',
+      bookingId: payload.bookingId,
+      failureReason: smsSent ? undefined : (user.phone ? 'SMS service failed' : 'No phone number available')
     });
 
     return { 
-      success: !!user.phone, 
+      success: smsSent, 
       channel: 'sms', 
-      error: !user.phone ? 'No phone number available' : undefined 
+      error: !smsSent ? (user.phone ? 'SMS service failed' : 'No phone number available') : undefined 
     };
 
   } catch (error) {
@@ -303,17 +318,19 @@ async function logNotification(data: {
   channel: 'web_push' | 'email' | 'sms';
   status: 'sent' | 'delivered' | 'failed' | 'pending';
   bookingId?: string;
+  failureReason?: string;
 }) {
   try {
     await db.insert(notificationHistory).values({
       userId: data.userId,
-      type: data.type,
+      type: data.type as any,
       title: data.title,
       message: data.message,
       channel: data.channel,
       status: data.status,
       bookingId: data.bookingId,
-      sentAt: new Date().toISOString()
+      failureReason: data.failureReason,
+      sentAt: new Date()
     });
   } catch (error) {
     console.error('Error logging notification:', error);
@@ -353,11 +370,27 @@ export async function sendBookingConfirmationNotification(bookingId: string) {
       return;
     }
 
+    // Get customer details for personalized email
+    const [customer] = await db.select().from(users).where(eq(users.id, booking.customerId));
+    
+    // Import email service for rich HTML emails
+    const { generateBookingConfirmationEmail } = await import('./emailService');
+    
+    // Generate rich HTML email content
+    const emailHTML = generateBookingConfirmationEmail(
+      customer?.firstName || 'Customer',
+      booking.salon?.name || 'Salon',
+      booking.service?.name || 'Service',
+      booking.date || '',
+      booking.startTime || '',
+      booking.service?.price || '0'
+    );
+
     const payload: NotificationPayload = {
       userId: booking.customerId,
       type: 'booking_confirmation',
       title: 'Booking Confirmed! 🎉',
-      message: `Your appointment at ${booking.salon?.name} for ${booking.service?.name} on ${booking.date} at ${booking.startTime} has been confirmed.`,
+      message: emailHTML, // Rich HTML for email, fallback text for other channels
       bookingId: booking.id,
       data: {
         salonName: booking.salon?.name,
@@ -373,6 +406,78 @@ export async function sendBookingConfirmationNotification(bookingId: string) {
 
   } catch (error) {
     console.error('Error sending booking confirmation notification:', error);
+    throw error;
+  }
+}
+
+// Booking cancellation notification
+export async function sendBookingCancellationNotification(bookingId: string) {
+  try {
+    // Get booking details with related data
+    const [booking] = await db
+      .select({
+        id: bookings.id,
+        customerId: bookings.customerId,
+        date: bookings.date,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        status: bookings.status,
+        salon: {
+          name: salons.name,
+          address: salons.address,
+          phone: salons.phone
+        },
+        service: {
+          name: services.name,
+          price: services.price,
+          duration: services.duration
+        }
+      })
+      .from(bookings)
+      .leftJoin(salons, eq(bookings.salonId, salons.id))
+      .leftJoin(services, eq(bookings.serviceId, services.id))
+      .where(eq(bookings.id, bookingId));
+
+    if (!booking) {
+      console.error(`Booking not found: ${bookingId}`);
+      return;
+    }
+
+    // Get customer details for personalized email
+    const [customer] = await db.select().from(users).where(eq(users.id, booking.customerId));
+    
+    // Import email service for rich HTML emails
+    const { generateBookingCancellationEmail } = await import('./emailService');
+    
+    // Generate rich HTML email content
+    const emailHTML = generateBookingCancellationEmail(
+      customer?.firstName || 'Customer',
+      booking.salon?.name || 'Salon',
+      booking.service?.name || 'Service',
+      booking.date || '',
+      booking.startTime || ''
+    );
+
+    const payload: NotificationPayload = {
+      userId: booking.customerId,
+      type: 'booking_confirmation', // Using booking_confirmation type for now
+      title: 'Booking Cancelled',
+      message: emailHTML, // Rich HTML for email, fallback text for other channels
+      bookingId: booking.id,
+      data: {
+        salonName: booking.salon?.name,
+        serviceName: booking.service?.name,
+        date: booking.date,
+        time: booking.startTime,
+        duration: booking.service?.duration,
+        address: booking.salon?.address
+      }
+    };
+
+    return await sendNotification(payload);
+
+  } catch (error) {
+    console.error('Error sending booking cancellation notification:', error);
     throw error;
   }
 }

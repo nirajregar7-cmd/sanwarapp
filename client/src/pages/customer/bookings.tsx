@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, Clock, MapPin, Star, Heart } from "lucide-react";
 import type { Booking } from "@shared/schema";
 import { useLocation } from "wouter";
@@ -134,13 +135,52 @@ export default function CustomerBookings() {
     setLocation(`/salon/${booking.salonId}?reschedule=${booking.id}`);
   };
 
+  const cancelBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      return await apiRequest("PATCH", `/api/customer/bookings/${bookingId}/cancel`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customer/bookings"] });
+      toast({
+        title: "Booking cancelled",
+        description: "Your booking has been cancelled successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Cancellation failed",
+        description: error.message || "Failed to cancel booking",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCancel = (booking: Booking) => {
-    // TODO: Implement booking cancellation
-    toast({
-      title: "Cancellation",
-      description: "Booking cancellation feature coming soon",
-      variant: "default",
-    });
+    // Check if booking can be cancelled
+    const bookingDateTime = new Date(`${booking.date} ${booking.startTime}`);
+    const now = new Date();
+    
+    if (booking.status === 'completed' || booking.status === 'cancelled') {
+      toast({
+        title: "Cannot cancel",
+        description: `This booking is already ${booking.status}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (bookingDateTime <= now) {
+      toast({
+        title: "Cannot cancel",
+        description: "Cannot cancel past bookings",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (confirm("Are you sure you want to cancel this booking?")) {
+      cancelBookingMutation.mutate(booking.id);
+    }
   };
 
   return (
