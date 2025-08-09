@@ -521,10 +521,11 @@ export default function SalonDetail() {
                 {!isAuthenticated ? (
                   <div className="text-center py-4 sm:py-6">
                     <p className="text-gray-600 mb-4 text-sm sm:text-base">Please log in to book an appointment</p>
-                    <Button asChild className="w-full">
-                      <Link href="/api/login">
-                        Log In to Book
-                      </Link>
+                    <Button 
+                      className="w-full"
+                      onClick={() => navigate("/auth")}
+                    >
+                      Log In to Book
                     </Button>
                   </div>
                 ) : (
