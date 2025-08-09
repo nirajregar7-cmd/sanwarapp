@@ -44,7 +44,9 @@ export function ReferralCodeInput({
       const codeData = await response.json();
       
       if (response.ok && codeData.valid) {
-        onCodeApplied(codeData);
+        if (typeof onCodeApplied === 'function') {
+          onCodeApplied(codeData);
+        }
         setCode("");
       } else {
         setError(codeData.error || "Invalid referral code");
@@ -60,7 +62,9 @@ export function ReferralCodeInput({
   const removeCode = () => {
     setCode("");
     setError("");
-    onCodeRemoved();
+    if (typeof onCodeRemoved === 'function') {
+      onCodeRemoved();
+    }
   };
 
   const getDiscountText = (codeData: any) => {
