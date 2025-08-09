@@ -1048,6 +1048,47 @@ export class DatabaseStorage implements IStorage {
       .limit(days);
   }
 
+  // Password reset operations
+  async findUserForPasswordReset(email: string, phone: string): Promise<User | undefined> {
+    // First try to find user with matching email and phone in users table
+    const [directUser] = await db
+      .select()
+      .from(users)
+      .where(and(eq(users.email, email), eq(users.phone, phone)));
+    
+    if (directUser) {
+      return directUser;
+    }
+
+    // For salon owners, phone might be in salons table instead
+    const [salonOwner] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        password: users.password,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        phone: users.phone,
+        profileImageUrl: users.profileImageUrl,
+        userType: users.userType,
+        isBlocked: users.isBlocked,
+        isSocialAuth: users.isSocialAuth,
+        socialProvider: users.socialProvider,
+        socialId: users.socialId,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .innerJoin(salons, eq(salons.ownerId, users.id))
+      .where(and(
+        eq(users.email, email),
+        eq(salons.phone, phone),
+        eq(users.userType, "salon_owner")
+      ));
+    
+    return salonOwner;
+  }
+
   // Password reset OTP operations
   async createPasswordResetOtp(otpData: InsertPasswordResetOtp): Promise<PasswordResetOtp> {
     const [otp] = await db.insert(passwordResetOtps).values(otpData).returning();
