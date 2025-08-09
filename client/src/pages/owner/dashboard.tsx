@@ -1168,26 +1168,6 @@ export default function OwnerDashboard() {
                             <Button variant="outline" size="sm">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {booking.status === 'pending' && (
-                              <>
-                                <Button 
-                                  size="sm" 
-                                  className="bg-green-600 hover:bg-green-700"
-                                  onClick={() => confirmBooking(booking.id)}
-                                  disabled={updateBookingStatusMutation.isPending}
-                                >
-                                  Confirm
-                                </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => cancelBooking(booking.id)}
-                                  disabled={updateBookingStatusMutation.isPending}
-                                >
-                                  Cancel
-                                </Button>
-                              </>
-                            )}
                             {booking.status === 'confirmed' && (
                               <Button 
                                 size="sm" 
@@ -1197,6 +1177,11 @@ export default function OwnerDashboard() {
                               >
                                 Mark Complete
                               </Button>
+                            )}
+                            {booking.status === 'completed' && (
+                              <Badge variant="secondary" className="px-3 py-1">
+                                Service Completed
+                              </Badge>
                             )}
                           </div>
                         </div>

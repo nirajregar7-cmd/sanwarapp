@@ -649,7 +649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const confirmationAmount = salon?.confirmationAmount || 10;
       
-      // Create booking after successful payment
+      // Create booking after successful payment - automatically confirmed
       const [booking] = await db.insert(bookings).values({
         customerId: userId,
         salonId,
@@ -660,7 +660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startTime: timeSlot.startTime,
         endTime: timeSlot.endTime,
         totalAmount: service.price,
-        status: 'confirmed',
+        status: 'confirmed', // Automatically confirmed when payment is successful
         paymentId: razorpay_payment_id,
         paymentStatus: 'completed'
       }).returning();
