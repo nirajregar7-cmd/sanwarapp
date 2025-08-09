@@ -14,7 +14,7 @@ import {
   Store, Users, Calendar, IndianRupee, Clock, Star, Plus, 
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
-  CreditCard
+  CreditCard, Camera, User
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -1752,9 +1752,69 @@ export default function OwnerDashboard() {
                 name="photoUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Photo URL</FormLabel>
+                    <FormLabel>Profile Picture</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://example.com/photo.jpg" {...field} />
+                      <div className="space-y-4">
+                        {field.value && (
+                          <div className="flex items-center space-x-4">
+                            <img 
+                              src={field.value} 
+                              alt="Staff preview" 
+                              className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                            />
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => field.onChange('')}
+                            >
+                              Remove Photo
+                            </Button>
+                          </div>
+                        )}
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={5242880} // 5MB
+                          onGetUploadParameters={async () => {
+                            const response = await fetch('/api/objects/upload', {
+                              method: 'POST',
+                              credentials: 'include',
+                            });
+                            const data = await response.json();
+                            return {
+                              method: 'PUT',
+                              url: data.uploadURL,
+                            };
+                          }}
+                          onComplete={(result) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const uploadedFile = result.successful[0];
+                              let imageUrl = (uploadedFile as any).uploadURL || (uploadedFile as any).response?.uploadURL;
+                              
+                              if (imageUrl && imageUrl.includes('?')) {
+                                imageUrl = imageUrl.split('?')[0];
+                              }
+                              
+                              if (imageUrl) {
+                                field.onChange(imageUrl);
+                                toast({
+                                  title: "Photo uploaded!",
+                                  description: "Staff profile picture has been uploaded successfully.",
+                                });
+                              }
+                            }
+                          }}
+                          buttonClassName="w-full"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Camera className="h-4 w-4" />
+                            <span>{field.value ? 'Change Photo' : 'Upload Photo'}</span>
+                          </div>
+                        </ObjectUploader>
+                        <p className="text-xs text-gray-500">
+                          Upload a profile picture for this staff member (max 5MB)
+                        </p>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
