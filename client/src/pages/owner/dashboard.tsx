@@ -1133,35 +1133,77 @@ export default function OwnerDashboard() {
                     <div className="space-y-4">
                       {bookings.map((booking) => (
                         <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="font-medium">Customer Booking #{booking.id.slice(0, 8)}</p>
-                              <Badge 
-                                variant={
-                                  booking.status === 'confirmed' ? 'default' :
-                                  booking.status === 'completed' ? 'secondary' :
-                                  booking.status === 'cancelled' ? 'destructive' : 'outline'
-                                }
-                              >
-                                {booking.status}
-                              </Badge>
+                          <div className="flex items-start space-x-4 flex-1">
+                            {/* Customer Profile Picture */}
+                            <div className="flex-shrink-0">
+                              {booking.isWalkIn ? (
+                                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                  <User className="h-6 w-6 text-gray-500" />
+                                </div>
+                              ) : booking.customerProfileImageUrl ? (
+                                <img
+                                  src={booking.customerProfileImageUrl}
+                                  alt={`${booking.customerFirstName} ${booking.customerLastName || ''}`}
+                                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <User className="h-6 w-6 text-primary" />
+                                </div>
+                              )}
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                              <div>
-                                <span className="font-medium">Date:</span> {booking.date}
-                              </div>
-                              <div>
-                                <span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}
-                              </div>
-                              <div>
-                                <span className="font-medium">Amount:</span> ₹{booking.totalAmount}
-                              </div>
-                              <div>
-                                <span className="font-medium">Payment:</span> 
-                                <Badge variant="outline" className="ml-1">
-                                  {booking.paymentStatus || 'Pending'}
+                            
+                            {/* Booking Details */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-2">
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {booking.isWalkIn 
+                                      ? booking.walkInCustomerName 
+                                      : `${booking.customerFirstName} ${booking.customerLastName || ''}`.trim()
+                                    }
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    Booking #{booking.id.slice(0, 8)}
+                                  </p>
+                                </div>
+                                <Badge 
+                                  variant={
+                                    booking.status === 'confirmed' ? 'default' :
+                                    booking.status === 'completed' ? 'secondary' :
+                                    booking.status === 'cancelled' ? 'destructive' : 'outline'
+                                  }
+                                >
+                                  {booking.status}
                                 </Badge>
                               </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                                <div>
+                                  <span className="font-medium">Date:</span> {booking.date}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Amount:</span> ₹{booking.totalAmount}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Payment:</span> 
+                                  <Badge variant="outline" className="ml-1">
+                                    {booking.paymentStatus || 'Pending'}
+                                  </Badge>
+                                </div>
+                              </div>
+                              {booking.isWalkIn && booking.walkInCustomerPhone && (
+                                <p className="text-sm text-gray-500 mt-1">
+                                  Phone: {booking.walkInCustomerPhone}
+                                </p>
+                              )}
+                              {!booking.isWalkIn && booking.customerPhone && (
+                                <p className="text-sm text-gray-500 mt-1">
+                                  Phone: {booking.customerPhone}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="flex space-x-2 ml-4">

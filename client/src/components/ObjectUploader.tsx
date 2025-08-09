@@ -19,7 +19,6 @@ interface ObjectUploaderProps {
     result: UploadResult<Record<string, unknown>, Record<string, unknown>>
   ) => void;
   buttonClassName?: string;
-  buttonType?: "button" | "submit";
   children: ReactNode;
 }
 
@@ -52,12 +51,11 @@ interface ObjectUploaderProps {
  * @param props.children - Content to be rendered inside the button
  */
 export function ObjectUploader({
-  maxNumberOfFiles = 3,
-  maxFileSize = 5485760, // 5MB default for photos
+  maxNumberOfFiles = 1,
+  maxFileSize = 10485760, // 10MB default
   onGetUploadParameters,
   onComplete,
   buttonClassName,
-  buttonType = "button",
   children,
 }: ObjectUploaderProps) {
   const [showModal, setShowModal] = useState(false);
@@ -66,7 +64,6 @@ export function ObjectUploader({
       restrictions: {
         maxNumberOfFiles,
         maxFileSize,
-        allowedFileTypes: ['image/*'], // Only allow images for reviews
       },
       autoProceed: false,
     })
@@ -76,18 +73,12 @@ export function ObjectUploader({
       })
       .on("complete", (result) => {
         onComplete?.(result);
-        setShowModal(false);
       })
   );
 
   return (
     <div>
-      <Button 
-        type={buttonType}
-        onClick={() => setShowModal(true)} 
-        className={buttonClassName} 
-        variant="outline"
-      >
+      <Button onClick={() => setShowModal(true)} className={buttonClassName}>
         {children}
       </Button>
 

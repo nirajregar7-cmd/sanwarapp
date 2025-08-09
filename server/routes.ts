@@ -1140,19 +1140,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get owner's bookings
+  // Get owner's bookings with customer details
   app.get('/api/owner/bookings', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       
-      // Get bookings for the owner's salon
-      const ownerBookings = await db.select()
+      // Get bookings for the owner's salon with customer information
+      const ownerBookings = await db.select({
+        // Booking fields
+        id: bookings.id,
+        customerId: bookings.customerId,
+        salonId: bookings.salonId,
+        serviceId: bookings.serviceId,
+        staffId: bookings.staffId,
+        timeSlotId: bookings.timeSlotId,
+        date: bookings.date,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        totalAmount: bookings.totalAmount,
+        status: bookings.status,
+        paymentId: bookings.paymentId,
+        paymentStatus: bookings.paymentStatus,
+        createdAt: bookings.createdAt,
+        isWalkIn: bookings.isWalkIn,
+        walkInCustomerName: bookings.walkInCustomerName,
+        walkInCustomerPhone: bookings.walkInCustomerPhone,
+        notes: bookings.notes,
+        // Customer information
+        customerFirstName: users.firstName,
+        customerLastName: users.lastName,
+        customerEmail: users.email,
+        customerProfileImageUrl: users.profileImageUrl,
+        customerPhone: users.phone,
+      })
         .from(bookings)
         .innerJoin(salons, eq(bookings.salonId, salons.id))
+        .leftJoin(users, eq(bookings.customerId, users.id))
         .where(eq(salons.ownerId, userId))
         .orderBy(desc(bookings.createdAt));
       
-      res.json(ownerBookings.map(booking => booking.bookings));
+      res.json(ownerBookings);
     } catch (error) {
       console.error("Error fetching owner bookings:", error);
       res.status(500).json({ message: "Failed to fetch bookings" });
@@ -1244,6 +1271,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error getting upload URL:", error);
       console.error("Error details:", error instanceof Error ? error.message : "Unknown error", error instanceof Error ? error.stack : "");
       res.status(500).json({ error: "Failed to get upload URL", details: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Customer profile routes
+  app.get('/api/customer/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error('Error fetching customer profile:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update customer profile
+  app.put('/api/customer/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const { firstName, lastName, phone, profileImageUrl } = req.body;
+
+      // Validate input
+      if (!firstName?.trim()) {
+        return res.status(400).json({ message: 'First name is required' });
+      }
+
+      // Set ACL policy for profile image if provided
+      if (profileImageUrl) {
+        const objectStorageService = new ObjectStorageService();
+        try {
+          await objectStorageService.trySetObjectEntityAclPolicy(
+            profileImageUrl,
+            {
+              owner: userId,
+              visibility: "public", // Profile pictures should be public
+            }
+          );
+        } catch (error) {
+          console.error('Error setting profile image ACL:', error);
+          // Don't fail the request if ACL setting fails
+        }
+      }
+
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          firstName: firstName.trim(),
+          lastName: lastName?.trim() || null,
+          phone: phone?.trim() || null,
+          profileImageUrl: profileImageUrl || null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating customer profile:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 

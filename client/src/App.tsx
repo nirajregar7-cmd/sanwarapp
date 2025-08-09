@@ -15,6 +15,7 @@ import CustomerHome from "@/pages/customer/home";
 import NotificationSettingsPage from "@/pages/NotificationSettingsPage";
 import SalonDetail from "@/pages/customer/salon-detail";
 import CustomerBookings from "@/pages/customer/bookings";
+import CustomerProfile from "@/pages/customer/customer-profile";
 import ReferEarnPage from "@/pages/customer/refer-earn";
 import SalonSearchPage from "@/pages/customer/salon-search";
 import OwnerDashboard from "@/pages/owner/dashboard";
@@ -125,6 +126,12 @@ function Router() {
               <Route path="/customer/bookings">
                 <Layout>
                   <CustomerBookings />
+                </Layout>
+              </Route>
+
+              <Route path="/customer/profile">
+                <Layout>
+                  <CustomerProfile />
                 </Layout>
               </Route>
 
