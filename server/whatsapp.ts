@@ -11,12 +11,24 @@ if (!accountSid || !authToken || !twilioPhoneNumber) {
 
 // Only initialize Twilio client if credentials are available and valid
 let client: any = null;
-if (accountSid && authToken && accountSid.startsWith('AC')) {
+if (accountSid && authToken) {
   try {
-    client = twilio(accountSid, authToken);
+    // Check if this is an API Key (starts with SK) vs Account SID (starts with AC)
+    if (accountSid.startsWith('SK')) {
+      // For API Keys, we need to provide the account SID separately
+      console.warn('Twilio API Key detected but Account SID missing. Please provide TWILIO_ACCOUNT_SID starting with AC.');
+    } else if (accountSid.startsWith('AC')) {
+      // Standard Account SID initialization
+      client = twilio(accountSid, authToken);
+      console.log('Twilio client initialized successfully');
+    } else {
+      console.error('Invalid Twilio Account SID format. Must start with AC for Account SID or SK for API Key.');
+    }
   } catch (error) {
     console.error('Failed to initialize Twilio client:', error);
   }
+} else {
+  console.warn('Twilio credentials missing. Please provide TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN.');
 }
 
 export interface WhatsAppMessage {
