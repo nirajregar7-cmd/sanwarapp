@@ -92,8 +92,11 @@ export default function CustomerProfile() {
     if (result.successful && result.successful.length > 0) {
       const uploadURL = result.successful[0].uploadURL;
       
-      // Update profile with the new image URL
+      // Update profile with the new image URL, including required firstName
       await updateProfileMutation.mutateAsync({
+        firstName: formData.firstName || profile?.firstName || '',
+        lastName: formData.lastName || profile?.lastName || '',
+        phone: formData.phone || profile?.phone || '',
         profileImageUrl: uploadURL
       });
       
