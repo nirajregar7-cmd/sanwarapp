@@ -408,12 +408,41 @@ export default function OwnerDashboard() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
           <div className="flex flex-col space-y-3 sm:space-y-4 lg:space-y-0 lg:flex-row lg:justify-between lg:items-center">
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
-                {salon ? salon.name : "Setup Your Salon"}
-              </h1>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
+                  {salon ? salon.name : "Setup Your Salon"}
+                </h1>
+                {salon && (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Badge 
+                      className={
+                        salon.verificationStatus === 'approved' 
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" 
+                          : salon.verificationStatus === 'rejected'
+                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                      }
+                    >
+                      {salon.verificationStatus === 'approved' && <CheckCircle className="h-3 w-3 mr-1" />}
+                      {salon.verificationStatus === 'approved' ? 'Verified' : 
+                       salon.verificationStatus === 'rejected' ? 'Rejected' : 'Pending Review'}
+                    </Badge>
+                  </div>
+                )}
+              </div>
               <p className="text-gray-600 text-sm sm:text-base mt-1">
                 {salon ? "Manage your salon and grow your business" : "Create your salon profile to get started"}
               </p>
+              {salon?.verificationNotes && (
+                <div className="mt-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                    Admin Notes:
+                  </p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    {salon.verificationNotes}
+                  </p>
+                </div>
+              )}
             </div>
             {!salon && (
               <Button 
