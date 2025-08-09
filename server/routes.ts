@@ -1303,6 +1303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { firstName, lastName, phone, profileImageUrl } = req.body;
+      console.log('Received profile update data:', { firstName, lastName, phone, profileImageUrl });
 
       // Validate input
       if (!firstName?.trim()) {

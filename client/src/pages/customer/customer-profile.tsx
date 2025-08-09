@@ -109,11 +109,13 @@ export default function CustomerProfile() {
   };
 
   const handleSave = () => {
-    updateProfileMutation.mutate({
+    const profileData = {
       firstName: formData.firstName,
       lastName: formData.lastName,
       phone: formData.phone,
-    });
+    };
+    console.log('Saving profile data:', profileData);
+    updateProfileMutation.mutate(profileData);
   };
 
   const handleCancel = () => {
