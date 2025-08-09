@@ -1086,6 +1086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.id;
       const { salonId } = req.params;
       const staffData = req.body;
+      console.log('Adding staff with data:', { salonId, staffData });
       
       // Verify salon ownership
       const [salon] = await db.select()
@@ -1095,12 +1096,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!salon || salon.ownerId !== userId) {
         return res.status(403).json({ message: "Not authorized to add staff to this salon" });
       }
+
+      // Set ACL policy for profile image if provided
+      if (staffData.photoUrl) {
+        const objectStorageService = new ObjectStorageService();
+        try {
+          await objectStorageService.trySetObjectEntityAclPolicy(
+            staffData.photoUrl,
+            {
+              owner: userId,
+              visibility: "public", // Staff pictures should be public
+            }
+          );
+        } catch (error) {
+          console.error('Error setting staff photo ACL:', error);
+          // Don't fail the request if ACL setting fails
+        }
+      }
       
       const [staffMember] = await db.insert(staff).values({
         ...staffData,
         salonId
       }).returning();
       
+      console.log('Staff member created successfully:', staffMember);
       res.json(staffMember);
     } catch (error) {
       console.error("Error adding staff:", error);
@@ -1114,6 +1133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.id;
       const { staffId } = req.params;
       const staffData = req.body;
+      console.log('Updating staff with data:', { staffId, staffData });
       
       // Verify ownership through salon
       const [staffMember] = await db.select({
@@ -1127,12 +1147,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!staffMember || staffMember.salon.ownerId !== userId) {
         return res.status(403).json({ message: "Not authorized to update this staff member" });
       }
+
+      // Set ACL policy for profile image if provided
+      if (staffData.photoUrl) {
+        const objectStorageService = new ObjectStorageService();
+        try {
+          await objectStorageService.trySetObjectEntityAclPolicy(
+            staffData.photoUrl,
+            {
+              owner: userId,
+              visibility: "public", // Staff pictures should be public
+            }
+          );
+        } catch (error) {
+          console.error('Error setting staff photo ACL:', error);
+          // Don't fail the request if ACL setting fails
+        }
+      }
       
       const [updatedStaff] = await db.update(staff)
         .set({ ...staffData, updatedAt: new Date() })
         .where(eq(staff.id, staffId))
         .returning();
       
+      console.log('Staff updated successfully:', updatedStaff);
       res.json(updatedStaff);
     } catch (error) {
       console.error("Error updating staff:", error);

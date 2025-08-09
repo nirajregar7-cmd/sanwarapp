@@ -24,6 +24,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Salon, Service, Staff, Booking, Review, SalonGallery } from "@shared/schema";
+
+// Extended booking type that includes customer information from the join
+type BookingWithCustomer = Booking & {
+  customerFirstName: string | null;
+  customerLastName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  customerProfileImageUrl: string | null;
+};
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -91,7 +100,7 @@ export default function OwnerDashboard() {
   });
 
   // Fetch salon bookings
-  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<BookingWithCustomer[]>({
     queryKey: [`/api/owner/bookings`],
     enabled: !!salon?.id,
   });
@@ -205,8 +214,10 @@ export default function OwnerDashboard() {
   // Staff mutation
   const staffMutation = useMutation({
     mutationFn: async (data: StaffFormData) => {
+      console.log('Staff mutation data:', data);
       const endpoint = editingItem ? `/api/staff/${editingItem.id}` : `/api/salons/${salon?.id}/staff`;
       const method = editingItem ? 'PUT' : 'POST';
+      console.log('Staff API call:', { method, endpoint, data });
       return apiRequest(method, endpoint, data);
     },
     onSuccess: () => {
@@ -1776,20 +1787,19 @@ export default function OwnerDashboard() {
                           maxNumberOfFiles={1}
                           maxFileSize={5242880} // 5MB
                           onGetUploadParameters={async () => {
-                            const response = await fetch('/api/objects/upload', {
-                              method: 'POST',
-                              credentials: 'include',
-                            });
+                            const response = await apiRequest('POST', '/api/objects/upload');
                             const data = await response.json();
                             return {
-                              method: 'PUT',
+                              method: 'PUT' as const,
                               url: data.uploadURL,
                             };
                           }}
                           onComplete={(result) => {
+                            console.log('Staff photo upload result:', result);
                             if (result.successful && result.successful.length > 0) {
                               const uploadedFile = result.successful[0];
                               let imageUrl = (uploadedFile as any).uploadURL || (uploadedFile as any).response?.uploadURL;
+                              console.log('Extracted image URL:', imageUrl);
                               
                               if (imageUrl && imageUrl.includes('?')) {
                                 imageUrl = imageUrl.split('?')[0];
@@ -1797,6 +1807,7 @@ export default function OwnerDashboard() {
                               
                               if (imageUrl) {
                                 field.onChange(imageUrl);
+                                console.log('Staff photo URL set in form:', imageUrl);
                                 toast({
                                   title: "Photo uploaded!",
                                   description: "Staff profile picture has been uploaded successfully.",
