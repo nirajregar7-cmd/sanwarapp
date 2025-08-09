@@ -1267,6 +1267,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Walk-in booking routes
+  app.post("/api/walk-in-bookings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      console.log("Creating walk-in booking:", req.body);
+
+      // Validate the request body
+      const walkInBookingData = insertWalkInBookingSchema.parse(req.body);
+
+      // Verify that the salon belongs to the authenticated user
+      const salon = await storage.getSalonById(walkInBookingData.salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "You can only add walk-in customers to your own salon" });
+      }
+
+      // Create the walk-in booking
+      const booking = await storage.createWalkInBooking({
+        ...walkInBookingData,
+        isWalkIn: true,
+        createdAt: new Date(),
+      });
+
+      console.log("Walk-in booking created:", booking.id);
+      res.status(201).json(booking);
+    } catch (error) {
+      console.error("Error creating walk-in booking:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ message: "Invalid booking data", details: error.message });
+      }
+      res.status(500).json({ message: "Failed to create walk-in booking" });
+    }
+  });
+
+  app.get("/api/walk-in-bookings/:salonId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Verify that the salon belongs to the authenticated user
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "You can only view walk-in customers for your own salon" });
+      }
+
+      const walkInBookings = await storage.getWalkInBookingsBySalon(salonId);
+      res.json(walkInBookings);
+    } catch (error) {
+      console.error("Error fetching walk-in bookings:", error);
+      res.status(500).json({ message: "Failed to fetch walk-in bookings" });
+    }
+  });
+
   // Salon routes
   app.post("/api/salons", isAuthenticated, async (req: any, res) => {
     try {
