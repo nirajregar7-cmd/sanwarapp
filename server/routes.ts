@@ -1830,16 +1830,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
             const slotEndTimeString = slotEndTime.toTimeString().substring(0, 5);
             
-            // Create the time slot
-            const timeSlot = await storage.createTimeSlot({
-              salonId: req.params.salonId,
-              date: dateString,
-              startTime: slotStartTime,
-              endTime: slotEndTimeString,
-              isAvailable: true
-            });
-            
-            slotsCreated.push(timeSlot);
+            // Check if this exact time slot already exists
+            const existingSlot = await db.select()
+              .from(timeSlots)
+              .where(and(
+                eq(timeSlots.salonId, req.params.salonId),
+                eq(timeSlots.date, dateString),
+                eq(timeSlots.startTime, slotStartTime),
+                eq(timeSlots.endTime, slotEndTimeString)
+              ))
+              .limit(1);
+
+            // Only create if it doesn't already exist
+            if (existingSlot.length === 0) {
+              const timeSlot = await storage.createTimeSlot({
+                salonId: req.params.salonId,
+                date: dateString,
+                startTime: slotStartTime,
+                endTime: slotEndTimeString,
+                isAvailable: true
+              });
+              
+              slotsCreated.push(timeSlot);
+            }
           }
           
           // Move to next slot
@@ -1848,12 +1861,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ 
-        message: `Created ${slotsCreated.length} time slots`,
+        message: `Created ${slotsCreated.length} new time slots`,
         slots: slotsCreated 
       });
     } catch (error) {
       console.error("Error creating bulk time slots:", error);
       res.status(500).json({ message: "Failed to create bulk time slots" });
+    }
+  });
+
+  // Clean up duplicate time slots for a salon
+  app.post("/api/salons/:salonId/time-slots/cleanup-duplicates", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const salonId = req.params.salonId;
+      
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage this salon" });
+      }
+
+      // Find duplicate slots (same salon, date, start time, end time)
+      const duplicateSlots = await db.select({
+        salonId: timeSlots.salonId,
+        date: timeSlots.date,
+        startTime: timeSlots.startTime,
+        endTime: timeSlots.endTime,
+        count: sql<number>`count(*)`,
+        ids: sql<string[]>`array_agg(${timeSlots.id})`
+      })
+      .from(timeSlots)
+      .where(eq(timeSlots.salonId, salonId))
+      .groupBy(timeSlots.salonId, timeSlots.date, timeSlots.startTime, timeSlots.endTime)
+      .having(sql`count(*) > 1`);
+
+      let deletedCount = 0;
+      
+      for (const duplicate of duplicateSlots) {
+        const slotIds = duplicate.ids;
+        // Keep the first slot and delete the rest
+        for (let i = 1; i < slotIds.length; i++) {
+          // Check if this slot has any bookings
+          const hasBookings = await db.select({ id: bookings.id })
+            .from(bookings)
+            .where(eq(bookings.timeSlotId, slotIds[i]))
+            .limit(1);
+          
+          // Only delete if no bookings exist
+          if (hasBookings.length === 0) {
+            await db.delete(timeSlots).where(eq(timeSlots.id, slotIds[i]));
+            deletedCount++;
+          }
+        }
+      }
+
+      res.json({ 
+        message: `Cleaned up ${deletedCount} duplicate time slots`,
+        duplicatesFound: duplicateSlots.length,
+        deletedCount 
+      });
+    } catch (error) {
+      console.error("Error cleaning up duplicate time slots:", error);
+      res.status(500).json({ message: "Failed to clean up duplicate time slots" });
     }
   });
 

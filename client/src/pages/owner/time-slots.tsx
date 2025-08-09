@@ -146,6 +146,30 @@ export default function TimeSlots() {
     },
   });
 
+  // Clean up duplicate time slots
+  const cleanupDuplicatesMutation = useMutation({
+    mutationFn: async () => {
+      return await fetch(`/api/salons/${salon?.id}/time-slots/cleanup-duplicates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/time-slots`] });
+      toast({
+        title: "Cleanup completed",
+        description: `Removed ${data.deletedCount} duplicate time slots`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Cleanup failed",
+        description: error.message || "Failed to clean up duplicates",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Delete time slot
   const deleteSlotMutation = useMutation({
     mutationFn: async (slotId: string) => {
@@ -229,6 +253,15 @@ export default function TimeSlots() {
             <p className="text-sm sm:text-base text-gray-600">Manage your salon's available time slots</p>
           </div>
           <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => cleanupDuplicatesMutation.mutate()}
+              disabled={cleanupDuplicatesMutation.isPending}
+              className="w-full xs:w-auto flex-1 sm:flex-none text-red-600 border-red-200 hover:bg-red-50"
+            >
+              {cleanupDuplicatesMutation.isPending ? "Cleaning..." : "Fix Duplicates"}
+            </Button>
           <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="w-full xs:w-auto flex-1 sm:flex-none">
