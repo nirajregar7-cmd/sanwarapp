@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { insertWalkInBookingSchema } from "@shared/schema";
+import { insertWalkInBookingSchema, type Salon, type Service, type Staff, type Booking } from "@shared/schema";
 import { z } from "zod";
 import { UserPlus, Clock, Phone, CreditCard, Calendar, DollarSign } from "lucide-react";
 import { format } from "date-fns";
@@ -26,26 +26,26 @@ export default function WalkInBookings() {
   const [selectedSalonId, setSelectedSalonId] = useState<string>("");
 
   // Get user's salons
-  const { data: salons = [], isLoading: salonsLoading } = useQuery({
+  const { data: salons = [], isLoading: salonsLoading } = useQuery<Salon[]>({
     queryKey: ["/api/user/salons"],
     enabled: !!user,
   });
 
   // Get services for selected salon
-  const { data: services = [], isLoading: servicesLoading } = useQuery({
+  const { data: services = [], isLoading: servicesLoading } = useQuery<Service[]>({
     queryKey: ["/api/salons", selectedSalonId, "services"],
     enabled: !!selectedSalonId,
   });
 
   // Get staff for selected salon
-  const { data: staff = [] } = useQuery({
+  const { data: staff = [] } = useQuery<Staff[]>({
     queryKey: ["/api/salons", selectedSalonId, "staff"],
     enabled: !!selectedSalonId,
   });
 
   // Get walk-in bookings for selected salon
-  const { data: walkInBookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ["/api/salons", selectedSalonId, "walk-in-bookings"],
+  const { data: walkInBookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
+    queryKey: [`/api/walk-in-bookings/${selectedSalonId}`],
     enabled: !!selectedSalonId,
   });
 
@@ -96,7 +96,7 @@ export default function WalkInBookings() {
     }
 
     // Calculate end time based on service duration
-    const selectedService = services.find(s => s.id === data.serviceId);
+    const selectedService = services.find((s: Service) => s.id === data.serviceId);
     if (selectedService) {
       const [hours, minutes] = data.startTime.split(':').map(Number);
       const startMinutes = hours * 60 + minutes;
@@ -104,7 +104,7 @@ export default function WalkInBookings() {
       const endHours = Math.floor(endMinutes / 60);
       const endMins = endMinutes % 60;
       data.endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
-      data.totalAmount = selectedService.price;
+      data.totalAmount = selectedService.price.toString();
     }
 
     data.salonId = selectedSalonId;
@@ -174,7 +174,7 @@ export default function WalkInBookings() {
                   <SelectValue placeholder="Choose a salon..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {salons.map((salon: any) => (
+                  {salons.map((salon) => (
                     <SelectItem key={salon.id} value={salon.id}>
                       {salon.name}
                     </SelectItem>
@@ -229,7 +229,7 @@ export default function WalkInBookings() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {services.map((service: any) => (
+                            {services.map((service) => (
                               <SelectItem key={service.id} value={service.id}>
                                 {service.name} - ₹{service.price} ({service.duration} min)
                               </SelectItem>
@@ -256,7 +256,7 @@ export default function WalkInBookings() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="">No specific staff</SelectItem>
-                              {staff.map((member: any) => (
+                              {staff.map((member) => (
                                 <SelectItem key={member.id} value={member.id}>
                                   {member.name} - {member.role}
                                 </SelectItem>
@@ -332,7 +332,8 @@ export default function WalkInBookings() {
                         <FormControl>
                           <Textarea 
                             placeholder="Any additional notes about the service..." 
-                            {...field} 
+                            {...field}
+                            value={field.value || ""}
                           />
                         </FormControl>
                         <FormMessage />
@@ -379,7 +380,7 @@ export default function WalkInBookings() {
               </p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
-                {walkInBookings.map((booking: any) => (
+                {walkInBookings.map((booking) => (
                   <div key={booking.id} className="p-3 border rounded-lg space-y-2">
                     <div className="flex justify-between items-start">
                       <div>
