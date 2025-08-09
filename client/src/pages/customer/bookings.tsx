@@ -261,20 +261,20 @@ export default function CustomerBookings() {
                         {salon.imageUrl ? (
                           <img
                             src={salon.imageUrl}
-                            alt={salon.name}
+                            alt={salon.name || 'Salon image'}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center">
                             <span className="text-accent text-lg font-semibold">
-                              {salon.name.charAt(0)}
+                              {salon.name?.charAt(0) || 'S'}
                             </span>
                           </div>
                         )}
                       </div>
                       <div className="p-3">
-                        <h3 className="font-semibold text-gray-900 truncate">{salon.name}</h3>
-                        <p className="text-sm text-gray-600 truncate mb-2">{salon.address}</p>
+                        <h3 className="font-semibold text-gray-900 truncate">{salon.name || 'Unknown Salon'}</h3>
+                        <p className="text-sm text-gray-600 truncate mb-2">{salon.address || 'Address not available'}</p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             {salon.averageRating > 0 && (
