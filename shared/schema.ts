@@ -346,6 +346,59 @@ export const freeBookingCredits = pgTable("free_booking_credits", {
   usedAt: timestamp("used_at"),
 });
 
+// Feedback system table
+export const feedback = pgTable("feedback", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  userType: varchar("user_type", { enum: ["customer", "salon_owner"] }).notNull(),
+  category: varchar("category", { enum: ["bug_report", "feature_request", "general_feedback", "complaint", "suggestion", "help_request"] }).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  rating: integer("rating"), // 1-5 star rating (optional)
+  moodRating: integer("mood_rating"), // 1-5 mood rating (optional)
+  attachmentUrl: varchar("attachment_url"), // for screenshots or documents
+  priority: varchar("priority", { enum: ["low", "medium", "high", "urgent"] }).default("medium"),
+  status: varchar("status", { enum: ["open", "in_progress", "resolved", "closed"] }).default("open"),
+  adminResponse: text("admin_response"),
+  adminNotes: text("admin_notes"),
+  respondedBy: varchar("responded_by").references(() => users.id),
+  respondedAt: timestamp("responded_at"),
+  isPublic: boolean("is_public").default(false), // for displaying public feedback
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Help tickets table for support requests
+export const helpTickets = pgTable("help_tickets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  userType: varchar("user_type", { enum: ["customer", "salon_owner"] }).notNull(),
+  ticketNumber: varchar("ticket_number", { length: 50 }).notNull().unique(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  category: varchar("category", { enum: ["technical_issue", "account_problem", "payment_issue", "booking_problem", "feature_inquiry", "general_support"] }).notNull(),
+  priority: varchar("priority", { enum: ["low", "medium", "high", "urgent"] }).default("medium"),
+  status: varchar("status", { enum: ["open", "assigned", "in_progress", "waiting_customer", "resolved", "closed"] }).default("open"),
+  assignedTo: varchar("assigned_to").references(() => users.id),
+  adminNotes: text("admin_notes"),
+  customerSatisfaction: integer("customer_satisfaction"), // 1-5 rating after resolution
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+// Help ticket messages for conversation
+export const helpTicketMessages = pgTable("help_ticket_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ticketId: varchar("ticket_id").references(() => helpTickets.id, { onDelete: "cascade" }).notNull(),
+  senderId: varchar("sender_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  senderType: varchar("sender_type", { enum: ["customer", "salon_owner", "admin", "system"] }).notNull(),
+  message: text("message").notNull(),
+  attachmentUrl: varchar("attachment_url"),
+  isInternal: boolean("is_internal").default(false), // for admin-only notes
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Referral milestones table for tracking special rewards (like 5-customer milestone)
 export const referralMilestones = pgTable("referral_milestones", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -543,6 +596,41 @@ export const salonLikesRelations = relations(salonLikes, ({ one }) => ({
   }),
 }));
 
+// Feedback system relations
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+  user: one(users, {
+    fields: [feedback.userId],
+    references: [users.id],
+  }),
+  respondedByUser: one(users, {
+    fields: [feedback.respondedBy],
+    references: [users.id],
+  }),
+}));
+
+export const helpTicketsRelations = relations(helpTickets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [helpTickets.userId],
+    references: [users.id],
+  }),
+  assignedToUser: one(users, {
+    fields: [helpTickets.assignedTo],
+    references: [users.id],
+  }),
+  messages: many(helpTicketMessages),
+}));
+
+export const helpTicketMessagesRelations = relations(helpTicketMessages, ({ one }) => ({
+  ticket: one(helpTickets, {
+    fields: [helpTicketMessages.ticketId],
+    references: [helpTickets.id],
+  }),
+  sender: one(users, {
+    fields: [helpTicketMessages.senderId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -665,6 +753,31 @@ export const insertPasswordResetOtpSchema = createInsertSchema(passwordResetOtps
   createdAt: true,
 });
 
+// Feedback system insert schemas
+export const insertFeedbackSchema = createInsertSchema(feedback).omit({
+  id: true,
+  respondedBy: true,
+  respondedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertHelpTicketSchema = createInsertSchema(helpTickets).omit({
+  id: true,
+  ticketNumber: true,
+  assignedTo: true,
+  adminNotes: true,
+  customerSatisfaction: true,
+  resolvedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertHelpTicketMessageSchema = createInsertSchema(helpTicketMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -706,6 +819,14 @@ export type SalonGallery = typeof salonGallery.$inferSelect;
 export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;
 export type PasswordResetOtp = typeof passwordResetOtps.$inferSelect;
 export type InsertPasswordResetOtp = z.infer<typeof insertPasswordResetOtpSchema>;
+
+// Feedback system types
+export type Feedback = typeof feedback.$inferSelect;
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type HelpTicket = typeof helpTickets.$inferSelect;
+export type InsertHelpTicket = z.infer<typeof insertHelpTicketSchema>;
+export type HelpTicketMessage = typeof helpTicketMessages.$inferSelect;
+export type InsertHelpTicketMessage = z.infer<typeof insertHelpTicketMessageSchema>;
 
 // Mood rating utility types and functions
 export type MoodRating = "very_happy" | "happy" | "neutral" | "sad" | "very_sad";

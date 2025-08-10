@@ -10,7 +10,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount } from "./payment";
@@ -3684,6 +3684,230 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating notification settings:", error);
       res.status(500).json({ message: "Failed to update notification settings" });
+    }
+  });
+
+  // Feedback system API routes
+  
+  // Submit feedback
+  app.post('/api/feedback', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const feedbackData = insertFeedbackSchema.parse({
+        ...req.body,
+        userId,
+        userType: req.user?.userType || "customer"
+      });
+
+      const [newFeedback] = await db.insert(feedback).values(feedbackData).returning();
+      res.status(201).json(newFeedback);
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      res.status(500).json({ message: "Failed to submit feedback" });
+    }
+  });
+
+  // Get feedback for user
+  app.get('/api/feedback', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userFeedback = await db.select()
+        .from(feedback)
+        .where(eq(feedback.userId, userId))
+        .orderBy(desc(feedback.createdAt));
+      
+      res.json(userFeedback);
+    } catch (error) {
+      console.error("Error fetching feedback:", error);
+      res.status(500).json({ message: "Failed to fetch feedback" });
+    }
+  });
+
+  // Submit help ticket
+  app.post('/api/help-tickets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userType = req.user?.userType || "customer";
+      
+      // Generate unique ticket number
+      const ticketNumber = `HELP-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      
+      const ticketData = insertHelpTicketSchema.parse({
+        ...req.body,
+        userId,
+        userType,
+        ticketNumber
+      });
+
+      const [newTicket] = await db.insert(helpTickets).values(ticketData).returning();
+      
+      // Add initial message
+      if (req.body.description) {
+        await db.insert(helpTicketMessages).values({
+          ticketId: newTicket.id,
+          senderId: userId,
+          senderType: userType,
+          message: req.body.description,
+        });
+      }
+      
+      res.status(201).json(newTicket);
+    } catch (error) {
+      console.error("Error creating help ticket:", error);
+      res.status(500).json({ message: "Failed to create help ticket" });
+    }
+  });
+
+  // Get help tickets for user
+  app.get('/api/help-tickets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const tickets = await db.select()
+        .from(helpTickets)
+        .where(eq(helpTickets.userId, userId))
+        .orderBy(desc(helpTickets.createdAt));
+      
+      res.json(tickets);
+    } catch (error) {
+      console.error("Error fetching help tickets:", error);
+      res.status(500).json({ message: "Failed to fetch help tickets" });
+    }
+  });
+
+  // Get help ticket messages
+  app.get('/api/help-tickets/:ticketId/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { ticketId } = req.params;
+      
+      // Verify ticket belongs to user
+      const [ticket] = await db.select()
+        .from(helpTickets)
+        .where(and(
+          eq(helpTickets.id, ticketId),
+          eq(helpTickets.userId, userId)
+        ));
+        
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      const messages = await db.select({
+        id: helpTicketMessages.id,
+        message: helpTicketMessages.message,
+        attachmentUrl: helpTicketMessages.attachmentUrl,
+        senderType: helpTicketMessages.senderType,
+        isInternal: helpTicketMessages.isInternal,
+        createdAt: helpTicketMessages.createdAt,
+        senderName: users.firstName
+      })
+        .from(helpTicketMessages)
+        .leftJoin(users, eq(helpTicketMessages.senderId, users.id))
+        .where(and(
+          eq(helpTicketMessages.ticketId, ticketId),
+          eq(helpTicketMessages.isInternal, false) // Only show non-internal messages to users
+        ))
+        .orderBy(helpTicketMessages.createdAt);
+      
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching ticket messages:", error);
+      res.status(500).json({ message: "Failed to fetch ticket messages" });
+    }
+  });
+
+  // Add message to help ticket
+  app.post('/api/help-tickets/:ticketId/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userType = req.user?.userType || "customer";
+      const { ticketId } = req.params;
+      const { message, attachmentUrl } = req.body;
+      
+      // Verify ticket belongs to user
+      const [ticket] = await db.select()
+        .from(helpTickets)
+        .where(and(
+          eq(helpTickets.id, ticketId),
+          eq(helpTickets.userId, userId)
+        ));
+        
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      const messageData = insertHelpTicketMessageSchema.parse({
+        ticketId,
+        senderId: userId,
+        senderType: userType,
+        message,
+        attachmentUrl: attachmentUrl || null,
+        isInternal: false
+      });
+
+      const [newMessage] = await db.insert(helpTicketMessages).values(messageData).returning();
+      
+      // Update ticket status to indicate customer responded
+      await db.update(helpTickets)
+        .set({ 
+          status: ticket.status === "waiting_customer" ? "in_progress" : ticket.status,
+          updatedAt: new Date()
+        })
+        .where(eq(helpTickets.id, ticketId));
+      
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error("Error adding ticket message:", error);
+      res.status(500).json({ message: "Failed to add message" });
+    }
+  });
+
+  // Admin feedback management routes (for future admin panel)
+  app.get('/api/admin/feedback', isAuthenticated, async (req: any, res) => {
+    try {
+      const userType = req.user?.userType;
+      if (userType !== "admin" && userType !== "super_admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const status = req.query.status as string;
+      const category = req.query.category as string;
+      const limit = parseInt(req.query.limit as string) || 50;
+      
+      let query = db.select({
+        id: feedback.id,
+        userId: feedback.userId,
+        userType: feedback.userType,
+        category: feedback.category,
+        subject: feedback.subject,
+        message: feedback.message,
+        rating: feedback.rating,
+        moodRating: feedback.moodRating,
+        priority: feedback.priority,
+        status: feedback.status,
+        adminResponse: feedback.adminResponse,
+        createdAt: feedback.createdAt,
+        userName: users.firstName,
+        userEmail: users.email
+      })
+        .from(feedback)
+        .leftJoin(users, eq(feedback.userId, users.id));
+      
+      if (status) {
+        query = query.where(eq(feedback.status, status as any));
+      }
+      if (category) {
+        query = query.where(eq(feedback.category, category as any));
+      }
+      
+      const adminFeedback = await query
+        .orderBy(desc(feedback.createdAt))
+        .limit(limit);
+      
+      res.json(adminFeedback);
+    } catch (error) {
+      console.error("Error fetching admin feedback:", error);
+      res.status(500).json({ message: "Failed to fetch feedback" });
     }
   });
 

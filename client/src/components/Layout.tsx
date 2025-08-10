@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus } from "lucide-react";
+import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,6 +103,14 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                     </>
                   )}
+                  {/* Feedback link - available for all authenticated users */}
+                  <Link 
+                    href="/feedback" 
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="hidden lg:inline">Feedback</span>
+                  </Link>
                 </nav>
               )}
             </div>
@@ -249,9 +257,17 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                     </>
                   )}
+                  
+                  {/* Feedback link - available for all authenticated users */}
+                  <Link 
+                    href="/feedback" 
+                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-3" />
+                    Feedback & Support
+                  </Link>
                 </div>
-
-
 
                 {/* Logout Button */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4 px-4">

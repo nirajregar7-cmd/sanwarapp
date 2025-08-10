@@ -19,6 +19,7 @@ import CustomerBookings from "@/pages/customer/bookings";
 import CustomerProfile from "@/pages/customer/customer-profile";
 import ReferEarnPage from "@/pages/customer/refer-earn";
 import SalonSearchPage from "@/pages/customer/salon-search";
+import FeedbackHelp from "@/pages/feedback-help";
 import OwnerDashboard from "@/pages/owner/dashboard";
 import TimeSlots from "@/pages/owner/time-slots";
 import AccountDetails from "@/pages/owner/account-details";
@@ -253,6 +254,13 @@ function Router() {
           <Route path="/notifications">
             <Layout>
               <NotificationSettingsPage />
+            </Layout>
+          </Route>
+          
+          {/* Feedback and Help route - available for all authenticated users */}
+          <Route path="/feedback">
+            <Layout>
+              <FeedbackHelp />
             </Layout>
           </Route>
         </>
