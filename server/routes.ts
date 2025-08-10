@@ -3732,12 +3732,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate unique ticket number
       const ticketNumber = `HELP-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
       
-      const ticketData = insertHelpTicketSchema.parse({
-        ...req.body,
-        userId,
-        userType,
+      const ticketData = {
+        ...insertHelpTicketSchema.parse({
+          ...req.body,
+          userId,
+          userType
+        }),
         ticketNumber
-      });
+      };
 
       const [newTicket] = await db.insert(helpTickets).values(ticketData).returning();
       
