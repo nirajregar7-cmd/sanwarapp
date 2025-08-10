@@ -10,7 +10,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount } from "./payment";
@@ -624,6 +624,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete free credit booking
+  app.post('/api/bookings/complete-free-credit', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { bookingData, creditUsed } = req.body;
+      
+      if (!bookingData || !creditUsed) {
+        return res.status(400).json({ message: "Missing booking data or credit information" });
+      }
+      
+      // Create the booking
+      const [booking] = await db.insert(bookings).values(bookingData).returning();
+      
+      // Mark the free credit as used
+      await db.update(freeBookingCredits)
+        .set({
+          isUsed: true,
+          bookingId: booking.id,
+          usedAt: new Date()
+        })
+        .where(eq(freeBookingCredits.id, creditUsed.id));
+      
+      // Mark time slot as unavailable for this date  
+      await db.execute(sql`
+        UPDATE time_slots 
+        SET is_available = false 
+        WHERE id = ${bookingData.timeSlotId}
+      `);
+      
+      // Send booking confirmation notification
+      await sendBookingConfirmationNotification(booking.id);
+      
+      res.status(201).json({
+        ...booking,
+        creditUsed: creditUsed,
+        message: "Free booking created successfully using your credit!"
+      });
+    } catch (error) {
+      console.error("Error completing free credit booking:", error);
+      res.status(500).json({ message: "Failed to complete free booking" });
+    }
+  });
+
   // Create booking endpoint
   // Create payment order for booking confirmation with referral code support
   app.post('/api/bookings/create-payment-order', isAuthenticated, async (req: any, res) => {
@@ -682,8 +725,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let finalAmount = salon.confirmationAmount || 10;
       let validReferralCode = null;
       let appliedDiscount = 0;
+      let usedFreeCredit = null;
       
-      // Process referral code if provided
+      // First, check if user has unused free credits
+      const [availableCredit] = await db.select()
+        .from(freeBookingCredits)
+        .where(
+          and(
+            eq(freeBookingCredits.customerId, userId),
+            eq(freeBookingCredits.isUsed, false)
+          )
+        )
+        .limit(1);
+      
+      if (availableCredit) {
+        // Apply free credit - make booking completely free
+        finalAmount = 0;
+        appliedDiscount = salon.confirmationAmount || 10;
+        usedFreeCredit = availableCredit;
+        
+        return res.json({
+          amount: 0,
+          orderData: null,
+          bookingData: {
+            customerId: userId,
+            salonId,
+            serviceId,
+            staffId: staffId || null,
+            timeSlotId,
+            date,
+            startTime: timeSlot.startTime,
+            endTime: timeSlot.endTime,
+            totalAmount: service.price,
+            confirmationAmount: '0',
+            paymentStatus: 'completed',
+            status: 'confirmed',
+            notes: `Free booking using credit: ${availableCredit.description}`
+          },
+          freeBooking: true,
+          creditUsed: availableCredit,
+          message: "Your free credit has been applied! This booking is completely free."
+        });
+      }
+      
+      // Process referral code if provided (and no free credits available)
       if (referralCode) {
         const referralResults = await db.select()
           .from(referrals)

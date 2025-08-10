@@ -153,17 +153,32 @@ export default function SalonDetail() {
       const orderData = await orderResponse.json();
       console.log("Order data received:", orderData);
       
-      // Handle free bookings (when referral code covers full amount)
-      if (orderData.isFreeBooking) {
-        const freeBookingResponse = await apiRequest("POST", "/api/bookings/create-free", {
+      // Handle free bookings (when referral code covers full amount OR user has free credits)
+      if (orderData.isFreeBooking || orderData.freeBooking) {
+        let endpoint = "/api/bookings/create-free";
+        let payload: any = {
           salonId,
           serviceId: data.serviceId,
           staffId: data.staffId || null,
           timeSlotId: data.timeSlotId,
           date: data.date.toISOString().split('T')[0],
-          referralCodeData: orderData.referralCodeData,
-        });
+        };
+
+        // Handle referral code free booking
+        if (orderData.isFreeBooking && orderData.referralCodeData) {
+          payload.referralCodeData = orderData.referralCodeData;
+        }
         
+        // Handle free credit booking
+        if (orderData.freeBooking && orderData.creditUsed) {
+          endpoint = "/api/bookings/complete-free-credit";
+          payload = {
+            bookingData: orderData.bookingData,
+            creditUsed: orderData.creditUsed,
+          };
+        }
+        
+        const freeBookingResponse = await apiRequest("POST", endpoint, payload);
         const freeBookingData = await freeBookingResponse.json();
         
         if (!freeBookingResponse.ok) {
