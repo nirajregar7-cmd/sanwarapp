@@ -6,11 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Scissors, Users, Eye, EyeOff } from "lucide-react";
+import { Scissors, Users, Eye, EyeOff, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { SocialLoginButtons } from "@/components/SocialLoginButtons";
 
 export default function AuthPage() {
@@ -344,11 +343,25 @@ export default function AuthPage() {
                     </p>
                   </div>
 
-                  <ReferralCodeInput
-                    value={registerForm.referralCode}
-                    onChange={(value) => setRegisterForm({ ...registerForm, referralCode: value })}
-                    disabled={registerMutation.isPending}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Input
+                          id="referralCode"
+                          placeholder="Enter referral code (if you have one)"
+                          value={registerForm.referralCode}
+                          onChange={(e) => setRegisterForm({ ...registerForm, referralCode: e.target.value.toUpperCase() })}
+                          disabled={registerMutation.isPending}
+                          className="pr-10"
+                        />
+                        <Gift className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      Have a referral code? Enter it to get special benefits during registration!
+                    </p>
+                  </div>
 
                   {registerMutation.isError && (
                     <Alert variant="destructive">
