@@ -17,7 +17,8 @@ import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -107,9 +108,9 @@ export function HelpTicketForm({ isOpen, onClose, userType }: HelpTicketFormProp
             <HelpCircle className="w-6 h-6 text-green-600" />
             Get Help
           </DialogTitle>
-          <p className="text-muted-foreground">
+          <DialogDescription>
             Need assistance? Submit a help request and our support team will assist you
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
