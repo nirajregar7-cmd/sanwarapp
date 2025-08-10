@@ -3790,7 +3790,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: feedback.id,
         userId: feedback.userId,
         userType: feedback.userType,
-        salonId: feedback.salonId,
         rating: feedback.rating,
         moodRating: feedback.moodRating,
         category: feedback.category,
@@ -3800,24 +3799,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         respondedBy: feedback.respondedBy,
         respondedAt: feedback.respondedAt,
         createdAt: feedback.createdAt,
-        userName: users.name,
+        userName: users.firstName,
+        userLastName: users.lastName,
         userEmail: users.email,
-        salonName: salons.name,
       })
       .from(feedback)
       .leftJoin(users, eq(feedback.userId, users.id))
-      .leftJoin(salons, eq(feedback.salonId, salons.id))
       .orderBy(desc(feedback.createdAt));
 
       // Transform data to match frontend expectations
       const transformedFeedback = allFeedback.map(item => ({
         ...item,
         user: item.userName ? {
-          name: item.userName,
+          name: `${item.userName} ${item.userLastName || ''}`.trim(),
           email: item.userEmail
-        } : undefined,
-        salon: item.salonName ? {
-          name: item.salonName
         } : undefined
       }));
 
@@ -3850,7 +3845,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         adminNotes: helpTickets.adminNotes,
         resolvedAt: helpTickets.resolvedAt,
         createdAt: helpTickets.createdAt,
-        userName: users.name,
+        userName: users.firstName,
+        userLastName: users.lastName,
         userEmail: users.email,
       })
       .from(helpTickets)
@@ -3861,7 +3857,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transformedTickets = allTickets.map(item => ({
         ...item,
         user: item.userName ? {
-          name: item.userName,
+          name: `${item.userName} ${item.userLastName || ''}`.trim(),
           email: item.userEmail
         } : undefined
       }));
@@ -3966,7 +3962,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         senderType: helpTicketMessages.senderType,
         message: helpTicketMessages.message,
         createdAt: helpTicketMessages.createdAt,
-        senderName: users.name,
+        senderName: users.firstName,
+        senderLastName: users.lastName,
         senderEmail: users.email,
       })
       .from(helpTicketMessages)
@@ -3978,7 +3975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transformedMessages = messages.map(item => ({
         ...item,
         sender: item.senderName ? {
-          name: item.senderName,
+          name: `${item.senderName} ${item.senderLastName || ''}`.trim(),
           email: item.senderEmail
         } : undefined
       }));
