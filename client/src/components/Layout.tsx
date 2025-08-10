@@ -103,6 +103,34 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                     </>
                   )}
+                  {(userType === "admin" || userType === "super_admin") && (
+                    <>
+                      <Link 
+                        href="/admin/dashboard" 
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        Admin Dashboard
+                      </Link>
+                      <Link 
+                        href="/admin/salons" 
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        Salons
+                      </Link>
+                      <Link 
+                        href="/admin/users" 
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        Users
+                      </Link>
+                      <Link 
+                        href="/admin/feedback-support" 
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        Support
+                      </Link>
+                    </>
+                  )}
                   {/* Feedback link - available for all authenticated users */}
                   <Link 
                     href="/feedback" 

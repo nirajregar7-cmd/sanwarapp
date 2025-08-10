@@ -32,6 +32,7 @@ import AdminDashboard from "@/pages/admin/admin-dashboard";
 import SalonManagement from "@/pages/admin/salon-management";
 import UserManagement from "@/pages/admin/user-management";
 import ActivityLogs from "@/pages/admin/activity-logs";
+import AdminFeedbackSupportPage from "@/pages/admin-feedback-support";
 
 // Clerk Auth Pages
 import ClerkSignInPage, { ClerkSignUpPage } from "@/pages/clerk-auth";
@@ -197,6 +198,11 @@ function Router() {
               <Route path="/admin/activity-logs">
                 <Layout>
                   <ActivityLogs />
+                </Layout>
+              </Route>
+              <Route path="/admin/feedback-support">
+                <Layout>
+                  <AdminFeedbackSupportPage />
                 </Layout>
               </Route>
             </>

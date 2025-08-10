@@ -3776,6 +3776,246 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ADMIN ENDPOINTS FOR FEEDBACK AND SUPPORT MANAGEMENT
+
+  // Get all feedback for admin
+  app.get('/api/admin/feedback', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is admin
+      if (req.user?.userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const allFeedback = await db.select({
+        id: feedback.id,
+        userId: feedback.userId,
+        userType: feedback.userType,
+        salonId: feedback.salonId,
+        rating: feedback.rating,
+        moodRating: feedback.moodRating,
+        category: feedback.category,
+        subject: feedback.subject,
+        message: feedback.message,
+        status: feedback.status,
+        respondedBy: feedback.respondedBy,
+        respondedAt: feedback.respondedAt,
+        createdAt: feedback.createdAt,
+        userName: users.name,
+        userEmail: users.email,
+        salonName: salons.name,
+      })
+      .from(feedback)
+      .leftJoin(users, eq(feedback.userId, users.id))
+      .leftJoin(salons, eq(feedback.salonId, salons.id))
+      .orderBy(desc(feedback.createdAt));
+
+      // Transform data to match frontend expectations
+      const transformedFeedback = allFeedback.map(item => ({
+        ...item,
+        user: item.userName ? {
+          name: item.userName,
+          email: item.userEmail
+        } : undefined,
+        salon: item.salonName ? {
+          name: item.salonName
+        } : undefined
+      }));
+
+      res.json(transformedFeedback);
+    } catch (error) {
+      console.error("Error fetching admin feedback:", error);
+      res.status(500).json({ message: "Failed to fetch feedback" });
+    }
+  });
+
+  // Get all help tickets for admin
+  app.get('/api/admin/help-tickets', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is admin
+      if (req.user?.userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const allTickets = await db.select({
+        id: helpTickets.id,
+        userId: helpTickets.userId,
+        userType: helpTickets.userType,
+        ticketNumber: helpTickets.ticketNumber,
+        category: helpTickets.category,
+        subject: helpTickets.subject,
+        description: helpTickets.description,
+        priority: helpTickets.priority,
+        status: helpTickets.status,
+        assignedTo: helpTickets.assignedTo,
+        adminNotes: helpTickets.adminNotes,
+        resolvedAt: helpTickets.resolvedAt,
+        createdAt: helpTickets.createdAt,
+        userName: users.name,
+        userEmail: users.email,
+      })
+      .from(helpTickets)
+      .leftJoin(users, eq(helpTickets.userId, users.id))
+      .orderBy(desc(helpTickets.createdAt));
+
+      // Transform data to match frontend expectations
+      const transformedTickets = allTickets.map(item => ({
+        ...item,
+        user: item.userName ? {
+          name: item.userName,
+          email: item.userEmail
+        } : undefined
+      }));
+
+      res.json(transformedTickets);
+    } catch (error) {
+      console.error("Error fetching admin help tickets:", error);
+      res.status(500).json({ message: "Failed to fetch help tickets" });
+    }
+  });
+
+  // Update feedback status (admin)
+  app.put('/api/admin/feedback/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is admin
+      if (req.user?.userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { id } = req.params;
+      const { status, response } = req.body;
+      const adminId = req.user.id;
+
+      const updateData: any = {
+        status,
+        updatedAt: new Date()
+      };
+
+      if (response) {
+        updateData.adminResponse = response;
+        updateData.respondedBy = adminId;
+        updateData.respondedAt = new Date();
+      }
+
+      const [updatedFeedback] = await db.update(feedback)
+        .set(updateData)
+        .where(eq(feedback.id, id))
+        .returning();
+
+      res.json(updatedFeedback);
+    } catch (error) {
+      console.error("Error updating feedback:", error);
+      res.status(500).json({ message: "Failed to update feedback" });
+    }
+  });
+
+  // Update help ticket status (admin)
+  app.put('/api/admin/help-tickets/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is admin
+      if (req.user?.userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { id } = req.params;
+      const { status, adminNotes } = req.body;
+      const adminId = req.user.id;
+
+      const updateData: any = {
+        status,
+        updatedAt: new Date()
+      };
+
+      if (status === 'in_progress') {
+        updateData.assignedTo = adminId;
+      }
+
+      if (status === 'resolved') {
+        updateData.resolvedAt = new Date();
+      }
+
+      if (adminNotes) {
+        updateData.adminNotes = adminNotes;
+      }
+
+      const [updatedTicket] = await db.update(helpTickets)
+        .set(updateData)
+        .where(eq(helpTickets.id, id))
+        .returning();
+
+      res.json(updatedTicket);
+    } catch (error) {
+      console.error("Error updating help ticket:", error);
+      res.status(500).json({ message: "Failed to update help ticket" });
+    }
+  });
+
+  // Get ticket messages (admin)
+  app.get('/api/admin/help-tickets/:id/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is admin
+      if (req.user?.userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { id } = req.params;
+
+      const messages = await db.select({
+        id: helpTicketMessages.id,
+        ticketId: helpTicketMessages.ticketId,
+        senderId: helpTicketMessages.senderId,
+        senderType: helpTicketMessages.senderType,
+        message: helpTicketMessages.message,
+        createdAt: helpTicketMessages.createdAt,
+        senderName: users.name,
+        senderEmail: users.email,
+      })
+      .from(helpTicketMessages)
+      .leftJoin(users, eq(helpTicketMessages.senderId, users.id))
+      .where(eq(helpTicketMessages.ticketId, id))
+      .orderBy(helpTicketMessages.createdAt);
+
+      // Transform data to match frontend expectations
+      const transformedMessages = messages.map(item => ({
+        ...item,
+        sender: item.senderName ? {
+          name: item.senderName,
+          email: item.senderEmail
+        } : undefined
+      }));
+
+      res.json(transformedMessages);
+    } catch (error) {
+      console.error("Error fetching ticket messages:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Send message to help ticket (admin)
+  app.post('/api/admin/help-tickets/:id/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is admin
+      if (req.user?.userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { id } = req.params;
+      const { message } = req.body;
+      const adminId = req.user.id;
+
+      const [newMessage] = await db.insert(helpTicketMessages).values({
+        ticketId: id,
+        senderId: adminId,
+        senderType: 'admin',
+        message: message.trim(),
+      }).returning();
+
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error("Error sending ticket message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
   // Get help ticket messages
   app.get('/api/help-tickets/:ticketId/messages', isAuthenticated, async (req: any, res) => {
     try {
