@@ -23,6 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { MoodRatingSelector } from "@/components/MoodRatingSelector";
+import { MoodRating } from "@shared/schema";
 import { Star, MessageSquare, Bug, Lightbulb, AlertCircle, HelpCircle, Heart } from "lucide-react";
 
 const feedbackSchema = z.object({
@@ -65,6 +66,7 @@ export function FeedbackForm({ isOpen, onClose, userType }: FeedbackFormProps) {
   const queryClient = useQueryClient();
   const [starRating, setStarRating] = useState<number>(0);
   const [moodRating, setMoodRating] = useState<number>(0);
+  const [selectedMood, setSelectedMood] = useState<MoodRating | undefined>();
 
   const {
     register,
@@ -93,6 +95,7 @@ export function FeedbackForm({ isOpen, onClose, userType }: FeedbackFormProps) {
       reset();
       setStarRating(0);
       setMoodRating(0);
+      setSelectedMood(undefined);
       onClose();
     },
     onError: (error) => {
@@ -237,8 +240,11 @@ export function FeedbackForm({ isOpen, onClose, userType }: FeedbackFormProps) {
               <div className="space-y-2">
                 <Label className="text-xs text-gray-600">Mood Rating</Label>
                 <MoodRatingSelector
-                  value={moodRating}
-                  onChange={setMoodRating}
+                  selectedMood={selectedMood}
+                  onMoodSelect={(mood, rating) => {
+                    setSelectedMood(mood);
+                    setMoodRating(rating);
+                  }}
                   size="md"
                 />
               </div>
