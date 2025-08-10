@@ -18,7 +18,8 @@ import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -126,9 +127,9 @@ export function FeedbackForm({ isOpen, onClose, userType }: FeedbackFormProps) {
             <MessageSquare className="w-6 h-6 text-blue-600" />
             Send Feedback
           </DialogTitle>
-          <p className="text-muted-foreground">
+          <DialogDescription>
             Help us improve Sanwar by sharing your thoughts and suggestions
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
