@@ -4034,18 +4034,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messages = await db.select({
         id: helpTicketMessages.id,
         message: helpTicketMessages.message,
-        attachmentUrl: helpTicketMessages.attachmentUrl,
         senderType: helpTicketMessages.senderType,
-        isInternal: helpTicketMessages.isInternal,
         createdAt: helpTicketMessages.createdAt,
         senderName: users.firstName
       })
         .from(helpTicketMessages)
         .leftJoin(users, eq(helpTicketMessages.senderId, users.id))
-        .where(and(
-          eq(helpTicketMessages.ticketId, ticketId),
-          eq(helpTicketMessages.isInternal, false) // Only show non-internal messages to users
-        ))
+        .where(eq(helpTicketMessages.ticketId, ticketId))
         .orderBy(helpTicketMessages.createdAt);
       
       res.json(messages);
@@ -4075,14 +4070,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Ticket not found" });
       }
       
-      const messageData = insertHelpTicketMessageSchema.parse({
+      const messageData = {
         ticketId,
         senderId: userId,
         senderType: userType,
         message,
         attachmentUrl: attachmentUrl || null,
         isInternal: false
-      });
+      };
 
       const [newMessage] = await db.insert(helpTicketMessages).values(messageData).returning();
       
