@@ -24,6 +24,7 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Load Google Maps script
@@ -45,6 +46,11 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
     script.onload = () => {
       setIsLoaded(true);
     };
+    
+    script.onerror = () => {
+      setMapError("Failed to load Google Maps. You can still set your location manually.");
+      setIsLoaded(false);
+    };
 
     document.head.appendChild(script);
 
@@ -60,6 +66,12 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
   // Initialize map when Google Maps is loaded
   useEffect(() => {
     if (!isLoaded || !mapRef.current || !window.google) return;
+    
+    // Check for billing error
+    if (!window.google.maps) {
+      setMapError("Google Maps billing is not enabled. Please enable billing in Google Cloud Console.");
+      return;
+    }
 
     const defaultCenter = initialLat && initialLng 
       ? { lat: initialLat, lng: initialLng }
@@ -220,13 +232,62 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
     );
   };
 
-  if (!isLoaded) {
+  if (mapError || (!isLoaded && !window.google)) {
     return (
-      <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-sm text-muted-foreground">Loading map...</p>
+      <div className="space-y-4">
+        {!disabled && (
+          <div className="flex gap-2">
+            <Button 
+              type="button"
+              variant="outline" 
+              size="sm"
+              onClick={getCurrentLocation}
+              disabled={isGettingLocation}
+              className="flex items-center gap-2"
+            >
+              {isGettingLocation ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              ) : (
+                <Navigation className="w-4 h-4" />
+              )}
+              {isGettingLocation ? "Getting Location..." : "Use Current Location"}
+            </Button>
+          </div>
+        )}
+        
+        <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+          <div className="text-center p-6">
+            {!isLoaded && !mapError ? (
+              <>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                <p className="text-sm text-muted-foreground">Loading map...</p>
+              </>
+            ) : (
+              <>
+                <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground mb-2">
+                  {mapError || "Map is not available"}
+                </p>
+                {currentLocation && (
+                  <div className="text-xs text-green-600 bg-green-50 dark:bg-green-950 px-3 py-2 rounded-lg">
+                    Location set: {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
+        
+        {!disabled && currentLocation && (
+          <div className="text-sm text-muted-foreground bg-green-50 dark:bg-green-950 p-3 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-green-600" />
+              <span className="text-green-800 dark:text-green-200">
+                Location successfully set to: {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
