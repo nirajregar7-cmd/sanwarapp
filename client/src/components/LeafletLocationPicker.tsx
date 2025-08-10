@@ -2,16 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { MapPin, Navigation } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix for default markers in Leaflet with Webpack
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
 
 interface LeafletLocationPickerProps {
   initialLat?: number;
@@ -27,138 +17,139 @@ export function LeafletLocationPicker({
   disabled 
 }: LeafletLocationPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [leafletLoaded, setLeafletLoaded] = useState(false);
   const { toast } = useToast();
 
-  // Initialize map
+  // Dynamically load Leaflet
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    const loadLeaflet = async () => {
+      try {
+        // Dynamically import Leaflet
+        const L = (await import('leaflet')).default;
+        await import('leaflet/dist/leaflet.css');
 
-    const defaultCenter: [number, number] = initialLat && initialLng 
+        // Fix for default markers in Leaflet with Webpack
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        });
+
+        (window as any).L = L;
+        setLeafletLoaded(true);
+      } catch (error) {
+        console.error('Failed to load Leaflet:', error);
+      }
+    };
+
+    if (!(window as any).L) {
+      loadLeaflet();
+    } else {
+      setLeafletLoaded(true);
+    }
+  }, []);
+
+  // Initialize map after Leaflet is loaded
+  useEffect(() => {
+    if (!leafletLoaded || !mapRef.current || mapInstanceRef.current) return;
+
+    const L = (window as any).L;
+    if (!L) return;
+
+    const defaultCenter = initialLat && initialLng 
       ? [initialLat, initialLng] 
       : [28.6139, 77.2090]; // Default to Delhi
 
-    // Add a small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      try {
-        if (!mapRef.current) return;
-        
-        const map = L.map(mapRef.current).setView(defaultCenter, 13);
-        mapInstanceRef.current = map;
+    try {
+      const map = L.map(mapRef.current).setView(defaultCenter, 13);
+      mapInstanceRef.current = map;
 
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Create red marker icon
+      const createRedIcon = () => L.divIcon({
+        className: 'red-marker',
+        html: `
+          <div style="
+            width: 32px; 
+            height: 32px; 
+            background: #dc2626; 
+            border: 3px solid white; 
+            border-radius: 50% 50% 50% 0; 
+            transform: rotate(-45deg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <div style="
+              width: 8px; 
+              height: 8px; 
+              background: white; 
+              border-radius: 50%;
+              transform: rotate(45deg);
+            "></div>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+      });
+
+      // Add initial marker if coordinates are provided
+      if (initialLat && initialLng) {
+        const marker = L.marker([initialLat, initialLng], { 
+          icon: createRedIcon(),
+          draggable: !disabled 
         }).addTo(map);
+        
+        markerRef.current = marker;
 
-        // Add initial marker if coordinates are provided
-        if (initialLat && initialLng) {
-          const redIcon = L.divIcon({
-            className: 'red-marker',
-            html: `
-              <div style="
-                width: 32px; 
-                height: 32px; 
-                background: #dc2626; 
-                border: 3px solid white; 
-                border-radius: 50% 50% 50% 0; 
-                transform: rotate(-45deg);
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              ">
-                <div style="
-                  width: 8px; 
-                  height: 8px; 
-                  background: white; 
-                  border-radius: 50%;
-                  transform: rotate(45deg);
-                "></div>
-              </div>
-            `,
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
+        if (!disabled) {
+          marker.on('dragend', () => {
+            const position = marker.getLatLng();
+            onLocationSelect(position.lat, position.lng);
           });
+        }
+      }
 
-          const marker = L.marker([initialLat, initialLng], { 
-            icon: redIcon,
-            draggable: !disabled 
-          }).addTo(map);
+      // Add click listener to place/move marker
+      if (!disabled) {
+        map.on('click', (e: any) => {
+          const { lat, lng } = e.latlng;
           
-          markerRef.current = marker;
-
-          if (!disabled) {
+          if (markerRef.current) {
+            markerRef.current.setLatLng([lat, lng]);
+          } else {
+            const marker = L.marker([lat, lng], { 
+              icon: createRedIcon(),
+              draggable: true 
+            }).addTo(map);
+            
             marker.on('dragend', () => {
               const position = marker.getLatLng();
               onLocationSelect(position.lat, position.lng);
             });
+            
+            markerRef.current = marker;
           }
-        }
-
-        // Add click listener to place/move marker
-        if (!disabled) {
-          map.on('click', (e: L.LeafletMouseEvent) => {
-            const { lat, lng } = e.latlng;
-            
-            const redIcon = L.divIcon({
-              className: 'red-marker',
-              html: `
-                <div style="
-                  width: 32px; 
-                  height: 32px; 
-                  background: #dc2626; 
-                  border: 3px solid white; 
-                  border-radius: 50% 50% 50% 0; 
-                  transform: rotate(-45deg);
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">
-                  <div style="
-                    width: 8px; 
-                    height: 8px; 
-                    background: white; 
-                    border-radius: 50%;
-                    transform: rotate(45deg);
-                  "></div>
-                </div>
-              `,
-              iconSize: [32, 32],
-              iconAnchor: [16, 32],
-            });
-
-            if (markerRef.current) {
-              markerRef.current.setLatLng([lat, lng]);
-            } else {
-              const marker = L.marker([lat, lng], { 
-                icon: redIcon,
-                draggable: true 
-              }).addTo(map);
-              
-              marker.on('dragend', () => {
-                const position = marker.getLatLng();
-                onLocationSelect(position.lat, position.lng);
-              });
-              
-              markerRef.current = marker;
-            }
-            
-            onLocationSelect(lat, lng);
-          });
-        }
-
-      } catch (error) {
-        console.error('Error initializing map:', error);
+          
+          onLocationSelect(lat, lng);
+        });
       }
-    }, 100);
+
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
 
     return () => {
-      clearTimeout(timer);
       if (mapInstanceRef.current) {
         try {
           mapInstanceRef.current.remove();
@@ -169,7 +160,7 @@ export function LeafletLocationPicker({
         }
       }
     };
-  }, [initialLat, initialLng, onLocationSelect, disabled]);
+  }, [leafletLoaded, initialLat, initialLng, onLocationSelect, disabled]);
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -180,6 +171,9 @@ export function LeafletLocationPicker({
       });
       return;
     }
+
+    const L = (window as any).L;
+    if (!L || !mapInstanceRef.current) return;
 
     setIsGettingLocation(true);
 
@@ -272,6 +266,19 @@ export function LeafletLocationPicker({
       }
     );
   };
+
+  if (!leafletLoaded) {
+    return (
+      <div className="space-y-4">
+        <div className="w-full h-64 rounded-lg border flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-sm text-gray-500">Loading map...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
