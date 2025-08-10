@@ -42,8 +42,12 @@ const salonSchema = z.object({
   description: z.string().optional(),
   phone: z.string().min(10, "Valid phone number required"),
   address: z.string().min(1, "Address is required"),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  latitude: z.number({
+    required_error: "Please mark your shop location on the map",
+  }),
+  longitude: z.number({
+    required_error: "Please mark your shop location on the map",
+  }),
   imageUrl: z.string().optional(),
   confirmationAmount: z.number().min(0),
 });
@@ -1495,10 +1499,10 @@ export default function OwnerDashboard() {
               {/* Location Picker */}
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Mark Your Shop Location on Map (Optional)
+                  Mark Your Shop Location on Map *
                 </label>
                 <p className="text-sm text-muted-foreground">
-                  Help customers find your exact location by marking it on the map
+                  Required: Help customers find your exact location by marking it on the map
                 </p>
                 <LocationPicker
                   initialLat={salon?.latitude ? Number(salon.latitude) : undefined}
