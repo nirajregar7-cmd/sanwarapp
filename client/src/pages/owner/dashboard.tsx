@@ -1513,7 +1513,7 @@ export default function OwnerDashboard() {
                     salonForm.setValue('latitude', lat);
                     salonForm.setValue('longitude', lng);
                   }}
-                  disabled={!editMode}
+                  disabled={false}
                 />
               </div>
               
