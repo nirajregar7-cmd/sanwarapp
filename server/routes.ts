@@ -12,7 +12,7 @@ import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
 import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
-import { eq, desc, isNotNull, sql, count, and, or, not, exists } from "drizzle-orm";
+import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount } from "./payment";
 import { calculateRevenueShare } from "@shared/revenue";
 import { sendPasswordResetOTP, generateOTP } from "./whatsapp";
@@ -4004,6 +4004,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         senderId: adminId,
         senderType: 'admin',
         message: message.trim(),
+        isInternal: false, // Admin responses should be visible to customers
       }).returning();
 
       res.status(201).json(newMessage);
@@ -4033,17 +4034,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const messages = await db.select({
         id: helpTicketMessages.id,
-        message: helpTicketMessages.message,
+        ticketId: helpTicketMessages.ticketId,
+        senderId: helpTicketMessages.senderId,
         senderType: helpTicketMessages.senderType,
+        message: helpTicketMessages.message,
         createdAt: helpTicketMessages.createdAt,
-        senderName: users.firstName
+        senderName: users.firstName,
+        senderLastName: users.lastName,
+        senderEmail: users.email,
       })
         .from(helpTicketMessages)
         .leftJoin(users, eq(helpTicketMessages.senderId, users.id))
-        .where(eq(helpTicketMessages.ticketId, ticketId))
+        .where(and(
+          eq(helpTicketMessages.ticketId, ticketId),
+          or(
+            eq(helpTicketMessages.isInternal, false),
+            isNull(helpTicketMessages.isInternal)
+          )
+        ))
         .orderBy(helpTicketMessages.createdAt);
       
-      res.json(messages);
+      // Transform data to match frontend expectations
+      const transformedMessages = messages.map(item => ({
+        ...item,
+        sender: item.senderName || item.senderType === 'admin' ? {
+          name: item.senderType === 'admin' ? 'Admin Support' : `${item.senderName} ${item.senderLastName || ''}`.trim(),
+          email: item.senderEmail
+        } : {
+          name: 'System',
+          email: null
+        }
+      }));
+
+      res.json(transformedMessages);
     } catch (error) {
       console.error("Error fetching ticket messages:", error);
       res.status(500).json({ message: "Failed to fetch ticket messages" });
