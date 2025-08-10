@@ -336,19 +336,7 @@ export function CustomerSalonMap({
         </p>
       </div>
 
-      {/* Add CSS for pulse animation */}
-      <style jsx>{`
-        @keyframes pulse {
-          0% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          100% {
-            transform: scale(1.5);
-            opacity: 0;
-          }
-        }
-      `}</style>
+      {/* Pulse animation is handled by CSS */}
     </div>
   );
 }
