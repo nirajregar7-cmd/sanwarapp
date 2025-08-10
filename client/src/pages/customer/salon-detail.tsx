@@ -25,6 +25,7 @@ import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
 import { ReviewPhotoGallery } from "@/components/ReviewPhotoGallery";
 import { ReviewForm } from "./review-form";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
+import { ShopLocationMap } from "@/components/ShopLocationMap";
 
 const bookingSchema = z.object({
   serviceId: z.string().min(1, "Please select a service"),
@@ -454,6 +455,17 @@ export default function SalonDetail() {
                           <MapPin className="h-4 w-4 mr-2" />
                           {salon.address}
                         </div>
+                        {/* Location Map */}
+                        {salon.latitude && salon.longitude && (
+                          <div className="mt-4">
+                            <ShopLocationMap
+                              lat={Number(salon.latitude)}
+                              lng={Number(salon.longitude)}
+                              shopName={salon.name}
+                              address={salon.address}
+                            />
+                          </div>
+                        )}
                       </div>
                       {salon.isPremium && (
                         <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white flex-shrink-0">

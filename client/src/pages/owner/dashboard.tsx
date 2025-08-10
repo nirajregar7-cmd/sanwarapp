@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { LocationPicker } from "@/components/LocationPicker";
 import type { UploadResult } from '@uppy/core';
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -41,6 +42,8 @@ const salonSchema = z.object({
   description: z.string().optional(),
   phone: z.string().min(10, "Valid phone number required"),
   address: z.string().min(1, "Address is required"),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   imageUrl: z.string().optional(),
   confirmationAmount: z.number().min(0),
 });
@@ -80,6 +83,7 @@ export default function OwnerDashboard() {
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [salonLocation, setSalonLocation] = useState<{lat: number, lng: number} | null>(null);
 
   // Fetch user's salon
   const { data: salon, isLoading: salonLoading } = useQuery<Salon>({
@@ -124,6 +128,8 @@ export default function OwnerDashboard() {
       description: salon?.description || "",
       phone: salon?.phone || "",
       address: salon?.address || "",
+      latitude: salon?.latitude ? Number(salon.latitude) : undefined,
+      longitude: salon?.longitude ? Number(salon.longitude) : undefined,
       imageUrl: salon?.imageUrl || "",
       confirmationAmount: salon?.confirmationAmount || 0,
     },
@@ -1485,6 +1491,25 @@ export default function OwnerDashboard() {
                   </FormItem>
                 )}
               />
+
+              {/* Location Picker */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Mark Your Shop Location on Map (Optional)
+                </label>
+                <p className="text-sm text-muted-foreground">
+                  Help customers find your exact location by marking it on the map
+                </p>
+                <LocationPicker
+                  initialLat={salon?.latitude ? Number(salon.latitude) : undefined}
+                  initialLng={salon?.longitude ? Number(salon.longitude) : undefined}
+                  onLocationSelect={(lat, lng) => {
+                    setSalonLocation({ lat, lng });
+                    salonForm.setValue('latitude', lat);
+                    salonForm.setValue('longitude', lng);
+                  }}
+                />
+              </div>
               
               <FormField
                 control={salonForm.control}
