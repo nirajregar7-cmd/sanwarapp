@@ -23,6 +23,7 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
   const [marker, setMarker] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const { toast } = useToast();
 
   // Load Google Maps script
@@ -33,7 +34,7 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBGne0aJNnXjDlE1KkLFPsQSZfCOTRNZBM&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
     script.async = true;
     script.defer = true;
     
@@ -145,12 +146,15 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
       return;
     }
 
+    setIsGettingLocation(true);
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         
         setCurrentLocation({ lat, lng });
+        setIsGettingLocation(false);
         
         if (map) {
           map.setCenter({ lat, lng });
@@ -165,7 +169,7 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
                 map: map,
                 draggable: true,
                 icon: {
-                  url: 'data:image/svg+xml;base64=' + btoa(`
+                  url: 'data:image/svg+xml;base64,' + btoa(`
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#dc2626">
                       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                     </svg>
@@ -191,11 +195,27 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
         });
       },
       (error) => {
+        setIsGettingLocation(false);
+        let errorMessage = "Could not get your current location. Please try again or click on the map to set your location manually.";
+        
+        if (error.code === 1) {
+          errorMessage = "Location access denied. Please allow location access in your browser settings or click on the map to set your location manually.";
+        } else if (error.code === 2) {
+          errorMessage = "Location unavailable. Please check your connection or click on the map to set your location manually.";
+        } else if (error.code === 3) {
+          errorMessage = "Location request timeout. Please try again or click on the map to set your location manually.";
+        }
+        
         toast({
           title: "Location error",
-          description: "Could not get your current location. Please try again or click on the map to set your location manually.",
+          description: errorMessage,
           variant: "destructive"
         });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
       }
     );
   };
@@ -220,10 +240,15 @@ export function LocationPicker({ initialLat, initialLng, onLocationSelect, disab
             variant="outline" 
             size="sm"
             onClick={getCurrentLocation}
+            disabled={isGettingLocation}
             className="flex items-center gap-2"
           >
-            <Navigation className="w-4 h-4" />
-            Use Current Location
+            {isGettingLocation ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            ) : (
+              <Navigation className="w-4 h-4" />
+            )}
+            {isGettingLocation ? "Getting Location..." : "Use Current Location"}
           </Button>
         </div>
       )}
