@@ -25,6 +25,7 @@ import TimeSlots from "@/pages/owner/time-slots";
 import AccountDetails from "@/pages/owner/account-details";
 import ReferEarn from "@/pages/owner/refer-earn";
 import WalkInBookings from "@/pages/salon-owner/walk-in-bookings";
+import ProductsFacilities from "@/pages/salon-owner/products-facilities";
 import NotFound from "@/pages/not-found";
 
 // Admin Pages
@@ -219,6 +220,11 @@ function Router() {
               <Route path="/shopkeeper/walk-in-bookings">
                 <Layout>
                   <WalkInBookings />
+                </Layout>
+              </Route>
+              <Route path="/shopkeeper/products-facilities">
+                <Layout>
+                  <ProductsFacilities />
                 </Layout>
               </Route>
               <Route path="/shopkeeper/refer-earn">

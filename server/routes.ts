@@ -10,7 +10,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount } from "./payment";
@@ -4165,6 +4165,286 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching admin feedback:", error);
       res.status(500).json({ message: "Failed to fetch feedback" });
+    }
+  });
+
+  // === SALON FACILITIES ROUTES ===
+  
+  // Get salon facilities
+  app.get('/api/salons/:salonId/facilities', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      
+      const facilities = await db.select()
+        .from(salonFacilities)
+        .where(eq(salonFacilities.salonId, salonId))
+        .orderBy(salonFacilities.name);
+      
+      res.json(facilities);
+    } catch (error) {
+      console.error("Error fetching salon facilities:", error);
+      res.status(500).json({ message: "Failed to fetch facilities" });
+    }
+  });
+
+  // Add salon facility (salon owner only)
+  app.post('/api/salons/:salonId/facilities', isAuthenticated, async (req: any, res) => {
+    try {
+      const { salonId } = req.params;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify salon ownership
+      if (userType !== 'salon_owner' && userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (userType === 'salon_owner') {
+        const [salon] = await db.select()
+          .from(salons)
+          .where(and(eq(salons.id, salonId), eq(salons.ownerId, userId)));
+        
+        if (!salon) {
+          return res.status(404).json({ message: "Salon not found" });
+        }
+      }
+
+      const facilityData = insertSalonFacilitySchema.parse({ 
+        ...req.body, 
+        salonId 
+      });
+
+      const [facility] = await db.insert(salonFacilities)
+        .values(facilityData)
+        .returning();
+
+      res.status(201).json(facility);
+    } catch (error) {
+      console.error("Error adding salon facility:", error);
+      res.status(500).json({ message: "Failed to add facility" });
+    }
+  });
+
+  // Update salon facility
+  app.put('/api/salons/:salonId/facilities/:facilityId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { salonId, facilityId } = req.params;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify salon ownership
+      if (userType !== 'salon_owner' && userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (userType === 'salon_owner') {
+        const [salon] = await db.select()
+          .from(salons)
+          .where(and(eq(salons.id, salonId), eq(salons.ownerId, userId)));
+        
+        if (!salon) {
+          return res.status(404).json({ message: "Salon not found" });
+        }
+      }
+
+      const updateData = insertSalonFacilitySchema.partial().parse(req.body);
+
+      const [facility] = await db.update(salonFacilities)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(and(
+          eq(salonFacilities.id, facilityId),
+          eq(salonFacilities.salonId, salonId)
+        ))
+        .returning();
+
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+
+      res.json(facility);
+    } catch (error) {
+      console.error("Error updating salon facility:", error);
+      res.status(500).json({ message: "Failed to update facility" });
+    }
+  });
+
+  // Delete salon facility
+  app.delete('/api/salons/:salonId/facilities/:facilityId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { salonId, facilityId } = req.params;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify salon ownership
+      if (userType !== 'salon_owner' && userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (userType === 'salon_owner') {
+        const [salon] = await db.select()
+          .from(salons)
+          .where(and(eq(salons.id, salonId), eq(salons.ownerId, userId)));
+        
+        if (!salon) {
+          return res.status(404).json({ message: "Salon not found" });
+        }
+      }
+
+      const [deleted] = await db.delete(salonFacilities)
+        .where(and(
+          eq(salonFacilities.id, facilityId),
+          eq(salonFacilities.salonId, salonId)
+        ))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+
+      res.json({ message: "Facility deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting salon facility:", error);
+      res.status(500).json({ message: "Failed to delete facility" });
+    }
+  });
+
+  // === SALON PRODUCTS ROUTES ===
+  
+  // Get salon products
+  app.get('/api/salons/:salonId/products', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      
+      const products = await db.select()
+        .from(salonProducts)
+        .where(eq(salonProducts.salonId, salonId))
+        .orderBy(salonProducts.name);
+      
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching salon products:", error);
+      res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
+
+  // Add salon product (salon owner only)
+  app.post('/api/salons/:salonId/products', isAuthenticated, async (req: any, res) => {
+    try {
+      const { salonId } = req.params;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify salon ownership
+      if (userType !== 'salon_owner' && userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (userType === 'salon_owner') {
+        const [salon] = await db.select()
+          .from(salons)
+          .where(and(eq(salons.id, salonId), eq(salons.ownerId, userId)));
+        
+        if (!salon) {
+          return res.status(404).json({ message: "Salon not found" });
+        }
+      }
+
+      const productData = insertSalonProductSchema.parse({ 
+        ...req.body, 
+        salonId 
+      });
+
+      const [product] = await db.insert(salonProducts)
+        .values(productData)
+        .returning();
+
+      res.status(201).json(product);
+    } catch (error) {
+      console.error("Error adding salon product:", error);
+      res.status(500).json({ message: "Failed to add product" });
+    }
+  });
+
+  // Update salon product
+  app.put('/api/salons/:salonId/products/:productId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { salonId, productId } = req.params;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify salon ownership
+      if (userType !== 'salon_owner' && userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (userType === 'salon_owner') {
+        const [salon] = await db.select()
+          .from(salons)
+          .where(and(eq(salons.id, salonId), eq(salons.ownerId, userId)));
+        
+        if (!salon) {
+          return res.status(404).json({ message: "Salon not found" });
+        }
+      }
+
+      const updateData = insertSalonProductSchema.partial().parse(req.body);
+
+      const [product] = await db.update(salonProducts)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(and(
+          eq(salonProducts.id, productId),
+          eq(salonProducts.salonId, salonId)
+        ))
+        .returning();
+
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      res.json(product);
+    } catch (error) {
+      console.error("Error updating salon product:", error);
+      res.status(500).json({ message: "Failed to update product" });
+    }
+  });
+
+  // Delete salon product
+  app.delete('/api/salons/:salonId/products/:productId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { salonId, productId } = req.params;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify salon ownership
+      if (userType !== 'salon_owner' && userType !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (userType === 'salon_owner') {
+        const [salon] = await db.select()
+          .from(salons)
+          .where(and(eq(salons.id, salonId), eq(salons.ownerId, userId)));
+        
+        if (!salon) {
+          return res.status(404).json({ message: "Salon not found" });
+        }
+      }
+
+      const [deleted] = await db.delete(salonProducts)
+        .where(and(
+          eq(salonProducts.id, productId),
+          eq(salonProducts.salonId, salonId)
+        ))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      res.json({ message: "Product deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting salon product:", error);
+      res.status(500).json({ message: "Failed to delete product" });
     }
   });
 

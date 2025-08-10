@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus, MessageSquare } from "lucide-react";
+import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus, MessageSquare, Package } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,6 +94,12 @@ export default function Layout({ children }: LayoutProps) {
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
                         Walk-in Customers
+                      </Link>
+                      <Link 
+                        href="/shopkeeper/products-facilities" 
+                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                      >
+                        Products & Facilities
                       </Link>
                       <Link 
                         href="/shopkeeper/account-details" 
@@ -274,6 +280,14 @@ export default function Layout({ children }: LayoutProps) {
                       >
                         <UserPlus className="h-4 w-4 mr-3" />
                         Walk-in Customers
+                      </Link>
+                      <Link 
+                        href="/shopkeeper/products-facilities" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Package className="h-4 w-4 mr-3" />
+                        Products & Facilities
                       </Link>
                       <Link 
                         href="/shopkeeper/account-details" 

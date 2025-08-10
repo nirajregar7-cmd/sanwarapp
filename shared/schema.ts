@@ -178,6 +178,34 @@ export const salonGallery = pgTable("salon_gallery", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Salon facilities table for storing salon amenities
+export const salonFacilities = pgTable("salon_facilities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  icon: varchar("icon", { length: 50 }), // Icon name or emoji
+  description: text("description"),
+  isAvailable: boolean("is_available").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Salon products table for storing retail products
+export const salonProducts = pgTable("salon_products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  brand: varchar("brand", { length: 100 }),
+  category: varchar("category", { length: 50 }), // hair_care, skin_care, tools, etc.
+  price: decimal("price", { precision: 10, scale: 2 }),
+  description: text("description"),
+  imageUrl: varchar("image_url"),
+  inStock: boolean("in_stock").default(true),
+  stockQuantity: integer("stock_quantity").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Platform statistics table
 export const platformStats = pgTable("platform_stats", {
   id: varchar("id").primaryKey().default("stats"),
@@ -729,6 +757,20 @@ export const insertSalonGallerySchema = createInsertSchema(salonGallery).omit({
   createdAt: true,
 });
 
+// Salon facilities schemas
+export const insertSalonFacilitySchema = createInsertSchema(salonFacilities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Salon products schemas  
+export const insertSalonProductSchema = createInsertSchema(salonProducts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertCustomerReferralCampaignSchema = createInsertSchema(customerReferralCampaigns).omit({
   id: true,
   createdAt: true,
@@ -817,6 +859,10 @@ export type InsertSalonOwnerAccount = typeof salonOwnerAccounts.$inferInsert;
 export type RevenueShare = typeof revenueShares.$inferSelect;
 export type SalonGallery = typeof salonGallery.$inferSelect;
 export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;
+export type SalonFacility = typeof salonFacilities.$inferSelect;
+export type InsertSalonFacility = z.infer<typeof insertSalonFacilitySchema>;
+export type SalonProduct = typeof salonProducts.$inferSelect;
+export type InsertSalonProduct = z.infer<typeof insertSalonProductSchema>;
 export type PasswordResetOtp = typeof passwordResetOtps.$inferSelect;
 export type InsertPasswordResetOtp = z.infer<typeof insertPasswordResetOtpSchema>;
 
