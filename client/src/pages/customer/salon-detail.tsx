@@ -25,7 +25,7 @@ import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
 import { ReviewPhotoGallery } from "@/components/ReviewPhotoGallery";
 import { ReviewForm } from "./review-form";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
-import { ShopLocationMap } from "@/components/ShopLocationMap";
+import { CustomerSalonMap } from "@/components/CustomerSalonMap";
 
 const bookingSchema = z.object({
   serviceId: z.string().min(1, "Please select a service"),
@@ -458,11 +458,11 @@ export default function SalonDetail() {
                         {/* Location Map */}
                         {salon.latitude && salon.longitude && (
                           <div className="mt-4">
-                            <ShopLocationMap
-                              lat={Number(salon.latitude)}
-                              lng={Number(salon.longitude)}
+                            <CustomerSalonMap
+                              shopLat={Number(salon.latitude)}
+                              shopLng={Number(salon.longitude)}
                               shopName={salon.name}
-                              address={salon.address}
+                              shopAddress={salon.address}
                             />
                           </div>
                         )}

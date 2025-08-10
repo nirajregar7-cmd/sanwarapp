@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import { LocationPicker } from "@/components/LocationPicker";
+import { LeafletLocationPicker } from "@/components/LeafletLocationPicker";
 import type { UploadResult } from '@uppy/core';
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -88,6 +88,7 @@ export default function OwnerDashboard() {
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [salonLocation, setSalonLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [editMode, setEditMode] = useState(false);
 
   // Fetch user's salon
   const { data: salon, isLoading: salonLoading } = useQuery<Salon>({
@@ -1504,7 +1505,7 @@ export default function OwnerDashboard() {
                 <p className="text-sm text-muted-foreground">
                   Required: Help customers find your exact location by marking it on the map
                 </p>
-                <LocationPicker
+                <LeafletLocationPicker
                   initialLat={salon?.latitude ? Number(salon.latitude) : undefined}
                   initialLng={salon?.longitude ? Number(salon.longitude) : undefined}
                   onLocationSelect={(lat, lng) => {
@@ -1512,6 +1513,7 @@ export default function OwnerDashboard() {
                     salonForm.setValue('latitude', lat);
                     salonForm.setValue('longitude', lng);
                   }}
+                  disabled={!editMode}
                 />
               </div>
               
