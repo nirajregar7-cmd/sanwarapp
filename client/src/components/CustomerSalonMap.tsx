@@ -2,16 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Navigation, MapPin, ExternalLink, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix for default markers in Leaflet with Webpack
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
 
 interface CustomerSalonMapProps {
   shopLat: number;
@@ -29,11 +19,41 @@ export function CustomerSalonMap({
   showNavigationButton = true 
 }: CustomerSalonMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
+  const mapInstanceRef = useRef<any>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [distance, setDistance] = useState<string>('');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [leafletLoaded, setLeafletLoaded] = useState(false);
   const { toast } = useToast();
+
+  // Dynamically load Leaflet
+  useEffect(() => {
+    const loadLeaflet = async () => {
+      try {
+        const L = (await import('leaflet')).default;
+        await import('leaflet/dist/leaflet.css');
+
+        // Fix for default markers in Leaflet with Webpack
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        });
+
+        (window as any).L = L;
+        setLeafletLoaded(true);
+      } catch (error) {
+        console.error('Failed to load Leaflet:', error);
+      }
+    };
+
+    if (!(window as any).L) {
+      loadLeaflet();
+    } else {
+      setLeafletLoaded(true);
+    }
+  }, []);
 
   // Calculate distance between two coordinates (Haversine formula)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -50,67 +70,82 @@ export function CustomerSalonMap({
 
   // Initialize map
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    if (!leafletLoaded || !mapRef.current || mapInstanceRef.current) return;
 
-    const map = L.map(mapRef.current).setView([shopLat, shopLng], 15);
-    mapInstanceRef.current = map;
+    const L = (window as any).L;
+    if (!L) return;
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    try {
+      const map = L.map(mapRef.current).setView([shopLat, shopLng], 15);
+      mapInstanceRef.current = map;
 
-    // Add shop marker (red)
-    const shopIcon = L.divIcon({
-      className: 'shop-marker',
-      html: `
-        <div style="
-          width: 40px; 
-          height: 40px; 
-          background: #dc2626; 
-          border: 4px solid white; 
-          border-radius: 50% 50% 50% 0; 
-          transform: rotate(-45deg);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-        ">
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Add shop marker (red)
+      const shopIcon = L.divIcon({
+        className: 'shop-marker',
+        html: `
           <div style="
-            width: 12px; 
-            height: 12px; 
-            background: white; 
-            border-radius: 50%;
-            transform: rotate(45deg);
-          "></div>
+            width: 40px; 
+            height: 40px; 
+            background: #dc2626; 
+            border: 4px solid white; 
+            border-radius: 50% 50% 50% 0; 
+            transform: rotate(-45deg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+          ">
+            <div style="
+              width: 12px; 
+              height: 12px; 
+              background: white; 
+              border-radius: 50%;
+              transform: rotate(45deg);
+            "></div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+      });
+
+      const shopMarker = L.marker([shopLat, shopLng], { icon: shopIcon }).addTo(map);
+
+      // Add popup for shop
+      shopMarker.bindPopup(`
+        <div class="p-2">
+          <h3 class="font-semibold text-lg">${shopName}</h3>
+          <p class="text-sm text-gray-600 mb-2">${shopAddress}</p>
         </div>
-      `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-    });
+      `);
 
-    const shopMarker = L.marker([shopLat, shopLng], { icon: shopIcon }).addTo(map);
-
-    // Add popup for shop
-    shopMarker.bindPopup(`
-      <div class="p-2">
-        <h3 class="font-semibold text-lg">${shopName}</h3>
-        <p class="text-sm text-gray-600 mb-2">${shopAddress}</p>
-      </div>
-    `);
+    } catch (error) {
+      console.error('Error initializing customer map:', error);
+    }
 
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+        try {
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
+        } catch (error) {
+          console.error('Error cleaning up customer map:', error);
+        }
       }
     };
-  }, [shopLat, shopLng, shopName, shopAddress]);
+  }, [leafletLoaded, shopLat, shopLng, shopName, shopAddress]);
 
   // Add user location marker when available
   useEffect(() => {
-    if (!mapInstanceRef.current || !userLocation) return;
+    if (!leafletLoaded || !mapInstanceRef.current || !userLocation) return;
+
+    const L = (window as any).L;
+    if (!L) return;
 
     const userIcon = L.divIcon({
       className: 'user-location-marker',
@@ -155,7 +190,7 @@ export function CustomerSalonMap({
     ]);
     mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
 
-  }, [userLocation, shopLat, shopLng]);
+  }, [leafletLoaded, userLocation, shopLat, shopLng]);
 
   const getUserLocation = () => {
     if (!navigator.geolocation) {
@@ -222,6 +257,22 @@ export function CustomerSalonMap({
       window.open(`https://www.google.com/maps/dir/?api=1&destination=${shopLat},${shopLng}&travelmode=driving`, '_blank');
     }, 1000);
   };
+
+  if (!leafletLoaded) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Location</h3>
+        </div>
+        <div className="w-full h-64 rounded-lg border flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Loading map...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

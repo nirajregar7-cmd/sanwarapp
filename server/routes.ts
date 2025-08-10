@@ -1342,6 +1342,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phone: salonData.phone,
         address: salonData.address,
         imageUrl: salonData.imageUrl || null,
+        latitude: salonData.latitude ? salonData.latitude.toString() : null,
+        longitude: salonData.longitude ? salonData.longitude.toString() : null,
         confirmationAmount: salonData.confirmationAmount ? Number(salonData.confirmationAmount) : 0,
         ownerId: userId,
         isActive: true,
