@@ -10,7 +10,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandMessages } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount, createSalonFundAccount, processSalonPayout } from "./payment";
@@ -5379,17 +5379,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Salon not found or not connected to your brand" });
       }
 
-      // For now, we'll store this as a notification or similar mechanism
-      // In a real app, you'd have a messages table
-      console.log(`Message from Brand Owner ${brandOwnerId} to Salon ${salonId}: ${message}`);
+      // Store the message in the database
+      const [newMessage] = await db
+        .insert(brandMessages)
+        .values({
+          brandOwnerId,
+          salonId,
+          salonOwnerId: salon[0].ownerId,
+          message,
+          priority: 'medium'
+        })
+        .returning();
 
       res.json({
         message: "Message sent successfully",
-        timestamp: new Date().toISOString()
+        messageId: newMessage.id,
+        timestamp: newMessage.createdAt
       });
     } catch (error) {
       console.error("Error sending message:", error);
       res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Get messages for salon owner from brand owners
+  app.get("/api/owner/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const salonOwnerId = req.user?.id;
+      
+      // Verify user is a salon owner
+      const user = await db.select()
+        .from(users)
+        .where(and(eq(users.id, salonOwnerId), eq(users.userType, 'salon_owner')))
+        .limit(1);
+      
+      if (!user.length) {
+        return res.status(403).json({ message: "Access denied. Only salon owners can view messages." });
+      }
+
+      // Get salon owner's salon
+      const salon = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, salonOwnerId))
+        .limit(1);
+
+      if (!salon.length) {
+        return res.json([]);
+      }
+
+      // Fetch messages for this salon
+      const messages = await db.select({
+        id: brandMessages.id,
+        message: brandMessages.message,
+        isRead: brandMessages.isRead,
+        priority: brandMessages.priority,
+        createdAt: brandMessages.createdAt,
+        brandOwnerName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`.as('brandOwnerName'),
+        brandOwnerEmail: users.email,
+        salonName: salons.name
+      })
+      .from(brandMessages)
+      .innerJoin(users, eq(brandMessages.brandOwnerId, users.id))
+      .innerJoin(salons, eq(brandMessages.salonId, salons.id))
+      .where(eq(brandMessages.salonOwnerId, salonOwnerId))
+      .orderBy(desc(brandMessages.createdAt));
+
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching salon owner messages:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Mark message as read
+  app.put("/api/owner/messages/:messageId/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const salonOwnerId = req.user?.id;
+      const messageId = req.params.messageId;
+
+      // Update message as read only if it belongs to this salon owner
+      const [updatedMessage] = await db
+        .update(brandMessages)
+        .set({ isRead: true, updatedAt: new Date() })
+        .where(and(
+          eq(brandMessages.id, messageId),
+          eq(brandMessages.salonOwnerId, salonOwnerId)
+        ))
+        .returning();
+
+      if (!updatedMessage) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+
+      res.json({ message: "Message marked as read", messageId: updatedMessage.id });
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      res.status(500).json({ message: "Failed to mark message as read" });
     }
   });
 

@@ -14,7 +14,7 @@ import {
   Store, Users, Calendar, IndianRupee, Clock, Star, Plus, 
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
-  CreditCard, Camera, User
+  CreditCard, Camera, User, MessageSquare, AlertCircle
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -123,6 +123,12 @@ export default function OwnerDashboard() {
     enabled: isAuthenticated && !!user?.id,
   });
 
+  // Fetch brand messages
+  const { data: brandMessages = [], isLoading: messagesLoading } = useQuery<any[]>({
+    queryKey: ['/api/owner/messages'],
+    enabled: isAuthenticated && !!salon?.id,
+  });
+
   const brandInvitations = brandInvitationsData?.received || [];
 
   const salonForm = useForm<SalonFormData>({
@@ -179,6 +185,20 @@ export default function OwnerDashboard() {
         description: error.message,
         variant: "destructive",
       });
+    },
+  });
+
+  // Mark message as read mutation
+  const markMessageAsReadMutation = useMutation({
+    mutationFn: async (messageId: string) => {
+      const response = await apiRequest("PUT", `/api/owner/messages/${messageId}/read`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/owner/messages'] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to mark message as read", description: error.message, variant: "destructive" });
     },
   });
 
@@ -601,22 +621,40 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="staff" className="text-xs py-3">Staff</TabsTrigger>
                   <TabsTrigger value="gallery" className="text-xs py-3">Gallery</TabsTrigger>
                 </TabsList>
-                <TabsList className="grid w-full grid-cols-3 gap-1 h-auto p-1 mt-1">
+                <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="timeslots" className="text-xs py-3">Slots</TabsTrigger>
                   <TabsTrigger value="bookings" className="text-xs py-3">Bookings</TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
+                  <TabsTrigger value="messages" className="text-xs py-3 relative">
+                    Messages
+                    {brandMessages.filter(msg => !msg.isRead).length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {brandMessages.filter(msg => !msg.isRead).length}
+                      </span>
+                    )}
+                  </TabsTrigger>
                   <TabsTrigger value="settings" className="text-xs py-3">Settings</TabsTrigger>
                 </TabsList>
               </div>
               
               {/* Desktop Tab Navigation */}
               <div className="hidden sm:block">
-                <TabsList className="grid w-full grid-cols-7 gap-1">
+                <TabsList className="grid w-full grid-cols-8 gap-1">
                   <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
                   <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
                   <TabsTrigger value="staff" className="text-sm">Staff</TabsTrigger>
                   <TabsTrigger value="gallery" className="text-sm">Gallery</TabsTrigger>
                   <TabsTrigger value="timeslots" className="text-sm">Slots</TabsTrigger>
                   <TabsTrigger value="bookings" className="text-sm">Bookings</TabsTrigger>
+                  <TabsTrigger value="messages" className="text-sm relative">
+                    Messages
+                    {brandMessages.filter(msg => !msg.isRead).length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {brandMessages.filter(msg => !msg.isRead).length}
+                      </span>
+                    )}
+                  </TabsTrigger>
                   <TabsTrigger value="settings" className="text-sm">Settings</TabsTrigger>
                 </TabsList>
               </div>
@@ -1467,6 +1505,79 @@ export default function OwnerDashboard() {
                       <span>View Reports</span>
                     </Button>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="messages" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <MessageSquare className="h-5 w-5 mr-2" />
+                    Brand Messages
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Messages from your brand owner
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {messagesLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : brandMessages.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">No messages yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {brandMessages.map((message: any) => (
+                        <div 
+                          key={message.id} 
+                          className={`border rounded-lg p-4 transition-colors ${
+                            !message.isRead ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                <User className="h-4 w-4 text-purple-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">Brand Owner</p>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(message.createdAt).toLocaleDateString()} at {' '}
+                                  {new Date(message.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              {message.priority === 'high' && (
+                                <AlertCircle className="h-4 w-4 text-red-500" />
+                              )}
+                              {message.priority === 'medium' && (
+                                <Clock className="h-4 w-4 text-yellow-500" />
+                              )}
+                              {!message.isRead && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => markMessageAsReadMutation.mutate(message.id)}
+                                  disabled={markMessageAsReadMutation.isPending}
+                                >
+                                  Mark as Read
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="ml-10">
+                            <p className="text-gray-700 leading-relaxed">{message.message}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

@@ -1098,12 +1098,26 @@ export const brandInvitations = pgTable("brand_invitations", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Brand messages table for communication between brand owners and salon owners
+export const brandMessages = pgTable("brand_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brandOwnerId: varchar("brand_owner_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  salonOwnerId: varchar("salon_owner_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  priority: varchar("priority", { enum: ["low", "medium", "high"] }).default("medium"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Zod schemas for new admin tables
 export const insertVerificationDocumentSchema = createInsertSchema(verificationDocuments);
 export const insertAdminActivityLogSchema = createInsertSchema(adminActivityLogs);
 export const insertContentModerationSchema = createInsertSchema(contentModerations);
 export const insertPlatformAnalyticsSchema = createInsertSchema(platformAnalytics);
 export const insertBrandInvitationSchema = createInsertSchema(brandInvitations);
+export const insertBrandMessageSchema = createInsertSchema(brandMessages).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Type exports for admin tables
 export type InsertVerificationDocument = z.infer<typeof insertVerificationDocumentSchema>;
@@ -1120,3 +1134,6 @@ export type PlatformAnalytics = typeof platformAnalytics.$inferSelect;
 
 export type InsertBrandInvitation = z.infer<typeof insertBrandInvitationSchema>;
 export type BrandInvitation = typeof brandInvitations.$inferSelect;
+
+export type InsertBrandMessage = z.infer<typeof insertBrandMessageSchema>;
+export type BrandMessage = typeof brandMessages.$inferSelect;
