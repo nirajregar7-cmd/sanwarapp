@@ -10,7 +10,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount, createSalonFundAccount, processSalonPayout } from "./payment";
@@ -1280,7 +1280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Update verification fields based on result
         verificationStatus: verificationResult.verified ? 'verified' as const : 
                            verificationResult.success ? 'failed' as const : 'pending' as const,
-        verificationMessage: verificationResult.message || verificationResult.error || null,
+        verificationMessage: verificationResult.message || null,
         verifiedAccountHolderName: verificationResult.accountHolderName || null,
         verifiedAt: verificationResult.verified ? new Date() : null,
         verificationAttempts: (existingAccount?.verificationAttempts || 0) + 1,
@@ -1309,7 +1309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         verificationResult: {
           success: verificationResult.success,
           verified: verificationResult.verified,
-          message: verificationResult.message || verificationResult.error
+          message: verificationResult.message || "Verification completed"
         }
       });
     } catch (error) {
@@ -2667,7 +2667,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bookingData = insertBookingSchema.parse({ ...req.body, customerId: userId });
       
       // Mark the time slot as unavailable
-      await storage.updateTimeSlotAvailability(bookingData.timeSlotId, false);
+      await storage.updateTimeSlotAvailability(bookingData.timeSlotId || "", false);
       
       const booking = await storage.createBooking(bookingData);
       res.json(booking);
