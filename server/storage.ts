@@ -22,6 +22,9 @@ import {
   platformAnalytics,
   revenueShares,
   passwordResetOtps,
+  emergencyBookingWaitlist,
+  salonEmergencyConfig,
+  emergencySlots,
   type User,
   type UpsertUser,
   type Salon,
@@ -65,6 +68,12 @@ import {
   type InsertPlatformAnalytics,
   type PasswordResetOtp,
   type InsertPasswordResetOtp,
+  type EmergencyWaitlist,
+  type InsertEmergencyWaitlist,
+  type SalonEmergencyConfig,
+  type InsertSalonEmergencyConfig,
+  type EmergencySlot,
+  type InsertEmergencySlot,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, asc, or, isNull, sql } from "drizzle-orm";
@@ -185,6 +194,23 @@ export interface IStorage {
   getValidPasswordResetOtp(phone: string, otp: string): Promise<PasswordResetOtp | undefined>;
   markPasswordResetOtpUsed(id: string): Promise<void>;
   updateUserPassword(email: string, hashedPassword: string): Promise<User | undefined>;
+
+  // Emergency booking operations
+  createEmergencyWaitlist(waitlist: InsertEmergencyWaitlist): Promise<EmergencyWaitlist>;
+  getEmergencyWaitlistBySalon(salonId: string): Promise<EmergencyWaitlist[]>;
+  getEmergencyWaitlistByCustomer(customerId: string): Promise<EmergencyWaitlist[]>;
+  updateEmergencyWaitlistStatus(id: string, status: string, assignedSlotId?: string, assignedBookingId?: string): Promise<void>;
+  getActiveEmergencyBookings(salonId: string, date: string): Promise<number>;
+
+  // Salon emergency configuration
+  getSalonEmergencyConfig(salonId: string): Promise<SalonEmergencyConfig | undefined>;
+  upsertSalonEmergencyConfig(config: InsertSalonEmergencyConfig): Promise<SalonEmergencyConfig>;
+
+  // Emergency slots operations
+  createEmergencySlot(slot: InsertEmergencySlot): Promise<EmergencySlot>;
+  getAvailableEmergencySlots(salonId: string, date: string): Promise<EmergencySlot[]>;
+  bookEmergencySlot(slotId: string, bookingId: string): Promise<void>;
+  getEmergencySlotsBySalon(salonId: string): Promise<EmergencySlot[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1355,6 +1381,100 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.email, email))
       .returning();
     return user;
+  }
+
+  // Emergency booking operations
+  async createEmergencyWaitlist(waitlist: InsertEmergencyWaitlist): Promise<EmergencyWaitlist> {
+    const [emergencyWaitlist] = await db.insert(emergencyBookingWaitlist).values(waitlist).returning();
+    return emergencyWaitlist;
+  }
+
+  async getEmergencyWaitlistBySalon(salonId: string): Promise<EmergencyWaitlist[]> {
+    return await db.select().from(emergencyBookingWaitlist)
+      .where(eq(emergencyBookingWaitlist.salonId, salonId))
+      .orderBy(desc(emergencyBookingWaitlist.createdAt));
+  }
+
+  async getEmergencyWaitlistByCustomer(customerId: string): Promise<EmergencyWaitlist[]> {
+    return await db.select().from(emergencyBookingWaitlist)
+      .where(eq(emergencyBookingWaitlist.customerId, customerId))
+      .orderBy(desc(emergencyBookingWaitlist.createdAt));
+  }
+
+  async updateEmergencyWaitlistStatus(id: string, status: string, assignedSlotId?: string, assignedBookingId?: string): Promise<void> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (assignedSlotId) updateData.assignedSlotId = assignedSlotId;
+    if (assignedBookingId) updateData.assignedBookingId = assignedBookingId;
+    if (status === 'confirmed') updateData.confirmedAt = new Date();
+
+    await db.update(emergencyBookingWaitlist)
+      .set(updateData)
+      .where(eq(emergencyBookingWaitlist.id, id));
+  }
+
+  async getActiveEmergencyBookings(salonId: string, date: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(emergencyBookingWaitlist)
+      .where(
+        and(
+          eq(emergencyBookingWaitlist.salonId, salonId),
+          eq(emergencyBookingWaitlist.preferredDate, date),
+          eq(emergencyBookingWaitlist.status, 'confirmed')
+        )
+      );
+    return result[0]?.count || 0;
+  }
+
+  // Salon emergency configuration
+  async getSalonEmergencyConfig(salonId: string): Promise<SalonEmergencyConfig | undefined> {
+    const [config] = await db.select().from(salonEmergencyConfig)
+      .where(eq(salonEmergencyConfig.salonId, salonId));
+    return config;
+  }
+
+  async upsertSalonEmergencyConfig(config: InsertSalonEmergencyConfig): Promise<SalonEmergencyConfig> {
+    const [emergencyConfig] = await db
+      .insert(salonEmergencyConfig)
+      .values(config)
+      .onConflictDoUpdate({
+        target: salonEmergencyConfig.salonId,
+        set: {
+          ...config,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return emergencyConfig;
+  }
+
+  // Emergency slots operations
+  async createEmergencySlot(slot: InsertEmergencySlot): Promise<EmergencySlot> {
+    const [emergencySlot] = await db.insert(emergencySlots).values(slot).returning();
+    return emergencySlot;
+  }
+
+  async getAvailableEmergencySlots(salonId: string, date: string): Promise<EmergencySlot[]> {
+    return await db.select().from(emergencySlots)
+      .where(
+        and(
+          eq(emergencySlots.salonId, salonId),
+          eq(emergencySlots.date, date),
+          eq(emergencySlots.isBooked, false)
+        )
+      )
+      .orderBy(asc(emergencySlots.startTime));
+  }
+
+  async bookEmergencySlot(slotId: string, bookingId: string): Promise<void> {
+    await db.update(emergencySlots)
+      .set({ isBooked: true, bookingId })
+      .where(eq(emergencySlots.id, slotId));
+  }
+
+  async getEmergencySlotsBySalon(salonId: string): Promise<EmergencySlot[]> {
+    return await db.select().from(emergencySlots)
+      .where(eq(emergencySlots.salonId, salonId))
+      .orderBy(desc(emergencySlots.createdAt));
   }
 }
 

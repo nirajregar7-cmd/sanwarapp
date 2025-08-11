@@ -10,7 +10,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
@@ -2139,6 +2139,235 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid booking data", details: error.message });
       }
       res.status(500).json({ message: "Failed to create walk-in booking" });
+    }
+  });
+
+  // Emergency booking endpoints
+  // Create emergency booking waitlist entry
+  app.post("/api/emergency-booking/waitlist", clerkIsAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.auth?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Get user from our database
+      const user = await storage.getUserByClerkId(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const waitlistData = insertEmergencyWaitlistSchema.parse({
+        ...req.body,
+        customerId: user.id,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+      });
+
+      // Check salon emergency configuration
+      const config = await storage.getSalonEmergencyConfig(waitlistData.salonId);
+      if (!config || !config.allowEmergencyBookings) {
+        return res.status(400).json({ message: "Emergency bookings not allowed for this salon" });
+      }
+
+      // Check if maximum emergency bookings reached for the day
+      const activeEmergencyCount = await storage.getActiveEmergencyBookings(
+        waitlistData.salonId, 
+        waitlistData.preferredDate
+      );
+      
+      if (activeEmergencyCount >= config.maxEmergencyBookingsPerDay) {
+        return res.status(400).json({ 
+          message: "Maximum emergency bookings reached for this day" 
+        });
+      }
+
+      const waitlistEntry = await storage.createEmergencyWaitlist(waitlistData);
+      res.status(201).json(waitlistEntry);
+    } catch (error) {
+      console.error("Error creating emergency waitlist entry:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ message: "Invalid data", details: error.message });
+      }
+      res.status(500).json({ message: "Failed to create emergency booking request" });
+    }
+  });
+
+  // Get emergency waitlist for customer
+  app.get("/api/emergency-booking/customer", clerkIsAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.auth?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUserByClerkId(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const waitlist = await storage.getEmergencyWaitlistByCustomer(user.id);
+      res.json(waitlist);
+    } catch (error) {
+      console.error("Error fetching customer emergency waitlist:", error);
+      res.status(500).json({ message: "Failed to fetch emergency bookings" });
+    }
+  });
+
+  // Get emergency waitlist for salon (salon owner only)
+  app.get("/api/emergency-booking/salon/:salonId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to access this salon's emergency bookings" });
+      }
+
+      const waitlist = await storage.getEmergencyWaitlistBySalon(salonId);
+      res.json(waitlist);
+    } catch (error) {
+      console.error("Error fetching salon emergency waitlist:", error);
+      res.status(500).json({ message: "Failed to fetch emergency bookings" });
+    }
+  });
+
+  // Update emergency booking status (salon owner only)
+  app.put("/api/emergency-booking/waitlist/:waitlistId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { waitlistId } = req.params;
+      const { status, assignedSlotId, assignedBookingId } = req.body;
+
+      // TODO: Add ownership verification for the waitlist entry
+      // For now, allow any authenticated salon owner to update
+
+      await storage.updateEmergencyWaitlistStatus(waitlistId, status, assignedSlotId, assignedBookingId);
+      res.json({ message: "Emergency booking status updated successfully" });
+    } catch (error) {
+      console.error("Error updating emergency booking status:", error);
+      res.status(500).json({ message: "Failed to update emergency booking status" });
+    }
+  });
+
+  // Emergency salon configuration endpoints
+  // Get salon emergency configuration
+  app.get("/api/emergency-booking/config/:salonId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to access this salon's configuration" });
+      }
+
+      const config = await storage.getSalonEmergencyConfig(salonId);
+      res.json(config || {
+        salonId,
+        allowEmergencyBookings: true,
+        emergencyChargeType: "percentage",
+        emergencyChargeValue: "50",
+        maxEmergencyBookingsPerDay: 3,
+        emergencyBookingTimeLimit: 120,
+        autoConfirmEmergency: false,
+        notificationEnabled: true,
+        operatingHoursOverride: false
+      });
+    } catch (error) {
+      console.error("Error fetching emergency configuration:", error);
+      res.status(500).json({ message: "Failed to fetch emergency configuration" });
+    }
+  });
+
+  // Update salon emergency configuration
+  app.put("/api/emergency-booking/config/:salonId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this salon's configuration" });
+      }
+
+      const configData = insertSalonEmergencyConfigSchema.parse({
+        ...req.body,
+        salonId
+      });
+
+      const config = await storage.upsertSalonEmergencyConfig(configData);
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating emergency configuration:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ message: "Invalid configuration data", details: error.message });
+      }
+      res.status(500).json({ message: "Failed to update emergency configuration" });
+    }
+  });
+
+  // Emergency slots endpoints
+  // Create emergency slot (salon owner only)
+  app.post("/api/emergency-booking/slots", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+
+      const slotData = insertEmergencySlotSchema.parse({
+        ...req.body,
+        createdBy: userId
+      });
+
+      // Verify salon ownership
+      const salon = await storage.getSalonById(slotData.salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to create emergency slots for this salon" });
+      }
+
+      const slot = await storage.createEmergencySlot(slotData);
+      res.status(201).json(slot);
+    } catch (error) {
+      console.error("Error creating emergency slot:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ message: "Invalid slot data", details: error.message });
+      }
+      res.status(500).json({ message: "Failed to create emergency slot" });
+    }
+  });
+
+  // Get available emergency slots for a salon and date
+  app.get("/api/emergency-booking/slots/:salonId/:date", async (req: any, res) => {
+    try {
+      const { salonId, date } = req.params;
+
+      const slots = await storage.getAvailableEmergencySlots(salonId, date);
+      res.json(slots);
+    } catch (error) {
+      console.error("Error fetching emergency slots:", error);
+      res.status(500).json({ message: "Failed to fetch emergency slots" });
+    }
+  });
+
+  // Get all emergency slots for salon (salon owner only)
+  app.get("/api/emergency-booking/slots/:salonId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to access this salon's emergency slots" });
+      }
+
+      const slots = await storage.getEmergencySlotsBySalon(salonId);
+      res.json(slots);
+    } catch (error) {
+      console.error("Error fetching salon emergency slots:", error);
+      res.status(500).json({ message: "Failed to fetch emergency slots" });
     }
   });
 

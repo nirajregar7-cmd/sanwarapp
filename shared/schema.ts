@@ -143,6 +143,12 @@ export const bookings = pgTable("bookings", {
   walkInCustomerName: varchar("walk_in_customer_name"), // For walk-ins without user accounts
   walkInCustomerPhone: varchar("walk_in_customer_phone"), // For walk-ins without user accounts
   notes: text("notes"), // General notes for any booking type
+  // Emergency booking fields
+  isEmergencyBooking: boolean("is_emergency_booking").default(false),
+  emergencyChargeAmount: decimal("emergency_charge_amount", { precision: 10, scale: 2 }).default("0"),
+  emergencyReason: text("emergency_reason"),
+  emergencyApprovedBy: varchar("emergency_approved_by").references(() => users.id),
+  emergencyApprovedAt: timestamp("emergency_approved_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -505,6 +511,61 @@ export const offerUsages = pgTable("offer_usages", {
   originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
   finalAmount: decimal("final_amount", { precision: 10, scale: 2 }).notNull(),
   usedAt: timestamp("used_at").defaultNow(),
+});
+
+// Emergency booking waitlist table for managing instant bookings when slots are full
+export const emergencyBookingWaitlist = pgTable("emergency_booking_waitlist", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  serviceId: varchar("service_id").references(() => services.id, { onDelete: "cascade" }).notNull(),
+  preferredDate: varchar("preferred_date", { length: 10 }).notNull(), // YYYY-MM-DD format
+  preferredStartTime: varchar("preferred_start_time", { length: 5 }), // HH:MM format (optional)
+  preferredEndTime: varchar("preferred_end_time", { length: 5 }), // HH:MM format (optional)
+  emergencyReason: text("emergency_reason"),
+  maxEmergencyCharge: decimal("max_emergency_charge", { precision: 10, scale: 2 }).notNull(), // Maximum extra they're willing to pay
+  customerPhone: varchar("customer_phone", { length: 20 }), // For urgent contact
+  notificationPreference: varchar("notification_preference", { enum: ["sms", "call", "app"] }).default("app"),
+  status: varchar("status", { enum: ["pending", "confirmed", "expired", "cancelled"] }).default("pending"),
+  assignedSlotId: varchar("assigned_slot_id").references(() => timeSlots.id),
+  assignedBookingId: varchar("assigned_booking_id").references(() => bookings.id),
+  confirmedAt: timestamp("confirmed_at"),
+  expiresAt: timestamp("expires_at").notNull(), // Auto-expire after X hours
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Emergency booking configuration per salon
+export const salonEmergencyConfig = pgTable("salon_emergency_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull().unique(),
+  allowEmergencyBookings: boolean("allow_emergency_bookings").default(true),
+  emergencyChargeType: varchar("emergency_charge_type", { enum: ["percentage", "fixed_amount"] }).default("percentage"),
+  emergencyChargeValue: decimal("emergency_charge_value", { precision: 10, scale: 2 }).default("50"), // 50% extra or fixed amount
+  maxEmergencyBookingsPerDay: integer("max_emergency_bookings_per_day").default(3),
+  emergencyBookingTimeLimit: integer("emergency_booking_time_limit").default(120), // minutes before appointment
+  autoConfirmEmergency: boolean("auto_confirm_emergency").default(false), // Auto-confirm or require salon approval
+  emergencyContactNumber: varchar("emergency_contact_number", { length: 20 }),
+  notificationEnabled: boolean("notification_enabled").default(true),
+  operatingHoursOverride: boolean("operating_hours_override").default(false), // Allow bookings outside normal hours
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Emergency slots table for creating additional slots when needed
+export const emergencySlots = pgTable("emergency_slots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
+  startTime: varchar("start_time", { length: 5 }).notNull(), // HH:MM format
+  endTime: varchar("end_time", { length: 5 }).notNull(), // HH:MM format
+  extraCharge: decimal("extra_charge", { precision: 10, scale: 2 }).notNull(),
+  reason: varchar("reason", { enum: ["emergency_demand", "staff_overtime", "special_request"] }).notNull(),
+  staffId: varchar("staff_id").references(() => staff.id),
+  isBooked: boolean("is_booked").default(false),
+  bookingId: varchar("booking_id").references(() => bookings.id),
+  createdBy: varchar("created_by").references(() => users.id).notNull(), // Salon owner who created it
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Relations
@@ -917,6 +978,29 @@ export const insertOfferUsageSchema = createInsertSchema(offerUsages).omit({
   usedAt: true,
 });
 
+// Emergency booking insert schemas
+export const insertEmergencyWaitlistSchema = createInsertSchema(emergencyBookingWaitlist).omit({
+  id: true,
+  assignedSlotId: true,
+  assignedBookingId: true,
+  confirmedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSalonEmergencyConfigSchema = createInsertSchema(salonEmergencyConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEmergencySlotSchema = createInsertSchema(emergencySlots).omit({
+  id: true,
+  isBooked: true,
+  bookingId: true,
+  createdAt: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -1003,6 +1087,14 @@ export type BrandOffer = typeof brandOffers.$inferSelect;
 export type InsertBrandOffer = z.infer<typeof insertBrandOfferSchema>;
 export type OfferUsage = typeof offerUsages.$inferSelect;
 export type InsertOfferUsage = z.infer<typeof insertOfferUsageSchema>;
+
+// Emergency booking types
+export type EmergencyWaitlist = typeof emergencyBookingWaitlist.$inferSelect;
+export type InsertEmergencyWaitlist = z.infer<typeof insertEmergencyWaitlistSchema>;
+export type SalonEmergencyConfig = typeof salonEmergencyConfig.$inferSelect;
+export type InsertSalonEmergencyConfig = z.infer<typeof insertSalonEmergencyConfigSchema>;
+export type EmergencySlot = typeof emergencySlots.$inferSelect;
+export type InsertEmergencySlot = z.infer<typeof insertEmergencySlotSchema>;
 
 // Mood rating utility types and functions
 export type MoodRating = "very_happy" | "happy" | "neutral" | "sad" | "very_sad";

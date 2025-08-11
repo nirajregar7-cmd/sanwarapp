@@ -26,6 +26,7 @@ import { ReviewPhotoGallery } from "@/components/ReviewPhotoGallery";
 import { ReviewForm } from "./review-form";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { CustomerSalonMap } from "@/components/CustomerSalonMap";
+import { EmergencyBookingBanner } from "@/components/EmergencyBookingBanner";
 
 const bookingSchema = z.object({
   serviceId: z.string().min(1, "Please select a service"),
@@ -903,6 +904,16 @@ export default function SalonDetail() {
                             />
                           )}
 
+                          {/* Emergency Booking Banner */}
+                          {selectedService && selectedDate && (
+                            <EmergencyBookingBanner
+                              salon={salon}
+                              service={services.find(s => s.id === selectedService)}
+                              selectedDate={selectedDate.toISOString().split('T')[0]}
+                              hasAvailableSlots={timeSlots?.some((slot: TimeSlot) => slot.isAvailable) || false}
+                            />
+                          )}
+
                           {/* Referral Code Input */}
                           <ReferralCodeInput
                             onCodeApplied={setAppliedReferralCode}
@@ -1024,7 +1035,7 @@ export default function SalonDetail() {
             </Card>
 
             {/* Facilities */}
-            {facilities && facilities.length > 0 && (
+            {Array.isArray(facilities) && facilities.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -1071,7 +1082,7 @@ export default function SalonDetail() {
             )}
 
             {/* Products */}
-            {products && products.length > 0 && (
+            {Array.isArray(products) && products.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
