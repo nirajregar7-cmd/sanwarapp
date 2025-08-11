@@ -12,6 +12,7 @@ import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
 import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
+import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount, createSalonFundAccount, processSalonPayout } from "./payment";
 import { calculateRevenueShare } from "@shared/revenue";
@@ -5831,6 +5832,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching offer analytics:", error);
       res.status(500).json({ message: "Failed to fetch offer analytics" });
+    }
+  });
+
+  // Initialize email service on startup
+  testEmailConnection();
+
+  // Test email endpoint (development only)
+  app.post('/api/test/welcome-email', async (req, res) => {
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ message: 'Test endpoints not available in production' });
+      }
+
+      const { email, firstName, userType } = req.body;
+      
+      if (!email || !firstName || !userType) {
+        return res.status(400).json({ message: 'Email, firstName, and userType are required' });
+      }
+
+      const success = await sendWelcomeEmail(email, firstName, userType);
+      
+      if (success) {
+        res.json({ message: 'Test welcome email sent successfully' });
+      } else {
+        res.status(500).json({ message: 'Failed to send test email' });
+      }
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      res.status(500).json({ message: 'Failed to send test email' });
     }
   });
 

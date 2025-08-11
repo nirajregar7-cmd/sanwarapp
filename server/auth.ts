@@ -11,6 +11,7 @@ import { eq, sql, and } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 import { setupSocialAuth } from "./socialAuth";
+import { sendWelcomeEmail } from "./welcomeEmail";
 
 declare global {
   namespace Express {
@@ -242,6 +243,10 @@ export function setupAuth(app: Express) {
         await processReferralRewards(referralRecord, user);
         console.log(`✅ Referral processed: ${referralRecord.referralType} for user ${user.firstName}`);
       }
+
+      // Send welcome email (async, don't block registration)
+      sendWelcomeEmail(user.email, user.firstName, user.userType as 'customer' | 'salon_owner' | 'brand_owner')
+        .catch(error => console.error('Failed to send welcome email:', error));
 
       // Log in the user
       req.login(user, (err) => {

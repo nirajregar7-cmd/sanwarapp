@@ -36,6 +36,12 @@ export function setupSocialAuth(app: Express) {
           socialProvider: 'google',
           socialId: profile.id
         });
+
+        // Send welcome email (async, don't block login)
+        import('./welcomeEmail').then(({ sendWelcomeEmail }) => {
+          sendWelcomeEmail(newUser.email, newUser.firstName, newUser.userType as 'customer' | 'salon_owner' | 'brand_owner')
+            .catch(error => console.error('Failed to send welcome email (Google OAuth):', error));
+        });
         
         return done(null, newUser);
       } catch (error) {
@@ -75,6 +81,12 @@ export function setupSocialAuth(app: Express) {
           isSocialAuth: true,
           socialProvider: 'facebook',
           socialId: profile.id
+        });
+
+        // Send welcome email (async, don't block login)
+        import('./welcomeEmail').then(({ sendWelcomeEmail }) => {
+          sendWelcomeEmail(newUser.email, newUser.firstName, newUser.userType as 'customer' | 'salon_owner' | 'brand_owner')
+            .catch(error => console.error('Failed to send welcome email (Facebook OAuth):', error));
         });
         
         return done(null, newUser);
