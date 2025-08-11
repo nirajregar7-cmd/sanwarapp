@@ -46,7 +46,10 @@ export const users = pgTable("users", {
   clerkId: varchar("clerk_id").unique(),
   // Brand owner fields
   brandName: varchar("brand_name"),
+  brandDescription: text("brand_description"),
   isBrandOwner: boolean("is_brand_owner").default(false),
+  isActive: boolean("is_active").default(true),
+  isVerified: boolean("is_verified").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -129,6 +132,8 @@ export const bookings = pgTable("bookings", {
   startTime: varchar("start_time", { length: 5 }).notNull(), // HH:MM format
   endTime: varchar("end_time", { length: 5 }).notNull(), // HH:MM format
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  confirmationAmount: decimal("confirmation_amount", { precision: 10, scale: 2 }).default("0"),
+  referralCode: varchar("referral_code", { length: 50 }),
   status: varchar("status", { enum: ["pending", "confirmed", "completed", "cancelled"] }).default("pending"),
   paymentId: varchar("payment_id"),
   paymentStatus: varchar("payment_status", { enum: ["pending", "completed", "failed"] }).default("pending"),

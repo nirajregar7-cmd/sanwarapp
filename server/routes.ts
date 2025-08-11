@@ -10,7 +10,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandMessages } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount, createSalonFundAccount, processSalonPayout } from "./payment";
@@ -1156,7 +1156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Add regular referral reward to customer wallet
               await storage.addWalletCredit(
                 userId,
-                parseFloat(referralRecord.rewardAmount.toString()),
+                parseFloat((referralRecord.rewardAmount || "0").toString()),
                 "Referral reward for completing first booking",
                 referralRecord.id,
                 "referral"
@@ -1447,9 +1447,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let fundAccountId = share.fundAccountId;
           if (!fundAccountId) {
             const fundAccountResult = await createSalonFundAccount(share.salonId, {
-              accountNumber: share.accountNumber,
-              ifscCode: share.ifscCode,
-              accountHolderName: share.accountHolderName
+              accountNumber: share.accountNumber || "",
+              ifscCode: share.ifscCode || "",
+              accountHolderName: share.accountHolderName || ""
             });
             
             if (fundAccountResult.success && fundAccountResult.fundAccountId) {
@@ -2128,7 +2128,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const booking = await storage.createWalkInBooking({
         ...walkInBookingData,
         isWalkIn: true,
-        createdAt: new Date(),
       });
 
       console.log("Walk-in booking created:", booking.id);

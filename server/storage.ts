@@ -9,6 +9,7 @@ import {
   reviews,
   salonGallery,
   salonLikes,
+  salonOwnerAccounts,
   referrals,
   referralMilestones,
   customerReferralCampaigns,
@@ -231,6 +232,16 @@ export class DatabaseStorage implements IStorage {
       profileImageUrl: userData.profileImageUrl,
       userType: userData.userType,
       role: 'user',
+      password: null,
+      isSocialAuth: false,
+      isBlocked: false,
+      socialProvider: null,
+      socialId: null,
+      brandName: null,
+      brandDescription: null,
+      isBrandOwner: false,
+      isActive: true,
+      isVerified: false,
     }).returning();
     return user;
   }
@@ -274,17 +285,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSalonById(id: string): Promise<Salon | undefined> {
-    const [salonWithLikes] = await db
-      .select({
-        ...salons,
-        likesCount: sql<number>`COALESCE(COUNT(${salonLikes.id}), 0)::int`
-      })
+    const [salon] = await db
+      .select()
       .from(salons)
-      .leftJoin(salonLikes, and(eq(salons.id, salonLikes.salonId), eq(salonLikes.isLiked, true)))
-      .where(eq(salons.id, id))
-      .groupBy(salons.id);
+      .where(eq(salons.id, id));
     
-    return salonWithLikes as any;
+    return salon;
   }
 
   async getSalonsByOwner(ownerId: string): Promise<Salon[]> {
@@ -292,18 +298,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllSalons(): Promise<Salon[]> {
-    const salonsWithLikes = await db
-      .select({
-        ...salons,
-        likesCount: sql<number>`COALESCE(COUNT(${salonLikes.id}), 0)::int`
-      })
+    const salonsData = await db
+      .select()
       .from(salons)
-      .leftJoin(salonLikes, and(eq(salons.id, salonLikes.salonId), eq(salonLikes.isLiked, true)))
       .where(eq(salons.isActive, true))
-      .groupBy(salons.id)
       .orderBy(desc(salons.averageRating));
     
-    return salonsWithLikes as any[];
+    return salonsData;
   }
 
   async updateSalon(id: string, salonData: Partial<InsertSalon>): Promise<Salon | undefined> {
@@ -597,7 +598,7 @@ export class DatabaseStorage implements IStorage {
     const walkInBookingData = {
       ...booking,
       status: "confirmed" as const,
-      paymentStatus: booking.walkInPaymentMethod === "online" ? "pending" : "completed" as const,
+      paymentStatus: (booking.walkInPaymentMethod === "online" ? "pending" : "completed") as "pending" | "completed",
       // Leave customerId and timeSlotId null for walk-ins
       customerId: null,
       timeSlotId: null,
@@ -896,7 +897,7 @@ export class DatabaseStorage implements IStorage {
 
   async addWalletCredit(customerId: string, amount: number, description: string, referenceId: string, referenceType: string): Promise<void> {
     const wallet = await this.getOrCreateWallet(customerId);
-    const newBalance = parseFloat(wallet.balance) + amount;
+    const newBalance = parseFloat(wallet.balance || "0") + amount;
 
     // Update wallet balance
     await db.update(wallets).set({
@@ -944,7 +945,7 @@ export class DatabaseStorage implements IStorage {
   async getSalonLikeStatus(customerId: string, salonId: string): Promise<boolean> {
     const [like] = await db.select().from(salonLikes)
       .where(and(eq(salonLikes.customerId, customerId), eq(salonLikes.salonId, salonId)));
-    return !!like && like.isLiked;
+    return !!like && (like.isLiked || false);
   }
 
   async getSalonLikesCount(salonId: string): Promise<number> {
