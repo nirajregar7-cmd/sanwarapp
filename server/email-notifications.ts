@@ -339,8 +339,8 @@ export async function sendBookingCompletionEmail(data: BookingNotificationData) 
 export async function getBookingNotificationData(bookingId: string): Promise<BookingNotificationData | null> {
   try {
     // Import storage here to avoid circular dependency issues
-    const { storage } = await import('./storage');
-    const { db } = storage;
+    const storageModule = await import('./storage');
+    const { db } = storageModule.storage;
     
     const [booking] = await db
       .select({

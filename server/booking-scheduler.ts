@@ -10,8 +10,8 @@ import {
 export async function checkAndSendReminders() {
   try {
     // Import storage here to avoid circular dependency issues
-    const { storage } = await import('./storage');
-    const { db } = storage;
+    const storageModule = await import('./storage');
+    const { db } = storageModule.storage;
     
     const now = new Date();
     const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
@@ -52,8 +52,8 @@ export async function checkAndSendReminders() {
 export async function checkAndSendCompletionEmails() {
   try {
     // Import storage here to avoid circular dependency issues
-    const { storage } = await import('./storage');
-    const { db } = storage;
+    const storageModule = await import('./storage');
+    const { db } = storageModule.storage;
     
     const now = new Date();
     const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
