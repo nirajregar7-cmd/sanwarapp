@@ -448,7 +448,6 @@ export class DatabaseStorage implements IStorage {
         startTime: bookings.startTime,
         endTime: bookings.endTime,
         totalAmount: bookings.totalAmount,
-        confirmationAmount: bookings.confirmationAmount,
         status: bookings.status,
         paymentId: bookings.paymentId,
         paymentStatus: bookings.paymentStatus,
@@ -458,26 +457,20 @@ export class DatabaseStorage implements IStorage {
         walkInCustomerName: bookings.walkInCustomerName,
         walkInCustomerPhone: bookings.walkInCustomerPhone,
         notes: bookings.notes,
-        // Salon details
-        salon: {
-          id: salons.id,
-          name: salons.name,
-          address: salons.address,
-          phone: salons.phone,
-        },
-        // Service details
-        service: {
-          id: services.id,
-          name: services.name,
-          price: services.price,
-          duration: services.duration,
-        },
-        // Staff details (optional)
-        staff: {
-          id: staff.id,
-          name: staff.name,
-          designation: staff.designation,
-        },
+        // Salon details - flatten instead of nested
+        salonId_joined: salons.id,
+        salonName: salons.name,
+        salonAddress: salons.address,
+        salonPhone: salons.phone,
+        // Service details - flatten instead of nested
+        serviceId_joined: services.id,
+        serviceName: services.name,
+        servicePrice: services.price,
+        serviceDuration: services.duration,
+        // Staff details - flatten instead of nested
+        staffId_joined: staff.id,
+        staffName: staff.name,
+        staffRole: staff.role,
       })
       .from(bookings)
       .leftJoin(salons, eq(bookings.salonId, salons.id))
@@ -486,7 +479,29 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookings.customerId, customerId))
       .orderBy(desc(bookings.createdAt));
 
-    return bookingsWithDetails as any;
+    // Transform flat results back to nested structure for API compatibility
+    const transformedResults = bookingsWithDetails.map(booking => ({
+      ...booking,
+      salon: booking.salonId_joined ? {
+        id: booking.salonId_joined,
+        name: booking.salonName,
+        address: booking.salonAddress,
+        phone: booking.salonPhone,
+      } : null,
+      service: booking.serviceId_joined ? {
+        id: booking.serviceId_joined,
+        name: booking.serviceName,
+        price: booking.servicePrice,
+        duration: booking.serviceDuration,
+      } : null,
+      staff: booking.staffId_joined ? {
+        id: booking.staffId_joined,
+        name: booking.staffName,
+        designation: booking.staffRole,
+      } : null,
+    }));
+
+    return transformedResults as any;
   }
 
   async getBookingsBySalon(salonId: string): Promise<Booking[]> {
@@ -503,7 +518,6 @@ export class DatabaseStorage implements IStorage {
         startTime: bookings.startTime,
         endTime: bookings.endTime,
         totalAmount: bookings.totalAmount,
-        confirmationAmount: bookings.confirmationAmount,
         status: bookings.status,
         paymentId: bookings.paymentId,
         paymentStatus: bookings.paymentStatus,
@@ -513,26 +527,20 @@ export class DatabaseStorage implements IStorage {
         walkInCustomerName: bookings.walkInCustomerName,
         walkInCustomerPhone: bookings.walkInCustomerPhone,
         notes: bookings.notes,
-        // Customer details
-        customer: {
-          id: users.id,
-          name: users.firstName || bookings.walkInCustomerName,
-          email: users.email,
-          phone: users.phone || bookings.walkInCustomerPhone,
-        },
-        // Service details
-        service: {
-          id: services.id,
-          name: services.name,
-          price: services.price,
-          duration: services.duration,
-        },
-        // Staff details (optional)
-        staff: {
-          id: staff.id,
-          name: staff.name,
-          designation: staff.designation,
-        },
+        // Customer details - flatten instead of nested
+        customerId_joined: users.id,
+        customerFirstName: users.firstName,
+        customerEmail: users.email,
+        customerPhone: users.phone,
+        // Service details - flatten instead of nested
+        serviceId_joined: services.id,
+        serviceName: services.name,
+        servicePrice: services.price,
+        serviceDuration: services.duration,
+        // Staff details - flatten instead of nested
+        staffId_joined: staff.id,
+        staffName: staff.name,
+        staffRole: staff.role,
       })
       .from(bookings)
       .leftJoin(users, eq(bookings.customerId, users.id))
@@ -541,7 +549,29 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookings.salonId, salonId))
       .orderBy(desc(bookings.createdAt));
 
-    return bookingsWithDetails as any;
+    // Transform flat results back to nested structure for API compatibility
+    const transformedResults = bookingsWithDetails.map(booking => ({
+      ...booking,
+      customer: booking.customerId_joined ? {
+        id: booking.customerId_joined,
+        name: booking.customerFirstName || booking.walkInCustomerName,
+        email: booking.customerEmail,
+        phone: booking.customerPhone || booking.walkInCustomerPhone,
+      } : null,
+      service: booking.serviceId_joined ? {
+        id: booking.serviceId_joined,
+        name: booking.serviceName,
+        price: booking.servicePrice,
+        duration: booking.serviceDuration,
+      } : null,
+      staff: booking.staffId_joined ? {
+        id: booking.staffId_joined,
+        name: booking.staffName,
+        designation: booking.staffRole,
+      } : null,
+    }));
+
+    return transformedResults as any;
   }
 
   async getBookingById(id: string): Promise<Booking | undefined> {
