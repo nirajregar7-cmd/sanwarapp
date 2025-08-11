@@ -3076,6 +3076,251 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Staff working hours routes
+  app.get('/api/staff/:staffId/working-hours', isAuthenticated, async (req: any, res) => {
+    try {
+      const { staffId } = req.params;
+      const userId = req.user?.id;
+      
+      // Verify staff belongs to user's salon
+      const [staffMember] = await db.select({
+        staff: staff,
+        salon: salons
+      })
+        .from(staff)
+        .innerJoin(salons, eq(staff.salonId, salons.id))
+        .where(eq(staff.id, staffId));
+      
+      if (!staffMember || staffMember.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const workingHours = await db.select()
+        .from(staffWorkingHours)
+        .where(eq(staffWorkingHours.staffId, staffId))
+        .orderBy(staffWorkingHours.dayOfWeek);
+      
+      res.json(workingHours);
+    } catch (error) {
+      console.error("Error fetching working hours:", error);
+      res.status(500).json({ message: "Failed to fetch working hours" });
+    }
+  });
+
+  app.post('/api/staff-working-hours', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const workingHoursData = req.body;
+      
+      // Verify staff belongs to user's salon
+      const [staffMember] = await db.select({
+        staff: staff,
+        salon: salons
+      })
+        .from(staff)
+        .innerJoin(salons, eq(staff.salonId, salons.id))
+        .where(eq(staff.id, workingHoursData.staffId));
+      
+      if (!staffMember || staffMember.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const [newWorkingHours] = await db.insert(staffWorkingHours).values({
+        ...workingHoursData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      
+      res.json(newWorkingHours);
+    } catch (error) {
+      console.error("Error creating working hours:", error);
+      res.status(500).json({ message: "Failed to create working hours" });
+    }
+  });
+
+  app.put('/api/staff-working-hours/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+      const workingHoursData = req.body;
+      
+      // Verify ownership
+      const [existingHours] = await db.select({
+        hours: staffWorkingHours,
+        staff: staff,
+        salon: salons
+      })
+        .from(staffWorkingHours)
+        .innerJoin(staff, eq(staffWorkingHours.staffId, staff.id))
+        .innerJoin(salons, eq(staff.salonId, salons.id))
+        .where(eq(staffWorkingHours.id, id));
+      
+      if (!existingHours || existingHours.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const [updatedHours] = await db.update(staffWorkingHours)
+        .set({
+          ...workingHoursData,
+          updatedAt: new Date()
+        })
+        .where(eq(staffWorkingHours.id, id))
+        .returning();
+      
+      res.json(updatedHours);
+    } catch (error) {
+      console.error("Error updating working hours:", error);
+      res.status(500).json({ message: "Failed to update working hours" });
+    }
+  });
+
+  // Staff services routes
+  app.get('/api/staff/:staffId/services', isAuthenticated, async (req: any, res) => {
+    try {
+      const { staffId } = req.params;
+      const userId = req.user?.id;
+      
+      // Verify staff belongs to user's salon
+      const [staffMember] = await db.select({
+        staff: staff,
+        salon: salons
+      })
+        .from(staff)
+        .innerJoin(salons, eq(staff.salonId, salons.id))
+        .where(eq(staff.id, staffId));
+      
+      if (!staffMember || staffMember.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const staffServicesList = await db.select({
+        staffService: staffServices,
+        service: services
+      })
+        .from(staffServices)
+        .innerJoin(services, eq(staffServices.serviceId, services.id))
+        .where(eq(staffServices.staffId, staffId));
+      
+      res.json(staffServicesList);
+    } catch (error) {
+      console.error("Error fetching staff services:", error);
+      res.status(500).json({ message: "Failed to fetch staff services" });
+    }
+  });
+
+  app.post('/api/staff-services', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const serviceData = req.body;
+      
+      // Verify staff belongs to user's salon
+      const [staffMember] = await db.select({
+        staff: staff,
+        salon: salons
+      })
+        .from(staff)
+        .innerJoin(salons, eq(staff.salonId, salons.id))
+        .where(eq(staff.id, serviceData.staffId));
+      
+      if (!staffMember || staffMember.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const [newStaffService] = await db.insert(staffServices).values({
+        ...serviceData,
+        createdAt: new Date()
+      }).returning();
+      
+      res.json(newStaffService);
+    } catch (error) {
+      console.error("Error creating staff service:", error);
+      res.status(500).json({ message: "Failed to create staff service" });
+    }
+  });
+
+  app.put('/api/staff-services/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+      const serviceData = req.body;
+      
+      // Verify ownership
+      const [existingService] = await db.select({
+        staffService: staffServices,
+        staff: staff,
+        salon: salons
+      })
+        .from(staffServices)
+        .innerJoin(staff, eq(staffServices.staffId, staff.id))
+        .innerJoin(salons, eq(staff.salonId, salons.id))
+        .where(eq(staffServices.id, id));
+      
+      if (!existingService || existingService.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const [updatedService] = await db.update(staffServices)
+        .set(serviceData)
+        .where(eq(staffServices.id, id))
+        .returning();
+      
+      res.json(updatedService);
+    } catch (error) {
+      console.error("Error updating staff service:", error);
+      res.status(500).json({ message: "Failed to update staff service" });
+    }
+  });
+
+  // Owner staff route
+  app.get('/api/owner/staff', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Get the owner's salon first
+      const [ownerSalon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!ownerSalon) {
+        return res.status(404).json({ message: "No salon found for this owner" });
+      }
+      
+      const staffMembers = await db.select()
+        .from(staff)
+        .where(eq(staff.salonId, ownerSalon.id));
+      
+      res.json(staffMembers);
+    } catch (error) {
+      console.error("Error fetching owner staff:", error);
+      res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
+  // Owner services route
+  app.get('/api/owner/services', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Get the owner's salon first
+      const [ownerSalon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!ownerSalon) {
+        return res.status(404).json({ message: "No salon found for this owner" });
+      }
+      
+      const salonServices = await db.select()
+        .from(services)
+        .where(eq(services.salonId, ownerSalon.id));
+      
+      res.json(salonServices);
+    } catch (error) {
+      console.error("Error fetching owner services:", error);
+      res.status(500).json({ message: "Failed to fetch services" });
+    }
+  });
+
   // Gallery routes
   app.post("/api/salons/:salonId/gallery", isAuthenticated, async (req: any, res) => {
     try {

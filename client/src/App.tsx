@@ -25,6 +25,7 @@ import SalonSearchPage from "@/pages/customer/salon-search";
 import FeedbackHelp from "@/pages/feedback-help";
 import OwnerDashboard from "@/pages/owner/dashboard";
 import TimeSlots from "@/pages/owner/time-slots";
+import StaffSchedulePage from "@/pages/owner/staff-schedule";
 import AccountDetails from "@/pages/owner/account-details";
 import ReferEarn from "@/pages/owner/refer-earn";
 import WalkInBookings from "@/pages/salon-owner/walk-in-bookings";
@@ -275,6 +276,12 @@ function Router() {
               <Route path="/owner/time-slots">
                 <Layout>
                   <TimeSlots />
+                </Layout>
+              </Route>
+
+              <Route path="/owner/staff-schedule">
+                <Layout>
+                  <StaffSchedulePage />
                 </Layout>
               </Route>
               <Route path="/owner/walk-in-bookings">
