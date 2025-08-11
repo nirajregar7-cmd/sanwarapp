@@ -69,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { userType } = req.body;
-      if (!userType || !['customer', 'salon_owner'].includes(userType)) {
+      if (!userType || !['customer', 'salon_owner', 'brand_owner'].includes(userType)) {
         return res.status(400).json({ error: 'Invalid user type' });
       }
 
@@ -124,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { userType } = req.body;
-      if (!userType || !["customer", "salon_owner"].includes(userType)) {
+      if (!userType || !["customer", "salon_owner", "brand_owner"].includes(userType)) {
         return res.status(400).json({ message: "Invalid user type" });
       }
 
