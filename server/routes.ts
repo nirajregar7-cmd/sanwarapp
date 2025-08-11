@@ -6106,6 +6106,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register smart scheduling routes
+  const { registerSmartSchedulingRoutes } = await import('./smart-scheduling-routes');
+  registerSmartSchedulingRoutes(app);
+
   return httpServer;
 }
 

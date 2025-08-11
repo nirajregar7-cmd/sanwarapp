@@ -25,6 +25,12 @@ import {
   emergencyBookingWaitlist,
   salonEmergencyConfig,
   emergencySlots,
+  // Smart scheduling tables
+  staffWorkingHours,
+  staffServices,
+  staffHolidays,
+  staffTimeSlots,
+  scheduleTemplates,
   type User,
   type UpsertUser,
   type Salon,
@@ -74,6 +80,17 @@ import {
   type InsertSalonEmergencyConfig,
   type EmergencySlot,
   type InsertEmergencySlot,
+  // Smart scheduling types
+  type StaffWorkingHours,
+  type InsertStaffWorkingHours,
+  type StaffService,
+  type InsertStaffService,
+  type StaffHoliday,
+  type InsertStaffHoliday,
+  type StaffTimeSlot,
+  type InsertStaffTimeSlot,
+  type ScheduleTemplate,
+  type InsertScheduleTemplate,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, asc, or, isNull, sql } from "drizzle-orm";
@@ -211,6 +228,40 @@ export interface IStorage {
   getAvailableEmergencySlots(salonId: string, date: string): Promise<EmergencySlot[]>;
   bookEmergencySlot(slotId: string, bookingId: string): Promise<void>;
   getEmergencySlotsBySalon(salonId: string): Promise<EmergencySlot[]>;
+
+  // Smart scheduling operations (staff-based scheduling)
+  getSalonStaff(salonId: string): Promise<any[]>;
+  createStaffMember(staff: any): Promise<any>;
+  updateStaffMember(staffId: string, updates: any): Promise<any>;
+  deleteStaffMember(staffId: string): Promise<void>;
+  
+  // Staff working hours operations
+  upsertStaffWorkingHours(workingHour: any): Promise<any>;
+  getStaffWorkingHours(staffId: string): Promise<any[]>;
+  getStaffWorkingHoursByDay(staffId: string, dayOfWeek: number): Promise<any>;
+  
+  // Staff service assignments
+  assignServiceToStaff(staffId: string, serviceId: string, customPrice?: number, estimatedDuration?: number): Promise<any>;
+  removeServiceFromStaff(staffId: string, serviceId: string): Promise<void>;
+  getStaffServices(staffId: string): Promise<any[]>;
+  getStaffByService(serviceId: string): Promise<any[]>;
+  
+  // Staff holidays management
+  createStaffHoliday(holiday: any): Promise<any>;
+  getStaffHolidays(staffId: string): Promise<any[]>;
+  approveStaffHoliday(holidayId: string, approvedBy: string): Promise<void>;
+  deleteStaffHoliday(holidayId: string): Promise<void>;
+  
+  // Staff time slots operations
+  createStaffTimeSlots(staffId: string, date: string, slots: any[]): Promise<any[]>;
+  getStaffTimeSlots(staffId: string, date: string): Promise<any[]>;
+  updateStaffTimeSlotAvailability(slotId: string, isAvailable: boolean): Promise<void>;
+  deleteStaffTimeSlots(staffId: string, date: string): Promise<void>;
+  
+  // Schedule templates
+  createScheduleTemplate(template: any): Promise<any>;
+  getScheduleTemplates(salonId: string): Promise<any[]>;
+  deleteScheduleTemplate(templateId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1475,6 +1526,226 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(emergencySlots)
       .where(eq(emergencySlots.salonId, salonId))
       .orderBy(desc(emergencySlots.createdAt));
+  }
+
+  // Smart scheduling operations implementation
+  async getSalonStaff(salonId: string): Promise<any[]> {
+    return await db.select().from(staff)
+      .where(and(eq(staff.salonId, salonId), eq(staff.isActive, true)))
+      .orderBy(staff.name);
+  }
+
+  async createStaffMember(staffData: any): Promise<any> {
+    const [newStaff] = await db.insert(staff).values(staffData).returning();
+    return newStaff;
+  }
+
+  async updateStaffMember(staffId: string, updates: any): Promise<any> {
+    const [updatedStaff] = await db
+      .update(staff)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(staff.id, staffId))
+      .returning();
+    return updatedStaff;
+  }
+
+  async deleteStaffMember(staffId: string): Promise<void> {
+    await db.update(staff)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(staff.id, staffId));
+  }
+
+  // Staff working hours operations
+  async upsertStaffWorkingHours(workingHour: any): Promise<any> {
+    const [result] = await db
+      .insert(staffWorkingHours)
+      .values(workingHour)
+      .onConflictDoUpdate({
+        target: [staffWorkingHours.staffId, staffWorkingHours.dayOfWeek],
+        set: {
+          ...workingHour,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return result;
+  }
+
+  async getStaffWorkingHours(staffId: string): Promise<any[]> {
+    return await db.select().from(staffWorkingHours)
+      .where(eq(staffWorkingHours.staffId, staffId))
+      .orderBy(staffWorkingHours.dayOfWeek);
+  }
+
+  async getStaffWorkingHoursByDay(staffId: string, dayOfWeek: number): Promise<any> {
+    const [result] = await db.select().from(staffWorkingHours)
+      .where(and(
+        eq(staffWorkingHours.staffId, staffId),
+        eq(staffWorkingHours.dayOfWeek, dayOfWeek)
+      ));
+    return result;
+  }
+
+  // Staff service assignments
+  async assignServiceToStaff(staffId: string, serviceId: string, customPrice?: number, estimatedDuration?: number): Promise<any> {
+    const [assignment] = await db
+      .insert(staffServices)
+      .values({
+        staffId,
+        serviceId,
+        customPrice,
+        estimatedDuration,
+        isActive: true,
+      })
+      .onConflictDoUpdate({
+        target: [staffServices.staffId, staffServices.serviceId],
+        set: {
+          isActive: true,
+          customPrice,
+          estimatedDuration,
+        },
+      })
+      .returning();
+    return assignment;
+  }
+
+  async removeServiceFromStaff(staffId: string, serviceId: string): Promise<void> {
+    await db.update(staffServices)
+      .set({ isActive: false })
+      .where(and(
+        eq(staffServices.staffId, staffId),
+        eq(staffServices.serviceId, serviceId)
+      ));
+  }
+
+  async getStaffServices(staffId: string): Promise<any[]> {
+    return await db.select({
+      id: staffServices.id,
+      serviceId: staffServices.serviceId,
+      serviceName: services.name,
+      servicePrice: services.price,
+      serviceDuration: services.duration,
+      customPrice: staffServices.customPrice,
+      estimatedDuration: staffServices.estimatedDuration,
+      isActive: staffServices.isActive,
+    })
+    .from(staffServices)
+    .innerJoin(services, eq(staffServices.serviceId, services.id))
+    .where(and(
+      eq(staffServices.staffId, staffId),
+      eq(staffServices.isActive, true)
+    ));
+  }
+
+  async getStaffByService(serviceId: string): Promise<any[]> {
+    return await db.select({
+      staffId: staff.id,
+      staffName: staff.name,
+      staffRole: staff.role,
+      staffRating: staff.rating,
+      customPrice: staffServices.customPrice,
+      estimatedDuration: staffServices.estimatedDuration,
+    })
+    .from(staff)
+    .innerJoin(staffServices, eq(staff.id, staffServices.staffId))
+    .where(and(
+      eq(staffServices.serviceId, serviceId),
+      eq(staffServices.isActive, true),
+      eq(staff.isActive, true)
+    ))
+    .orderBy(staff.rating, staff.name);
+  }
+
+  // Staff holidays management
+  async createStaffHoliday(holiday: any): Promise<any> {
+    const [newHoliday] = await db.insert(staffHolidays).values(holiday).returning();
+    return newHoliday;
+  }
+
+  async getStaffHolidays(staffId: string): Promise<any[]> {
+    return await db.select().from(staffHolidays)
+      .where(eq(staffHolidays.staffId, staffId))
+      .orderBy(desc(staffHolidays.date));
+  }
+
+  async approveStaffHoliday(holidayId: string, approvedBy: string): Promise<void> {
+    await db.update(staffHolidays)
+      .set({
+        isApproved: true,
+        approvedBy,
+        approvedAt: new Date(),
+      })
+      .where(eq(staffHolidays.id, holidayId));
+  }
+
+  async deleteStaffHoliday(holidayId: string): Promise<void> {
+    await db.delete(staffHolidays)
+      .where(eq(staffHolidays.id, holidayId));
+  }
+
+  // Staff time slots operations
+  async createStaffTimeSlots(staffId: string, date: string, slots: any[]): Promise<any[]> {
+    // Delete existing slots for this staff member and date
+    await db.delete(staffTimeSlots)
+      .where(and(
+        eq(staffTimeSlots.staffId, staffId),
+        eq(staffTimeSlots.date, date)
+      ));
+
+    // Insert new slots
+    if (slots.length > 0) {
+      return await db.insert(staffTimeSlots).values(slots).returning();
+    }
+    return [];
+  }
+
+  async getStaffTimeSlots(staffId: string, date: string): Promise<any[]> {
+    return await db.select().from(staffTimeSlots)
+      .where(and(
+        eq(staffTimeSlots.staffId, staffId),
+        eq(staffTimeSlots.date, date)
+      ))
+      .orderBy(staffTimeSlots.startTime);
+  }
+
+  async updateStaffTimeSlotAvailability(slotId: string, isAvailable: boolean): Promise<void> {
+    await db.update(staffTimeSlots)
+      .set({ isAvailable })
+      .where(eq(staffTimeSlots.id, slotId));
+  }
+
+  async deleteStaffTimeSlots(staffId: string, date: string): Promise<void> {
+    await db.delete(staffTimeSlots)
+      .where(and(
+        eq(staffTimeSlots.staffId, staffId),
+        eq(staffTimeSlots.date, date)
+      ));
+  }
+
+  // Schedule templates
+  async createScheduleTemplate(template: any): Promise<any> {
+    const [newTemplate] = await db.insert(scheduleTemplates).values(template).returning();
+    return newTemplate;
+  }
+
+  async getScheduleTemplates(salonId: string): Promise<any[]> {
+    return await db.select().from(scheduleTemplates)
+      .where(and(
+        eq(scheduleTemplates.salonId, salonId),
+        eq(scheduleTemplates.isActive, true)
+      ))
+      .orderBy(scheduleTemplates.name);
+  }
+
+  async deleteScheduleTemplate(templateId: string): Promise<void> {
+    await db.update(scheduleTemplates)
+      .set({ isActive: false })
+      .where(eq(scheduleTemplates.id, templateId));
+  }
+
+  // Access to db for the smart scheduling service
+  get db() {
+    return db;
   }
 }
 

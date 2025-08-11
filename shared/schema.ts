@@ -109,14 +109,18 @@ export const workingHours = pgTable("working_hours", {
   breakEndTime: varchar("break_end_time", { length: 5 }),
 });
 
-// Time slots table
+// Time slots table (legacy - keeping for backward compatibility)
 export const timeSlots = pgTable("time_slots", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  staffId: varchar("staff_id").references(() => staff.id, { onDelete: "set null" }), // Added staff assignment
   date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
   startTime: varchar("start_time", { length: 5 }).notNull(), // HH:MM format
   endTime: varchar("end_time", { length: 5 }).notNull(), // HH:MM format
   isAvailable: boolean("is_available").default(true),
+  // Enhanced fields for smart scheduling
+  serviceId: varchar("service_id").references(() => services.id, { onDelete: "set null" }), // Pre-assigned service
+  slotType: varchar("slot_type", { enum: ["regular", "break", "blocked"] }).default("regular"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -178,8 +182,85 @@ export const staff = pgTable("staff", {
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
   totalReviews: integer("total_reviews").default(0),
   isActive: boolean("is_active").default(true),
+  // New fields for smart scheduling
+  defaultSlotDuration: integer("default_slot_duration").default(30), // in minutes (15, 20, 30, etc.)
+  canManageSchedule: boolean("can_manage_schedule").default(false), // Allow staff to manage their own schedule
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Staff working hours table (individual schedules for each staff member)
+export const staffWorkingHours = pgTable("staff_working_hours", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").references(() => staff.id, { onDelete: "cascade" }).notNull(),
+  dayOfWeek: integer("day_of_week").notNull(), // 0 = Sunday, 1 = Monday, etc.
+  isAvailable: boolean("is_available").default(true),
+  // First shift timings
+  shift1StartTime: varchar("shift1_start_time", { length: 5 }), // HH:MM format
+  shift1EndTime: varchar("shift1_end_time", { length: 5 }), // HH:MM format
+  // Second shift timings (optional for split shifts)
+  shift2StartTime: varchar("shift2_start_time", { length: 5 }),
+  shift2EndTime: varchar("shift2_end_time", { length: 5 }),
+  // Break timings
+  breakStartTime: varchar("break_start_time", { length: 5 }),
+  breakEndTime: varchar("break_end_time", { length: 5 }),
+  breakDuration: integer("break_duration").default(30), // in minutes
+  // Slot configuration
+  slotDuration: integer("slot_duration").default(30), // Individual slot duration in minutes
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Staff service assignments (which staff can perform which services)
+export const staffServices = pgTable("staff_services", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").references(() => staff.id, { onDelete: "cascade" }).notNull(),
+  serviceId: varchar("service_id").references(() => services.id, { onDelete: "cascade" }).notNull(),
+  isActive: boolean("is_active").default(true),
+  // Service-specific settings for this staff member
+  customPrice: decimal("custom_price", { precision: 10, scale: 2 }), // Optional custom price
+  estimatedDuration: integer("estimated_duration"), // Staff-specific duration override
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Staff holidays and off days
+export const staffHolidays = pgTable("staff_holidays", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").references(() => staff.id, { onDelete: "cascade" }).notNull(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
+  reason: varchar("reason", { length: 255 }), // Holiday, sick leave, personal, etc.
+  isApproved: boolean("is_approved").default(false),
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Staff time slots table (generated slots for each staff member)
+export const staffTimeSlots = pgTable("staff_time_slots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").references(() => staff.id, { onDelete: "cascade" }).notNull(),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
+  startTime: varchar("start_time", { length: 5 }).notNull(), // HH:MM format
+  endTime: varchar("end_time", { length: 5 }).notNull(), // HH:MM format
+  isAvailable: boolean("is_available").default(true),
+  isBreakTime: boolean("is_break_time").default(false),
+  slotType: varchar("slot_type", { enum: ["regular", "break", "blocked"] }).default("regular"),
+  // Service compatibility
+  compatibleServices: text("compatible_services").array(), // Array of service IDs this slot can accommodate
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Schedule templates for easy copying
+export const scheduleTemplates = pgTable("schedule_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(), // e.g., "Standard Week", "Holiday Hours"
+  description: text("description"),
+  templateData: jsonb("template_data").notNull(), // JSON structure with staff schedules
+  isActive: boolean("is_active").default(true),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Salon gallery table for work showcase images
@@ -678,10 +759,67 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   }),
 }));
 
-export const staffRelations = relations(staff, ({ one }) => ({
+export const staffRelations = relations(staff, ({ one, many }) => ({
   salon: one(salons, {
     fields: [staff.salonId],
     references: [salons.id],
+  }),
+  bookings: many(bookings),
+  workingHours: many(staffWorkingHours),
+  services: many(staffServices),
+  holidays: many(staffHolidays),
+  timeSlots: many(staffTimeSlots),
+}));
+
+// New relations for smart scheduling tables
+export const staffWorkingHoursRelations = relations(staffWorkingHours, ({ one }) => ({
+  staff: one(staff, {
+    fields: [staffWorkingHours.staffId],
+    references: [staff.id],
+  }),
+}));
+
+export const staffServicesRelations = relations(staffServices, ({ one }) => ({
+  staff: one(staff, {
+    fields: [staffServices.staffId],
+    references: [staff.id],
+  }),
+  service: one(services, {
+    fields: [staffServices.serviceId],
+    references: [services.id],
+  }),
+}));
+
+export const staffHolidaysRelations = relations(staffHolidays, ({ one }) => ({
+  staff: one(staff, {
+    fields: [staffHolidays.staffId],
+    references: [staff.id],
+  }),
+  approver: one(users, {
+    fields: [staffHolidays.approvedBy],
+    references: [users.id],
+  }),
+}));
+
+export const staffTimeSlotsRelations = relations(staffTimeSlots, ({ one }) => ({
+  staff: one(staff, {
+    fields: [staffTimeSlots.staffId],
+    references: [staff.id],
+  }),
+  salon: one(salons, {
+    fields: [staffTimeSlots.salonId],
+    references: [salons.id],
+  }),
+}));
+
+export const scheduleTemplatesRelations = relations(scheduleTemplates, ({ one }) => ({
+  salon: one(salons, {
+    fields: [scheduleTemplates.salonId],
+    references: [salons.id],
+  }),
+  creator: one(users, {
+    fields: [scheduleTemplates.createdBy],
+    references: [users.id],
   }),
 }));
 
