@@ -1771,8 +1771,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalReviews: 0,
         defaultSlotDuration: 15, // Default 15 minutes
         canManageSchedule: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
       }).returning();
       
       console.log('Staff member created successfully:', staffMember);
