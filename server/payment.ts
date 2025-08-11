@@ -143,3 +143,133 @@ export function verifyRazorpayPayment(
     return false;
   }
 }
+
+// Automatic Payout System for Salon Owners
+export interface PayoutData {
+  accountNumber: string;
+  ifscCode: string;
+  amount: number; // in paisa
+  purpose: string;
+  fundAccountId?: string;
+  mode?: 'IMPS' | 'NEFT' | 'RTGS' | 'UPI';
+  narration?: string;
+}
+
+export interface PayoutResult {
+  success: boolean;
+  payoutId?: string;
+  status?: string;
+  error?: string;
+}
+
+// Create fund account for salon owner for payouts
+export async function createSalonFundAccount(
+  salonId: string,
+  bankDetails: BankAccountVerificationData
+): Promise<{ success: boolean; fundAccountId?: string; contactId?: string; error?: string }> {
+  if (!razorpay) {
+    return {
+      success: false,
+      error: 'Razorpay not configured'
+    };
+  }
+
+  try {
+    // Step 1: Create a contact first
+    const contactRequest = {
+      name: bankDetails.accountHolderName,
+      contact: "9999999999", // Placeholder phone number
+      email: `salon.${salonId}@sanwarhub.in`, // Generated email
+      type: 'vendor',
+      reference_id: salonId,
+      notes: {
+        salon_id: salonId,
+        purpose: 'automatic_payout'
+      }
+    };
+
+    console.log('Creating contact for salon:', contactRequest);
+    // Use the correct Razorpay SDK method - it should be .contact not .contacts
+    const contact = await (razorpay as any).contacts.create(contactRequest);
+    console.log('Contact created:', contact.id);
+
+    // Step 2: Create fund account with the contact ID
+    const fundAccountRequest = {
+      contact_id: contact.id,
+      account_type: 'bank_account',
+      bank_account: {
+        name: bankDetails.accountHolderName,
+        account_number: bankDetails.accountNumber,
+        ifsc: bankDetails.ifscCode
+      }
+    };
+
+    console.log('Creating fund account for contact:', contact.id);
+    // Use the correct Razorpay SDK method - it should be fundAccounts not fundAccount
+    const fundAccount = await (razorpay as any).fundAccounts.create(fundAccountRequest);
+    console.log('Fund account created:', fundAccount.id);
+    
+    if (fundAccount.id && fundAccount.active) {
+      return {
+        success: true,
+        fundAccountId: fundAccount.id,
+        contactId: contact.id
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Failed to create fund account'
+      };
+    }
+  } catch (error: any) {
+    console.error('Error creating fund account:', error.error || error);
+    return {
+      success: false,
+      error: error.error?.description || error.message || 'Failed to create fund account'
+    };
+  }
+}
+
+// Automatic payout to salon owner
+export async function processSalonPayout(
+  fundAccountId: string,
+  amount: number,
+  bookingId: string,
+  salonName: string
+): Promise<PayoutResult> {
+  if (!razorpay) {
+    return {
+      success: false,
+      error: 'Razorpay not configured'
+    };
+  }
+
+  try {
+    const payoutData = {
+      account_number: '2323230059316908', // Your Razorpay account number (check dashboard)
+      fund_account_id: fundAccountId,
+      amount: Math.round(amount * 100), // Convert to paisa
+      currency: 'INR',
+      mode: 'IMPS' as const,
+      purpose: 'payout',
+      narration: `Revenue share for booking ${bookingId} - ${salonName}`,
+      reference_id: `salon_payout_${bookingId}_${Date.now()}`
+    };
+
+    const payout = await razorpay.payouts.create(payoutData);
+    
+    console.log('Payout created:', payout);
+
+    return {
+      success: true,
+      payoutId: payout.id,
+      status: payout.status
+    };
+  } catch (error: any) {
+    console.error('Error processing payout:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to process payout'
+    };
+  }
+}

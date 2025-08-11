@@ -1003,6 +1003,46 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(salonLikes.createdAt));
   }
 
+  // Automatic Payout System Methods
+  async getSalonOwnerBankDetails(salonId: string): Promise<any> {
+    const [account] = await db.select()
+      .from(salonOwnerAccounts)
+      .where(and(
+        eq(salonOwnerAccounts.salonId, salonId),
+        eq(salonOwnerAccounts.isVerified, true)
+      ));
+    return account;
+  }
+
+  async updateRevenueShareTransferStatus(
+    bookingId: string, 
+    status: 'pending' | 'completed' | 'failed',
+    transferReference?: string,
+    transferDate?: Date
+  ): Promise<void> {
+    const updateData: any = { transferStatus: status };
+    if (transferReference) updateData.transferReference = transferReference;
+    if (transferDate) updateData.transferDate = transferDate;
+
+    await db.update(revenueShares)
+      .set(updateData)
+      .where(eq(revenueShares.bookingId, bookingId));
+  }
+
+  async getPendingRevenueShares(): Promise<any[]> {
+    return await db.select({
+      id: revenueShares.id,
+      bookingId: revenueShares.bookingId,
+      salonShare: revenueShares.salonShare,
+      salonId: bookings.salonId,
+      salonName: salons.name,
+    })
+      .from(revenueShares)
+      .innerJoin(bookings, eq(revenueShares.bookingId, bookings.id))
+      .innerJoin(salons, eq(bookings.salonId, salons.id))
+      .where(eq(revenueShares.transferStatus, 'pending'));
+  }
+
   // Admin operations implementation
   async getAllUsers(userType?: string, search?: string): Promise<User[]> {
     let query = db.select().from(users);

@@ -13,7 +13,7 @@ import { ObjectPermission } from "./objectAcl";
 import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
-import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount } from "./payment";
+import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount, createSalonFundAccount, processSalonPayout } from "./payment";
 import { calculateRevenueShare } from "@shared/revenue";
 import { sendPasswordResetOTP, generateOTP } from "./whatsapp";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -1035,13 +1035,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate and record revenue share
       const revenueShare = calculateRevenueShare(confirmationAmount);
-      await db.insert(revenueShares).values({
+      const [revenueRecord] = await db.insert(revenueShares).values({
         bookingId: booking.id,
         confirmationAmount: confirmationAmount.toString(),
         platformShare: revenueShare.platformShare.toString(),
         salonShare: revenueShare.salonShare.toString(),
         transferStatus: 'pending'
-      });
+      }).returning();
+
+      // Attempt automatic payout to salon owner
+      try {
+        console.log(`Starting automatic payout for booking ${booking.id}, salon ${salon.name}`);
+        
+        // Get salon owner bank details
+        const bankDetails = await storage.getSalonOwnerBankDetails(salonId);
+        
+        if (bankDetails && bankDetails.isVerified) {
+          console.log(`Bank details found for salon ${salon.name}, processing payout...`);
+          
+          // Create fund account if not exists (or use existing)
+          let fundAccountId = bankDetails.fundAccountId;
+          if (!fundAccountId) {
+            const fundAccountResult = await createSalonFundAccount(salonId, {
+              accountNumber: bankDetails.accountNumber,
+              ifscCode: bankDetails.ifscCode,
+              accountHolderName: bankDetails.accountHolderName
+            });
+            
+            if (fundAccountResult.success && fundAccountResult.fundAccountId) {
+              fundAccountId = fundAccountResult.fundAccountId;
+              
+              // Update bank details with fund account ID
+              await db.update(salonOwnerAccounts)
+                .set({ fundAccountId })
+                .where(eq(salonOwnerAccounts.salonId, salonId));
+            }
+          }
+          
+          if (fundAccountId) {
+            // Process payout
+            const payoutResult = await processSalonPayout(
+              fundAccountId,
+              revenueShare.salonShare,
+              booking.id,
+              salon.name
+            );
+            
+            if (payoutResult.success) {
+              console.log(`✅ Automatic payout successful: ${payoutResult.payoutId}`);
+              
+              // Update transfer status to completed
+              await storage.updateRevenueShareTransferStatus(
+                booking.id,
+                'completed',
+                payoutResult.payoutId,
+                new Date()
+              );
+            } else {
+              console.error(`❌ Automatic payout failed: ${payoutResult.error}`);
+              await storage.updateRevenueShareTransferStatus(booking.id, 'failed');
+            }
+          } else {
+            console.log(`⚠️ Could not create fund account for salon ${salon.name}`);
+            await storage.updateRevenueShareTransferStatus(booking.id, 'failed');
+          }
+        } else {
+          console.log(`⚠️ No verified bank details found for salon ${salon.name}, payout will remain pending`);
+        }
+      } catch (payoutError) {
+        console.error('Error in automatic payout process:', payoutError);
+        // Keep transfer status as pending if payout fails
+        await storage.updateRevenueShareTransferStatus(booking.id, 'failed');
+      }
       
       // Handle referral tracking for all referral types
       try {
@@ -1276,22 +1341,207 @@ export async function registerRoutes(app: Express): Promise<Server> {
         platformCommission: sql`COALESCE(SUM(${revenueShares.platformShare}), 0)`,
         totalBookings: sql`COUNT(*)`,
         pendingTransfers: sql`COALESCE(SUM(CASE WHEN ${revenueShares.transferStatus} = 'pending' THEN ${revenueShares.salonShare} ELSE 0 END), 0)`,
-        completedTransfers: sql`COALESCE(SUM(CASE WHEN ${revenueShares.transferStatus} = 'completed' THEN ${revenueShares.salonShare} ELSE 0 END), 0)`
+        completedTransfers: sql`COALESCE(SUM(CASE WHEN ${revenueShares.transferStatus} = 'completed' THEN ${revenueShares.salonShare} ELSE 0 END), 0)`,
+        failedTransfers: sql`COALESCE(SUM(CASE WHEN ${revenueShares.transferStatus} = 'failed' THEN ${revenueShares.salonShare} ELSE 0 END), 0)`
       })
       .from(revenueShares)
       .innerJoin(bookings, eq(revenueShares.bookingId, bookings.id))
       .where(eq(bookings.salonId, salon.id));
+
+      // Get detailed transfer history
+      const transfers = await db.select({
+        bookingId: revenueShares.bookingId,
+        amount: revenueShares.salonShare,
+        status: revenueShares.transferStatus,
+        transferDate: revenueShares.transferDate,
+        transferReference: revenueShares.transferReference,
+        createdAt: revenueShares.createdAt,
+        customerName: sql<string>`${users.firstName} || ' ' || COALESCE(${users.lastName}, '')`,
+        serviceName: services.name
+      })
+      .from(revenueShares)
+      .innerJoin(bookings, eq(revenueShares.bookingId, bookings.id))
+      .innerJoin(users, eq(bookings.customerId, users.id))
+      .innerJoin(services, eq(bookings.serviceId, services.id))
+      .where(eq(bookings.salonId, salon.id))
+      .orderBy(desc(revenueShares.createdAt))
+      .limit(20);
+
+      // Get bank account status
+      const [bankAccount] = await db.select()
+        .from(salonOwnerAccounts)
+        .where(eq(salonOwnerAccounts.salonId, salon.id));
       
-      res.json(revenueData[0] || {
-        totalEarnings: "0",
-        platformCommission: "0", 
-        totalBookings: "0",
-        pendingTransfers: "0",
-        completedTransfers: "0"
+      res.json({
+        summary: revenueData[0] || {
+          totalEarnings: "0",
+          platformCommission: "0", 
+          totalBookings: "0",
+          pendingTransfers: "0",
+          completedTransfers: "0",
+          failedTransfers: "0"
+        },
+        transfers,
+        bankAccountStatus: bankAccount ? {
+          isVerified: bankAccount.isVerified,
+          verificationStatus: bankAccount.verificationStatus,
+          bankName: bankAccount.bankName,
+          accountNumber: bankAccount.accountNumber.replace(/\d(?=\d{4})/g, '*'), // Mask account number
+          hasFundAccount: !!bankAccount.fundAccountId
+        } : null
       });
     } catch (error) {
       console.error("Error fetching revenue data:", error);
       res.status(500).json({ message: "Failed to fetch revenue data" });
+    }
+  });
+
+  // Admin endpoint to manually trigger pending payouts
+  app.post('/api/admin/trigger-payouts', async (req, res) => {
+    try {
+      console.log('🚀 Manual payout trigger started...');
+      
+      // Get all pending revenue shares with bank details
+      const pendingShares = await db.select({
+        id: revenueShares.id,
+        bookingId: revenueShares.bookingId,
+        salonShare: revenueShares.salonShare,
+        salonId: bookings.salonId,
+        salonName: salons.name,
+        accountNumber: salonOwnerAccounts.accountNumber,
+        ifscCode: salonOwnerAccounts.ifscCode,
+        accountHolderName: salonOwnerAccounts.accountHolderName,
+        fundAccountId: salonOwnerAccounts.fundAccountId,
+        isVerified: salonOwnerAccounts.isVerified
+      })
+      .from(revenueShares)
+      .innerJoin(bookings, eq(revenueShares.bookingId, bookings.id))
+      .innerJoin(salons, eq(bookings.salonId, salons.id))
+      .leftJoin(salonOwnerAccounts, eq(salonOwnerAccounts.salonId, salons.id))
+      .where(eq(revenueShares.transferStatus, 'pending'))
+      .limit(10); // Process max 10 at a time
+
+      console.log(`Found ${pendingShares.length} pending payouts to process`);
+      
+      let successCount = 0;
+      let failureCount = 0;
+      const results = [];
+
+      for (const share of pendingShares) {
+        try {
+          if (!share.isVerified || !share.accountNumber) {
+            console.log(`❌ Skipping ${share.salonName}: No verified bank account`);
+            await storage.updateRevenueShareTransferStatus(share.bookingId, 'failed');
+            failureCount++;
+            results.push({
+              salon: share.salonName,
+              booking: share.bookingId,
+              amount: share.salonShare,
+              status: 'failed',
+              reason: 'No verified bank account'
+            });
+            continue;
+          }
+
+          // Create fund account if not exists
+          let fundAccountId = share.fundAccountId;
+          if (!fundAccountId) {
+            const fundAccountResult = await createSalonFundAccount(share.salonId, {
+              accountNumber: share.accountNumber,
+              ifscCode: share.ifscCode,
+              accountHolderName: share.accountHolderName
+            });
+            
+            if (fundAccountResult.success && fundAccountResult.fundAccountId) {
+              fundAccountId = fundAccountResult.fundAccountId;
+              
+              // Update bank details with fund account ID
+              await db.update(salonOwnerAccounts)
+                .set({ fundAccountId })
+                .where(eq(salonOwnerAccounts.salonId, share.salonId));
+            }
+          }
+
+          if (fundAccountId) {
+            // Process payout
+            const payoutResult = await processSalonPayout(
+              fundAccountId,
+              parseFloat(share.salonShare),
+              share.bookingId,
+              share.salonName
+            );
+            
+            if (payoutResult.success) {
+              console.log(`✅ Payout successful for ${share.salonName}: ${payoutResult.payoutId}`);
+              
+              await storage.updateRevenueShareTransferStatus(
+                share.bookingId,
+                'completed',
+                payoutResult.payoutId,
+                new Date()
+              );
+              
+              successCount++;
+              results.push({
+                salon: share.salonName,
+                booking: share.bookingId,
+                amount: share.salonShare,
+                status: 'completed',
+                payoutId: payoutResult.payoutId
+              });
+            } else {
+              console.error(`❌ Payout failed for ${share.salonName}: ${payoutResult.error}`);
+              await storage.updateRevenueShareTransferStatus(share.bookingId, 'failed');
+              failureCount++;
+              results.push({
+                salon: share.salonName,
+                booking: share.bookingId,
+                amount: share.salonShare,
+                status: 'failed',
+                reason: payoutResult.error
+              });
+            }
+          } else {
+            console.log(`⚠️ Could not create fund account for ${share.salonName}`);
+            await storage.updateRevenueShareTransferStatus(share.bookingId, 'failed');
+            failureCount++;
+            results.push({
+              salon: share.salonName,
+              booking: share.bookingId,
+              amount: share.salonShare,
+              status: 'failed',
+              reason: 'Could not create fund account'
+            });
+          }
+        } catch (error) {
+          console.error(`Error processing payout for ${share.salonName}:`, error);
+          await storage.updateRevenueShareTransferStatus(share.bookingId, 'failed');
+          failureCount++;
+          results.push({
+            salon: share.salonName,
+            booking: share.bookingId,
+            amount: share.salonShare,
+            status: 'failed',
+            reason: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      res.json({
+        message: `Processed ${pendingShares.length} payouts`,
+        summary: {
+          total: pendingShares.length,
+          successful: successCount,
+          failed: failureCount
+        },
+        results
+      });
+    } catch (error) {
+      console.error('Error in manual payout trigger:', error);
+      res.status(500).json({ 
+        message: 'Failed to trigger payouts',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

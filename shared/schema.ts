@@ -290,6 +290,8 @@ export const salonOwnerAccounts = pgTable("salon_owner_accounts", {
   verifiedAt: timestamp("verified_at"),
   verificationAttempts: integer("verification_attempts").default(0),
   lastVerificationAttempt: timestamp("last_verification_attempt"),
+  // Razorpay fund account ID for automatic payouts
+  fundAccountId: varchar("fund_account_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
