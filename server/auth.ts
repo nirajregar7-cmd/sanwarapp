@@ -194,7 +194,7 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      if (!["customer", "salon_owner"].includes(userType)) {
+      if (!["customer", "salon_owner", "brand_owner"].includes(userType)) {
         return res.status(400).json({ error: "Invalid user type" });
       }
 
