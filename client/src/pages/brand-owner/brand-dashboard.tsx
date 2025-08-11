@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +39,12 @@ import {
   LineChart,
   PieChart,
   Activity,
-  Mail
+  Mail,
+  Phone,
+  MessageSquare,
+  FileText,
+  PauseCircle,
+  PlayCircle
 } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -57,6 +63,7 @@ interface BrandSalon {
     firstName: string;
     lastName: string;
     email: string;
+    phone?: string;
   };
   _count: {
     bookings: number;
@@ -161,6 +168,50 @@ export default function BrandDashboard() {
     queryKey: [`/api/brand/salon-analytics/${selectedSalonDetails?.id}`, selectedDateRange],
     enabled: !!selectedSalonDetails?.id,
   });
+
+  // Handler functions
+  const handleSendMessage = (salonId: string, salonName: string) => {
+    const salon = brandSalons?.find(s => s.id === salonId);
+    if (salon) {
+      setSelectedSalonForMessage(salon);
+      setMessageDialogOpen(true);
+    }
+  };
+
+  const handleToggleSalonStatus = async (salonId: string, isActive: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/salons/${salonId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ isActive: !isActive })
+      });
+
+      if (!response.ok) throw new Error('Failed to update salon status');
+      
+      toast({
+        title: isActive ? "Salon suspended" : "Salon activated",
+        description: `The salon has been ${isActive ? 'suspended' : 'activated'} successfully.`,
+      });
+      
+      // Refresh the data
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update salon status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewSalonDetails = (salonId: string) => {
+    const salon = brandSalons?.find(s => s.id === salonId);
+    if (salon) {
+      setSelectedSalonDetails(salon);
+      setSalonDetailsDialogOpen(true);
+    }
+  };
 
   if ((user as any)?.userType !== 'brand_owner') {
     return (
@@ -409,14 +460,75 @@ export default function BrandDashboard() {
                     </div>
 
                     <div className="flex gap-2 mt-4">
-                      <Button size="sm" variant="outline" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => handleViewSalonDetails(salon.id)}
+                      >
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Manage
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <Settings className="h-4 w-4 mr-2" />
+                            Manage
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              const phone = salon.owner.phone || '';
+                              if (phone) {
+                                window.open(`tel:${phone}`, '_blank');
+                              }
+                            }}
+                          >
+                            <Phone className="h-4 w-4 mr-2" />
+                            Call Manager
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              const email = salon.owner.email;
+                              window.open(`mailto:${email}?subject=Regarding ${salon.name}`, '_blank');
+                            }}
+                          >
+                            <Mail className="h-4 w-4 mr-2" />
+                            Email Manager
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => handleSendMessage(salon.id, salon.name)}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Send Message
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => window.open(`/admin/reports?salon=${salon.id}`, '_blank')}
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            View Reports
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleToggleSalonStatus(salon.id, salon.isActive)}
+                          >
+                            {salon.isActive ? (
+                              <>
+                                <PauseCircle className="h-4 w-4 mr-2" />
+                                Suspend Salon
+                              </>
+                            ) : (
+                              <>
+                                <PlayCircle className="h-4 w-4 mr-2" />
+                                Activate Salon
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </CardContent>
                 </Card>
@@ -1195,6 +1307,158 @@ function ConnectionsManagement({ userId }: { userId?: string }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Message Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Message</DialogTitle>
+            <DialogDescription>
+              Send a message to {selectedSalonForMessage?.name} owner
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="Type your message here..."
+              value={messageContent}
+              onChange={(e) => setMessageContent(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMessageDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedSalonForMessage) {
+                  sendMessageMutation.mutate({
+                    salonId: selectedSalonForMessage.id,
+                    message: messageContent
+                  });
+                }
+              }}
+              disabled={sendMessageMutation.isPending || !messageContent.trim()}
+            >
+              Send Message
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Salon Details Dialog */}
+      <Dialog open={salonDetailsDialogOpen} onOpenChange={setSalonDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{selectedSalonDetails?.name} - Detailed View</DialogTitle>
+            <DialogDescription>
+              Complete salon information and performance metrics
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSalonDetails && (
+            <div className="grid gap-6 py-4 max-h-96 overflow-y-auto">
+              {/* Basic Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Basic Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Name:</span>
+                      <span>{selectedSalonDetails.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Address:</span>
+                      <span className="text-right">{selectedSalonDetails.address}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Status:</span>
+                      <Badge variant={selectedSalonDetails.isActive ? "default" : "secondary"}>
+                        {selectedSalonDetails.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Premium:</span>
+                      <Badge variant={selectedSalonDetails.isPremium ? "default" : "outline"}>
+                        {selectedSalonDetails.isPremium ? "Yes" : "No"}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Owner Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Name:</span>
+                      <span>{selectedSalonDetails.owner.firstName} {selectedSalonDetails.owner.lastName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Email:</span>
+                      <span>{selectedSalonDetails.owner.email}</span>
+                    </div>
+                    {selectedSalonDetails.owner.phone && (
+                      <div className="flex justify-between">
+                        <span className="font-medium">Phone:</span>
+                        <span>{selectedSalonDetails.owner.phone}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Performance Metrics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Performance Metrics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold">{selectedSalonDetails._count.bookings}</p>
+                      <p className="text-sm text-gray-600">Total Bookings</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold">{selectedSalonDetails._count.staff}</p>
+                      <p className="text-sm text-gray-600">Staff Members</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold">{selectedSalonDetails._count.services}</p>
+                      <p className="text-sm text-gray-600">Services</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold">{selectedSalonDetails.averageRating}</p>
+                      <p className="text-sm text-gray-600">Avg Rating</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Monthly Earnings:</span>
+                      <span className="text-xl font-bold text-green-600">
+                        ₹{selectedSalonDetails.monthlyEarnings.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="font-medium">Total Reviews:</span>
+                      <span className="text-lg">{selectedSalonDetails.totalReviews}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSalonDetailsDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
