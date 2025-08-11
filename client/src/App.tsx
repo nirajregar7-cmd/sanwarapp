@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { MobileInstallButton } from "@/components/MobileInstallButton";
 
 import Layout from "@/components/Layout";
 
@@ -300,6 +301,7 @@ function App() {
         <Router />
         <Toaster />
         <InstallPrompt />
+        <MobileInstallButton />
       </TooltipProvider>
     </QueryClientProvider>
   );

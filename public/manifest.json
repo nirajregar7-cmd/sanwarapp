@@ -3,6 +3,7 @@
   "short_name": "Sanwar",
   "description": "Smart salon booking platform for seamless appointments",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#8B5CF6",
@@ -22,12 +23,5 @@
     }
   ],
   "categories": ["lifestyle", "business"],
-  "screenshots": [
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "375x812",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ]
+  "prefer_related_applications": false
 }

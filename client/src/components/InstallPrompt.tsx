@@ -6,17 +6,21 @@ import { Download, X, Smartphone } from 'lucide-react';
 
 export function InstallPrompt() {
   const { isInstallable, isInstalled, installApp } = usePWA();
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(() => {
+    return localStorage.getItem('pwa-prompt-dismissed') === 'true';
+  });
 
   if (!isInstallable || isInstalled || isDismissed) {
     return null;
   }
 
   const handleInstall = async () => {
-    const success = await installApp();
-    if (!success) {
-      setIsDismissed(true);
-    }
+    await installApp();
+  };
+
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    localStorage.setItem('pwa-prompt-dismissed', 'true');
   };
 
   return (
@@ -30,7 +34,7 @@ export function InstallPrompt() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsDismissed(true)}
+            onClick={handleDismiss}
             className="h-6 w-6 p-0 hover:bg-primary/10"
           >
             <X className="h-3 w-3" />

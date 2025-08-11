@@ -16,7 +16,14 @@ export function usePWA() {
 
   useEffect(() => {
     // Check if app is already installed
-    setIsInstalled(window.matchMedia('(display-mode: standalone)').matches);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isInWebAppiOS = (window.navigator as any).standalone === true;
+    setIsInstalled(isStandalone || isInWebAppiOS);
+
+    // Always show install option if not already installed
+    if (!isStandalone && !isInWebAppiOS) {
+      setIsInstallable(true);
+    }
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -40,23 +47,44 @@ export function usePWA() {
   }, []);
 
   const installApp = async () => {
-    if (!installPrompt) return false;
-
-    try {
-      await installPrompt.prompt();
-      const choiceResult = await installPrompt.userChoice;
-      
-      if (choiceResult.outcome === 'accepted') {
-        setIsInstalled(true);
-        setIsInstallable(false);
-        setInstallPrompt(null);
-        return true;
+    if (installPrompt) {
+      try {
+        await installPrompt.prompt();
+        const choiceResult = await installPrompt.userChoice;
+        
+        if (choiceResult.outcome === 'accepted') {
+          setIsInstalled(true);
+          setIsInstallable(false);
+          setInstallPrompt(null);
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Error installing app:', error);
+        return false;
       }
-      return false;
-    } catch (error) {
-      console.error('Error installing app:', error);
+    } else {
+      // Fallback for browsers that don't support beforeinstallprompt
+      showInstallInstructions();
       return false;
     }
+  };
+
+  const showInstallInstructions = () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    let instructions = '';
+    
+    if (isIOS) {
+      instructions = 'To install: Tap the Share button and select "Add to Home Screen"';
+    } else if (isAndroid) {
+      instructions = 'To install: Tap the menu (⋮) and select "Install app" or "Add to Home screen"';
+    } else {
+      instructions = 'To install: Look for the install icon in your browser address bar, or use browser menu → "Install Sanwar"';
+    }
+    
+    alert(instructions);
   };
 
   return {
