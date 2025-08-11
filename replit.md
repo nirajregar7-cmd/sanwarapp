@@ -18,7 +18,7 @@ The server is built using Express.js and TypeScript, adhering to a RESTful API d
 The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication.
 
 ### Authentication System
-The system uses traditional email/password authentication with bcrypt for secure password hashing and JWT tokens for session management. `express-session` with PostgreSQL storage maintains persistent login states. Users can register as either a customer or salon owner, with role-based access control implemented throughout the application. Social login integration with Google and Facebook OAuth is also supported.
+The system uses traditional email/password authentication with bcrypt for secure password hashing and JWT tokens for session management. `express-session` with PostgreSQL storage maintains persistent login states. Users can register as either a customer or salon owner, with role-based access control implemented throughout the application. Social login integration with Google and Facebook OAuth is also supported. An automated welcome email system sends personalized onboarding messages to new users based on their role, integrated across all registration methods.
 
 ### File Storage and Media Management
 Media uploads are handled via Google Cloud Storage, leveraging Replit's sidecar authentication for secure access. Uppy.js provides a modern file upload interface. An Access Control List (ACL) mechanism ensures fine-grained permissions for uploaded files, allowing for private media access based on user relationships.
@@ -54,7 +54,7 @@ Vite is used for fast development builds and hot module replacement. The build p
 - **Replit Runtime**: Hosting and development platform.
 - **Vercel Deployment**: Production hosting.
 - **Twilio**: SMS OTP for password reset.
-- **SendGrid**: Email notifications.
+- **Nodemailer with Gmail**: Automated welcome email system for new user registrations.
 - **Razorpay**: Payment gateway and automatic payout system.
 
 ### Development Tools
