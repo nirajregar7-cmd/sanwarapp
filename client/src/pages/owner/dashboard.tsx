@@ -2115,9 +2115,11 @@ export default function OwnerDashboard() {
                             };
                           }}
                           onComplete={(result) => {
+                            console.log('Staff photo upload completed:', result);
                             if (result.successful && result.successful.length > 0) {
                               const uploadedFile = result.successful[0];
                               const imageUrl = uploadedFile.uploadURL;
+                              console.log('Uploaded file URL:', imageUrl);
                               
                               if (imageUrl) {
                                 // Convert Google Storage URL to our object path format
@@ -2126,13 +2128,21 @@ export default function OwnerDashboard() {
                                   // Extract path and convert to /objects/ format
                                   const url = new URL(imageUrl);
                                   const pathParts = url.pathname.split('/');
+                                  console.log('URL path parts:', pathParts);
                                   if (pathParts.length >= 4) {
-                                    // Extract bucket and object path
+                                    // Extract bucket and object path - avoid double "uploads" 
                                     const objectPath = pathParts.slice(3).join('/');
-                                    finalUrl = `/objects/uploads/${objectPath}`;
+                                    console.log('Extracted object path:', objectPath);
+                                    // Don't add "/uploads/" if it already starts with "uploads/"
+                                    if (objectPath.startsWith('uploads/')) {
+                                      finalUrl = `/objects/${objectPath}`;
+                                    } else {
+                                      finalUrl = `/objects/uploads/${objectPath}`;
+                                    }
                                   }
                                 }
                                 
+                                console.log('Final URL being set:', finalUrl);
                                 field.onChange(finalUrl);
                                 toast({
                                   title: "Photo uploaded!",
