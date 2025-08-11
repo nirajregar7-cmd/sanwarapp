@@ -1,6 +1,14 @@
 import { File } from "@google-cloud/storage";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { neon } from "@neondatabase/serverless";
+import { staff } from "../shared/schema";
+import { eq } from "drizzle-orm";
 
 const ACL_POLICY_METADATA_KEY = "custom:aclPolicy";
+
+// Initialize database connection for this module
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql);
 
 // The type of the access group.
 //
@@ -36,8 +44,8 @@ export interface ObjectAccessGroup {
 }
 
 export enum ObjectPermission {
-  READ = "read",
-  WRITE = "write",
+  READ = "READ",
+  WRITE = "WRITE",
 }
 
 export interface ObjectAclRule {
@@ -153,6 +161,27 @@ export async function canAccessObject({
     requestedPermission === ObjectPermission.READ
   ) {
     return true;
+  }
+
+  // Special handling for staff photos - allow authenticated users to view them
+  if (userId && requestedPermission === ObjectPermission.READ) {
+    const objectPath = objectFile.name;
+    if (objectPath.startsWith('uploads/') || objectPath.includes('staff_photos/')) {
+      try {
+        // Check if this object is a staff photo by looking in the database
+        const [staffWithPhoto] = await db.select()
+          .from(staff)
+          .where(eq(staff.photoUrl, objectPath))
+          .limit(1);
+        
+        if (staffWithPhoto) {
+          // This is a staff photo - allow access to all authenticated users
+          return true;
+        }
+      } catch (error) {
+        console.error('Error checking staff photo in objectAcl:', error);
+      }
+    }
   }
 
   // Access control requires the user id.

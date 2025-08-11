@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -1107,6 +1107,24 @@ export default function OwnerDashboard() {
                       </Button>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+              
+              {/* Staff Schedule Management Link */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Staff Schedule Management</CardTitle>
+                  <CardDescription>
+                    Set working hours and manage schedules for your staff members
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Link href="/owner/staff-schedule">
+                    <Button className="w-full">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Manage Staff Schedules
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </TabsContent>
