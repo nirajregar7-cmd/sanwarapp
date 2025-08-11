@@ -318,7 +318,7 @@ export function CustomerSalonMap({
       <div className="relative">
         <div 
           ref={mapRef} 
-          className="w-full h-64 rounded-lg border"
+          className="w-full h-64 rounded-lg border relative z-10"
           style={{ minHeight: '256px' }}
         />
         <div className="absolute bottom-4 left-4 bg-white dark:bg-gray-900 px-3 py-2 rounded-lg shadow-md text-sm">
