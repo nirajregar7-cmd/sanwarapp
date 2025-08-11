@@ -1555,39 +1555,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
       
-      // Get bookings for the owner's salon with customer information
-      const ownerBookings = await db.select({
-        // Booking fields
-        id: bookings.id,
-        customerId: bookings.customerId,
-        salonId: bookings.salonId,
-        serviceId: bookings.serviceId,
-        staffId: bookings.staffId,
-        timeSlotId: bookings.timeSlotId,
-        date: bookings.date,
-        startTime: bookings.startTime,
-        endTime: bookings.endTime,
-        totalAmount: bookings.totalAmount,
-        status: bookings.status,
-        paymentId: bookings.paymentId,
-        paymentStatus: bookings.paymentStatus,
-        createdAt: bookings.createdAt,
-        isWalkIn: bookings.isWalkIn,
-        walkInCustomerName: bookings.walkInCustomerName,
-        walkInCustomerPhone: bookings.walkInCustomerPhone,
-        notes: bookings.notes,
-        // Customer information
-        customerFirstName: users.firstName,
-        customerLastName: users.lastName,
-        customerEmail: users.email,
-        customerProfileImageUrl: users.profileImageUrl,
-        customerPhone: users.phone,
-      })
-        .from(bookings)
-        .innerJoin(salons, eq(bookings.salonId, salons.id))
-        .leftJoin(users, eq(bookings.customerId, users.id))
-        .where(eq(salons.ownerId, userId))
-        .orderBy(desc(bookings.createdAt));
+      // Get the owner's salon first
+      const [ownerSalon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!ownerSalon) {
+        return res.status(404).json({ message: "No salon found for this owner" });
+      }
+      
+      // Use the storage method to get bookings with detailed information
+      const ownerBookings = await storage.getBookingsBySalon(ownerSalon.id);
       
       res.json(ownerBookings);
     } catch (error) {

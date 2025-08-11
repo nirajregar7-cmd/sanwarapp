@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, Clock, MapPin, Star, Heart } from "lucide-react";
-import type { Booking } from "@shared/schema";
+import type { BookingWithDetails } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
 
@@ -18,7 +18,7 @@ export default function CustomerBookings() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
 
-  const { data: bookings, isLoading, error } = useQuery<Booking[]>({
+  const { data: bookings, isLoading, error } = useQuery<BookingWithDetails[]>({
     queryKey: ["/api/bookings/my"],
     retry: false,
   });
@@ -151,12 +151,12 @@ export default function CustomerBookings() {
     return bookingDateTime > new Date();
   };
 
-  const handleReschedule = (booking: Booking) => {
+  const handleReschedule = (booking: BookingWithDetails) => {
     // Navigate to salon detail page with booking data for rescheduling
     setLocation(`/salon/${booking.salonId}?reschedule=${booking.id}`);
   };
 
-  const handleCancel = (booking: Booking) => {
+  const handleCancel = (booking: BookingWithDetails) => {
     // Check if booking can be cancelled
     const bookingDateTime = new Date(`${booking.date} ${booking.startTime}`);
     const now = new Date();
@@ -194,7 +194,7 @@ export default function CustomerBookings() {
 
       {bookings && bookings.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {bookings.map((booking: Booking) => (
+          {bookings.map((booking: BookingWithDetails) => (
             <Card 
               key={booking.id} 
               className={`dark:bg-gray-800 dark:border-gray-700 ${isUpcoming(booking.date || '', booking.startTime || '') ? 'border-l-4 border-l-accent' : ''}`}
@@ -203,9 +203,11 @@ export default function CustomerBookings() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 space-y-2 sm:space-y-0">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
-                      Salon Booking #{booking.id.slice(-6)}
+                      {booking.service?.name || 'Salon Service'} #{booking.id.slice(-6)}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">Service booked</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm">
+                      {booking.salon?.name || 'Salon Booking'}
+                    </p>
                   </div>
                   <Badge className={`${getStatusColor(booking.status || '')} flex-shrink-0 self-start`}>
                     {getStatusText(booking.status || '')}
@@ -215,15 +217,28 @@ export default function CustomerBookings() {
                 <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
-                    <span>{new Date(booking.date).toLocaleDateString()}</span>
+                    <span className="font-medium">
+                      {new Date(booking.date).toLocaleDateString('en-US', { 
+                        weekday: 'short',
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 text-gray-400 mr-2" />
-                    <span>{booking.startTime} - {booking.endTime}</span>
+                    <span className="font-medium">{booking.startTime} - {booking.endTime}</span>
                   </div>
+                  {booking.staff?.name && (
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 text-gray-400 mr-2" />
+                      <span>Staff: {booking.staff.name}</span>
+                    </div>
+                  )}
                   <div className="flex items-center">
                     <MapPin className="h-4 w-4 text-gray-400 mr-2" />
-                    <span>Salon Location</span>
+                    <span>{booking.salon?.address || 'Salon Location'}</span>
                   </div>
                 </div>
                 

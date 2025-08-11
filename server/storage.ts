@@ -432,19 +432,113 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBookingsByCustomer(customerId: string): Promise<Booking[]> {
-    return await db
-      .select()
+    const bookingsWithDetails = await db
+      .select({
+        // Booking fields
+        id: bookings.id,
+        customerId: bookings.customerId,
+        salonId: bookings.salonId,
+        serviceId: bookings.serviceId,
+        staffId: bookings.staffId,
+        timeSlotId: bookings.timeSlotId,
+        date: bookings.date,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        totalAmount: bookings.totalAmount,
+        confirmationAmount: bookings.confirmationAmount,
+        status: bookings.status,
+        paymentId: bookings.paymentId,
+        paymentStatus: bookings.paymentStatus,
+        createdAt: bookings.createdAt,
+        updatedAt: bookings.updatedAt,
+        isWalkIn: bookings.isWalkIn,
+        walkInCustomerName: bookings.walkInCustomerName,
+        walkInCustomerPhone: bookings.walkInCustomerPhone,
+        notes: bookings.notes,
+        // Salon details
+        salon: {
+          id: salons.id,
+          name: salons.name,
+          address: salons.address,
+          phone: salons.phone,
+        },
+        // Service details
+        service: {
+          id: services.id,
+          name: services.name,
+          price: services.price,
+          duration: services.duration,
+        },
+        // Staff details (optional)
+        staff: {
+          id: staff.id,
+          name: staff.name,
+          designation: staff.designation,
+        },
+      })
       .from(bookings)
+      .leftJoin(salons, eq(bookings.salonId, salons.id))
+      .leftJoin(services, eq(bookings.serviceId, services.id))
+      .leftJoin(staff, eq(bookings.staffId, staff.id))
       .where(eq(bookings.customerId, customerId))
       .orderBy(desc(bookings.createdAt));
+
+    return bookingsWithDetails as any;
   }
 
   async getBookingsBySalon(salonId: string): Promise<Booking[]> {
-    return await db
-      .select()
+    const bookingsWithDetails = await db
+      .select({
+        // Booking fields
+        id: bookings.id,
+        customerId: bookings.customerId,
+        salonId: bookings.salonId,
+        serviceId: bookings.serviceId,
+        staffId: bookings.staffId,
+        timeSlotId: bookings.timeSlotId,
+        date: bookings.date,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        totalAmount: bookings.totalAmount,
+        confirmationAmount: bookings.confirmationAmount,
+        status: bookings.status,
+        paymentId: bookings.paymentId,
+        paymentStatus: bookings.paymentStatus,
+        createdAt: bookings.createdAt,
+        updatedAt: bookings.updatedAt,
+        isWalkIn: bookings.isWalkIn,
+        walkInCustomerName: bookings.walkInCustomerName,
+        walkInCustomerPhone: bookings.walkInCustomerPhone,
+        notes: bookings.notes,
+        // Customer details
+        customer: {
+          id: users.id,
+          name: users.firstName || bookings.walkInCustomerName,
+          email: users.email,
+          phone: users.phone || bookings.walkInCustomerPhone,
+        },
+        // Service details
+        service: {
+          id: services.id,
+          name: services.name,
+          price: services.price,
+          duration: services.duration,
+        },
+        // Staff details (optional)
+        staff: {
+          id: staff.id,
+          name: staff.name,
+          designation: staff.designation,
+        },
+      })
       .from(bookings)
+      .leftJoin(users, eq(bookings.customerId, users.id))
+      .leftJoin(services, eq(bookings.serviceId, services.id))
+      .leftJoin(staff, eq(bookings.staffId, staff.id))
       .where(eq(bookings.salonId, salonId))
       .orderBy(desc(bookings.createdAt));
+
+    return bookingsWithDetails as any;
   }
 
   async getBookingById(id: string): Promise<Booking | undefined> {

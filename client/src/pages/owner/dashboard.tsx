@@ -24,16 +24,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { Salon, Service, Staff, Booking, Review, SalonGallery } from "@shared/schema";
-
-// Extended booking type that includes customer information from the join
-type BookingWithCustomer = Booking & {
-  customerFirstName: string | null;
-  customerLastName: string | null;
-  customerEmail: string | null;
-  customerPhone: string | null;
-  customerProfileImageUrl: string | null;
-};
+import type { Salon, Service, Staff, BookingWithDetails, Review, SalonGallery } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -109,7 +100,7 @@ export default function OwnerDashboard() {
   });
 
   // Fetch salon bookings
-  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<BookingWithCustomer[]>({
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<BookingWithDetails[]>({
     queryKey: [`/api/owner/bookings`],
     enabled: !!salon?.id,
   });
@@ -731,25 +722,49 @@ export default function OwnerDashboard() {
                   ) : bookings.length > 0 ? (
                     <div className="space-y-4">
                       {bookings.slice(0, 5).map((booking) => (
-                        <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div>
-                            <p className="font-medium">Customer Booking</p>
-                            <p className="text-sm text-gray-600">
-                              {booking.date} at {booking.startTime}
-                            </p>
+                        <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="font-medium text-gray-900">
+                                {booking.service?.name || 'Service Booking'}
+                              </p>
+                              <Badge 
+                                variant={
+                                  booking.status === 'confirmed' ? 'default' :
+                                  booking.status === 'completed' ? 'secondary' :
+                                  booking.status === 'cancelled' ? 'destructive' : 'outline'
+                                }
+                              >
+                                {booking.status}
+                              </Badge>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-sm text-gray-600">
+                                <Calendar className="h-3 w-3 inline mr-1" />
+                                {new Date(booking.date).toLocaleDateString('en-US', { 
+                                  weekday: 'short',
+                                  month: 'short', 
+                                  day: 'numeric'
+                                })} at {booking.startTime} - {booking.endTime}
+                              </p>
+                              {booking.customer?.name && (
+                                <p className="text-sm text-gray-600">
+                                  Customer: {booking.customer.name}
+                                </p>
+                              )}
+                              {booking.staff?.name && (
+                                <p className="text-sm text-gray-600">
+                                  Staff: {booking.staff.name}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <Badge 
-                              variant={
-                                booking.status === 'confirmed' ? 'default' :
-                                booking.status === 'completed' ? 'secondary' :
-                                booking.status === 'cancelled' ? 'destructive' : 'outline'
-                              }
-                            >
-                              {booking.status}
-                            </Badge>
-                            <p className="text-sm font-medium text-green-600 mt-1">
+                          <div className="text-right ml-4">
+                            <p className="text-lg font-semibold text-green-600">
                               ₹{booking.totalAmount}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {booking.paymentStatus === 'completed' ? 'Paid' : 'Pending'}
                             </p>
                           </div>
                         </div>
@@ -1162,12 +1177,10 @@ export default function OwnerDashboard() {
                                 <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
                                   <User className="h-6 w-6 text-gray-500" />
                                 </div>
-                              ) : booking.customerProfileImageUrl ? (
-                                <img
-                                  src={booking.customerProfileImageUrl}
-                                  alt={`${booking.customerFirstName} ${booking.customerLastName || ''}`}
-                                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                                />
+                              ) : booking.customer?.id ? (
+                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <User className="h-6 w-6 text-primary" />
+                                </div>
                               ) : (
                                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                                   <User className="h-6 w-6 text-primary" />
@@ -1182,7 +1195,7 @@ export default function OwnerDashboard() {
                                   <p className="font-medium text-gray-900">
                                     {booking.isWalkIn 
                                       ? booking.walkInCustomerName 
-                                      : `${booking.customerFirstName} ${booking.customerLastName || ''}`.trim()
+                                      : booking.customer?.name || 'Customer'
                                     }
                                   </p>
                                   <p className="text-sm text-gray-500">
@@ -1199,7 +1212,10 @@ export default function OwnerDashboard() {
                                   {booking.status}
                                 </Badge>
                               </div>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm text-gray-600">
+                                <div>
+                                  <span className="font-medium">Service:</span> {booking.service?.name || 'Service'}
+                                </div>
                                 <div>
                                   <span className="font-medium">Date:</span> {booking.date}
                                 </div>
@@ -1221,9 +1237,9 @@ export default function OwnerDashboard() {
                                   Phone: {booking.walkInCustomerPhone}
                                 </p>
                               )}
-                              {!booking.isWalkIn && booking.customerPhone && (
+                              {!booking.isWalkIn && booking.customer?.phone && (
                                 <p className="text-sm text-gray-500 mt-1">
-                                  Phone: {booking.customerPhone}
+                                  Phone: {booking.customer.phone}
                                 </p>
                               )}
                             </div>

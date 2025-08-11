@@ -837,6 +837,33 @@ export type InsertTimeSlot = z.infer<typeof insertTimeSlotSchema>;
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type InsertWalkInBooking = z.infer<typeof insertWalkInBookingSchema>;
+
+// Enhanced booking type with related data for UI display
+export interface BookingWithDetails extends Booking {
+  salon?: {
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+  };
+  service?: {
+    id: string;
+    name: string;
+    price: string;
+    duration: number;
+  };
+  staff?: {
+    id: string;
+    name: string;
+    designation: string;
+  };
+  customer?: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
+}
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type PlatformStats = typeof platformStats.$inferSelect;
