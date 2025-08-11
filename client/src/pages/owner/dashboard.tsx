@@ -704,6 +704,51 @@ export default function OwnerDashboard() {
                 </Card>
               </div>
 
+              {/* Salon ID Card for Brand Invitations */}
+              <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg sm:text-xl flex items-center">
+                    <Store className="h-5 w-5 mr-2 text-indigo-600" />
+                    Salon ID for Brand Partners
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-lg border">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-1">Your Salon ID</p>
+                          <p className="text-lg font-mono bg-gray-100 px-3 py-1 rounded border select-all">
+                            {salon?.id}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(salon?.id || '');
+                            toast({
+                              title: "Copied!",
+                              description: "Salon ID copied to clipboard",
+                            });
+                          }}
+                        >
+                          Copy ID
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600 space-y-2">
+                      <p className="font-medium">📋 How to use this ID:</p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>Share this ID with brand owners who want to partner with your salon</li>
+                        <li>Brand owners can use this ID to send you partnership invitations</li>
+                        <li>You'll receive notifications about partnership requests in your dashboard</li>
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Recent Bookings */}
               <Card>
                 <CardHeader>
