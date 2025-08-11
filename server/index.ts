@@ -65,7 +65,15 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+    
+    // Start the booking notification scheduler
+    try {
+      const { startBookingScheduler } = await import('./booking-scheduler');
+      startBookingScheduler();
+    } catch (schedulerError) {
+      console.error('❌ Error starting booking scheduler:', schedulerError);
+    }
   });
 })();

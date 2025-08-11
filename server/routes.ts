@@ -1191,6 +1191,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log("Created booking after payment:", booking);
+
+      // Send booking confirmation email
+      try {
+        const { sendBookingConfirmationEmail, getBookingNotificationData } = await import('./email-notifications');
+        const notificationData = await getBookingNotificationData(booking.id);
+        if (notificationData) {
+          await sendBookingConfirmationEmail(notificationData);
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending confirmation email:', emailError);
+        // Don't fail the booking if email fails
+      }
+
       res.json({ 
         success: true, 
         booking,
