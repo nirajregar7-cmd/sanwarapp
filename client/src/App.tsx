@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { MobileInstallButton } from "@/components/MobileInstallButton";
+import { AppClerkProvider } from "@/lib/clerk-provider";
 
 import Layout from "@/components/Layout";
 
@@ -320,14 +321,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Router />
-        <Toaster />
-        <InstallPrompt />
-        <MobileInstallButton />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <AppClerkProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Router />
+          <Toaster />
+          <InstallPrompt />
+          <MobileInstallButton />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </AppClerkProvider>
   );
 }
 
