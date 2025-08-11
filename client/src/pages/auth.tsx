@@ -28,7 +28,8 @@ export default function AuthPage() {
     password: "",
     firstName: "",
     lastName: "",
-    userType: "customer" as "customer" | "salon_owner",
+    userType: "customer" as "customer" | "salon_owner" | "brand_owner",
+    brandName: "",
     referralCode: "",
   });
   
@@ -46,8 +47,8 @@ export default function AuthPage() {
       setActiveTab("register"); // Switch to register tab if referral code present
     }
     
-    if (userType && (userType === "customer" || userType === "salon_owner")) {
-      setRegisterForm(prev => ({ ...prev, userType: userType as "customer" | "salon_owner" }));
+    if (userType && (userType === "customer" || userType === "salon_owner" || userType === "brand_owner")) {
+      setRegisterForm(prev => ({ ...prev, userType: userType as "customer" | "salon_owner" | "brand_owner" }));
     }
     
     if (returnToParam) {
@@ -92,6 +93,15 @@ export default function AuthPage() {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (registerForm.userType === "brand_owner" && !registerForm.brandName) {
+      toast({
+        title: "Missing Brand Name",
+        description: "Please provide your brand name",
         variant: "destructive",
       });
       return;
@@ -240,9 +250,9 @@ export default function AuthPage() {
                   <RadioGroup
                     value={registerForm.userType}
                     onValueChange={(value) => 
-                      setRegisterForm({ ...registerForm, userType: value as "customer" | "salon_owner" })
+                      setRegisterForm({ ...registerForm, userType: value as "customer" | "salon_owner" | "brand_owner" })
                     }
-                    className="grid grid-cols-2 gap-4"
+                    className="grid grid-cols-1 gap-3"
                   >
                     <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-gray-50">
                       <RadioGroupItem value="customer" id="customer" />
@@ -256,6 +266,13 @@ export default function AuthPage() {
                       <Label htmlFor="salon_owner" className="flex items-center cursor-pointer">
                         <Scissors className="w-4 h-4 mr-2" />
                         Salon Owner
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-gray-50">
+                      <RadioGroupItem value="brand_owner" id="brand_owner" />
+                      <Label htmlFor="brand_owner" className="flex items-center cursor-pointer">
+                        <Gift className="w-4 h-4 mr-2" />
+                        Brand Owner (Multiple Salons)
                       </Label>
                     </div>
                   </RadioGroup>
@@ -342,6 +359,24 @@ export default function AuthPage() {
                       Password must be at least 6 characters long
                     </p>
                   </div>
+
+                  {/* Brand Name Field - only show for brand owners */}
+                  {registerForm.userType === "brand_owner" && (
+                    <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <Label htmlFor="brandName">Brand Name *</Label>
+                      <Input
+                        id="brandName"
+                        placeholder="e.g., StyleCut, BeautyHub, etc."
+                        value={registerForm.brandName}
+                        onChange={(e) => setRegisterForm({ ...registerForm, brandName: e.target.value })}
+                        disabled={registerMutation.isPending}
+                        required
+                      />
+                      <p className="text-xs text-blue-600">
+                        This will be used to group all your salon branches under one brand
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="referralCode">Referral Code (Optional)</Label>

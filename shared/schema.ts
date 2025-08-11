@@ -34,7 +34,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   phone: varchar("phone", { length: 20 }),
   profileImageUrl: varchar("profile_image_url"),
-  userType: varchar("user_type", { enum: ["customer", "salon_owner", "admin", "super_admin"] }).notNull().default("customer"),
+  userType: varchar("user_type", { enum: ["customer", "salon_owner", "brand_owner", "admin", "super_admin"] }).notNull().default("customer"),
   role: varchar("role").default("user"), // Added role field for backward compatibility
   isBlocked: boolean("is_blocked").default(false),
   // Social authentication fields
@@ -43,6 +43,9 @@ export const users = pgTable("users", {
   socialId: varchar("social_id"),
   // Clerk authentication field
   clerkId: varchar("clerk_id").unique(),
+  // Brand owner fields
+  brandName: varchar("brand_name"),
+  isBrandOwner: boolean("is_brand_owner").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -51,6 +54,8 @@ export const users = pgTable("users", {
 export const salons = pgTable("salons", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ownerId: varchar("owner_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  brandOwnerId: varchar("brand_owner_id").references(() => users.id, { onDelete: "set null" }),
+  brandName: varchar("brand_name"),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   phone: varchar("phone", { length: 20 }),
@@ -461,6 +466,7 @@ export const salonLikes = pgTable("salon_likes", {
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   ownedSalons: many(salons, { relationName: "salon_owner" }),
+  brandSalons: many(salons, { relationName: "brand_owner" }),
   bookings: many(bookings, { relationName: "customer_bookings" }),
   reviews: many(reviews, { relationName: "customer_reviews" }),
   wallet: one(wallets),
@@ -472,6 +478,11 @@ export const salonsRelations = relations(salons, ({ one, many }) => ({
     fields: [salons.ownerId],
     references: [users.id],
     relationName: "salon_owner",
+  }),
+  brandOwner: one(users, {
+    fields: [salons.brandOwnerId],
+    references: [users.id],
+    relationName: "brand_owner",
   }),
   services: many(services),
   staff: many(staff),

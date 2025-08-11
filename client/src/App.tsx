@@ -40,6 +40,9 @@ import AdminFeedbackSupportPage from "@/pages/admin-feedback-support";
 // Clerk Auth Pages
 import ClerkSignInPage, { ClerkSignUpPage } from "@/pages/clerk-auth";
 
+// Brand Owner Pages
+import BrandDashboard from "@/pages/brand-owner/brand-dashboard";
+
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
@@ -91,6 +94,10 @@ function Router() {
               <Layout>
                 <OwnerDashboard />
               </Layout>
+            ) : (user as any).userType === 'brand_owner' ? (
+              <Layout>
+                <BrandDashboard />
+              </Layout>
             ) : (
               <Layout>
                 <CustomerHome />
@@ -115,6 +122,17 @@ function Router() {
               <Route path="/shopkeeper/dashboard">
                 <Layout>
                   <OwnerDashboard />
+                </Layout>
+              </Route>
+            </>
+          )}
+          
+          {/* Brand Owner Routes */}
+          {(user as any)?.userType === 'brand_owner' && (
+            <>
+              <Route path="/brand/dashboard">
+                <Layout>
+                  <BrandDashboard />
                 </Layout>
               </Route>
             </>
