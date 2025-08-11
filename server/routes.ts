@@ -1734,16 +1734,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Set ACL policy for profile image if provided and fix double path issue
-      if (staffData.photoUrl) {
+      if (staffData.photoUrl && staffData.photoUrl.trim() !== '') {
         const objectStorageService = new ObjectStorageService();
         try {
           // Fix double path issue: remove the leading "/objects/uploads/" if present
           let cleanPhotoUrl = staffData.photoUrl;
+          console.log('Original photo URL:', cleanPhotoUrl);
+          
           if (cleanPhotoUrl.startsWith('/objects/uploads/uploads/')) {
             cleanPhotoUrl = cleanPhotoUrl.replace('/objects/uploads/uploads/', 'uploads/');
           } else if (cleanPhotoUrl.startsWith('/objects/uploads/')) {
             cleanPhotoUrl = cleanPhotoUrl.replace('/objects/uploads/', '');
           }
+          
+          console.log('Cleaned photo URL for ACL:', cleanPhotoUrl);
           
           const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
             cleanPhotoUrl,
@@ -1752,11 +1756,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
               visibility: "public", // Staff pictures should be public
             }
           );
+          
+          console.log('Final object path:', objectPath);
           staffData.photoUrl = objectPath; // Use the corrected path
         } catch (error) {
           console.error('Error setting staff photo ACL:', error);
-          // Don't fail the request if ACL setting fails
+          // Set photoUrl to null if ACL setting fails completely
+          staffData.photoUrl = null;
         }
+      } else {
+        staffData.photoUrl = null;
       }
       
       const [staffMember] = await db.insert(staff).values({
@@ -1802,20 +1811,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to update this staff member" });
       }
 
-      // Set ACL policy for profile image if provided
-      if (staffData.photoUrl) {
+      // Set ACL policy for profile image if provided and fix double path issue  
+      if (staffData.photoUrl && staffData.photoUrl.trim() !== '') {
         const objectStorageService = new ObjectStorageService();
         try {
-          await objectStorageService.trySetObjectEntityAclPolicy(
-            staffData.photoUrl,
+          // Fix double path issue: remove the leading "/objects/uploads/" if present
+          let cleanPhotoUrl = staffData.photoUrl;
+          console.log('Update - Original photo URL:', cleanPhotoUrl);
+          
+          if (cleanPhotoUrl.startsWith('/objects/uploads/uploads/')) {
+            cleanPhotoUrl = cleanPhotoUrl.replace('/objects/uploads/uploads/', 'uploads/');
+          } else if (cleanPhotoUrl.startsWith('/objects/uploads/')) {
+            cleanPhotoUrl = cleanPhotoUrl.replace('/objects/uploads/', '');
+          }
+          
+          console.log('Update - Cleaned photo URL for ACL:', cleanPhotoUrl);
+          
+          const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+            cleanPhotoUrl,
             {
               owner: userId,
               visibility: "public", // Staff pictures should be public
             }
           );
+          
+          console.log('Update - Final object path:', objectPath);
+          staffData.photoUrl = objectPath; // Use the corrected path
         } catch (error) {
-          console.error('Error setting staff photo ACL:', error);
-          // Don't fail the request if ACL setting fails
+          console.error('Error setting staff photo ACL during update:', error);
+          // Don't change the photoUrl if ACL setting fails during update
         }
       }
       
