@@ -4683,10 +4683,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/brand/salons/:brandOwnerId', isAuthenticated, async (req: any, res) => {
     try {
       const { brandOwnerId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
 
-      // Check if the authenticated user is the brand owner
-      if (userId !== brandOwnerId) {
+      // Check if the authenticated user is the brand owner or admin
+      if (userId !== brandOwnerId && userType !== 'admin') {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -4758,9 +4759,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/brand/stats/:brandOwnerId', isAuthenticated, async (req: any, res) => {
     try {
       const { brandOwnerId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
 
-      if (userId !== brandOwnerId) {
+      if (userId !== brandOwnerId && userType !== 'admin') {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -4834,9 +4836,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/brand/services/popular/:brandOwnerId', isAuthenticated, async (req: any, res) => {
     try {
       const { brandOwnerId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
 
-      if (userId !== brandOwnerId) {
+      if (userId !== brandOwnerId && userType !== 'admin') {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -4874,9 +4877,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/brand/reviews/:brandOwnerId', isAuthenticated, async (req: any, res) => {
     try {
       const { brandOwnerId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
 
-      if (userId !== brandOwnerId) {
+      if (userId !== brandOwnerId && userType !== 'admin') {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
