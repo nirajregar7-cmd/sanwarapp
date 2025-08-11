@@ -4921,6 +4921,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // Brand Connection/Invitation System API
+  // ============================================
+
+  // Get brand invitations for a user (sent and received)
+  app.get("/api/brand-invitations/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.userId;
+      const currentUserId = req.user?.id;
+
+      // Verify the user can only see their own invitations
+      if (userId !== currentUserId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { brandInvitations } = await import("@shared/schema");
+
+      // Get invitations sent by this user (as brand owner)
+      const sentInvitations = await db.select({
+        id: brandInvitations.id,
+        salonOwnerId: brandInvitations.salonOwnerId,
+        salonId: brandInvitations.salonId,
+        salonName: brandInvitations.salonName,
+        status: brandInvitations.status,
+        message: brandInvitations.message,
+        invitationType: brandInvitations.invitationType,
+        createdAt: brandInvitations.createdAt,
+        ownerName: users.firstName,
+        ownerEmail: users.email
+      })
+      .from(brandInvitations)
+      .leftJoin(users, eq(brandInvitations.salonOwnerId, users.id))
+      .where(eq(brandInvitations.brandOwnerId, userId));
+
+      // Get invitations received by this user (as salon owner)
+      const receivedInvitations = await db.select({
+        id: brandInvitations.id,
+        brandOwnerId: brandInvitations.brandOwnerId,
+        brandName: brandInvitations.brandName,
+        status: brandInvitations.status,
+        message: brandInvitations.message,
+        invitationType: brandInvitations.invitationType,
+        createdAt: brandInvitations.createdAt,
+        brandOwnerName: users.firstName,
+        brandOwnerEmail: users.email
+      })
+      .from(brandInvitations)
+      .leftJoin(users, eq(brandInvitations.brandOwnerId, users.id))
+      .where(eq(brandInvitations.salonOwnerId, userId));
+
+      res.json({
+        sent: sentInvitations,
+        received: receivedInvitations
+      });
+    } catch (error) {
+      console.error("Error fetching brand invitations:", error);
+      res.status(500).json({ message: "Failed to fetch brand invitations" });
+    }
+  });
+
+  // Send brand invitation (brand owner invites salon)
+  app.post("/api/brand-invitations/send", isAuthenticated, async (req: any, res) => {
+    try {
+      const brandOwnerId = req.user?.id;
+      const { salonId, message } = req.body;
+
+      const { brandInvitations } = await import("@shared/schema");
+
+      // Verify current user is a brand owner
+      const brandOwner = await db.select()
+        .from(users)
+        .where(and(eq(users.id, brandOwnerId), eq(users.userType, 'brand_owner')))
+        .limit(1);
+
+      if (!brandOwner.length) {
+        return res.status(403).json({ message: "Only brand owners can send invitations" });
+      }
+
+      // Get salon details
+      const salon = await db.select({
+        id: salons.id,
+        name: salons.name,
+        ownerId: salons.ownerId
+      })
+      .from(salons)
+      .where(eq(salons.id, salonId))
+      .limit(1);
+
+      if (!salon.length) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+
+      // Check if invitation already exists
+      const existingInvitation = await db.select()
+        .from(brandInvitations)
+        .where(and(
+          eq(brandInvitations.brandOwnerId, brandOwnerId),
+          eq(brandInvitations.salonId, salonId),
+          eq(brandInvitations.status, 'pending')
+        ))
+        .limit(1);
+
+      if (existingInvitation.length > 0) {
+        return res.status(400).json({ message: "Invitation already sent to this salon" });
+      }
+
+      // Create invitation
+      const invitation = await db.insert(brandInvitations).values({
+        brandOwnerId,
+        salonOwnerId: salon[0].ownerId,
+        salonId,
+        invitationType: 'brand_to_salon',
+        brandName: brandOwner[0].brandName,
+        salonName: salon[0].name,
+        message: message || `${brandOwner[0].brandName} wants to add your salon to their brand network`,
+        status: 'pending'
+      }).returning();
+
+      res.json({
+        message: "Brand invitation sent successfully",
+        invitation: invitation[0]
+      });
+    } catch (error) {
+      console.error("Error sending brand invitation:", error);
+      res.status(500).json({ message: "Failed to send brand invitation" });
+    }
+  });
+
+  // Accept/Reject brand invitation
+  app.put("/api/brand-invitations/:invitationId", isAuthenticated, async (req: any, res) => {
+    try {
+      const invitationId = req.params.invitationId;
+      const userId = req.user?.id;
+      const { status } = req.body; // 'accepted' or 'rejected'
+
+      const { brandInvitations } = await import("@shared/schema");
+
+      if (!['accepted', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: "Status must be 'accepted' or 'rejected'" });
+      }
+
+      // Get invitation
+      const invitation = await db.select()
+        .from(brandInvitations)
+        .where(eq(brandInvitations.id, invitationId))
+        .limit(1);
+
+      if (!invitation.length) {
+        return res.status(404).json({ message: "Invitation not found" });
+      }
+
+      const inv = invitation[0];
+
+      // Verify user is authorized to respond to this invitation
+      const canRespond = (
+        (inv.invitationType === 'brand_to_salon' && inv.salonOwnerId === userId) ||
+        (inv.invitationType === 'salon_to_brand' && inv.brandOwnerId === userId)
+      );
+
+      if (!canRespond) {
+        return res.status(403).json({ message: "Not authorized to respond to this invitation" });
+      }
+
+      if (inv.status !== 'pending') {
+        return res.status(400).json({ message: "Invitation has already been responded to" });
+      }
+
+      // Update invitation status
+      await db.update(brandInvitations)
+        .set({ 
+          status,
+          updatedAt: new Date()
+        })
+        .where(eq(brandInvitations.id, invitationId));
+
+      // If accepted, update salon's brand ownership
+      if (status === 'accepted') {
+        await db.update(salons)
+          .set({ brandOwnerId: inv.brandOwnerId })
+          .where(eq(salons.id, inv.salonId!));
+      }
+
+      res.json({
+        message: `Invitation ${status} successfully`,
+        status
+      });
+    } catch (error) {
+      console.error("Error responding to brand invitation:", error);
+      res.status(500).json({ message: "Failed to respond to invitation" });
+    }
+  });
+
   return httpServer;
 }
 

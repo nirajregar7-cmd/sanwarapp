@@ -998,11 +998,27 @@ export const platformAnalytics = pgTable("platform_analytics", {
   index("idx_platform_analytics_date").on(table.date)
 ]);
 
+// Brand invitations table for connecting salons to brands
+export const brandInvitations = pgTable("brand_invitations", {
+  id: varchar("id").primaryKey().$defaultFn(() => nanoid()),
+  brandOwnerId: varchar("brand_owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  salonOwnerId: varchar("salon_owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }),
+  status: varchar("status", { enum: ["pending", "accepted", "rejected"] }).default("pending"),
+  message: text("message"),
+  invitationType: varchar("invitation_type", { enum: ["brand_to_salon", "salon_to_brand"] }).notNull(),
+  brandName: varchar("brand_name"),
+  salonName: varchar("salon_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Zod schemas for new admin tables
 export const insertVerificationDocumentSchema = createInsertSchema(verificationDocuments);
 export const insertAdminActivityLogSchema = createInsertSchema(adminActivityLogs);
 export const insertContentModerationSchema = createInsertSchema(contentModerations);
 export const insertPlatformAnalyticsSchema = createInsertSchema(platformAnalytics);
+export const insertBrandInvitationSchema = createInsertSchema(brandInvitations);
 
 // Type exports for admin tables
 export type InsertVerificationDocument = z.infer<typeof insertVerificationDocumentSchema>;
@@ -1016,3 +1032,6 @@ export type ContentModeration = typeof contentModerations.$inferSelect;
 
 export type InsertPlatformAnalytics = z.infer<typeof insertPlatformAnalyticsSchema>;
 export type PlatformAnalytics = typeof platformAnalytics.$inferSelect;
+
+export type InsertBrandInvitation = z.infer<typeof insertBrandInvitationSchema>;
+export type BrandInvitation = typeof brandInvitations.$inferSelect;

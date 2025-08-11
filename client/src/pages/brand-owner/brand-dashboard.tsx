@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Building2, 
   Users, 
@@ -21,7 +25,13 @@ import {
   Eye,
   Plus,
   Filter,
-  Download
+  Download,
+  Send,
+  Clock,
+  Check,
+  X,
+  UserPlus,
+  Link2
 } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -259,6 +269,7 @@ export default function BrandDashboard() {
       <Tabs defaultValue="salons" className="space-y-4">
         <TabsList>
           <TabsTrigger value="salons">Branch Management</TabsTrigger>
+          <TabsTrigger value="connections">Salon Connections</TabsTrigger>
           <TabsTrigger value="performance">Performance Analytics</TabsTrigger>
           <TabsTrigger value="services">Service Reports</TabsTrigger>
           <TabsTrigger value="reviews">Customer Feedback</TabsTrigger>
@@ -364,6 +375,11 @@ export default function BrandDashboard() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        {/* Salon Connections Tab */}
+        <TabsContent value="connections" className="space-y-4">
+          <ConnectionsManagement userId={user?.id} />
         </TabsContent>
 
         {/* Performance Analytics Tab */}
@@ -595,6 +611,295 @@ export default function BrandDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// Brand Connections Management Component
+interface BrandInvitation {
+  id: string;
+  salonOwnerId?: string;
+  brandOwnerId?: string;
+  salonId?: string;
+  salonName?: string;
+  brandName?: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  message: string;
+  invitationType: 'brand_to_salon' | 'salon_to_brand';
+  createdAt: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  brandOwnerName?: string;
+  brandOwnerEmail?: string;
+}
+
+function ConnectionsManagement({ userId }: { userId?: string }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [searchSalonId, setSearchSalonId] = useState('');
+  const [inviteMessage, setInviteMessage] = useState('');
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+
+  // Fetch brand invitations
+  const { data: invitations, isLoading: invitationsLoading } = useQuery({
+    queryKey: [`/api/brand-invitations/${userId}`],
+    enabled: !!userId,
+  });
+
+  // Send brand invitation mutation
+  const sendInvitationMutation = useMutation({
+    mutationFn: async (data: { salonId: string; message?: string }) => {
+      const response = await fetch('/api/brand-invitations/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to send invitation');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/brand-invitations/${userId}`] });
+      toast({ title: "Invitation sent successfully!", description: "The salon owner will be notified." });
+      setShowInviteDialog(false);
+      setSearchSalonId('');
+      setInviteMessage('');
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to send invitation", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Respond to invitation mutation
+  const respondInvitationMutation = useMutation({
+    mutationFn: async (data: { invitationId: string; status: 'accepted' | 'rejected' }) => {
+      const response = await fetch(`/api/brand-invitations/${data.invitationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: data.status }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to respond to invitation');
+      }
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/brand-invitations/${userId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/brand/salons/${userId}`] });
+      toast({ 
+        title: `Invitation ${variables.status}!`, 
+        description: variables.status === 'accepted' ? "Salon has been added to your brand." : "Invitation declined."
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to respond", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleSendInvitation = () => {
+    if (!searchSalonId.trim()) {
+      toast({ title: "Please enter a salon ID", variant: "destructive" });
+      return;
+    }
+    sendInvitationMutation.mutate({ salonId: searchSalonId, message: inviteMessage });
+  };
+
+  const handleRespondToInvitation = (invitationId: string, status: 'accepted' | 'rejected') => {
+    respondInvitationMutation.mutate({ invitationId, status });
+  };
+
+  const sentInvitations = invitations?.sent || [];
+  const receivedInvitations = invitations?.received || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Brand Salon Connections</h2>
+        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Invite Salon
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Invite Salon to Join Brand</DialogTitle>
+              <DialogDescription>
+                Send an invitation to a salon owner to join your brand network.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="salonId">Salon ID</Label>
+                <Input
+                  id="salonId"
+                  placeholder="Enter salon ID"
+                  value={searchSalonId}
+                  onChange={(e) => setSearchSalonId(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="message">Custom Message (Optional)</Label>
+                <Textarea
+                  id="message"
+                  placeholder="Add a personal message..."
+                  value={inviteMessage}
+                  onChange={(e) => setInviteMessage(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSendInvitation}
+                disabled={sendInvitationMutation.isPending}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {sendInvitationMutation.isPending ? 'Sending...' : 'Send Invitation'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Sent Invitations */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Send className="h-5 w-5 mr-2" />
+              Sent Invitations
+            </CardTitle>
+            <CardDescription>Invitations you've sent to salon owners</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {invitationsLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : sentInvitations.length > 0 ? (
+              <div className="space-y-4">
+                {sentInvitations.map((invitation: BrandInvitation) => (
+                  <div key={invitation.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-medium">{invitation.salonName}</h4>
+                        <p className="text-sm text-gray-600">
+                          Owner: {invitation.ownerName} ({invitation.ownerEmail})
+                        </p>
+                      </div>
+                      <Badge variant={
+                        invitation.status === 'pending' ? 'secondary' :
+                        invitation.status === 'accepted' ? 'default' : 'destructive'
+                      }>
+                        <div className="flex items-center gap-1">
+                          {invitation.status === 'pending' && <Clock className="h-3 w-3" />}
+                          {invitation.status === 'accepted' && <Check className="h-3 w-3" />}
+                          {invitation.status === 'rejected' && <X className="h-3 w-3" />}
+                          {invitation.status}
+                        </div>
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-2">{invitation.message}</p>
+                    <p className="text-xs text-gray-500">
+                      Sent: {new Date(invitation.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No invitations sent yet.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Received Requests */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <UserPlus className="h-5 w-5 mr-2" />
+              Join Requests
+            </CardTitle>
+            <CardDescription>Requests from salon owners to join your brand</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {invitationsLoading ? (
+              <div className="space-y-3">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                    <div className="flex gap-2">
+                      <div className="h-8 bg-gray-200 rounded w-16"></div>
+                      <div className="h-8 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : receivedInvitations.filter((inv: BrandInvitation) => inv.invitationType === 'salon_to_brand').length > 0 ? (
+              <div className="space-y-4">
+                {receivedInvitations
+                  .filter((inv: BrandInvitation) => inv.invitationType === 'salon_to_brand')
+                  .map((invitation: BrandInvitation) => (
+                    <div key={invitation.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium">{invitation.salonName}</h4>
+                          <p className="text-sm text-gray-600">Wants to join your brand</p>
+                        </div>
+                        <Badge variant={
+                          invitation.status === 'pending' ? 'secondary' :
+                          invitation.status === 'accepted' ? 'default' : 'destructive'
+                        }>
+                          {invitation.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-3">{invitation.message}</p>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Requested: {new Date(invitation.createdAt).toLocaleDateString()}
+                      </p>
+                      
+                      {invitation.status === 'pending' && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleRespondToInvitation(invitation.id, 'accepted')}
+                            disabled={respondInvitationMutation.isPending}
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRespondToInvitation(invitation.id, 'rejected')}
+                            disabled={respondInvitationMutation.isPending}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Decline
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No join requests received.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
