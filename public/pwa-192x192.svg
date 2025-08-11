@@ -1,0 +1,7 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="20" fill="#8B5CF6"/>
+  <path d="M48 120c0-8.837 7.163-16 16-16h64c8.837 0 16 7.163 16 16v8c0 8.837-7.163 16-16 16H64c-8.837 0-16-7.163-16-16v-8z" fill="white"/>
+  <circle cx="96" cy="80" r="24" fill="white"/>
+  <path d="M72 56h48v16H72z" fill="white"/>
+  <text x="96" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">Sanwar</text>
+</svg>
