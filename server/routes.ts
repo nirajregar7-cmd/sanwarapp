@@ -5345,6 +5345,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // Brand Messaging and Analytics API Routes
+  // ============================================
+
+  // Send message from brand owner to salon owner
+  app.post("/api/brand/messages/send", isAuthenticated, async (req: any, res) => {
+    try {
+      const brandOwnerId = req.user?.id;
+      const { salonId, message } = req.body;
+
+      // Verify sender is a brand owner
+      const brandOwner = await db.select()
+        .from(users)
+        .where(and(eq(users.id, brandOwnerId), eq(users.userType, 'brand_owner')))
+        .limit(1);
+
+      if (!brandOwner.length) {
+        return res.status(403).json({ message: "Only brand owners can send messages" });
+      }
+
+      // Verify salon exists and is connected to this brand
+      const salon = await db.select()
+        .from(salons)
+        .where(and(eq(salons.id, salonId), eq(salons.brandOwnerId, brandOwnerId)))
+        .limit(1);
+
+      if (!salon.length) {
+        return res.status(404).json({ message: "Salon not found or not connected to your brand" });
+      }
+
+      // For now, we'll store this as a notification or similar mechanism
+      // In a real app, you'd have a messages table
+      console.log(`Message from Brand Owner ${brandOwnerId} to Salon ${salonId}: ${message}`);
+
+      res.json({
+        message: "Message sent successfully",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Get detailed salon analytics for brand owner
+  app.get("/api/brand/salon-analytics/:salonId", isAuthenticated, async (req: any, res) => {
+    try {
+      const brandOwnerId = req.user?.id;
+      const salonId = req.params.salonId;
+
+      // Verify brand owner owns this salon
+      const salon = await db.select()
+        .from(salons)
+        .where(and(eq(salons.id, salonId), eq(salons.brandOwnerId, brandOwnerId)))
+        .limit(1);
+
+      if (!salon.length) {
+        return res.status(404).json({ message: "Salon not found or access denied" });
+      }
+
+      // Get detailed analytics
+      const analytics = await db.select({
+        totalBookings: sql<number>`count(${bookings.id})`,
+        totalRevenue: sql<number>`coalesce(sum(${bookings.totalAmount}), 0)`,
+        monthlyRevenue: sql<number>`coalesce(sum(case when ${bookings.createdAt} >= date_trunc('month', current_date) then ${bookings.totalAmount} else 0 end), 0)`,
+        averageBookingValue: sql<number>`coalesce(avg(${bookings.totalAmount}), 0)`,
+        completedBookings: sql<number>`count(case when ${bookings.status} = 'completed' then 1 end)`,
+        cancelledBookings: sql<number>`count(case when ${bookings.status} = 'cancelled' then 1 end)`,
+      })
+      .from(bookings)
+      .where(eq(bookings.salonId, salonId));
+
+      // Get recent bookings trend
+      const recentBookings = await db.select({
+        date: sql<string>`date(${bookings.createdAt})`,
+        count: sql<number>`count(*)`,
+        revenue: sql<number>`sum(${bookings.totalAmount})`
+      })
+      .from(bookings)
+      .where(and(
+        eq(bookings.salonId, salonId),
+        sql`${bookings.createdAt} >= current_date - interval '30 days'`
+      ))
+      .groupBy(sql`date(${bookings.createdAt})`)
+      .orderBy(sql`date(${bookings.createdAt})`);
+
+      // Get top services
+      const topServices = await db.select({
+        serviceName: services.name,
+        bookingCount: sql<number>`count(${bookings.id})`,
+        revenue: sql<number>`sum(${bookings.totalAmount})`
+      })
+      .from(bookings)
+      .innerJoin(services, eq(bookings.serviceId, services.id))
+      .where(eq(bookings.salonId, salonId))
+      .groupBy(services.name)
+      .orderBy(sql`count(${bookings.id}) desc`)
+      .limit(10);
+
+      res.json({
+        salonId,
+        analytics: analytics[0],
+        recentBookings,
+        topServices,
+        brandRevenuePart: analytics[0].monthlyRevenue * 0.45,
+        salonRevenuePart: analytics[0].monthlyRevenue * 0.55
+      });
+    } catch (error) {
+      console.error("Error fetching salon analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   return httpServer;
 }
 

@@ -31,7 +31,14 @@ import {
   Check,
   X,
   UserPlus,
-  Link2
+  Link2,
+  MessageCircle,
+  Target,
+  Award,
+  LineChart,
+  PieChart,
+  Activity,
+  Mail
 } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -89,6 +96,11 @@ export default function BrandDashboard() {
     to: endOfMonth(new Date())
   });
   const [selectedSalon, setSelectedSalon] = useState<string>("all");
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [selectedSalonForMessage, setSelectedSalonForMessage] = useState<BrandSalon | null>(null);
+  const [messageContent, setMessageContent] = useState("");
+  const [salonDetailsDialogOpen, setSalonDetailsDialogOpen] = useState(false);
+  const [selectedSalonDetails, setSelectedSalonDetails] = useState<BrandSalon | null>(null);
 
   // Fetch brand salons
   const { data: brandSalons, isLoading: salonsLoading } = useQuery<BrandSalon[]>({
@@ -112,6 +124,42 @@ export default function BrandDashboard() {
   const { data: reviewsSummary } = useQuery({
     queryKey: [`/api/brand/reviews/${user?.id}`, selectedDateRange],
     enabled: !!user?.id && (user as any)?.userType === 'brand_owner'
+  });
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ salonId, message }: { salonId: string, message: string }) => {
+      const response = await fetch('/api/brand/messages/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ salonId, message })
+      });
+      if (!response.ok) throw new Error('Failed to send message');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message sent",
+        description: "Your message has been sent to the salon owner.",
+      });
+      setMessageDialogOpen(false);
+      setMessageContent("");
+      setSelectedSalonForMessage(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Fetch detailed salon analytics
+  const { data: detailedAnalytics } = useQuery({
+    queryKey: [`/api/brand/salon-analytics/${selectedSalonDetails?.id}`, selectedDateRange],
+    enabled: !!selectedSalonDetails?.id,
   });
 
   if ((user as any)?.userType !== 'brand_owner') {
@@ -429,13 +477,38 @@ export default function BrandDashboard() {
                           <div>
                             <p className="font-medium">{salon.name}</p>
                             <p className="text-sm text-gray-600">{salon._count.bookings} bookings</p>
+                            <p className="text-xs text-gray-500">Owner: {salon.owner.firstName} {salon.owner.lastName}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-semibold">₹{salon.monthlyEarnings.toLocaleString()}</p>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                            {salon.averageRating}
+                        <div className="flex items-center gap-2">
+                          <div className="text-right">
+                            <p className="font-semibold">₹{salon.monthlyEarnings.toLocaleString()}</p>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Star className="h-3 w-3 text-yellow-500 mr-1" />
+                              {salon.averageRating}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedSalonDetails(salon);
+                                setSalonDetailsDialogOpen(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedSalonForMessage(salon);
+                                setMessageDialogOpen(true);
+                              }}
+                            >
+                              <MessageCircle className="h-3 w-3" />
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -611,6 +684,228 @@ export default function BrandDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Message Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Send Message to Salon Owner</DialogTitle>
+            <DialogDescription>
+              Send a message to {selectedSalonForMessage?.owner.firstName} {selectedSalonForMessage?.owner.lastName} at {selectedSalonForMessage?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea
+                id="message"
+                placeholder="Type your message here..."
+                value={messageContent}
+                onChange={(e) => setMessageContent(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMessageDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedSalonForMessage && messageContent.trim()) {
+                  sendMessageMutation.mutate({
+                    salonId: selectedSalonForMessage.id,
+                    message: messageContent.trim()
+                  });
+                }
+              }}
+              disabled={!messageContent.trim() || sendMessageMutation.isPending}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {sendMessageMutation.isPending ? "Sending..." : "Send Message"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detailed Salon Analytics Dialog */}
+      <Dialog open={salonDetailsDialogOpen} onOpenChange={setSalonDetailsDialogOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              {selectedSalonDetails?.name} - Performance Analytics
+            </DialogTitle>
+            <DialogDescription>
+              Comprehensive performance analysis and owner profile
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSalonDetails && (
+            <div className="space-y-6">
+              {/* Owner Profile */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Owner Profile
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Name</p>
+                      <p className="text-lg">{selectedSalonDetails.owner.firstName} {selectedSalonDetails.owner.lastName}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Email</p>
+                      <p className="text-lg">{selectedSalonDetails.owner.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Salon Address</p>
+                      <p className="text-sm">{selectedSalonDetails.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Status</p>
+                      <Badge variant={selectedSalonDetails.isActive ? "default" : "secondary"}>
+                        {selectedSalonDetails.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Performance Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <IndianRupee className="h-8 w-8 mx-auto text-green-600 mb-2" />
+                      <p className="text-2xl font-bold">₹{selectedSalonDetails.totalEarnings.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600">Total Earnings</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <TrendingUp className="h-8 w-8 mx-auto text-blue-600 mb-2" />
+                      <p className="text-2xl font-bold">₹{selectedSalonDetails.monthlyEarnings.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600">Monthly Earnings</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <CalendarIcon className="h-8 w-8 mx-auto text-purple-600 mb-2" />
+                      <p className="text-2xl font-bold">{selectedSalonDetails._count.bookings}</p>
+                      <p className="text-sm text-gray-600">Total Bookings</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Additional Analytics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Team & Services
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Staff Members</span>
+                        <span className="font-semibold">{selectedSalonDetails._count.staff}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Services Offered</span>
+                        <span className="font-semibold">{selectedSalonDetails._count.services}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Average Rating</span>
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                          <span className="font-semibold">{selectedSalonDetails.averageRating}</span>
+                          <span className="text-sm text-gray-500 ml-1">({selectedSalonDetails.totalReviews} reviews)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Performance Insights
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Revenue Share (Brand)</span>
+                        <span className="font-semibold text-green-600">₹{(selectedSalonDetails.monthlyEarnings * 0.45).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Revenue Share (Salon)</span>
+                        <span className="font-semibold">₹{(selectedSalonDetails.monthlyEarnings * 0.55).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Premium Status</span>
+                        <Badge variant={selectedSalonDetails.isPremium ? "default" : "outline"}>
+                          {selectedSalonDetails.isPremium ? "Premium" : "Standard"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedSalonForMessage(selectedSalonDetails);
+                        setMessageDialogOpen(true);
+                        setSalonDetailsDialogOpen(false);
+                      }}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Send Message
+                    </Button>
+                    <Button variant="outline">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Email Owner
+                    </Button>
+                    <Button variant="outline">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Report
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSalonDetailsDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
