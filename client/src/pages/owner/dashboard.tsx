@@ -1217,7 +1217,13 @@ export default function OwnerDashboard() {
                                   <span className="font-medium">Service:</span> {booking.service?.name || 'Service'}
                                 </div>
                                 <div>
-                                  <span className="font-medium">Date:</span> {booking.date}
+                                  <span className="font-medium">Appointment:</span> {booking.date}
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    Booked: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric' 
+                                    }) : 'Unknown'}
+                                  </div>
                                 </div>
                                 <div>
                                   <span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}

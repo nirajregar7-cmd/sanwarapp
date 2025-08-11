@@ -217,14 +217,26 @@ export default function CustomerBookings() {
                 <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
-                    <span className="font-medium">
-                      {new Date(booking.date).toLocaleDateString('en-US', { 
-                        weekday: 'short',
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="font-medium">
+                        Appointment: {new Date(booking.date).toLocaleDateString('en-US', { 
+                          weekday: 'short',
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Booked on: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric'
+                        }) : 'Unknown'} {booking.createdAt ? 'at ' + new Date(booking.createdAt).toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        }) : ''}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 text-gray-400 mr-2" />
