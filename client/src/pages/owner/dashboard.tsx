@@ -117,6 +117,14 @@ export default function OwnerDashboard() {
     enabled: !!salon?.id,
   });
 
+  // Fetch brand invitations
+  const { data: brandInvitationsData, isLoading: invitationsLoading } = useQuery<{sent: any[], received: any[]}>({
+    queryKey: [`/api/brand-invitations/${user?.id}`],
+    enabled: isAuthenticated && !!user?.id,
+  });
+
+  const brandInvitations = brandInvitationsData?.received || [];
+
   const salonForm = useForm<SalonFormData>({
     resolver: zodResolver(salonSchema),
     defaultValues: {
@@ -149,6 +157,28 @@ export default function OwnerDashboard() {
       phone: "",
       email: "",
       photoUrl: "",
+    },
+  });
+
+  // Mutation for responding to brand invitations
+  const respondToInvitationMutation = useMutation({
+    mutationFn: async ({ invitationId, status }: { invitationId: string, status: 'accepted' | 'rejected' }) => {
+      const response = await apiRequest('PUT', `/api/brand-invitations/${invitationId}`, { status });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/brand-invitations/${user?.id}`] });
+      toast({
+        title: "Response sent",
+        description: "Your response to the brand invitation has been recorded.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -748,6 +778,87 @@ export default function OwnerDashboard() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Brand Invitations */}
+              {brandInvitations.length > 0 && (
+                <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg sm:text-xl flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Users className="h-5 w-5 mr-2 text-purple-600" />
+                        Brand Partnership Requests
+                      </div>
+                      <Badge variant="secondary">{brandInvitations.filter(inv => inv.status === 'pending').length} pending</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {invitationsLoading ? (
+                      <div className="space-y-4">
+                        {Array.from({ length: 2 }).map((_, i) => (
+                          <div key={i} className="h-20 bg-gray-200 rounded animate-pulse"></div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {brandInvitations.map((invitation) => (
+                          <div key={invitation.id} className="bg-white p-4 rounded-lg border">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-semibold text-gray-900">
+                                    {invitation.brandName || 'Brand Owner'}
+                                  </h4>
+                                  <Badge 
+                                    variant={
+                                      invitation.status === 'pending' ? 'outline' :
+                                      invitation.status === 'accepted' ? 'default' : 'destructive'
+                                    }
+                                  >
+                                    {invitation.status}
+                                  </Badge>
+                                </div>
+                                {invitation.message && (
+                                  <p className="text-sm text-gray-600 mb-3">
+                                    "{invitation.message}"
+                                  </p>
+                                )}
+                                <p className="text-xs text-gray-500">
+                                  Received: {new Date(invitation.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                              {invitation.status === 'pending' && (
+                                <div className="flex gap-2 ml-4">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => respondToInvitationMutation.mutate({ 
+                                      invitationId: invitation.id, 
+                                      status: 'accepted' 
+                                    })}
+                                    disabled={respondToInvitationMutation.isPending}
+                                  >
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => respondToInvitationMutation.mutate({ 
+                                      invitationId: invitation.id, 
+                                      status: 'rejected' 
+                                    })}
+                                    disabled={respondToInvitationMutation.isPending}
+                                  >
+                                    Decline
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Recent Bookings */}
               <Card>
