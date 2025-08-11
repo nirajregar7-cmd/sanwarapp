@@ -464,6 +464,44 @@ export const salonLikes = pgTable("salon_likes", {
   index("unique_customer_salon_like").on(table.customerId, table.salonId)
 ]);
 
+// Brand offers table for brand owners to create offers for all their salons
+export const brandOffers = pgTable("brand_offers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brandOwnerId: varchar("brand_owner_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  offerType: varchar("offer_type", { enum: ["percentage", "fixed_amount", "buy_one_get_one", "free_service"] }).notNull(),
+  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).notNull(), // percentage or fixed amount
+  minimumAmount: decimal("minimum_amount", { precision: 10, scale: 2 }).default("0"), // minimum booking amount
+  maximumDiscount: decimal("maximum_discount", { precision: 10, scale: 2 }), // max discount for percentage offers
+  applicableServices: text("applicable_services").array().default([]), // specific service IDs or "all"
+  termsAndConditions: text("terms_and_conditions"),
+  promoCode: varchar("promo_code", { length: 50 }).unique(),
+  usageLimit: integer("usage_limit"), // null for unlimited
+  usageCount: integer("usage_count").default(0),
+  validFrom: timestamp("valid_from").notNull(),
+  validUntil: timestamp("valid_until").notNull(),
+  isActive: boolean("is_active").default(true),
+  showOnSalonDashboard: boolean("show_on_salon_dashboard").default(true),
+  priority: integer("priority").default(0), // for sorting offers
+  imageUrl: varchar("image_url"), // offer banner image
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Table to track offer usage by customers
+export const offerUsages = pgTable("offer_usages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  offerId: varchar("offer_id").references(() => brandOffers.id, { onDelete: "cascade" }).notNull(),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  bookingId: varchar("booking_id").references(() => bookings.id, { onDelete: "cascade" }).notNull(),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).notNull(),
+  originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
+  finalAmount: decimal("final_amount", { precision: 10, scale: 2 }).notNull(),
+  usedAt: timestamp("used_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   ownedSalons: many(salons, { relationName: "salon_owner" }),
@@ -634,6 +672,33 @@ export const salonLikesRelations = relations(salonLikes, ({ one }) => ({
   }),
   salon: one(salons, {
     fields: [salonLikes.salonId],
+    references: [salons.id],
+  }),
+}));
+
+export const brandOffersRelations = relations(brandOffers, ({ one, many }) => ({
+  brandOwner: one(users, {
+    fields: [brandOffers.brandOwnerId],
+    references: [users.id],
+  }),
+  usages: many(offerUsages),
+}));
+
+export const offerUsagesRelations = relations(offerUsages, ({ one }) => ({
+  offer: one(brandOffers, {
+    fields: [offerUsages.offerId],
+    references: [brandOffers.id],
+  }),
+  customer: one(users, {
+    fields: [offerUsages.customerId],
+    references: [users.id],
+  }),
+  booking: one(bookings, {
+    fields: [offerUsages.bookingId],
+    references: [bookings.id],
+  }),
+  salon: one(salons, {
+    fields: [offerUsages.salonId],
     references: [salons.id],
   }),
 }));
@@ -834,6 +899,19 @@ export const insertHelpTicketMessageSchema = createInsertSchema(helpTicketMessag
   createdAt: true,
 });
 
+// Brand offers insert schemas
+export const insertBrandOfferSchema = createInsertSchema(brandOffers).omit({
+  id: true,
+  usageCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertOfferUsageSchema = createInsertSchema(offerUsages).omit({
+  id: true,
+  usedAt: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -914,6 +992,12 @@ export type HelpTicket = typeof helpTickets.$inferSelect;
 export type InsertHelpTicket = z.infer<typeof insertHelpTicketSchema>;
 export type HelpTicketMessage = typeof helpTicketMessages.$inferSelect;
 export type InsertHelpTicketMessage = z.infer<typeof insertHelpTicketMessageSchema>;
+
+// Brand offers types
+export type BrandOffer = typeof brandOffers.$inferSelect;
+export type InsertBrandOffer = z.infer<typeof insertBrandOfferSchema>;
+export type OfferUsage = typeof offerUsages.$inferSelect;
+export type InsertOfferUsage = z.infer<typeof insertOfferUsageSchema>;
 
 // Mood rating utility types and functions
 export type MoodRating = "very_happy" | "happy" | "neutral" | "sad" | "very_sad";

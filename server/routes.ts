@@ -5462,6 +5462,294 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Brand Offers Management API Routes
+
+  // Get all offers for a brand owner
+  app.get('/api/brand/offers/:brandOwnerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { brandOwnerId } = req.params;
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Check if the authenticated user is the brand owner or admin
+      if (userId !== brandOwnerId && userType !== 'admin') {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const offers = await db.select()
+        .from(brandOffers)
+        .where(eq(brandOffers.brandOwnerId, brandOwnerId))
+        .orderBy(desc(brandOffers.createdAt));
+
+      res.json(offers);
+    } catch (error) {
+      console.error("Error fetching brand offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // Create a new offer
+  app.post('/api/brand/offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const brandOwnerId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify user is a brand owner
+      if (userType !== 'brand_owner') {
+        return res.status(403).json({ message: "Only brand owners can create offers" });
+      }
+
+      const {
+        title,
+        description,
+        offerType,
+        discountValue,
+        minimumAmount,
+        maximumDiscount,
+        applicableServices,
+        termsAndConditions,
+        promoCode,
+        usageLimit,
+        validFrom,
+        validUntil,
+        showOnSalonDashboard,
+        priority,
+        imageUrl
+      } = req.body;
+
+      // Validate required fields
+      if (!title || !description || !offerType || !discountValue || !validFrom || !validUntil) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Create the offer
+      const [offer] = await db.insert(brandOffers).values({
+        brandOwnerId,
+        title,
+        description,
+        offerType,
+        discountValue: discountValue.toString(),
+        minimumAmount: minimumAmount?.toString() || "0",
+        maximumDiscount: maximumDiscount?.toString() || null,
+        applicableServices: applicableServices || [],
+        termsAndConditions,
+        promoCode,
+        usageLimit,
+        validFrom: new Date(validFrom),
+        validUntil: new Date(validUntil),
+        showOnSalonDashboard: showOnSalonDashboard ?? true,
+        priority: priority || 0,
+        imageUrl
+      }).returning();
+
+      res.json(offer);
+    } catch (error) {
+      console.error("Error creating offer:", error);
+      res.status(500).json({ 
+        message: "Failed to create offer",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update an offer
+  app.put('/api/brand/offers/:offerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { offerId } = req.params;
+      const brandOwnerId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify user is a brand owner
+      if (userType !== 'brand_owner') {
+        return res.status(403).json({ message: "Only brand owners can update offers" });
+      }
+
+      // Verify offer ownership
+      const [existingOffer] = await db.select()
+        .from(brandOffers)
+        .where(and(eq(brandOffers.id, offerId), eq(brandOffers.brandOwnerId, brandOwnerId)));
+
+      if (!existingOffer) {
+        return res.status(404).json({ message: "Offer not found or unauthorized" });
+      }
+
+      const {
+        title,
+        description,
+        offerType,
+        discountValue,
+        minimumAmount,
+        maximumDiscount,
+        applicableServices,
+        termsAndConditions,
+        promoCode,
+        usageLimit,
+        validFrom,
+        validUntil,
+        isActive,
+        showOnSalonDashboard,
+        priority,
+        imageUrl
+      } = req.body;
+
+      // Update the offer
+      const [updatedOffer] = await db.update(brandOffers)
+        .set({
+          title,
+          description,
+          offerType,
+          discountValue: discountValue?.toString(),
+          minimumAmount: minimumAmount?.toString(),
+          maximumDiscount: maximumDiscount?.toString(),
+          applicableServices,
+          termsAndConditions,
+          promoCode,
+          usageLimit,
+          validFrom: validFrom ? new Date(validFrom) : undefined,
+          validUntil: validUntil ? new Date(validUntil) : undefined,
+          isActive,
+          showOnSalonDashboard,
+          priority,
+          imageUrl,
+          updatedAt: new Date()
+        })
+        .where(eq(brandOffers.id, offerId))
+        .returning();
+
+      res.json(updatedOffer);
+    } catch (error) {
+      console.error("Error updating offer:", error);
+      res.status(500).json({ message: "Failed to update offer" });
+    }
+  });
+
+  // Delete an offer
+  app.delete('/api/brand/offers/:offerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { offerId } = req.params;
+      const brandOwnerId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify user is a brand owner
+      if (userType !== 'brand_owner') {
+        return res.status(403).json({ message: "Only brand owners can delete offers" });
+      }
+
+      // Verify offer ownership
+      const [existingOffer] = await db.select()
+        .from(brandOffers)
+        .where(and(eq(brandOffers.id, offerId), eq(brandOffers.brandOwnerId, brandOwnerId)));
+
+      if (!existingOffer) {
+        return res.status(404).json({ message: "Offer not found or unauthorized" });
+      }
+
+      // Delete the offer
+      await db.delete(brandOffers).where(eq(brandOffers.id, offerId));
+
+      res.json({ message: "Offer deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting offer:", error);
+      res.status(500).json({ message: "Failed to delete offer" });
+    }
+  });
+
+  // Get offers for salon owners (offers from their brand owner)
+  app.get('/api/salon/brand-offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify user is a salon owner
+      if (userType !== 'salon_owner') {
+        return res.status(403).json({ message: "Only salon owners can view brand offers" });
+      }
+
+      // Get salon owned by this user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+
+      if (!salon || !salon.brandOwnerId) {
+        return res.json([]); // Return empty array if no salon or no brand connection
+      }
+
+      // Get active offers from the brand owner
+      const offers = await db.select()
+        .from(brandOffers)
+        .where(and(
+          eq(brandOffers.brandOwnerId, salon.brandOwnerId),
+          eq(brandOffers.isActive, true),
+          eq(brandOffers.showOnSalonDashboard, true),
+          sql`${brandOffers.validFrom} <= NOW()`,
+          sql`${brandOffers.validUntil} >= NOW()`
+        ))
+        .orderBy(desc(brandOffers.priority), desc(brandOffers.createdAt));
+
+      res.json(offers);
+    } catch (error) {
+      console.error("Error fetching salon brand offers:", error);
+      res.status(500).json({ message: "Failed to fetch brand offers" });
+    }
+  });
+
+  // Get offer analytics for brand owner
+  app.get('/api/brand/offers/:offerId/analytics', isAuthenticated, async (req: any, res) => {
+    try {
+      const { offerId } = req.params;
+      const brandOwnerId = req.user?.id;
+      const userType = req.user?.userType;
+
+      // Verify user is a brand owner
+      if (userType !== 'brand_owner') {
+        return res.status(403).json({ message: "Only brand owners can view offer analytics" });
+      }
+
+      // Verify offer ownership
+      const [offer] = await db.select()
+        .from(brandOffers)
+        .where(and(eq(brandOffers.id, offerId), eq(brandOffers.brandOwnerId, brandOwnerId)));
+
+      if (!offer) {
+        return res.status(404).json({ message: "Offer not found or unauthorized" });
+      }
+
+      // Get usage analytics
+      const [analytics] = await db.select({
+        totalUsage: count(offerUsages.id),
+        totalDiscount: sql<number>`COALESCE(SUM(CAST(${offerUsages.discountAmount} AS DECIMAL)), 0)`,
+        totalOriginalAmount: sql<number>`COALESCE(SUM(CAST(${offerUsages.originalAmount} AS DECIMAL)), 0)`,
+        totalFinalAmount: sql<number>`COALESCE(SUM(CAST(${offerUsages.finalAmount} AS DECIMAL)), 0)`
+      })
+      .from(offerUsages)
+      .where(eq(offerUsages.offerId, offerId));
+
+      // Get usage by salon
+      const usageBySalon = await db.select({
+        salonId: offerUsages.salonId,
+        salonName: salons.name,
+        usageCount: count(offerUsages.id),
+        totalDiscount: sql<number>`COALESCE(SUM(CAST(${offerUsages.discountAmount} AS DECIMAL)), 0)`
+      })
+      .from(offerUsages)
+      .innerJoin(salons, eq(offerUsages.salonId, salons.id))
+      .where(eq(offerUsages.offerId, offerId))
+      .groupBy(offerUsages.salonId, salons.name);
+
+      res.json({
+        offer,
+        analytics: {
+          ...analytics,
+          usagePercentage: offer.usageLimit ? (Number(analytics.totalUsage) / offer.usageLimit) * 100 : null,
+          usageBySalon
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching offer analytics:", error);
+      res.status(500).json({ message: "Failed to fetch offer analytics" });
+    }
+  });
+
   return httpServer;
 }
 

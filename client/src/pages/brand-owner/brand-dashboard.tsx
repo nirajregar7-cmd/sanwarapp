@@ -44,7 +44,14 @@ import {
   MessageSquare,
   FileText,
   PauseCircle,
-  PlayCircle
+  PlayCircle,
+  Tag,
+  Gift,
+  Percent,
+  DollarSign,
+  Edit,
+  Trash2,
+  Copy
 } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -72,6 +79,30 @@ interface BrandSalon {
   };
   totalEarnings: number;
   monthlyEarnings: number;
+}
+
+interface BrandOffer {
+  id: string;
+  brandOwnerId: string;
+  title: string;
+  description: string;
+  offerType: 'percentage' | 'fixed_amount' | 'buy_one_get_one' | 'free_service';
+  discountValue: string;
+  minimumAmount: string;
+  maximumDiscount?: string;
+  applicableServices: string[];
+  termsAndConditions?: string;
+  promoCode?: string;
+  usageLimit?: number;
+  usageCount: number;
+  validFrom: string;
+  validUntil: string;
+  isActive: boolean;
+  showOnSalonDashboard: boolean;
+  priority: number;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface BrandStats {
@@ -774,26 +805,7 @@ export default function BrandDashboard() {
 
         {/* Offers & Pricing Tab */}
         <TabsContent value="offers" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Offers & Pricing Control</h2>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Brand-wide Offer
-            </Button>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Brand Offers</CardTitle>
-              <CardDescription>Manage promotions across all your branches</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-gray-600 mb-4">No active brand-wide offers</p>
-                <Button variant="outline">Create Your First Offer</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <OffersManagement userId={user?.id} />
         </TabsContent>
       </Tabs>
 
@@ -1310,5 +1322,775 @@ function ConnectionsManagement({ userId }: { userId?: string }) {
 
 
     </div>
+  );
+}
+
+// Offers Management Component
+function OffersManagement({ userId }: { userId?: string }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [showCreateOfferDialog, setShowCreateOfferDialog] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<BrandOffer | null>(null);
+  const [showOfferDetails, setShowOfferDetails] = useState<BrandOffer | null>(null);
+
+  // Fetch brand offers
+  const { data: offers = [], isLoading: offersLoading, refetch } = useQuery({
+    queryKey: ['/api/brand/offers', userId],
+    enabled: !!userId,
+  });
+
+  // Create offer mutation
+  const createOfferMutation = useMutation({
+    mutationFn: async (offerData: any) => {
+      const response = await fetch('/api/brand/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(offerData)
+      });
+      if (!response.ok) throw new Error('Failed to create offer');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Offer created successfully!" });
+      queryClient.invalidateQueries({ queryKey: ['/api/brand/offers', userId] });
+      setShowCreateOfferDialog(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  // Update offer mutation
+  const updateOfferMutation = useMutation({
+    mutationFn: async ({ offerId, ...offerData }: any) => {
+      const response = await fetch(`/api/brand/offers/${offerId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(offerData)
+      });
+      if (!response.ok) throw new Error('Failed to update offer');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Offer updated successfully!" });
+      queryClient.invalidateQueries({ queryKey: ['/api/brand/offers', userId] });
+      setEditingOffer(null);
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  // Delete offer mutation
+  const deleteOfferMutation = useMutation({
+    mutationFn: async (offerId: string) => {
+      const response = await fetch(`/api/brand/offers/${offerId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to delete offer');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Offer deleted successfully!" });
+      queryClient.invalidateQueries({ queryKey: ['/api/brand/offers', userId] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const handleDeleteOffer = (offerId: string) => {
+    if (confirm('Are you sure you want to delete this offer? This action cannot be undone.')) {
+      deleteOfferMutation.mutate(offerId);
+    }
+  };
+
+  const getOfferTypeIcon = (type: string) => {
+    switch (type) {
+      case 'percentage': return <Percent className="h-4 w-4" />;
+      case 'fixed_amount': return <DollarSign className="h-4 w-4" />;
+      case 'buy_one_get_one': return <Gift className="h-4 w-4" />;
+      case 'free_service': return <Tag className="h-4 w-4" />;
+      default: return <Tag className="h-4 w-4" />;
+    }
+  };
+
+  const getOfferTypeText = (type: string) => {
+    switch (type) {
+      case 'percentage': return 'Percentage Discount';
+      case 'fixed_amount': return 'Fixed Amount Off';
+      case 'buy_one_get_one': return 'Buy One Get One';
+      case 'free_service': return 'Free Service';
+      default: return type;
+    }
+  };
+
+  const isOfferActive = (offer: BrandOffer) => {
+    const now = new Date();
+    const validFrom = new Date(offer.validFrom);
+    const validUntil = new Date(offer.validUntil);
+    return offer.isActive && now >= validFrom && now <= validUntil;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Offers & Pricing Control</h2>
+        <Button onClick={() => setShowCreateOfferDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Brand-wide Offer
+        </Button>
+      </div>
+
+      {offersLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-4"></div>
+                <div className="flex gap-2">
+                  <div className="h-6 bg-gray-200 rounded w-16"></div>
+                  <div className="h-6 bg-gray-200 rounded w-20"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : offers.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {offers.map((offer: BrandOffer) => (
+            <Card key={offer.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-2">
+                    {getOfferTypeIcon(offer.offerType)}
+                    <Badge variant={isOfferActive(offer) ? "default" : "secondary"}>
+                      {isOfferActive(offer) ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setShowOfferDetails(offer)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setEditingOffer(offer)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Offer
+                      </DropdownMenuItem>
+                      {offer.promoCode && (
+                        <DropdownMenuItem onClick={() => {
+                          navigator.clipboard.writeText(offer.promoCode!);
+                          toast({ title: "Copied!", description: "Promo code copied to clipboard" });
+                        }}>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Promo Code
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteOffer(offer.id)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Offer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-lg">{offer.title}</h3>
+                    <p className="text-sm text-gray-600 line-clamp-2">{offer.description}</p>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span>Type:</span>
+                    <span className="font-medium">{getOfferTypeText(offer.offerType)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span>Value:</span>
+                    <span className="font-medium">
+                      {offer.offerType === 'percentage' ? `${offer.discountValue}%` : 
+                       offer.offerType === 'fixed_amount' ? `₹${offer.discountValue}` :
+                       offer.offerType === 'buy_one_get_one' ? 'BOGO' : 'Free Service'}
+                    </span>
+                  </div>
+
+                  {offer.minimumAmount && Number(offer.minimumAmount) > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span>Min Amount:</span>
+                      <span className="font-medium">₹{offer.minimumAmount}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between text-sm">
+                    <span>Valid Until:</span>
+                    <span className="font-medium">
+                      {format(new Date(offer.validUntil), 'MMM dd, yyyy')}
+                    </span>
+                  </div>
+
+                  {offer.usageLimit && (
+                    <div className="flex justify-between text-sm">
+                      <span>Usage:</span>
+                      <span className="font-medium">
+                        {offer.usageCount}/{offer.usageLimit}
+                        <span className="text-xs text-gray-500 ml-1">
+                          ({Math.round((offer.usageCount / offer.usageLimit) * 100)}%)
+                        </span>
+                      </span>
+                    </div>
+                  )}
+
+                  {offer.promoCode && (
+                    <div className="bg-gray-100 rounded p-2 text-center">
+                      <span className="text-xs text-gray-600">Promo Code:</span>
+                      <p className="font-mono font-bold">{offer.promoCode}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Gift className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Brand Offers Yet</h3>
+            <p className="text-gray-600 mb-6">Create your first brand-wide offer to attract customers across all your salon branches</p>
+            <Button onClick={() => setShowCreateOfferDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Your First Offer
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Create/Edit Offer Dialog */}
+      <CreateEditOfferDialog
+        open={showCreateOfferDialog || !!editingOffer}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowCreateOfferDialog(false);
+            setEditingOffer(null);
+          }
+        }}
+        offer={editingOffer}
+        onSubmit={(offerData) => {
+          if (editingOffer) {
+            updateOfferMutation.mutate({ ...offerData, offerId: editingOffer.id });
+          } else {
+            createOfferMutation.mutate(offerData);
+          }
+        }}
+        isLoading={createOfferMutation.isPending || updateOfferMutation.isPending}
+      />
+
+      {/* Offer Details Dialog */}
+      {showOfferDetails && (
+        <OfferDetailsDialog
+          offer={showOfferDetails}
+          open={!!showOfferDetails}
+          onOpenChange={(open) => !open && setShowOfferDetails(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Create/Edit Offer Dialog Component
+function CreateEditOfferDialog({
+  open,
+  onOpenChange,
+  offer,
+  onSubmit,
+  isLoading
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  offer?: BrandOffer | null;
+  onSubmit: (data: any) => void;
+  isLoading: boolean;
+}) {
+  const [formData, setFormData] = useState({
+    title: offer?.title || '',
+    description: offer?.description || '',
+    offerType: offer?.offerType || 'percentage',
+    discountValue: offer?.discountValue || '',
+    minimumAmount: offer?.minimumAmount || '',
+    maximumDiscount: offer?.maximumDiscount || '',
+    promoCode: offer?.promoCode || '',
+    usageLimit: offer?.usageLimit?.toString() || '',
+    validFrom: offer?.validFrom ? new Date(offer.validFrom).toISOString().split('T')[0] : '',
+    validUntil: offer?.validUntil ? new Date(offer.validUntil).toISOString().split('T')[0] : '',
+    termsAndConditions: offer?.termsAndConditions || '',
+    showOnSalonDashboard: offer?.showOnSalonDashboard ?? true,
+    priority: offer?.priority?.toString() || '1'
+  });
+
+  useEffect(() => {
+    if (offer) {
+      setFormData({
+        title: offer.title,
+        description: offer.description,
+        offerType: offer.offerType,
+        discountValue: offer.discountValue,
+        minimumAmount: offer.minimumAmount,
+        maximumDiscount: offer.maximumDiscount || '',
+        promoCode: offer.promoCode || '',
+        usageLimit: offer.usageLimit?.toString() || '',
+        validFrom: new Date(offer.validFrom).toISOString().split('T')[0],
+        validUntil: new Date(offer.validUntil).toISOString().split('T')[0],
+        termsAndConditions: offer.termsAndConditions || '',
+        showOnSalonDashboard: offer.showOnSalonDashboard,
+        priority: offer.priority.toString()
+      });
+    } else {
+      // Reset form for new offer
+      setFormData({
+        title: '',
+        description: '',
+        offerType: 'percentage',
+        discountValue: '',
+        minimumAmount: '',
+        maximumDiscount: '',
+        promoCode: '',
+        usageLimit: '',
+        validFrom: '',
+        validUntil: '',
+        termsAndConditions: '',
+        showOnSalonDashboard: true,
+        priority: '1'
+      });
+    }
+  }, [offer, open]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      ...formData,
+      usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
+      priority: parseInt(formData.priority)
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {offer ? 'Edit Brand Offer' : 'Create Brand Offer'}
+          </DialogTitle>
+          <DialogDescription>
+            {offer ? 'Modify your existing brand-wide offer' : 'Create a new offer that will be available across all your salon branches'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title">Offer Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="e.g., Summer Special 50% Off"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Describe what this offer includes..."
+                rows={3}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Offer Type and Value */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="offerType">Offer Type *</Label>
+              <Select 
+                value={formData.offerType} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, offerType: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="percentage">Percentage Discount</SelectItem>
+                  <SelectItem value="fixed_amount">Fixed Amount Off</SelectItem>
+                  <SelectItem value="buy_one_get_one">Buy One Get One</SelectItem>
+                  <SelectItem value="free_service">Free Service</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="discountValue">
+                {formData.offerType === 'percentage' ? 'Discount Percentage *' :
+                 formData.offerType === 'fixed_amount' ? 'Discount Amount (₹) *' :
+                 'Service Name *'}
+              </Label>
+              <Input
+                id="discountValue"
+                value={formData.discountValue}
+                onChange={(e) => setFormData(prev => ({ ...prev, discountValue: e.target.value }))}
+                placeholder={
+                  formData.offerType === 'percentage' ? '50' :
+                  formData.offerType === 'fixed_amount' ? '500' :
+                  'Haircut'
+                }
+                required
+              />
+            </div>
+          </div>
+
+          {/* Conditions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="minimumAmount">Minimum Order Amount (₹)</Label>
+              <Input
+                id="minimumAmount"
+                type="number"
+                value={formData.minimumAmount}
+                onChange={(e) => setFormData(prev => ({ ...prev, minimumAmount: e.target.value }))}
+                placeholder="0"
+                min="0"
+              />
+            </div>
+
+            {formData.offerType === 'percentage' && (
+              <div>
+                <Label htmlFor="maximumDiscount">Maximum Discount (₹)</Label>
+                <Input
+                  id="maximumDiscount"
+                  type="number"
+                  value={formData.maximumDiscount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, maximumDiscount: e.target.value }))}
+                  placeholder="1000"
+                  min="0"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Promo Code and Usage */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="promoCode">Promo Code (Optional)</Label>
+              <Input
+                id="promoCode"
+                value={formData.promoCode}
+                onChange={(e) => setFormData(prev => ({ ...prev, promoCode: e.target.value.toUpperCase() }))}
+                placeholder="SUMMER50"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usageLimit">Usage Limit (Optional)</Label>
+              <Input
+                id="usageLimit"
+                type="number"
+                value={formData.usageLimit}
+                onChange={(e) => setFormData(prev => ({ ...prev, usageLimit: e.target.value }))}
+                placeholder="100"
+                min="1"
+              />
+            </div>
+          </div>
+
+          {/* Validity Period */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="validFrom">Valid From *</Label>
+              <Input
+                id="validFrom"
+                type="date"
+                value={formData.validFrom}
+                onChange={(e) => setFormData(prev => ({ ...prev, validFrom: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="validUntil">Valid Until *</Label>
+              <Input
+                id="validUntil"
+                type="date"
+                value={formData.validUntil}
+                onChange={(e) => setFormData(prev => ({ ...prev, validUntil: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Terms and Settings */}
+          <div>
+            <Label htmlFor="termsAndConditions">Terms and Conditions</Label>
+            <Textarea
+              id="termsAndConditions"
+              value={formData.termsAndConditions}
+              onChange={(e) => setFormData(prev => ({ ...prev, termsAndConditions: e.target.value }))}
+              placeholder="Enter any terms and conditions for this offer..."
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="showOnSalonDashboard"
+                checked={formData.showOnSalonDashboard}
+                onChange={(e) => setFormData(prev => ({ ...prev, showOnSalonDashboard: e.target.checked }))}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="showOnSalonDashboard">Show on salon dashboards</Label>
+            </div>
+
+            <div>
+              <Label htmlFor="priority">Priority (1=Highest)</Label>
+              <Input
+                id="priority"
+                type="number"
+                value={formData.priority}
+                onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+                min="1"
+                max="10"
+                required
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Saving...' : (offer ? 'Update Offer' : 'Create Offer')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Offer Details Dialog Component
+function OfferDetailsDialog({
+  offer,
+  open,
+  onOpenChange
+}: {
+  offer: BrandOffer;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const getOfferTypeIcon = (type: string) => {
+    switch (type) {
+      case 'percentage': return <Percent className="h-5 w-5" />;
+      case 'fixed_amount': return <DollarSign className="h-5 w-5" />;
+      case 'buy_one_get_one': return <Gift className="h-5 w-5" />;
+      case 'free_service': return <Tag className="h-5 w-5" />;
+      default: return <Tag className="h-5 w-5" />;
+    }
+  };
+
+  const getOfferTypeText = (type: string) => {
+    switch (type) {
+      case 'percentage': return 'Percentage Discount';
+      case 'fixed_amount': return 'Fixed Amount Off';
+      case 'buy_one_get_one': return 'Buy One Get One';
+      case 'free_service': return 'Free Service';
+      default: return type;
+    }
+  };
+
+  const isActive = () => {
+    const now = new Date();
+    const validFrom = new Date(offer.validFrom);
+    const validUntil = new Date(offer.validUntil);
+    return offer.isActive && now >= validFrom && now <= validUntil;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            {getOfferTypeIcon(offer.offerType)}
+            {offer.title}
+          </DialogTitle>
+          <DialogDescription>
+            Complete details of your brand offer
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Status Banner */}
+          <div className={`p-4 rounded-lg ${isActive() ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`font-medium ${isActive() ? 'text-green-800' : 'text-gray-800'}`}>
+                  Status: {isActive() ? 'Active' : 'Inactive'}
+                </p>
+                <p className={`text-sm ${isActive() ? 'text-green-600' : 'text-gray-600'}`}>
+                  {isActive() ? 'This offer is currently available to customers' : 'This offer is not currently available'}
+                </p>
+              </div>
+              <Badge variant={isActive() ? "default" : "secondary"}>
+                {isActive() ? 'ACTIVE' : 'INACTIVE'}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Offer Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-900">Offer Type</h4>
+                <p className="text-gray-600">{getOfferTypeText(offer.offerType)}</p>
+              </div>
+
+              <div>
+                <h4 className="font-medium text-gray-900">Discount Value</h4>
+                <p className="text-gray-600">
+                  {offer.offerType === 'percentage' ? `${offer.discountValue}%` : 
+                   offer.offerType === 'fixed_amount' ? `₹${offer.discountValue}` :
+                   offer.offerType === 'buy_one_get_one' ? 'Buy One Get One Free' : 
+                   `Free ${offer.discountValue}`}
+                </p>
+              </div>
+
+              {offer.minimumAmount && Number(offer.minimumAmount) > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900">Minimum Order Amount</h4>
+                  <p className="text-gray-600">₹{offer.minimumAmount}</p>
+                </div>
+              )}
+
+              {offer.maximumDiscount && Number(offer.maximumDiscount) > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900">Maximum Discount</h4>
+                  <p className="text-gray-600">₹{offer.maximumDiscount}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-900">Validity Period</h4>
+                <p className="text-gray-600">
+                  {format(new Date(offer.validFrom), 'MMM dd, yyyy')} - {format(new Date(offer.validUntil), 'MMM dd, yyyy')}
+                </p>
+              </div>
+
+              {offer.promoCode && (
+                <div>
+                  <h4 className="font-medium text-gray-900">Promo Code</h4>
+                  <div className="bg-gray-100 rounded p-2 font-mono font-bold text-center">
+                    {offer.promoCode}
+                  </div>
+                </div>
+              )}
+
+              {offer.usageLimit && (
+                <div>
+                  <h4 className="font-medium text-gray-900">Usage Statistics</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Used:</span>
+                      <span>{offer.usageCount} times</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Limit:</span>
+                      <span>{offer.usageLimit} times</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full" 
+                        style={{ width: `${Math.min((offer.usageCount / offer.usageLimit) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {Math.round((offer.usageCount / offer.usageLimit) * 100)}% used
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Description</h4>
+            <p className="text-gray-600">{offer.description}</p>
+          </div>
+
+          {/* Terms and Conditions */}
+          {offer.termsAndConditions && (
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">Terms and Conditions</h4>
+              <div className="bg-gray-50 rounded p-4">
+                <p className="text-sm text-gray-600 whitespace-pre-line">{offer.termsAndConditions}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Settings */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Show on salon dashboards</span>
+              <Badge variant={offer.showOnSalonDashboard ? "default" : "secondary"}>
+                {offer.showOnSalonDashboard ? "Yes" : "No"}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Priority</span>
+              <Badge variant="outline">{offer.priority}</Badge>
+            </div>
+          </div>
+
+          {/* Metadata */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t text-xs text-gray-500">
+            <div>
+              <span className="font-medium">Created:</span> {format(new Date(offer.createdAt), 'MMM dd, yyyy HH:mm')}
+            </div>
+            <div>
+              <span className="font-medium">Updated:</span> {format(new Date(offer.updatedAt), 'MMM dd, yyyy HH:mm')}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
