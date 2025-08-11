@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus, MessageSquare, Package } from "lucide-react";
+import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus, MessageSquare, Package, Crown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,6 +128,12 @@ export default function Layout({ children }: LayoutProps) {
                         className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
                         Users
+                      </Link>
+                      <Link 
+                        href="/admin/brand-owners" 
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        Brand Owners
                       </Link>
                       <Link 
                         href="/admin/feedback-support" 
@@ -296,6 +302,52 @@ export default function Layout({ children }: LayoutProps) {
                       >
                         <Settings className="h-4 w-4 mr-3" />
                         Account Details
+                      </Link>
+                    </>
+                  )}
+                  
+                  {/* Admin Mobile Links */}
+                  {(userType === "admin" || userType === "super_admin") && (
+                    <>
+                      <Link 
+                        href="/admin/dashboard" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <BarChart3 className="h-4 w-4 mr-3" />
+                        Admin Dashboard
+                      </Link>
+                      <Link 
+                        href="/admin/salons" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Store className="h-4 w-4 mr-3" />
+                        Salons
+                      </Link>
+                      <Link 
+                        href="/admin/users" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <User className="h-4 w-4 mr-3" />
+                        Users
+                      </Link>
+                      <Link 
+                        href="/admin/brand-owners" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Crown className="h-4 w-4 mr-3" />
+                        Brand Owners
+                      </Link>
+                      <Link 
+                        href="/admin/feedback-support" 
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-3" />
+                        Support
                       </Link>
                     </>
                   )}

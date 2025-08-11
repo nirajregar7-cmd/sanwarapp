@@ -36,6 +36,7 @@ import SalonManagement from "@/pages/admin/salon-management";
 import UserManagement from "@/pages/admin/user-management";
 import ActivityLogs from "@/pages/admin/activity-logs";
 import AdminFeedbackSupportPage from "@/pages/admin-feedback-support";
+import BrandOwnerManagement from "@/pages/admin/brand-owner-management";
 
 // Clerk Auth Pages
 import ClerkSignInPage, { ClerkSignUpPage } from "@/pages/clerk-auth";
@@ -214,6 +215,11 @@ function Router() {
               <Route path="/admin/users">
                 <Layout>
                   <UserManagement />
+                </Layout>
+              </Route>
+              <Route path="/admin/brand-owners">
+                <Layout>
+                  <BrandOwnerManagement />
                 </Layout>
               </Route>
               <Route path="/admin/activity-logs">

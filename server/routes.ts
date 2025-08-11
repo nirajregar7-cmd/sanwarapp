@@ -5113,6 +5113,238 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // Admin Brand Owner Management API Routes
+  // ============================================
+
+  // Get all brand owners for admin
+  app.get("/api/admin/brand-owners", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Verify user is admin
+      const adminUser = await db.select()
+        .from(users)
+        .where(and(eq(users.id, userId), inArray(users.userType, ['admin', 'super_admin'])))
+        .limit(1);
+
+      if (!adminUser.length) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get all brand owners with stats
+      const brandOwners = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        phone: users.phone,
+        brandName: users.brandName,
+        brandDescription: users.brandDescription,
+        isActive: users.isActive,
+        isVerified: users.isVerified,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        userType: users.userType
+      })
+      .from(users)
+      .where(eq(users.userType, 'brand_owner'));
+
+      // Get stats for each brand owner
+      const brandOwnersWithStats = await Promise.all(
+        brandOwners.map(async (brandOwner) => {
+          const [salonCount, totalBookings, totalEarnings] = await Promise.all([
+            db.select({ count: count() }).from(salons).where(eq(salons.brandOwnerId, brandOwner.id)),
+            db.select({ count: count() }).from(bookings).where(
+              inArray(bookings.salonId, 
+                db.select({ id: salons.id }).from(salons).where(eq(salons.brandOwnerId, brandOwner.id))
+              )
+            ),
+            db.select({ 
+              total: sql<number>`COALESCE(SUM(CAST(${bookings.totalAmount} AS DECIMAL)), 0)` 
+            }).from(bookings).where(
+              and(
+                inArray(bookings.salonId, 
+                  db.select({ id: salons.id }).from(salons).where(eq(salons.brandOwnerId, brandOwner.id))
+                ),
+                eq(bookings.status, 'completed')
+              )
+            )
+          ]);
+
+          return {
+            ...brandOwner,
+            _count: {
+              salons: Number(salonCount[0]?.count) || 0,
+              totalBookings: Number(totalBookings[0]?.count) || 0,
+              totalEarnings: Number(totalEarnings[0]?.total) || 0
+            }
+          };
+        })
+      );
+
+      res.json(brandOwnersWithStats);
+    } catch (error) {
+      console.error("Error fetching brand owners:", error);
+      res.status(500).json({ message: "Failed to fetch brand owners" });
+    }
+  });
+
+  // Get brand owner details with salons
+  app.get("/api/admin/brand-owners/:brandOwnerId/details", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { brandOwnerId } = req.params;
+      
+      // Verify user is admin
+      const adminUser = await db.select()
+        .from(users)
+        .where(and(eq(users.id, userId), inArray(users.userType, ['admin', 'super_admin'])))
+        .limit(1);
+
+      if (!adminUser.length) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get brand owner details
+      const brandOwner = await db.select()
+        .from(users)
+        .where(and(eq(users.id, brandOwnerId), eq(users.userType, 'brand_owner')))
+        .limit(1);
+
+      if (!brandOwner.length) {
+        return res.status(404).json({ message: "Brand owner not found" });
+      }
+
+      // Get brand owner's salons
+      const brandSalons = await db.select({
+        id: salons.id,
+        name: salons.name,
+        address: salons.address,
+        isActive: salons.isActive,
+        averageRating: salons.averageRating,
+        totalReviews: salons.totalReviews
+      })
+      .from(salons)
+      .where(eq(salons.brandOwnerId, brandOwnerId));
+
+      // Get stats
+      const [totalBookings, totalEarnings] = await Promise.all([
+        db.select({ count: count() }).from(bookings).where(
+          inArray(bookings.salonId, brandSalons.map(s => s.id))
+        ),
+        db.select({ 
+          total: sql<number>`COALESCE(SUM(CAST(${bookings.totalAmount} AS DECIMAL)), 0)` 
+        }).from(bookings).where(
+          and(
+            inArray(bookings.salonId, brandSalons.map(s => s.id)),
+            eq(bookings.status, 'completed')
+          )
+        )
+      ]);
+
+      const result = {
+        ...brandOwner[0],
+        salons: brandSalons,
+        _count: {
+          salons: brandSalons.length,
+          totalBookings: Number(totalBookings[0]?.count) || 0,
+          totalEarnings: Number(totalEarnings[0]?.total) || 0
+        }
+      };
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching brand owner details:", error);
+      res.status(500).json({ message: "Failed to fetch brand owner details" });
+    }
+  });
+
+  // Update brand owner
+  app.put("/api/admin/brand-owners/:brandOwnerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { brandOwnerId } = req.params;
+      const updates = req.body;
+      
+      // Verify user is admin
+      const adminUser = await db.select()
+        .from(users)
+        .where(and(eq(users.id, userId), inArray(users.userType, ['admin', 'super_admin'])))
+        .limit(1);
+
+      if (!adminUser.length) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Update brand owner
+      const updatedBrandOwner = await db.update(users)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(and(eq(users.id, brandOwnerId), eq(users.userType, 'brand_owner')))
+        .returning();
+
+      if (!updatedBrandOwner.length) {
+        return res.status(404).json({ message: "Brand owner not found" });
+      }
+
+      res.json({
+        message: "Brand owner updated successfully",
+        brandOwner: updatedBrandOwner[0]
+      });
+    } catch (error) {
+      console.error("Error updating brand owner:", error);
+      res.status(500).json({ message: "Failed to update brand owner" });
+    }
+  });
+
+  // Delete brand owner
+  app.delete("/api/admin/brand-owners/:brandOwnerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { brandOwnerId } = req.params;
+      
+      // Verify user is admin
+      const adminUser = await db.select()
+        .from(users)
+        .where(and(eq(users.id, userId), inArray(users.userType, ['admin', 'super_admin'])))
+        .limit(1);
+
+      if (!adminUser.length) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Check if brand owner has salons
+      const brandSalons = await db.select({ count: count() })
+        .from(salons)
+        .where(eq(salons.brandOwnerId, brandOwnerId));
+
+      if (Number(brandSalons[0]?.count) > 0) {
+        return res.status(400).json({ 
+          message: "Cannot delete brand owner with active salons. Please transfer or remove salons first." 
+        });
+      }
+
+      // Delete brand owner
+      const deletedBrandOwner = await db.delete(users)
+        .where(and(eq(users.id, brandOwnerId), eq(users.userType, 'brand_owner')))
+        .returning();
+
+      if (!deletedBrandOwner.length) {
+        return res.status(404).json({ message: "Brand owner not found" });
+      }
+
+      res.json({
+        message: "Brand owner deleted successfully"
+      });
+    } catch (error) {
+      console.error("Error deleting brand owner:", error);
+      res.status(500).json({ message: "Failed to delete brand owner" });
+    }
+  });
+
   return httpServer;
 }
 
