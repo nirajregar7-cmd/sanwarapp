@@ -1733,17 +1733,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to add staff to this salon" });
       }
 
-      // Set ACL policy for profile image if provided
+      // Set ACL policy for profile image if provided and fix double path issue
       if (staffData.photoUrl) {
         const objectStorageService = new ObjectStorageService();
         try {
-          await objectStorageService.trySetObjectEntityAclPolicy(
-            staffData.photoUrl,
+          // Fix double path issue: remove the leading "/objects/uploads/" if present
+          let cleanPhotoUrl = staffData.photoUrl;
+          if (cleanPhotoUrl.startsWith('/objects/uploads/uploads/')) {
+            cleanPhotoUrl = cleanPhotoUrl.replace('/objects/uploads/uploads/', 'uploads/');
+          } else if (cleanPhotoUrl.startsWith('/objects/uploads/')) {
+            cleanPhotoUrl = cleanPhotoUrl.replace('/objects/uploads/', '');
+          }
+          
+          const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+            cleanPhotoUrl,
             {
               owner: userId,
               visibility: "public", // Staff pictures should be public
             }
           );
+          staffData.photoUrl = objectPath; // Use the corrected path
         } catch (error) {
           console.error('Error setting staff photo ACL:', error);
           // Don't fail the request if ACL setting fails
@@ -1751,8 +1760,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const [staffMember] = await db.insert(staff).values({
-        ...staffData,
-        salonId
+        salonId,
+        name: staffData.name,
+        role: staffData.role,
+        phone: staffData.phone,
+        email: staffData.email,
+        photoUrl: staffData.photoUrl || null,
+        isActive: true,
+        rating: "4.5", // Default rating as decimal string
+        totalReviews: 0,
+        defaultSlotDuration: 15, // Default 15 minutes
+        canManageSchedule: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }).returning();
       
       console.log('Staff member created successfully:', staffMember);
