@@ -81,16 +81,7 @@ import {
   type EmergencySlot,
   type InsertEmergencySlot,
   // Smart scheduling types
-  type StaffWorkingHours,
-  type InsertStaffWorkingHours,
-  type StaffService,
-  type InsertStaffService,
-  type StaffHoliday,
-  type InsertStaffHoliday,
-  type StaffTimeSlot,
-  type InsertStaffTimeSlot,
-  type ScheduleTemplate,
-  type InsertScheduleTemplate,
+  // Staff service management types are available from the schema
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, asc, or, isNull, sql } from "drizzle-orm";
@@ -499,6 +490,233 @@ export class DatabaseStorage implements IStorage {
 
   async updateTimeSlotAvailability(id: string, isAvailable: boolean): Promise<void> {
     await db.update(timeSlots).set({ isAvailable }).where(eq(timeSlots.id, id));
+  }
+
+  // Staff service assignment operations
+  async assignServiceToStaff(staffId: string, serviceId: string, customPrice?: number, estimatedDuration?: number): Promise<any> {
+    const assignmentData: any = {
+      staffId,
+      serviceId,
+      isActive: true,
+    };
+    
+    if (customPrice !== undefined) {
+      assignmentData.customPrice = customPrice.toString();
+    }
+    
+    if (estimatedDuration !== undefined) {
+      assignmentData.estimatedDuration = estimatedDuration.toString();
+    }
+
+    const [assignment] = await db.insert(staffServices).values(assignmentData).returning();
+    return assignment;
+  }
+
+  async getStaffServices(staffId: string): Promise<any[]> {
+    return await db
+      .select({
+        id: staffServices.id,
+        staffId: staffServices.staffId,
+        serviceId: staffServices.serviceId,
+        serviceName: services.name,
+        servicePrice: services.price,
+        serviceDuration: services.duration,
+        customPrice: staffServices.customPrice,
+        estimatedDuration: staffServices.estimatedDuration,
+        isActive: staffServices.isActive,
+      })
+      .from(staffServices)
+      .leftJoin(services, eq(staffServices.serviceId, services.id))
+      .where(and(eq(staffServices.staffId, staffId), eq(staffServices.isActive, true)));
+  }
+
+  async getSalonStaffWithServices(salonId: string): Promise<any[]> {
+    const staffList = await db
+      .select()
+      .from(staff)
+      .where(and(eq(staff.salonId, salonId), eq(staff.isActive, true)));
+
+    // Get services for each staff member
+    const staffWithServices = await Promise.all(
+      staffList.map(async (staffMember) => {
+        const services = await this.getStaffServices(staffMember.id);
+        return {
+          ...staffMember,
+          services,
+        };
+      })
+    );
+
+    return staffWithServices;
+  }
+
+  // Advanced staff-based slot generation
+  async generateStaffBasedSlots(salonId: string, date: string): Promise<{ generated: number; message: string }> {
+    console.log(`[SLOT GENERATION] Starting staff-based slot generation for salon ${salonId} on ${date}`);
+
+    // Get salon working hours for the specified date
+    const dayOfWeek = new Date(date).getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const workingHours = await db
+      .select()
+      .from(workingHours)
+      .where(and(eq(workingHours.salonId, salonId), eq(workingHours.dayOfWeek, dayOfWeek)));
+
+    if (workingHours.length === 0 || !workingHours[0].isOpen) {
+      return { generated: 0, message: "Salon is closed on this day" };
+    }
+
+    const { startTime, endTime } = workingHours[0];
+    console.log(`[SLOT GENERATION] Salon hours: ${startTime} - ${endTime}`);
+
+    // Get all active staff members with their assigned services
+    const staffWithServices = await this.getSalonStaffWithServices(salonId);
+    
+    if (staffWithServices.length === 0) {
+      return { generated: 0, message: "No active staff members found" };
+    }
+
+    console.log(`[SLOT GENERATION] Found ${staffWithServices.length} staff members`);
+
+    // Check if slots already exist for this date
+    const existingSlots = await db
+      .select()
+      .from(timeSlots)
+      .where(and(eq(timeSlots.salonId, salonId), eq(timeSlots.date, date)));
+
+    if (existingSlots.length > 0) {
+      return { generated: 0, message: `${existingSlots.length} slots already exist for this date` };
+    }
+
+    let totalGeneratedSlots = 0;
+    const slotsToInsert: any[] = [];
+
+    // Generate slots for each staff member and their services
+    for (const staffMember of staffWithServices) {
+      if (staffMember.services.length === 0) {
+        console.log(`[SLOT GENERATION] Staff ${staffMember.name} has no assigned services, skipping`);
+        continue;
+      }
+
+      console.log(`[SLOT GENERATION] Generating slots for ${staffMember.name} with ${staffMember.services.length} services`);
+
+      // For each service assigned to this staff member
+      for (const service of staffMember.services) {
+        const serviceDuration = service.estimatedDuration || service.serviceDuration || 30; // Default 30 minutes
+        const slotDuration = staffMember.defaultSlotDuration || 30;
+
+        // Generate time slots from start to end time
+        let currentTime = startTime;
+        const endTimeMinutes = this.timeToMinutes(endTime);
+
+        while (this.timeToMinutes(currentTime) < endTimeMinutes) {
+          const endSlotTime = this.addMinutes(currentTime, slotDuration);
+          
+          // Don't create slots that would go beyond working hours
+          if (this.timeToMinutes(endSlotTime) > endTimeMinutes) {
+            break;
+          }
+
+          slotsToInsert.push({
+            salonId,
+            staffId: staffMember.id,
+            serviceId: service.serviceId,
+            date,
+            startTime: currentTime,
+            endTime: endSlotTime,
+            isAvailable: true,
+            slotType: 'regular',
+          });
+
+          totalGeneratedSlots++;
+          currentTime = endSlotTime;
+        }
+      }
+    }
+
+    // Insert all generated slots
+    if (slotsToInsert.length > 0) {
+      await db.insert(timeSlots).values(slotsToInsert);
+      console.log(`[SLOT GENERATION] Successfully generated ${totalGeneratedSlots} slots`);
+    }
+
+    return {
+      generated: totalGeneratedSlots,
+      message: `Generated ${totalGeneratedSlots} staff-service specific slots`,
+    };
+  }
+
+  // Get available slots grouped by staff and service
+  async getStaffBasedTimeSlots(salonId: string, date: string): Promise<any[]> {
+    console.log(`[DEBUG] Fetching staff-based time slots for salon ${salonId} on date ${date}`);
+
+    // Get all time slots with staff and service details
+    const slotsWithDetails = await db
+      .select({
+        id: timeSlots.id,
+        salonId: timeSlots.salonId,
+        staffId: timeSlots.staffId,
+        serviceId: timeSlots.serviceId,
+        date: timeSlots.date,
+        startTime: timeSlots.startTime,
+        endTime: timeSlots.endTime,
+        isAvailable: timeSlots.isAvailable,
+        slotType: timeSlots.slotType,
+        staffName: staff.name,
+        staffRole: staff.role,
+        staffPhoto: staff.photoUrl,
+        serviceName: services.name,
+        servicePrice: services.price,
+        serviceDuration: services.duration,
+      })
+      .from(timeSlots)
+      .leftJoin(staff, eq(timeSlots.staffId, staff.id))
+      .leftJoin(services, eq(timeSlots.serviceId, services.id))
+      .where(and(eq(timeSlots.salonId, salonId), eq(timeSlots.date, date)))
+      .orderBy(asc(timeSlots.startTime));
+
+    console.log(`[DEBUG] Found ${slotsWithDetails.length} total time slots with details`);
+
+    // Get booked slots to determine availability
+    const bookedSlots = await db
+      .select({
+        timeSlotId: bookings.timeSlotId
+      })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.salonId, salonId),
+          eq(bookings.date, date),
+          or(
+            eq(bookings.status, "pending"),
+            eq(bookings.status, "confirmed"),
+            eq(bookings.status, "completed")
+          )
+        )
+      );
+
+    const bookedSlotIds = new Set(bookedSlots.map(b => b.timeSlotId));
+
+    // Return slots with real-time availability
+    const result = slotsWithDetails.map(slot => ({
+      ...slot,
+      isAvailable: !bookedSlotIds.has(slot.id)
+    }));
+
+    console.log(`[DEBUG] Returning ${result.length} staff-based slots`);
+    return result;
+  }
+
+  // Utility functions for time calculations
+  private timeToMinutes(time: string): number {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  }
+
+  private addMinutes(time: string, minutes: number): string {
+    const totalMinutes = this.timeToMinutes(time) + minutes;
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   }
 
   // Booking operations
@@ -1586,28 +1804,7 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  // Staff service assignments
-  async assignServiceToStaff(staffId: string, serviceId: string, customPrice?: number, estimatedDuration?: number): Promise<any> {
-    const [assignment] = await db
-      .insert(staffServices)
-      .values({
-        staffId,
-        serviceId,
-        customPrice,
-        estimatedDuration,
-        isActive: true,
-      })
-      .onConflictDoUpdate({
-        target: [staffServices.staffId, staffServices.serviceId],
-        set: {
-          isActive: true,
-          customPrice,
-          estimatedDuration,
-        },
-      })
-      .returning();
-    return assignment;
-  }
+  // This function has been moved earlier in the file - removing duplicate
 
   async removeServiceFromStaff(staffId: string, serviceId: string): Promise<void> {
     await db.update(staffServices)
@@ -1618,24 +1815,7 @@ export class DatabaseStorage implements IStorage {
       ));
   }
 
-  async getStaffServices(staffId: string): Promise<any[]> {
-    return await db.select({
-      id: staffServices.id,
-      serviceId: staffServices.serviceId,
-      serviceName: services.name,
-      servicePrice: services.price,
-      serviceDuration: services.duration,
-      customPrice: staffServices.customPrice,
-      estimatedDuration: staffServices.estimatedDuration,
-      isActive: staffServices.isActive,
-    })
-    .from(staffServices)
-    .innerJoin(services, eq(staffServices.serviceId, services.id))
-    .where(and(
-      eq(staffServices.staffId, staffId),
-      eq(staffServices.isActive, true)
-    ));
-  }
+  // getStaffServices function already exists earlier - removing duplicate
 
   async getStaffByService(serviceId: string): Promise<any[]> {
     return await db.select({

@@ -2754,14 +2754,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Fetching time slots for salon ${req.params.salonId} on date ${date}`);
 
-      // Only return manually created time slots - NO automatic generation
-      const timeSlots = await storage.getAvailableTimeSlots(req.params.salonId, date);
-      console.log(`Found ${timeSlots.length} manually created time slots`);
+      // Use the new staff-based slot system
+      const timeSlots = await storage.getStaffBasedTimeSlots(req.params.salonId, date);
+      console.log(`Found ${timeSlots.length} staff-based time slots`);
       
       res.json(timeSlots);
     } catch (error) {
       console.error("Error fetching time slots:", error);
       res.status(500).json({ message: "Failed to fetch time slots" });
+    }
+  });
+
+  // Staff service assignment routes
+  app.post("/api/salons/:salonId/staff/:staffId/assign-service", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage staff for this salon" });
+      }
+
+      const { serviceId, customPrice, estimatedDuration } = req.body;
+      
+      if (!serviceId) {
+        return res.status(400).json({ message: "Service ID is required" });
+      }
+
+      const assignment = await storage.assignServiceToStaff(
+        req.params.staffId,
+        serviceId,
+        customPrice,
+        estimatedDuration
+      );
+
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error assigning service to staff:", error);
+      res.status(500).json({ message: "Failed to assign service" });
+    }
+  });
+
+  app.get("/api/salons/:salonId/staff-with-services", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to view staff for this salon" });
+      }
+
+      const staffWithServices = await storage.getSalonStaffWithServices(req.params.salonId);
+      res.json(staffWithServices);
+    } catch (error) {
+      console.error("Error fetching staff with services:", error);
+      res.status(500).json({ message: "Failed to fetch staff with services" });
+    }
+  });
+
+  // Smart slot generation route
+  app.post("/api/salons/:salonId/generate-staff-slots", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to generate slots for this salon" });
+      }
+
+      const { date } = req.body;
+      
+      if (!date) {
+        return res.status(400).json({ message: "Date is required" });
+      }
+
+      console.log(`[SLOT GENERATION] Owner ${userId} generating slots for salon ${req.params.salonId} on ${date}`);
+
+      const result = await storage.generateStaffBasedSlots(req.params.salonId, date);
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating staff slots:", error);
+      res.status(500).json({ message: "Failed to generate slots" });
     }
   });
 
@@ -2775,7 +2848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to manage time slots for this salon" });
       }
 
-      const { date, startTime, endTime } = req.body;
+      const { date, startTime, endTime, staffId, serviceId } = req.body;
       
       if (!date || !startTime || !endTime) {
         return res.status(400).json({ message: "Date, start time, and end time are required" });
@@ -2783,10 +2856,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const timeSlot = await storage.createTimeSlot({
         salonId: req.params.salonId,
+        staffId,
+        serviceId,
         date,
         startTime,
         endTime,
-        isAvailable: true
+        isAvailable: true,
+        slotType: 'regular'
       });
 
       res.json(timeSlot);
