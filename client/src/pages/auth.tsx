@@ -116,6 +116,22 @@ export default function AuthPage() {
       return;
     }
 
+    // For business accounts (salon_owner or brand_owner), redirect to email verification first
+    if (registerForm.userType === "salon_owner" || registerForm.userType === "brand_owner") {
+      // Store the registration data in sessionStorage to retrieve after email verification
+      sessionStorage.setItem("pendingRegistration", JSON.stringify(registerForm));
+      
+      toast({
+        title: "Email Verification Required",
+        description: "Business accounts require email verification for security.",
+      });
+      
+      // Redirect to email verification with pre-filled user type
+      setLocation(`/email-verification/${registerForm.userType}`);
+      return;
+    }
+
+    // For customer accounts, proceed with direct registration
     registerMutation.mutate(registerForm, {
       onSuccess: (data) => {
         let successMessage = "Welcome to Sanwar! Your account has been created successfully";

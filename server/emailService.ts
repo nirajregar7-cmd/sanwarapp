@@ -194,3 +194,67 @@ export function generateBookingCancellationEmail(customerName: string, salonName
     </html>
   `;
 }
+
+// Function to send email verification OTP for business signup
+export async function sendEmailVerificationOtp(email: string, otp: string, userType: 'salon_owner' | 'brand_owner'): Promise<boolean> {
+  const userTypeDisplay = userType === 'salon_owner' ? 'Salon Owner' : 'Brand Owner';
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+        .otp-card { background: white; padding: 25px; margin: 20px 0; border-radius: 8px; text-align: center; border: 2px solid #6366f1; }
+        .otp-code { font-size: 36px; font-weight: bold; color: #6366f1; letter-spacing: 8px; margin: 20px 0; padding: 15px; background: #f1f5f9; border-radius: 8px; }
+        .warning { background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+        .footer { text-align: center; color: #666; font-size: 14px; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🔐 Email Verification</h1>
+          <p>Welcome to Sanwar - ${userTypeDisplay} Registration</p>
+        </div>
+        
+        <div class="content">
+          <p>Welcome to Sanwar!</p>
+          
+          <p>To complete your ${userTypeDisplay} account registration, please verify your email address using the code below:</p>
+          
+          <div class="otp-card">
+            <h3>Your Verification Code</h3>
+            <div class="otp-code">${otp}</div>
+            <p style="color: #666; font-size: 14px;">This code will expire in 10 minutes</p>
+          </div>
+          
+          <p>Enter this code in the verification form to activate your account and start managing your business with Sanwar.</p>
+          
+          <div class="warning">
+            <strong>Security Notice:</strong> Never share this verification code with anyone. Sanwar will never ask for your verification code via phone or email.
+          </div>
+          
+          <p>If you didn't request this verification, please ignore this email or contact our support team.</p>
+          
+          <div class="footer">
+            <p>This is an automated email from Sanwar - Smart Salon Booking Platform</p>
+            <p>For support, contact us at support@sanwarhub.in</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({
+    to: email,
+    subject: `🔐 Verify Your ${userTypeDisplay} Account - Sanwar`,
+    html,
+    from: 'noreply@sanwarhub.in'
+  });
+}

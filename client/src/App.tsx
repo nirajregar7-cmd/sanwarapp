@@ -14,6 +14,7 @@ import Layout from "@/components/Layout";
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth";
 import ForgotPasswordPage from "@/pages/forgot-password";
+import EmailVerification from "@/pages/email-verification";
 import UserTypeSelection from "@/pages/user-type-selection";
 import CustomerHome from "@/pages/customer/home";
 import NotificationSettingsPage from "@/pages/NotificationSettingsPage";
@@ -65,6 +66,10 @@ function Router() {
       <Route path="/clerk-signin" component={ClerkSignInPage} />
       <Route path="/clerk-signup" component={ClerkSignUpPage} />
       <Route path="/user-type-selection" component={UserTypeSelection} />
+      
+      {/* Email verification page */}
+      <Route path="/email-verification" component={EmailVerification} />
+      <Route path="/email-verification/:userType" component={EmailVerification} />
       
       {/* Password reset page */}
       <Route path="/forgot-password" component={ForgotPasswordPage} />

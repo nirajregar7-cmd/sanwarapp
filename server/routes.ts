@@ -10,9 +10,10 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
+import { sendEmailVerificationOtp } from "./emailService";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount, createSalonFundAccount, processSalonPayout } from "./payment";
 import { calculateRevenueShare } from "@shared/revenue";
@@ -219,6 +220,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Password reset successful" });
     } catch (error) {
       console.error("Reset password error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Email verification OTP endpoints for business signup
+  // Step 1: Request email verification OTP
+  app.post('/api/auth/send-email-verification', async (req, res) => {
+    try {
+      const { email, userType } = req.body;
+      
+      if (!email || !userType) {
+        return res.status(400).json({ message: "Email and user type are required" });
+      }
+
+      if (!["salon_owner", "brand_owner"].includes(userType)) {
+        return res.status(400).json({ message: "Invalid user type for email verification" });
+      }
+
+      // Check if user already exists with this email
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      // Generate OTP
+      const otp = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Delete any existing OTP for this email
+      await db.delete(emailVerificationOtps)
+        .where(eq(emailVerificationOtps.email, email));
+
+      // Save OTP to database
+      await db.insert(emailVerificationOtps).values({
+        email,
+        otp,
+        userType,
+        expiresAt,
+      });
+
+      // Send OTP via email
+      const success = await sendEmailVerificationOtp(email, otp, userType);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to send verification email. Please try again." });
+      }
+
+      res.json({ message: "Verification code sent to your email" });
+    } catch (error) {
+      console.error("Send email verification error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Step 2: Verify email OTP
+  app.post('/api/auth/verify-email-otp', async (req, res) => {
+    try {
+      const { email, otp } = req.body;
+      
+      if (!email || !otp) {
+        return res.status(400).json({ message: "Email and OTP are required" });
+      }
+
+      // Find and verify OTP
+      const otpRecord = await db.select()
+        .from(emailVerificationOtps)
+        .where(
+          and(
+            eq(emailVerificationOtps.email, email),
+            eq(emailVerificationOtps.otp, otp),
+            eq(emailVerificationOtps.verified, false),
+            gte(emailVerificationOtps.expiresAt, new Date())
+          )
+        )
+        .limit(1);
+
+      if (otpRecord.length === 0) {
+        // Increment attempts
+        await db.update(emailVerificationOtps)
+          .set({ attempts: sql`attempts + 1` })
+          .where(eq(emailVerificationOtps.email, email));
+        
+        return res.status(400).json({ message: "Invalid or expired verification code" });
+      }
+
+      // Mark OTP as verified
+      await db.update(emailVerificationOtps)
+        .set({ verified: true })
+        .where(eq(emailVerificationOtps.id, otpRecord[0].id));
+
+      res.json({ 
+        message: "Email verified successfully",
+        userType: otpRecord[0].userType
+      });
+    } catch (error) {
+      console.error("Verify email OTP error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

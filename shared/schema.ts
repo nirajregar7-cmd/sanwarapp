@@ -325,6 +325,18 @@ export const passwordResetOtps = pgTable("password_reset_otps", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Email verification OTPs for business signup
+export const emailVerificationOtps = pgTable("email_verification_otps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").notNull(),
+  otp: varchar("otp", { length: 6 }).notNull(),
+  userType: varchar("user_type", { enum: ["salon_owner", "brand_owner"] }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false),
+  attempts: integer("attempts").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Notification settings table
 export const notificationSettings = pgTable("notification_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1074,6 +1086,11 @@ export const insertSalonLikeSchema = createInsertSchema(salonLikes).omit({
 });
 
 export const insertPasswordResetOtpSchema = createInsertSchema(passwordResetOtps).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEmailVerificationOtpSchema = createInsertSchema(emailVerificationOtps).omit({
   id: true,
   createdAt: true,
 });
