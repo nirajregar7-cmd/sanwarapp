@@ -803,8 +803,9 @@ export default function SalonDetail() {
                                 <FormLabel>Select Staff Member</FormLabel>
                                 <Select 
                                   onValueChange={(value) => {
-                                    field.onChange(value);
-                                    setSelectedStaff(value);
+                                    const staffValue = value === "any" ? "" : value;
+                                    field.onChange(staffValue);
+                                    setSelectedStaff(staffValue);
                                   }} 
                                   value={field.value}
                                 >
@@ -814,7 +815,7 @@ export default function SalonDetail() {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="">Any available staff</SelectItem>
+                                    <SelectItem value="any">Any available staff</SelectItem>
                                     {staff
                                       .filter(member => member.isActive)
                                       .map((member) => (
