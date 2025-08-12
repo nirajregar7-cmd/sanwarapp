@@ -646,8 +646,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Get available slots grouped by staff and service
-  async getStaffBasedTimeSlots(salonId: string, date: string): Promise<any[]> {
-    console.log(`[DEBUG] Fetching staff-based time slots for salon ${salonId} on date ${date}`);
+  async getStaffBasedTimeSlots(salonId: string, date: string, serviceId?: string, staffId?: string): Promise<any[]> {
+    console.log(`[DEBUG] Fetching staff-based time slots for salon ${salonId} on date ${date}, service: ${serviceId}, staff: ${staffId}`);
+
+    // Build dynamic where conditions
+    const conditions = [
+      eq(timeSlots.salonId, salonId),
+      eq(timeSlots.date, date)
+    ];
+
+    if (serviceId) {
+      conditions.push(eq(timeSlots.serviceId, serviceId));
+    }
+
+    if (staffId) {
+      conditions.push(eq(timeSlots.staffId, staffId));
+    }
 
     // Get all time slots with staff and service details
     const slotsWithDetails = await db
@@ -671,7 +685,7 @@ export class DatabaseStorage implements IStorage {
       .from(timeSlots)
       .leftJoin(staff, eq(timeSlots.staffId, staff.id))
       .leftJoin(services, eq(timeSlots.serviceId, services.id))
-      .where(and(eq(timeSlots.salonId, salonId), eq(timeSlots.date, date)))
+      .where(and(...conditions))
       .orderBy(asc(timeSlots.startTime));
 
     console.log(`[DEBUG] Found ${slotsWithDetails.length} total time slots with details`);

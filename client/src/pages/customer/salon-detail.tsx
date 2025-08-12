@@ -46,6 +46,7 @@ export default function SalonDetail() {
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedService, setSelectedService] = useState<string>("");
+  const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
@@ -106,14 +107,18 @@ export default function SalonDetail() {
     enabled: !!salonId,
   });
 
-  // Fetch available time slots for selected date and service
+  // Fetch available time slots for selected date, service, and staff
   const { data: timeSlots = [], isLoading: timeSlotsLoading } = useQuery({
-    queryKey: [`/api/salons/${salonId}/time-slots`, selectedDate?.toISOString().split('T')[0]],
-    enabled: !!salonId && !!selectedDate,
+    queryKey: [`/api/salons/${salonId}/time-slots`, selectedDate?.toISOString().split('T')[0], selectedService, selectedStaff],
+    enabled: !!salonId && !!selectedDate && !!selectedService,
     queryFn: async (): Promise<TimeSlot[]> => {
-      if (!selectedDate) return [];
+      if (!selectedDate || !selectedService) return [];
       const dateStr = selectedDate.toISOString().split('T')[0];
-      const response = await apiRequest("GET", `/api/salons/${salonId}/time-slots?date=${dateStr}`);
+      let url = `/api/salons/${salonId}/time-slots?date=${dateStr}&serviceId=${selectedService}`;
+      if (selectedStaff) {
+        url += `&staffId=${selectedStaff}`;
+      }
+      const response = await apiRequest("GET", url);
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     },
@@ -768,6 +773,7 @@ export default function SalonDetail() {
                                   onValueChange={(value) => {
                                     field.onChange(value);
                                     setSelectedService(value);
+                                    setSelectedStaff(""); // Reset staff when service changes
                                   }}
                                   value={field.value}
                                 >
@@ -794,15 +800,24 @@ export default function SalonDetail() {
                             name="staffId"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Preferred Staff (Optional)</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <FormLabel>Select Staff Member</FormLabel>
+                                <Select 
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    setSelectedStaff(value);
+                                  }} 
+                                  value={field.value}
+                                >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Any available staff" />
+                                      <SelectValue placeholder="Choose staff member" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {staff.map((member) => (
+                                    <SelectItem value="">Any available staff</SelectItem>
+                                    {staff
+                                      .filter(member => member.isActive)
+                                      .map((member) => (
                                       <SelectItem key={member.id} value={member.id}>
                                         {member.name} - {member.role}
                                       </SelectItem>

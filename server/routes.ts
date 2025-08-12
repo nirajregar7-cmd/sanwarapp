@@ -2747,15 +2747,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/salons/:salonId/time-slots", async (req, res) => {
     try {
-      const { date } = req.query;
+      const { date, serviceId, staffId } = req.query;
       if (!date || typeof date !== 'string') {
         return res.status(400).json({ message: "Date parameter is required" });
       }
 
-      console.log(`Fetching time slots for salon ${req.params.salonId} on date ${date}`);
+      console.log(`Fetching time slots for salon ${req.params.salonId} on date ${date}, service: ${serviceId}, staff: ${staffId}`);
 
-      // Use the new staff-based slot system
-      const timeSlots = await storage.getStaffBasedTimeSlots(req.params.salonId, date);
+      // Use the new staff-based slot system with filtering
+      const timeSlots = await storage.getStaffBasedTimeSlots(
+        req.params.salonId, 
+        date, 
+        serviceId as string || undefined,
+        staffId as string || undefined
+      );
       console.log(`Found ${timeSlots.length} staff-based time slots`);
       
       res.json(timeSlots);
