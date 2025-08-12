@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { format, addDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,8 +44,14 @@ interface Service {
 export default function StaffManagement() {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState(format(addDays(new Date(), 7), 'yyyy-MM-dd'));
   const [isAssigningService, setIsAssigningService] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [selectedStaffForSlots, setSelectedStaffForSlots] = useState("");
+  const [openingTime, setOpeningTime] = useState("09:00");
+  const [closingTime, setClosingTime] = useState("18:00");
+  const [breakDuration, setBreakDuration] = useState(60);
 
   // Get current salon
   const { data: salon } = useQuery({
@@ -115,6 +122,59 @@ export default function StaffManagement() {
     },
   });
 
+  // Bulk slot generation mutation
+  const generateBulkSlotsMutation = useMutation({
+    mutationFn: async ({ startDate, endDate }: { startDate: string; endDate: string }) => {
+      return apiRequest("POST", `/api/salons/${salon?.id}/generate-bulk-slots`, { startDate, endDate });
+    },
+    onSuccess: (result: any) => {
+      toast({
+        title: "Bulk Slots Generated",
+        description: `${result.totalGenerated} slots created from ${startDate} to ${endDate}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Bulk Generation Failed",
+        description: error.message || "Failed to generate bulk slots.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Individual staff slot generation mutation
+  const generateStaffSlotsMutation = useMutation({
+    mutationFn: async ({ staffId, date, openingTime, closingTime, breakDuration }: {
+      staffId: string;
+      date: string;
+      openingTime: string;
+      closingTime: string;
+      breakDuration: number;
+    }) => {
+      return apiRequest("POST", `/api/salons/${salon?.id}/generate-dynamic-staff-slots`, {
+        staffId,
+        date,
+        openingTime,
+        closingTime,
+        breakDuration
+      });
+    },
+    onSuccess: (result: any) => {
+      toast({
+        title: "Dynamic Slots Generated",
+        description: `${result.generated} service-based slots created for ${result.staffName}`,
+      });
+      setSelectedStaffForSlots("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Dynamic Generation Failed",
+        description: error.message || "Failed to generate dynamic staff slots.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAssignService = (staff: Staff) => {
     setSelectedStaff(staff);
     setIsAssigningService(true);
@@ -146,160 +206,283 @@ export default function StaffManagement() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Staff Management</h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-gray-600 dark:text-gray-400">
             Assign services to staff and generate intelligent slots
           </p>
         </div>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="slot-date">Generate for:</Label>
-            <Input
-              id="slot-date"
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-40"
-            />
-          </div>
-          <Button
-            onClick={handleGenerateSlots}
-            disabled={generateSlotsMutation.isPending}
-            className="bg-gradient-to-r from-blue-600 to-purple-600"
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            {generateSlotsMutation.isPending ? "Generating..." : "Generate Slots"}
-          </Button>
+      {/* Enhanced Slot Generation Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            Intelligent Slot Generation
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="bulk" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="bulk">Bulk Generation</TabsTrigger>
+              <TabsTrigger value="individual">Individual Staff</TabsTrigger>
+              <TabsTrigger value="quick">Quick Generate</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="bulk" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    min={format(new Date(), 'yyyy-MM-dd')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endDate">End Date</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={startDate || format(new Date(), 'yyyy-MM-dd')}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button 
+                    onClick={() => generateBulkSlotsMutation.mutate({ startDate, endDate })} 
+                    disabled={!startDate || !endDate || generateBulkSlotsMutation.isPending}
+                    className="w-full bg-gradient-to-r from-green-600 to-blue-600"
+                  >
+                    {generateBulkSlotsMutation.isPending ? (
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    ) : null}
+                    Generate Bulk Slots
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="individual" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Select Staff Member</Label>
+                  <Select value={selectedStaffForSlots} onValueChange={setSelectedStaffForSlots}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose staff member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staffWithServices.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name} - {member.role}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Select Date</Label>
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    min={format(new Date(), 'yyyy-MM-dd')}
+                  />
+                </div>
+              </div>
+              
+              {selectedStaffForSlots && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div>
+                    <Label>Opening Time</Label>
+                    <Input
+                      type="time"
+                      value={openingTime}
+                      onChange={(e) => setOpeningTime(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Closing Time</Label>
+                    <Input
+                      type="time"
+                      value={closingTime}
+                      onChange={(e) => setClosingTime(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Break Duration (minutes)</Label>
+                    <Input
+                      type="number"
+                      value={breakDuration}
+                      onChange={(e) => setBreakDuration(Number(e.target.value))}
+                      min="0"
+                      step="15"
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-3">
+                    <Button 
+                      onClick={() => generateStaffSlotsMutation.mutate({
+                        staffId: selectedStaffForSlots,
+                        date: selectedDate,
+                        openingTime,
+                        closingTime,
+                        breakDuration
+                      })} 
+                      disabled={!selectedStaffForSlots || !selectedDate || generateStaffSlotsMutation.isPending}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
+                    >
+                      {generateStaffSlotsMutation.isPending ? (
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                      ) : null}
+                      Generate Dynamic Service-Based Slots
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="quick" className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="slot-date">Generate for:</Label>
+                  <Input
+                    id="slot-date"
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+                <Button
+                  onClick={handleGenerateSlots}
+                  disabled={generateSlotsMutation.isPending}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  {generateSlotsMutation.isPending ? "Generating..." : "Quick Generate"}
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Staff Grid */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Team Members</h2>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {staffWithServices.map((staff: Staff) => (
+            <Card key={staff.id} className="relative overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                    {staff.photoUrl ? (
+                      <img src={staff.photoUrl} alt={staff.name} className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                      <Users className="w-6 h-6 text-blue-600" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{staff.name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{staff.role}</Badge>
+                      <Badge variant={staff.isActive ? "default" : "secondary"}>
+                        {staff.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                {/* Assigned Services */}
+                <div>
+                  <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                    Assigned Services ({staff.services.length})
+                  </h4>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {staff.services.length === 0 ? (
+                      <p className="text-sm text-gray-500 italic">No services assigned</p>
+                    ) : (
+                      staff.services.map((service) => (
+                        <div key={service.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{service.serviceName}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                              ₹{service.customPrice || service.servicePrice} • {service.estimatedDuration || service.serviceDuration}min
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleAssignService(staff)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Assign Service
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
-      {/* Staff Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {staffWithServices.map((staff: Staff) => (
-          <Card key={staff.id} className="relative overflow-hidden">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                  {staff.photoUrl ? (
-                    <img src={staff.photoUrl} alt={staff.name} className="w-12 h-12 rounded-full object-cover" />
-                  ) : (
-                    <Users className="w-6 h-6 text-blue-600" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{staff.name}</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{staff.role}</Badge>
-                    <Badge variant={staff.isActive ? "default" : "secondary"}>
-                      {staff.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              {/* Assigned Services */}
-              <div>
-                <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
-                  Assigned Services ({staff.services.length})
-                </h4>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {staff.services.length === 0 ? (
-                    <p className="text-sm text-gray-500 italic">No services assigned</p>
-                  ) : (
-                    staff.services.map((service) => (
-                      <div key={service.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{service.serviceName}</p>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <span>₹{service.customPrice || service.servicePrice}</span>
-                            <Clock className="w-3 h-3" />
-                            <span>{service.estimatedDuration || service.serviceDuration}min</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <Button
-                onClick={() => handleAssignService(staff)}
-                className="w-full"
-                variant="outline"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Assign Service
-              </Button>
-            </CardContent>
-
-            {/* Status indicator */}
-            <div className={`absolute top-0 right-0 w-3 h-3 rounded-bl-lg ${
-              staff.isActive ? 'bg-green-500' : 'bg-gray-400'
-            }`} />
-          </Card>
-        ))}
-
-        {staffWithServices.length === 0 && (
-          <Card className="col-span-full">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <UserPlus className="w-16 h-16 text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">No Staff Members</h3>
-              <p className="text-gray-500 text-center mb-4">
-                You haven't added any staff members yet. Add staff to start managing their services.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
       {/* Service Assignment Dialog */}
-      <Dialog open={isAssigningService} onOpenChange={setIsAssigningService}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Assign Service to {selectedStaff?.name}</DialogTitle>
-          </DialogHeader>
-
-          <ServiceAssignmentForm
-            staff={selectedStaff}
-            services={allServices}
-            onAssign={(data) => assignServiceMutation.mutate(data)}
-            isLoading={assignServiceMutation.isPending}
-          />
-        </DialogContent>
-      </Dialog>
+      <ServiceAssignmentDialog
+        staff={selectedStaff}
+        services={allServices}
+        isOpen={isAssigningService}
+        onClose={() => setIsAssigningService(false)}
+        onAssign={assignServiceMutation.mutate}
+        isLoading={assignServiceMutation.isPending}
+      />
     </div>
   );
 }
 
-function ServiceAssignmentForm({ 
-  staff, 
-  services, 
-  onAssign, 
-  isLoading 
-}: {
+interface ServiceAssignmentDialogProps {
   staff: Staff | null;
   services: Service[];
+  isOpen: boolean;
+  onClose: () => void;
   onAssign: (data: any) => void;
   isLoading: boolean;
-}) {
+}
+
+function ServiceAssignmentDialog({
+  staff,
+  services,
+  isOpen,
+  onClose,
+  onAssign,
+  isLoading,
+}: ServiceAssignmentDialogProps) {
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [customPrice, setCustomPrice] = useState("");
   const [estimatedDuration, setEstimatedDuration] = useState("");
 
-  if (!staff) return null;
-
-  const assignedServiceIds = staff.services.map(s => s.serviceId);
-  const availableServices = services.filter(s => !assignedServiceIds.includes(s.id));
-
   const selectedService = services.find(s => s.id === selectedServiceId);
+  const availableServices = services.filter(
+    service => !staff?.services.some(s => s.serviceId === service.id)
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedServiceId) return;
+    if (!staff || !selectedServiceId) return;
 
     onAssign({
       staffId: staff.id,
@@ -307,80 +490,86 @@ function ServiceAssignmentForm({
       customPrice: customPrice ? parseFloat(customPrice) : undefined,
       estimatedDuration: estimatedDuration ? parseInt(estimatedDuration) : undefined,
     });
+    
+    setSelectedServiceId("");
+    setCustomPrice("");
+    setEstimatedDuration("");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="service">Select Service</Label>
-        <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a service..." />
-          </SelectTrigger>
-          <SelectContent>
-            {availableServices.map((service) => (
-              <SelectItem key={service.id} value={service.id}>
-                {service.name} - ₹{service.price} ({service.duration}min)
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {selectedService && (
-        <>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Assign Service to {staff?.name}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="custom-price">
-              Custom Price (Optional) 
-              <span className="text-sm text-gray-500 ml-1">
-                Default: ₹{selectedService.price}
-              </span>
-            </Label>
-            <Input
-              id="custom-price"
-              type="number"
-              step="0.01"
-              value={customPrice}
-              onChange={(e) => setCustomPrice(e.target.value)}
-              placeholder={selectedService.price}
-            />
+            <Label>Select Service</Label>
+            <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a service" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableServices.map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name} - ₹{service.price} ({service.duration}min)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div>
-            <Label htmlFor="duration">
-              Estimated Duration (minutes) 
-              <span className="text-sm text-gray-500 ml-1">
-                Default: {selectedService.duration}min
-              </span>
-            </Label>
-            <Input
-              id="duration"
-              type="number"
-              value={estimatedDuration}
-              onChange={(e) => setEstimatedDuration(e.target.value)}
-              placeholder={selectedService.duration.toString()}
-            />
-          </div>
-        </>
-      )}
+          {selectedService && (
+            <>
+              <div>
+                <Label htmlFor="customPrice">
+                  Custom Price (optional)
+                  <span className="text-sm text-gray-500 ml-2">Default: ₹{selectedService.price}</span>
+                </Label>
+                <Input
+                  id="customPrice"
+                  type="number"
+                  value={customPrice}
+                  onChange={(e) => setCustomPrice(e.target.value)}
+                  placeholder={selectedService.price}
+                />
+              </div>
 
-      <div className="flex gap-2 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setSelectedServiceId("")}
-          className="flex-1"
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          disabled={!selectedServiceId || isLoading}
-          className="flex-1"
-        >
-          {isLoading ? "Assigning..." : "Assign Service"}
-        </Button>
-      </div>
-    </form>
+              <div>
+                <Label htmlFor="estimatedDuration">
+                  Estimated Duration (minutes)
+                  <span className="text-sm text-gray-500 ml-2">Default: {selectedService.duration}min</span>
+                </Label>
+                <Input
+                  id="estimatedDuration"
+                  type="number"
+                  value={estimatedDuration}
+                  onChange={(e) => setEstimatedDuration(e.target.value)}
+                  placeholder={selectedService.duration.toString()}
+                />
+              </div>
+            </>
+          )}
+
+          <div className="flex gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={!selectedServiceId || isLoading}
+              className="flex-1"
+            >
+              {isLoading ? "Assigning..." : "Assign Service"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

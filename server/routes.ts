@@ -2843,6 +2843,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk slot generation route
+  app.post("/api/salons/:salonId/generate-bulk-slots", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to generate bulk slots for this salon" });
+      }
+
+      const { startDate, endDate } = req.body;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Start date and end date are required" });
+      }
+
+      console.log(`[BULK SLOT GENERATION] Owner ${userId} generating bulk slots for salon ${req.params.salonId} from ${startDate} to ${endDate}`);
+
+      const result = await storage.generateBulkStaffSlots(req.params.salonId, startDate, endDate);
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating bulk slots:", error);
+      res.status(500).json({ message: "Failed to generate bulk slots" });
+    }
+  });
+
+  // Dynamic staff slot generation route
+  app.post("/api/salons/:salonId/generate-dynamic-staff-slots", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to generate dynamic slots for this salon" });
+      }
+
+      const { staffId, date, openingTime, closingTime, breakDuration } = req.body;
+      
+      if (!staffId || !date || !openingTime || !closingTime) {
+        return res.status(400).json({ message: "Staff ID, date, opening time, and closing time are required" });
+      }
+
+      console.log(`[DYNAMIC SLOT GENERATION] Owner ${userId} generating dynamic slots for staff ${staffId} on ${date} (${openingTime}-${closingTime}, break: ${breakDuration}min)`);
+
+      const result = await storage.generateDynamicStaffSlots(
+        req.params.salonId,
+        staffId,
+        date,
+        openingTime,
+        closingTime,
+        breakDuration || 60
+      );
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating dynamic staff slots:", error);
+      res.status(500).json({ message: "Failed to generate dynamic staff slots" });
+    }
+  });
+
   // Time slot management routes (for shopkeepers)
   app.post("/api/salons/:salonId/time-slots", isAuthenticated, async (req: any, res) => {
     try {

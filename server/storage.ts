@@ -1937,6 +1937,200 @@ export class DatabaseStorage implements IStorage {
       .where(eq(scheduleTemplates.id, templateId));
   }
 
+  // Helper methods for time conversion
+  private minutesToTime(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  }
+
+  // Enhanced slot generation methods
+  async generateBulkStaffSlots(salonId: string, startDate: string, endDate: string): Promise<any> {
+    console.log(`[BULK GENERATION] Processing bulk slots for salon ${salonId} from ${startDate} to ${endDate}`);
+    
+    let totalGenerated = 0;
+    const currentDate = new Date(startDate);
+    const endDateObj = new Date(endDate);
+
+    while (currentDate <= endDateObj) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      console.log(`[BULK GENERATION] Generating slots for date ${dateStr}`);
+      
+      try {
+        const result = await this.generateStaffBasedSlots(salonId, dateStr);
+        totalGenerated += result.generated;
+        console.log(`[BULK GENERATION] Generated ${result.generated} slots for ${dateStr}`);
+      } catch (error) {
+        console.error(`[BULK GENERATION] Error generating slots for ${dateStr}:`, error);
+      }
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    console.log(`[BULK GENERATION] Completed bulk generation: ${totalGenerated} total slots created`);
+    
+    return {
+      totalGenerated,
+      message: `Successfully generated ${totalGenerated} slots from ${startDate} to ${endDate}`
+    };
+  }
+
+  async generateDynamicStaffSlots(
+    salonId: string, 
+    staffId: string, 
+    date: string, 
+    openingTime: string, 
+    closingTime: string, 
+    breakDuration: number
+  ): Promise<any> {
+    console.log(`[DYNAMIC GENERATION] Generating dynamic slots for staff ${staffId} on ${date} (${openingTime}-${closingTime}, break: ${breakDuration}min)`);
+    
+    // Get staff information and their assigned services
+    const staffInfo = await db
+      .select({
+        staffId: staff.id,
+        staffName: staff.name,
+        serviceId: staffServices.serviceId,
+        serviceName: services.name,
+        serviceDuration: services.duration,
+        estimatedDuration: staffServices.estimatedDuration,
+        customPrice: staffServices.customPrice,
+        servicePrice: services.price,
+      })
+      .from(staff)
+      .leftJoin(staffServices, and(
+        eq(staffServices.staffId, staff.id),
+        eq(staffServices.isActive, true)
+      ))
+      .leftJoin(services, eq(services.id, staffServices.serviceId))
+      .where(and(
+        eq(staff.salonId, salonId),
+        eq(staff.id, staffId),
+        eq(staff.isActive, true)
+      ));
+
+    if (staffInfo.length === 0 || !staffInfo[0].serviceId) {
+      console.log(`[DYNAMIC GENERATION] No active staff member or services found for staff ${staffId}`);
+      return { generated: 0, staffName: 'Unknown', message: 'No active services assigned to this staff member' };
+    }
+
+    // Get existing bookings for this date to avoid conflicts
+    const existingBookings = await db
+      .select({
+        startTime: bookings.startTime,
+        endTime: bookings.endTime
+      })
+      .from(bookings)
+      .where(and(
+        eq(bookings.salonId, salonId),
+        eq(bookings.staffId, staffId),
+        eq(bookings.date, date),
+        eq(bookings.status, 'confirmed')
+      ));
+
+    // Parse opening and closing times
+    const openingMinutes = this.timeToMinutes(openingTime);
+    const closingMinutes = this.timeToMinutes(closingTime);
+    
+    // Calculate break time (halfway through the day)
+    const workingMinutes = closingMinutes - openingMinutes;
+    const breakStartMinutes = openingMinutes + Math.floor(workingMinutes / 2);
+    const breakEndMinutes = breakStartMinutes + breakDuration;
+
+    const slots = [];
+    const staffName = staffInfo[0].staffName;
+    
+    // Group services by duration for sequence generation
+    const servicesByDuration = staffInfo.reduce((acc: any, service) => {
+      if (service.serviceId) {
+        const duration = service.estimatedDuration || service.serviceDuration;
+        const durationKey = String(duration);
+        if (!acc[durationKey]) acc[durationKey] = [];
+        acc[durationKey].push(service);
+      }
+      return acc;
+    }, {});
+
+    const allServices = Object.values(servicesByDuration).flat() as any[];
+    let serviceIndex = 0;
+    
+    let currentTime = openingMinutes;
+    
+    while (currentTime < closingMinutes) {
+      // Skip break time
+      if (currentTime >= breakStartMinutes && currentTime < breakEndMinutes) {
+        currentTime = breakEndMinutes;
+        continue;
+      }
+      
+      // Get next service in sequence
+      const currentService = allServices[serviceIndex % allServices.length];
+      const serviceDuration = currentService.estimatedDuration || currentService.serviceDuration;
+      const endTime = currentTime + serviceDuration;
+      
+      // Check if slot fits before closing time
+      if (endTime > closingMinutes) {
+        break;
+      }
+      
+      // Check if slot conflicts with break time
+      if (currentTime < breakEndMinutes && endTime > breakStartMinutes) {
+        currentTime = breakEndMinutes;
+        continue;
+      }
+      
+      const startTimeStr = this.minutesToTime(currentTime);
+      const endTimeStr = this.minutesToTime(endTime);
+      
+      // Check for conflicts with existing bookings
+      const hasConflict = existingBookings.some(booking => {
+        const bookingStart = this.timeToMinutes(booking.startTime);
+        const bookingEnd = this.timeToMinutes(booking.endTime);
+        return (currentTime < bookingEnd && endTime > bookingStart);
+      });
+      
+      if (!hasConflict) {
+        slots.push({
+          id: crypto.randomUUID(),
+          salonId,
+          staffId,
+          serviceId: currentService.serviceId,
+          date,
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+          isAvailable: true,
+          slotType: 'regular' as const,
+          price: currentService.customPrice || currentService.servicePrice
+        });
+      }
+      
+      currentTime = endTime;
+      serviceIndex++;
+    }
+
+    // Clear existing dynamic slots for this staff and date
+    await db.delete(timeSlots)
+      .where(and(
+        eq(timeSlots.salonId, salonId),
+        eq(timeSlots.staffId, staffId),
+        eq(timeSlots.date, date),
+        eq(timeSlots.slotType, 'regular')
+      ));
+
+    // Insert new slots
+    if (slots.length > 0) {
+      await db.insert(timeSlots).values(slots);
+    }
+
+    console.log(`[DYNAMIC GENERATION] Generated ${slots.length} dynamic service-based slots for ${staffName}`);
+    
+    return {
+      generated: slots.length,
+      staffName,
+      message: `Generated ${slots.length} service-based slots with custom working hours and break time`
+    };
+  }
+
   // Access to db for the smart scheduling service
   get db() {
     return db;
