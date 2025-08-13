@@ -1,0 +1,266 @@
+PS C:\Users\niraj\OneDrive\sanwarapp> mkdir sanwar-mobile 
+
+
+    Directory: C:\Users\niraj\OneDrive\sanwarapp
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----        13-08-2025     23:57                sanwar-mobile
+
+
+PS C:\Users\niraj\OneDrive\sanwarapp> cd sanwar-mobile
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile> npm init @capacitor/app
+>>
+Need to install the following packages:
+@capacitor/create-app@0.5.0
+Ok to proceed? (y) y
+
+
+> niraj@1.0.0 npx
+> create-capacitor-app
+
+√ What is the name of your app?
+ ... sanwar
+√ What directory should be used for your app?
+ ... dist/public
+√ What should be the App ID for your app?
+
+    App IDs (aka Bundle ID in iOS and Application ID in Android) are unique
+    identifiers for apps. They must be in reverse domain name notation, generally
+    representing a domain name that you or your company owns.
+
+ ... com.sanwar.app
+
+* Your Capacitor app is ready to go! *
+
+Next steps:
+  - cd dist/public/
+  - install dependencies (e.g. w/ npm install)
+  - npm start
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile> cd dist/public/
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install
+
+added 121 packages, and audited 122 packages in 21s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm start
+
+> capacitor-app@1.0.0 start
+> vite
+
+
+  VITE v5.4.19  ready in 776 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npx cap add android
+>> 
+[error] Could not find the android platform.
+        You must install it in your project first, e.g. w/ npm install @capacitor/android
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/android
+
+added 1 package, and audited 123 packages in 4s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npx cap add android
+√ Adding native android project in android in 559.10ms
+√ add in 562.79ms
+[warn] sync could not run--missing dist directory.
+[success] android platform added!
+Follow the Developer Workflow guide to get building:
+https://capacitorjs.com/docs/basics/workflow
+
+Thank you for helping improve Capacitor by sharing anonymous usage data! 💖
+Information about the data we collect is available on our website: https://capacitorjs.com/docs/next/cli/telemetry
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npx cap add ios
+>>
+[error] Could not find the ios platform.
+        You must install it in your project first, e.g. w/ npm install @capacitor/ios
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/ios
+
+added 1 package, and audited 124 packages in 6s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/ios
+
+up to date, audited 124 packages in 2s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/app
+
+added 1 package, and audited 125 packages in 4s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/haptics
+
+added 1 package, and audited 126 packages in 5s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/keyboard
+
+added 1 package, and audited 127 packages in 6s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/status-bar 
+
+added 1 package, and audited 128 packages in 5s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/splash-screen
+
+up to date, audited 128 packages in 5s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/push-notifications
+
+added 1 package, and audited 129 packages in 5s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/camera @capacitor/filesystem
+
+added 2 packages, and audited 131 packages in 11s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install @capacitor/geolocation
+
+added 1 package, and audited 132 packages in 6s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npm install -g @capacitor/assets
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated q@1.5.1: You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+npm warn deprecated
+npm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
+npm warn deprecated @xmldom/xmldom@0.7.13: this version is no longer supported, please update to at least 0.8.*
+
+added 423 packages in 46s
+
+54 packages are looking for funding
+  run `npm fund` for details
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npx capacitor-assets generate --iconBackgroundColor '#8B5CF6' --iconBackgroundColorDark '#8B5CF6' --splashBackgroundColor '#8B5CF6' --splashBackgroundColorDark '#8B5CF6'
+>>
+[log] xml(load) at C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public\android\app\src\main\AndroidManifest.xml
+[log] xml(load) Found root namespaces in XML file: http://schemas.android.com/apk/res/android
+Asset directory not found at C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public. Use --asset-path to specify a specific directory containing assets
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> npx cap sync android
+[warn] Cannot copy web assets from dist to android\app\src\main\assets\public
+       Web asset directory specified by webDir does not exist. This is not an error because server.url is set in config.      
+× Creating capacitor.config.json in android\app\src\main\assets - failed!
+× copy android - failed!
+[error] Error: ENOENT: no such file or directory, open
+        'C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public\android\app\src\main\assets\capacitor.config.json'       
+√ Updating Android plugins in 3.27ms
+[info] Found 9 Capacitor plugins for android:
+       @capacitor/app@7.0.2
+       @capacitor/camera@7.0.2
+       @capacitor/filesystem@7.1.4
+       @capacitor/geolocation@7.1.5
+       @capacitor/haptics@7.0.2
+       @capacitor/keyboard@7.0.2
+       @capacitor/push-notifications@7.0.2
+       @capacitor/splash-screen@7.0.2
+       @capacitor/status-bar@7.0.2
+× update android - failed!
+[error] Error: ENOENT: no such file or directory, open
+        'C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public\android\app\src\main\assets\capacitor.plugins.json'      
+PS C:\Users\niraj\OneDrive\sanwarapp\sanwar-mobile\dist\public> 
