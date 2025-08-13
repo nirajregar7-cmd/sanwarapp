@@ -153,6 +153,39 @@ export default function SalonDetail() {
     },
   });
 
+  // Alternative "Pay at Salon" booking when online payment fails
+  const handlePayAtSalonBooking = async () => {
+    try {
+      const formData = form.getValues();
+      const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
+        salonId,
+        serviceId: formData.serviceId,
+        staffId: formData.staffId || null,
+        timeSlotId: formData.timeSlotId,
+        date: formData.date.toISOString().split('T')[0],
+        notes: "Pay at salon - Online payment failed due to security checks"
+      });
+      
+      const booking = await response.json();
+      
+      toast({
+        title: "Booking Confirmed!",
+        description: "Your appointment is booked! Please pay the full service amount when you visit the salon.",
+      });
+      
+      setBookingDialogOpen(false);
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/time-slots`] });
+    } catch (error) {
+      console.error("Pay at salon booking failed:", error);
+      toast({
+        title: "Booking Failed",
+        description: "Unable to create booking. Please try again or contact the salon directly.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const bookingMutation = useMutation({
     mutationFn: async (data: BookingFormData) => {
       if (!isAuthenticated) {
@@ -373,7 +406,18 @@ export default function SalonDetail() {
       let title = "Booking Failed";
       let description = error.message;
       
-      if (error.message.includes('timeout') || error.message.includes('taking too long')) {
+      if (error.message.includes('risk_check_failed') || error.message.includes('payment_risk_check_failed')) {
+        title = "Payment Security Check";
+        description = "Payment was flagged by security checks. You can still book by paying at the salon.";
+        
+        // Show "Pay at Salon" option as a fallback
+        setTimeout(() => {
+          if (confirm("Would you like to book this appointment and pay at the salon instead?")) {
+            handlePayAtSalonBooking();
+          }
+        }, 1500);
+        
+      } else if (error.message.includes('timeout') || error.message.includes('taking too long')) {
         title = "Payment Timeout";
         description = "The payment is taking longer than expected. Please check your internet connection and try again.";
       } else if (error.message.includes('cancelled')) {
@@ -385,6 +429,9 @@ export default function SalonDetail() {
       } else if (error.message.includes('not available')) {
         title = "Payment System Issue";
         description = "Payment system is temporarily unavailable. Please refresh the page and try again.";
+      } else if (error.message.includes('BAD_REQUEST_ERROR')) {
+        title = "Payment Processing Error";
+        description = "There was an issue processing your payment. Please try a different payment method or contact support.";
       }
       
       toast({

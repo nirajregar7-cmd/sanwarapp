@@ -993,6 +993,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Create "Pay at Salon" booking when online payment fails
+  app.post('/api/bookings/create-pay-at-salon', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const {
+        salonId,
+        serviceId,
+        timeSlotId,
+        date,
+        staffId,
+        notes
+      } = req.body;
+      
+      // Validate required fields
+      if (!salonId || !serviceId || !timeSlotId || !date) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Check slot availability
+      const [existingBooking] = await db.select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.timeSlotId, timeSlotId),
+            eq(bookings.date, date)
+          )
+        );
+        
+      if (existingBooking) {
+        return res.status(400).json({ message: "Time slot is no longer available" });
+      }
+      
+      // Get time slot and service details
+      const [timeSlot] = await db.select()
+        .from(timeSlots)
+        .where(eq(timeSlots.id, timeSlotId));
+        
+      const [service] = await db.select()
+        .from(services)
+        .where(eq(services.id, serviceId));
+      
+      if (!timeSlot || !service) {
+        return res.status(400).json({ message: "Service or time slot not found" });
+      }
+      
+      // Create "Pay at Salon" booking
+      const [booking] = await db.insert(bookings).values({
+        customerId: userId,
+        salonId,
+        serviceId,
+        staffId: staffId || null,
+        timeSlotId,
+        date,
+        startTime: timeSlot.startTime,
+        endTime: timeSlot.endTime,
+        totalAmount: service.price,
+        confirmationAmount: '0',
+        paymentStatus: 'pending',
+        status: 'pending',
+        notes: notes || 'Pay at salon - Online payment failed'
+      }).returning();
+      
+      // Send booking confirmation notification
+      await sendBookingConfirmationNotification(booking.id);
+      
+      res.status(201).json({
+        ...booking,
+        message: "Booking created successfully! Please pay at the salon."
+      });
+    } catch (error) {
+      console.error("Error creating pay-at-salon booking:", error);
+      res.status(500).json({ message: "Failed to create booking" });
+    }
+  });
+
   // Create free booking with referral code
   app.post('/api/bookings/create-free', isAuthenticated, async (req: any, res) => {
     try {
