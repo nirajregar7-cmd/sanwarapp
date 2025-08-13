@@ -170,8 +170,15 @@ export default function EmailVerification() {
           },
         });
       } else {
-        // Fallback: redirect to register page with verified email and user type
-        setLocation(`/auth?email=${verificationData?.email}&userType=${verificationData?.userType}&verified=true`);
+        // No pending registration data - redirect to auth page to complete registration
+        toast({
+          title: "Email Verified Successfully!",
+          description: "Redirecting to complete your business registration...",
+        });
+        // Add a small delay for better UX
+        setTimeout(() => {
+          setLocation(`/auth?email=${verificationData?.email}&userType=${verificationData?.userType}&verified=true`);
+        }, 1500);
       }
     },
     onError: (error: Error) => {
