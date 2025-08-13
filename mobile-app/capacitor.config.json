@@ -1,7 +1,7 @@
 {
   "appId": "com.sanwar.app",
   "appName": "Sanwar",
-  "webDir": "dist",
+  "webDir": "dist/public",
   "server": {
     "url": "https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev",
     "cleartext": true

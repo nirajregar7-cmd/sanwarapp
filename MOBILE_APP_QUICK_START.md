@@ -32,7 +32,7 @@ Edit `capacitor.config.ts` and replace the server URL:
 const config: CapacitorConfig = {
   appId: 'com.sanwar.app',
   appName: 'Sanwar',
-  webDir: 'dist',
+  webDir: 'dist/public',  // This is where your built app files are located
   server: {
     url: 'https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev',
     cleartext: true
