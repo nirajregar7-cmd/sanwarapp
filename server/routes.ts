@@ -3139,7 +3139,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/salons/:salonId/time-slots/bulk", isAuthenticated, async (req: any, res) => {
+  // Bulk generate time slots with break handling
+  app.post("/api/salons/:salonId/time-slots/bulk-generate", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const salon = await storage.getSalonById(req.params.salonId);
@@ -3352,6 +3353,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting time slot:", error);
       res.status(500).json({ message: "Failed to delete time slot" });
+    }
+  });
+
+  // Delete all time slots for a specific date
+  app.delete("/api/salons/:salonId/time-slots/date/:date", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete time slots for this salon" });
+      }
+
+      // Delete all time slots for this salon and date that are not booked
+      const result = await db.delete(timeSlots)
+        .where(and(
+          eq(timeSlots.salonId, req.params.salonId),
+          eq(timeSlots.date, req.params.date),
+          not(exists(
+            db.select().from(bookings)
+              .where(and(
+                eq(bookings.timeSlotId, timeSlots.id),
+                or(eq(bookings.status, "confirmed"), eq(bookings.status, "completed"))
+              ))
+          ))
+        ));
+      
+      res.json({ message: `All unbooked time slots for ${req.params.date} deleted successfully` });
+    } catch (error) {
+      console.error("Error deleting time slots by date:", error);
+      res.status(500).json({ message: "Failed to delete time slots" });
+    }
+  });
+
+  // Fix duplicate time slots for a salon
+  app.post("/api/salons/:salonId/time-slots/fix-duplicates", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage time slots for this salon" });
+      }
+
+      // Find duplicate slots (same salon, date, start time, end time)
+      const duplicateSlots = await db.select({
+        salonId: timeSlots.salonId,
+        date: timeSlots.date,
+        startTime: timeSlots.startTime,
+        endTime: timeSlots.endTime,
+        count: sql<number>`count(*)`,
+        ids: sql<string[]>`array_agg(${timeSlots.id})`
+      })
+      .from(timeSlots)
+      .where(eq(timeSlots.salonId, req.params.salonId))
+      .groupBy(timeSlots.salonId, timeSlots.date, timeSlots.startTime, timeSlots.endTime)
+      .having(sql`count(*) > 1`);
+
+      let deletedCount = 0;
+      
+      for (const duplicate of duplicateSlots) {
+        const slotIds = duplicate.ids;
+        // Keep the first slot and delete the rest
+        for (let i = 1; i < slotIds.length; i++) {
+          // Check if this slot has any bookings
+          const hasBookings = await db.select({ id: bookings.id })
+            .from(bookings)
+            .where(eq(bookings.timeSlotId, slotIds[i]))
+            .limit(1);
+          
+          // Only delete if no bookings exist
+          if (hasBookings.length === 0) {
+            await db.delete(timeSlots).where(eq(timeSlots.id, slotIds[i]));
+            deletedCount++;
+          }
+        }
+      }
+
+      res.json({ 
+        message: `Fixed ${deletedCount} duplicate time slots`,
+        duplicatesFound: duplicateSlots.length,
+        deletedCount 
+      });
+    } catch (error) {
+      console.error("Error fixing duplicate time slots:", error);
+      res.status(500).json({ message: "Failed to fix duplicate time slots" });
     }
   });
 
