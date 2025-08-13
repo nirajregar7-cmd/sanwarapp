@@ -3173,6 +3173,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get slot counts for each staff member
+  app.get("/api/salons/:salonId/staff-slot-counts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+      
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to view slot counts for this salon" });
+      }
+
+      // Get all staff members for this salon
+      const staffMembers = await db.select()
+        .from(staff)
+        .where(eq(staff.salonId, salonId));
+
+      // Get slot counts for each staff member
+      const slotCounts: Record<string, number> = {};
+      
+      for (const staffMember of staffMembers) {
+        const [countResult] = await db
+          .select({ count: count() })
+          .from(timeSlots)
+          .where(
+            and(
+              eq(timeSlots.salonId, salonId),
+              eq(timeSlots.staffId, staffMember.id),
+              eq(timeSlots.isAvailable, true),
+              gte(timeSlots.date, new Date().toISOString().split('T')[0]) // Only future/today slots
+            )
+          );
+        
+        slotCounts[staffMember.id] = countResult?.count || 0;
+      }
+
+      res.json(slotCounts);
+    } catch (error) {
+      console.error("Error fetching staff slot counts:", error);
+      res.status(500).json({ message: "Failed to fetch slot counts" });
+    }
+  });
+
+  // Get public staff slot counts (accessible to all users)
+  app.get("/api/salons/:salonId/public-staff-slot-counts", async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      
+      // Get all active staff members for this salon
+      const staffMembers = await db.select()
+        .from(staff)
+        .where(and(eq(staff.salonId, salonId), eq(staff.isActive, true)));
+
+      // Get slot counts for each staff member
+      const slotCounts: Record<string, number> = {};
+      
+      for (const staffMember of staffMembers) {
+        const [countResult] = await db
+          .select({ count: count() })
+          .from(timeSlots)
+          .where(
+            and(
+              eq(timeSlots.salonId, salonId),
+              eq(timeSlots.staffId, staffMember.id),
+              eq(timeSlots.isAvailable, true),
+              gte(timeSlots.date, new Date().toISOString().split('T')[0]) // Only future/today slots
+            )
+          );
+        
+        slotCounts[staffMember.id] = countResult?.count || 0;
+      }
+
+      res.json(slotCounts);
+    } catch (error) {
+      console.error("Error fetching public staff slot counts:", error);
+      res.status(500).json({ message: "Failed to fetch slot counts" });
+    }
+  });
+
   // Bulk generate time slots (new method for the management interface)
   app.post("/api/salons/:salonId/time-slots/bulk-generate", isAuthenticated, async (req, res) => {
     try {
@@ -5572,7 +5651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (conditions.length > 0) {
-        query = query.where(and(...conditions));
+        query = query.where(and(...conditions)) as typeof query;
       }
       
       const adminFeedback = await query

@@ -6,6 +6,7 @@ Sanwar is a smart salon booking platform designed to digitize salon businesses a
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Shopkeeper prefers: Single simple slot generation method to avoid confusion.
+Individual staff-based slot generation: Implemented with real-time slot counts and staff-specific booking system.
 
 ## System Architecture
 

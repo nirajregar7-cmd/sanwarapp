@@ -77,6 +77,13 @@ export default function SalonDetail() {
     enabled: !!salonId,
   });
 
+  // Fetch staff slot counts (visible to all users, not just salon owners)
+  const { data: staffSlotCounts = {} } = useQuery<Record<string, number>>({
+    queryKey: [`/api/salons/${salonId}/public-staff-slot-counts`],
+    enabled: !!salonId,
+    refetchInterval: 30000, // Refresh every 30 seconds for live slot availability
+  });
+
   // Fetch salon reviews
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
     queryKey: [`/api/salons/${salonId}/reviews`],
@@ -978,7 +985,12 @@ export default function SalonDetail() {
                                       .filter(member => member.isActive)
                                       .map((member) => (
                                       <SelectItem key={member.id} value={member.id}>
-                                        {member.name} - {member.role}
+                                        <div className="flex items-center justify-between w-full">
+                                          <span>{member.name} - {member.role}</span>
+                                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full ml-2">
+                                            {staffSlotCounts[member.id] || 0} slots
+                                          </span>
+                                        </div>
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
