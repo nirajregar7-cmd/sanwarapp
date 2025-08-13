@@ -29,6 +29,7 @@ import TimeSlots from "@/pages/owner/time-slots";
 import TimeSlotManagement from "@/pages/owner/time-slot-management";
 import StaffSchedulePage from "@/pages/owner/staff-schedule";
 import StaffManagement from "@/pages/owner/staff-management";
+import StaffSlotGenerator from "@/pages/owner/staff-slot-generator";
 import AccountDetails from "@/pages/owner/account-details";
 import ReferEarn from "@/pages/owner/refer-earn";
 import WalkInBookings from "@/pages/salon-owner/walk-in-bookings";
@@ -306,6 +307,12 @@ function Router() {
               <Route path="/owner/staff-management">
                 <Layout>
                   <StaffManagement />
+                </Layout>
+              </Route>
+              
+              <Route path="/owner/staff-slot-generator">
+                <Layout>
+                  <StaffSlotGenerator />
                 </Layout>
               </Route>
               <Route path="/owner/walk-in-bookings">

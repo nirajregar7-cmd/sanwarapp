@@ -23,6 +23,49 @@ import { promisify } from "util";
 
 const scryptAsync = promisify(scrypt);
 
+// Helper function to generate time slots for a specific date
+function generateTimeSlotsForDate(date: string, openingTime: string, closingTime: string, slotDuration: number, breakStartTime: string, breakEndTime: string) {
+  const slots = [];
+  const [openHour, openMin] = openingTime.split(':').map(Number);
+  const [closeHour, closeMin] = closingTime.split(':').map(Number);
+  const [breakStartHour, breakStartMin] = breakStartTime.split(':').map(Number);
+  const [breakEndHour, breakEndMin] = breakEndTime.split(':').map(Number);
+  
+  const openingMinutes = openHour * 60 + openMin;
+  const closingMinutes = closeHour * 60 + closeMin;
+  const breakStartMinutes = breakStartHour * 60 + breakStartMin;
+  const breakEndMinutes = breakEndHour * 60 + breakEndMin;
+  
+  for (let minutes = openingMinutes; minutes < closingMinutes; minutes += slotDuration) {
+    const endMinutes = minutes + slotDuration;
+    
+    // Skip slots that overlap with break time
+    if ((minutes >= breakStartMinutes && minutes < breakEndMinutes) || 
+        (endMinutes > breakStartMinutes && endMinutes <= breakEndMinutes) ||
+        (minutes < breakStartMinutes && endMinutes > breakEndMinutes)) {
+      continue;
+    }
+    
+    // Stop if the slot would end after closing time
+    if (endMinutes > closingMinutes) {
+      break;
+    }
+    
+    const startHour = Math.floor(minutes / 60);
+    const startMin = minutes % 60;
+    const endHour = Math.floor(endMinutes / 60);
+    const endMin = endMinutes % 60;
+    
+    slots.push({
+      date,
+      startTime: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`,
+      endTime: `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`
+    });
+  }
+  
+  return slots;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -3043,6 +3086,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating dynamic staff slots:", error);
       res.status(500).json({ message: "Failed to generate dynamic staff slots" });
+    }
+  });
+
+  // Generate time slots for individual staff member
+  app.post("/api/salons/:salonId/staff/:staffId/generate-slots", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId, staffId } = req.params;
+      const { startDate, endDate, openingTime, closingTime, slotDuration, breakStartTime, breakEndTime } = req.body;
+      
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to generate slots for this salon" });
+      }
+
+      // Verify staff member belongs to this salon
+      const [staffMember] = await db.select()
+        .from(staff)
+        .where(and(eq(staff.id, staffId), eq(staff.salonId, salonId)))
+        .limit(1);
+
+      if (!staffMember) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
+
+      console.log(`[INDIVIDUAL SLOT GENERATION] Owner ${userId} generating slots for staff ${staffMember.name} (${staffId}) from ${startDate} to ${endDate}`);
+
+      // Generate slots for the date range
+      let totalGenerated = 0;
+      const currentDate = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      
+      while (currentDate <= endDateObj) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        // Generate time slots for this date
+        const slots = generateTimeSlotsForDate(dateStr, openingTime, closingTime, parseInt(slotDuration), breakStartTime, breakEndTime);
+        
+        // Create each slot in the database
+        for (const slot of slots) {
+          try {
+            // Check if slot already exists
+            const existing = await db
+              .select()
+              .from(timeSlots)
+              .where(
+                and(
+                  eq(timeSlots.salonId, salonId),
+                  eq(timeSlots.staffId, staffId),
+                  eq(timeSlots.date, slot.date),
+                  eq(timeSlots.startTime, slot.startTime)
+                )
+              )
+              .limit(1);
+
+            if (existing.length === 0) {
+              await storage.createTimeSlot({
+                salonId,
+                staffId,
+                date: slot.date,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                isAvailable: true,
+                slotType: 'regular'
+              });
+              totalGenerated++;
+            }
+          } catch (error) {
+            console.error("Error creating individual slot:", error);
+          }
+        }
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      res.json({ 
+        message: `Generated ${totalGenerated} slots for ${staffMember.name}`,
+        count: totalGenerated,
+        staffName: staffMember.name
+      });
+    } catch (error) {
+      console.error("Error generating individual staff slots:", error);
+      res.status(500).json({ message: "Failed to generate slots" });
     }
   });
 
