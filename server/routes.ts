@@ -768,9 +768,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create booking endpoint
   // Create payment order for booking confirmation with referral code support
   app.post('/api/bookings/create-payment-order', isAuthenticated, async (req: any, res) => {
+    const startTime = Date.now();
     try {
       const userId = req.user?.id;
       const { salonId, serviceId, timeSlotId, date, staffId, referralCode } = req.body;
+      
+      console.log('🎯 Creating payment order for user:', userId, 'amount processing...');
       
       // Validate required fields
       if (!salonId || !serviceId || !timeSlotId || !date) {
@@ -918,6 +921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create Razorpay order for remaining amount
+      console.log('🔄 Creating Razorpay order for amount:', finalAmount);
       const order = await createRazorpayOrder({
         amount: finalAmount,
         receipt: `booking_${Date.now()}`,
@@ -936,6 +940,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
+      const processingTime = Date.now() - startTime;
+      console.log(`⚡ Payment order created in ${processingTime}ms for user ${userId}`);
+      
       res.json({
         orderId: order.id,
         amount: order.amount,
@@ -947,13 +954,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         referralCodeApplied: validReferralCode?.code || null,
         servicePrice: service.price,
         salonName: salon.name,
-        serviceName: service.name
+        serviceName: service.name,
+        processingTime: `${processingTime}ms`
       });
     } catch (error) {
-      console.error("Error creating payment order:", error);
-      res.status(500).json({ 
-        message: "Failed to create payment order", 
-        error: error instanceof Error ? error.message : "Unknown error"
+      const processingTime = Date.now() - startTime;
+      console.error(`❌ Error creating payment order after ${processingTime}ms:`, error);
+      
+      let errorMessage = "Failed to create payment order";
+      let statusCode = 500;
+      
+      if (error instanceof Error) {
+        if (error.message.includes('timeout') || error.message.includes('slow')) {
+          errorMessage = error.message;
+          statusCode = 408; // Request Timeout
+        } else if (error.message.includes('network') || error.message.includes('connection')) {
+          errorMessage = "Network issue. Please check your connection and try again.";
+          statusCode = 503; // Service Unavailable
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      res.status(statusCode).json({ 
+        message: errorMessage,
+        processingTime: `${processingTime}ms`,
+        retryable: statusCode === 408 || statusCode === 503
       });
     }
   });
@@ -1054,6 +1080,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Verify payment and create booking
   app.post('/api/bookings/verify-payment', isAuthenticated, async (req: any, res) => {
+    const startTime = Date.now();
     try {
       const userId = req.user?.id;
       const {
@@ -1070,7 +1097,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         discountApplied
       } = req.body;
       
+      console.log('🔐 Starting payment verification for user:', userId, 'payment ID:', razorpay_payment_id);
+      
       // Verify payment signature
+      console.log('🔍 Verifying payment signature...');
       const isValidPayment = verifyRazorpayPayment(
         razorpay_order_id,
         razorpay_payment_id,
@@ -1078,8 +1108,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       if (!isValidPayment) {
-        return res.status(400).json({ message: "Invalid payment signature" });
+        console.error('❌ Invalid payment signature for payment:', razorpay_payment_id);
+        return res.status(400).json({ 
+          message: "Payment verification failed. Invalid signature.",
+          paymentId: razorpay_payment_id
+        });
       }
+      
+      console.log('✅ Payment signature verified successfully');
       
       // Get service and time slot details
       const [service] = await db.select()
@@ -1287,30 +1323,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail the booking if notification fails
       }
 
-      console.log("Created booking after payment:", booking);
+      const processingTime = Date.now() - startTime;
+      console.log(`✅ Booking created successfully after payment in ${processingTime}ms:`, booking.id);
 
-      // Send booking confirmation email
-      try {
-        const { sendBookingConfirmationEmail, getBookingNotificationData } = await import('./email-notifications');
-        const notificationData = await getBookingNotificationData(booking.id);
-        if (notificationData) {
-          await sendBookingConfirmationEmail(notificationData);
+      // Send booking confirmation email (async)
+      setImmediate(async () => {
+        try {
+          const { sendBookingConfirmationEmail, getBookingNotificationData } = await import('./email-notifications');
+          const notificationData = await getBookingNotificationData(booking.id);
+          if (notificationData) {
+            await sendBookingConfirmationEmail(notificationData);
+            console.log('📧 Booking confirmation email sent for:', booking.id);
+          }
+        } catch (emailError) {
+          console.error('❌ Error sending confirmation email:', emailError);
+          // Don't fail the booking if email fails
         }
-      } catch (emailError) {
-        console.error('❌ Error sending confirmation email:', emailError);
-        // Don't fail the booking if email fails
-      }
+      });
 
       res.json({ 
         success: true, 
         booking,
-        message: "Booking confirmed! You've paid the confirmation amount. Pay the remaining service cost at the salon."
+        message: "Booking confirmed! You've paid the confirmation amount. Pay the remaining service cost at the salon.",
+        processingTime: `${processingTime}ms`,
+        paymentId: razorpay_payment_id
       });
     } catch (error) {
-      console.error("Error verifying payment and creating booking:", error);
-      res.status(500).json({ 
-        message: "Failed to verify payment and create booking", 
-        error: error instanceof Error ? error.message : "Unknown error"
+      const processingTime = Date.now() - startTime;
+      console.error(`❌ Error verifying payment and creating booking after ${processingTime}ms:`, error);
+      
+      let errorMessage = "Failed to process payment and create booking";
+      let statusCode = 500;
+      
+      if (error instanceof Error) {
+        if (error.message.includes('slot')) {
+          errorMessage = "Selected time slot is no longer available. Please choose another time.";
+          statusCode = 409; // Conflict
+        } else if (error.message.includes('payment')) {
+          errorMessage = "Payment processing failed. Please contact support if money was deducted.";
+          statusCode = 402; // Payment Required
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      res.status(statusCode).json({ 
+        message: errorMessage,
+        processingTime: `${processingTime}ms`,
+        retryable: statusCode !== 409 // Don't retry if slot conflict
       });
     }
   });

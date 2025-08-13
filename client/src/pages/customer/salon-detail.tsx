@@ -207,8 +207,19 @@ export default function SalonDetail() {
         return freeBookingData;
       }
       
-      // Step 2: Initialize Razorpay payment
+      // Step 2: Initialize Razorpay payment with improved timeout handling
       return new Promise((resolve, reject) => {
+        let isResolved = false;
+        const paymentStartTime = Date.now();
+        
+        // Set a timeout for the entire payment process
+        const paymentTimeout = setTimeout(() => {
+          if (!isResolved) {
+            isResolved = true;
+            reject(new Error("Payment is taking too long. Please try again or contact support if money was deducted."));
+          }
+        }, 120000); // 2 minutes timeout
+        
         const options = {
           key: orderData.keyId,
           amount: orderData.amount,
@@ -216,26 +227,75 @@ export default function SalonDetail() {
           name: orderData.salonName || salon?.name || "Sanwar",
           description: `Booking confirmation for ${orderData.serviceName || "service"}`,
           order_id: orderData.orderId,
+          timeout: 300, // 5 minutes for Razorpay itself
+          retry: {
+            enabled: true,
+            max_count: 3
+          },
           handler: async (response: any) => {
+            if (isResolved) return;
+            
+            const paymentTime = Date.now() - paymentStartTime;
+            console.log(`💳 Payment completed in ${paymentTime}ms`);
+            
             try {
-              // Step 3: Verify payment and create booking
-              const verifyResponse = await apiRequest("POST", "/api/bookings/verify-payment", {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                salonId,
-                serviceId: data.serviceId,
-                staffId: data.staffId || null,
-                timeSlotId: data.timeSlotId,
-                date: data.date.toISOString().split('T')[0],
-                referralCodeData: orderData.referralCodeApplied ? appliedReferralCode : null,
-                discountApplied: orderData.discountApplied || 0,
-              });
+              // Step 3: Verify payment and create booking with retry logic
+              const verifyStartTime = Date.now();
+              let verifyAttempts = 0;
+              const maxVerifyAttempts = 3;
+              
+              const attemptVerification = async (): Promise<any> => {
+                verifyAttempts++;
+                try {
+                  const verifyResponse = await apiRequest("POST", "/api/bookings/verify-payment", {
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    salonId,
+                    serviceId: data.serviceId,
+                    staffId: data.staffId || null,
+                    timeSlotId: data.timeSlotId,
+                    date: data.date.toISOString().split('T')[0],
+                    referralCodeData: orderData.referralCodeApplied ? appliedReferralCode : null,
+                    discountApplied: orderData.discountApplied || 0,
+                  });
 
-              const bookingData = await verifyResponse.json();
-              resolve(bookingData);
+                  const bookingData = await verifyResponse.json();
+                  const verifyTime = Date.now() - verifyStartTime;
+                  console.log(`✅ Payment verified and booking created in ${verifyTime}ms`);
+                  return bookingData;
+                } catch (error) {
+                  console.log(`❌ Verification attempt ${verifyAttempts} failed:`, error);
+                  
+                  if (verifyAttempts < maxVerifyAttempts) {
+                    console.log(`🔄 Retrying verification in 2 seconds...`);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    return attemptVerification();
+                  }
+                  throw error;
+                }
+              };
+
+              const bookingData = await attemptVerification();
+              
+              clearTimeout(paymentTimeout);
+              if (!isResolved) {
+                isResolved = true;
+                resolve(bookingData);
+              }
             } catch (error) {
-              reject(error);
+              clearTimeout(paymentTimeout);
+              if (!isResolved) {
+                isResolved = true;
+                console.error("Payment verification failed:", error);
+                reject(new Error(
+                  error instanceof Error && error.message.includes('slot') 
+                    ? "Time slot is no longer available. Please choose another time."
+                    : error instanceof Error && error.message.includes('timeout')
+                    ? "Booking is taking longer than expected. Please check your booking status or contact support."
+                    : "Payment was successful but booking confirmation failed. Please contact support with your payment ID: " + response.razorpay_payment_id
+                ));
+              }
             }
           },
           prefill: {
@@ -246,19 +306,42 @@ export default function SalonDetail() {
             color: "#3B82F6",
           },
           modal: {
+            escape: false, // Prevent accidental closure
             ondismiss: () => {
-              reject(new Error("Payment cancelled"));
+              clearTimeout(paymentTimeout);
+              if (!isResolved) {
+                isResolved = true;
+                reject(new Error("Payment cancelled by user"));
+              }
             },
+            confirm_close: true // Ask for confirmation before closing
           },
         };
 
         // @ts-ignore - Razorpay is loaded from CDN
         if (typeof window !== 'undefined' && window.Razorpay) {
-          // @ts-ignore
-          const rzp = new window.Razorpay(options);
-          rzp.open();
+          try {
+            // @ts-ignore
+            const rzp = new window.Razorpay(options);
+            
+            // Add error handling for Razorpay initialization
+            rzp.on('payment.failed', (response: any) => {
+              clearTimeout(paymentTimeout);
+              if (!isResolved) {
+                isResolved = true;
+                console.error("Razorpay payment failed:", response.error);
+                reject(new Error(`Payment failed: ${response.error.description || 'Unknown error'}`));
+              }
+            });
+            
+            rzp.open();
+          } catch (error) {
+            clearTimeout(paymentTimeout);
+            reject(new Error("Failed to initialize payment. Please refresh the page and try again."));
+          }
         } else {
-          reject(new Error("Payment system not available. Please refresh the page."));
+          clearTimeout(paymentTimeout);
+          reject(new Error("Payment system not available. Please refresh the page and ensure you have a stable internet connection."));
         }
       });
     },
@@ -276,9 +359,29 @@ export default function SalonDetail() {
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/time-slots`] });
     },
     onError: (error: Error) => {
+      console.error("Booking mutation error:", error);
+      
+      // Provide more specific error messages based on error content
+      let title = "Booking Failed";
+      let description = error.message;
+      
+      if (error.message.includes('timeout') || error.message.includes('taking too long')) {
+        title = "Payment Timeout";
+        description = "The payment is taking longer than expected. Please check your internet connection and try again.";
+      } else if (error.message.includes('cancelled')) {
+        title = "Payment Cancelled";
+        description = "Payment was cancelled. No charges were made.";
+      } else if (error.message.includes('slot')) {
+        title = "Time Slot Unavailable";
+        description = error.message;
+      } else if (error.message.includes('not available')) {
+        title = "Payment System Issue";
+        description = "Payment system is temporarily unavailable. Please refresh the page and try again.";
+      }
+      
       toast({
-        title: "Booking Failed",
-        description: error.message,
+        title,
+        description,
         variant: "destructive",
       });
     },
@@ -989,11 +1092,22 @@ export default function SalonDetail() {
                             disabled={bookingMutation.isPending}
                           >
                             {bookingMutation.isPending 
-                              ? (rescheduleBookingId ? "Rescheduling..." : "Booking...") 
+                              ? (
+                                  <span className="flex items-center justify-center gap-2">
+                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                    {rescheduleBookingId ? "Processing Reschedule..." : "Processing Booking..."}
+                                  </span>
+                                )
                               : appliedReferralCode?.discountType === 'free'
                               ? "Book for FREE!"
                               : (rescheduleBookingId ? "Reschedule Booking" : "Confirm Booking")}
                           </Button>
+                          
+                          {bookingMutation.isPending && (
+                            <div className="text-xs text-gray-500 text-center mt-2">
+                              Please wait while we process your payment. This may take up to 2 minutes.
+                            </div>
+                          )}
                         </form>
                       </Form>
                     </DialogContent>

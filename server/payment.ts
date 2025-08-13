@@ -32,11 +32,21 @@ export async function createRazorpayOrder(data: CreateOrderData) {
       notes: data.notes || {},
     };
 
-    const order = await razorpay.orders.create(options);
+    // Add timeout for Razorpay API call
+    const orderPromise = razorpay.orders.create(options);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Razorpay order creation timeout')), 15000)
+    );
+
+    const order = await Promise.race([orderPromise, timeoutPromise]);
+    console.log('✅ Razorpay order created successfully:', order.id);
     return order;
   } catch (error) {
-    console.error('Error creating Razorpay order:', error);
-    throw new Error('Failed to create payment order');
+    console.error('❌ Error creating Razorpay order:', error);
+    if (error instanceof Error && error.message.includes('timeout')) {
+      throw new Error('Payment service is currently slow. Please try again in a moment.');
+    }
+    throw new Error('Failed to create payment order. Please check your connection and try again.');
   }
 }
 
