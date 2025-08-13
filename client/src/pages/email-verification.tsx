@@ -359,7 +359,7 @@ export default function EmailVerification() {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={verifyOtpMutation.isPending || timeLeft <= 0 || !otpForm.watch("otp") || otpForm.watch("otp").length !== 6}
+                disabled={verifyOtpMutation.isPending || timeLeft <= 0}
                 data-testid="button-verify-email"
               >
                 {verifyOtpMutation.isPending ? "Verifying..." : "Verify Email"}
