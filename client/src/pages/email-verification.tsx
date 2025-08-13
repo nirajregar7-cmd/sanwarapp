@@ -329,48 +329,59 @@ export default function EmailVerification() {
         </CardHeader>
         <CardContent>
           <Form {...otpForm}>
-            <form onSubmit={otpForm.handleSubmit((data) => verifyOtpMutation.mutate(data))} className="space-y-4">
-              <FormField
-                control={otpForm.control}
-                name="otp"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Verification Code</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Enter 6-digit code"
-                        maxLength={6}
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                        className="text-center text-lg tracking-widest font-mono"
-                        data-testid="otp-input"
-                        autoComplete="one-time-code"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-red-500">Verification Code</label>
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  maxLength={6}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-center text-lg tracking-widest font-mono ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  data-testid="otp-input"
+                  autoComplete="one-time-code"
+                  id="otp-simple"
+                />
+                {otpForm.formState.errors.otp && (
+                  <p className="text-sm text-red-500 mt-1">Please enter your verification code</p>
                 )}
-              />
+              </div>
 
               <div className="flex items-center justify-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                 <Timer className="w-4 h-4" />
                 <span>Time remaining: {formatTime(timeLeft)}</span>
               </div>
 
-
               <Button 
-                type="submit" 
+                onClick={async () => {
+                  const otpInput = document.getElementById('otp-simple') as HTMLInputElement;
+                  const otpValue = otpInput?.value || '';
+                  if (otpValue.length === 6) {
+                    verifyOtpMutation.mutate({ 
+                      otp: otpValue,
+                      email: verificationData?.email || ''
+                    });
+                  } else {
+                    toast({
+                      title: "Invalid OTP",
+                      description: "Please enter a 6-digit verification code",
+                      variant: "destructive",
+                    });
+                  }
+                }}
                 className="w-full" 
                 disabled={verifyOtpMutation.isPending || timeLeft <= 0}
-                data-testid="button-verify-email"
+                data-testid="verify-button"
               >
-                {verifyOtpMutation.isPending ? "Verifying..." : "Verify Email"}
+                {verifyOtpMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify Email"
+                )}
               </Button>
-            </form>
+            </div>
           </Form>
 
           <div className="mt-6 text-center space-y-3">
