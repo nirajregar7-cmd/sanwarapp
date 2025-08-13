@@ -502,12 +502,8 @@ export class DatabaseStorage implements IStorage {
       eq(timeSlots.date, date)
     ];
 
-    // For customer booking: if specific service/staff selected, filter by them
-    // But if not specified, show ALL manually created slots for that date
-    if (serviceId && serviceId !== 'undefined') {
-      conditions.push(eq(timeSlots.serviceId, serviceId));
-    }
-
+    // For customer booking: if specific staff selected, filter by them
+    // Service filter removed since slots are generated service-agnostic (serviceId: null)
     if (staffId && staffId !== 'undefined') {
       conditions.push(eq(timeSlots.staffId, staffId));
     }

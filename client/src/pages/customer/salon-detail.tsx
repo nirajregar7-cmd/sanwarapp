@@ -107,14 +107,14 @@ export default function SalonDetail() {
     enabled: !!salonId,
   });
 
-  // Fetch available time slots for selected date, service, and staff
+  // Fetch available time slots for selected date and staff (ignore service filter since slots are service-agnostic)
   const { data: timeSlots = [], isLoading: timeSlotsLoading } = useQuery({
-    queryKey: [`/api/salons/${salonId}/time-slots`, selectedDate?.toISOString().split('T')[0], selectedService, selectedStaff],
-    enabled: !!salonId && !!selectedDate && !!selectedService,
+    queryKey: [`/api/salons/${salonId}/time-slots`, selectedDate?.toISOString().split('T')[0], selectedStaff],
+    enabled: !!salonId && !!selectedDate,
     queryFn: async (): Promise<TimeSlot[]> => {
-      if (!selectedDate || !selectedService) return [];
+      if (!selectedDate) return [];
       const dateStr = selectedDate.toISOString().split('T')[0];
-      let url = `/api/salons/${salonId}/time-slots?date=${dateStr}&serviceId=${selectedService}`;
+      let url = `/api/salons/${salonId}/time-slots?date=${dateStr}`;
       if (selectedStaff) {
         url += `&staffId=${selectedStaff}`;
       }
