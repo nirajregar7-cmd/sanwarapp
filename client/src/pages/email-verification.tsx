@@ -335,12 +335,8 @@ export default function EmailVerification() {
                         type="text"
                         placeholder="Enter 6-digit code"
                         maxLength={6}
-                        value={field.value}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                          console.log("Simple input OTP changed:", value, "Length:", value.length);
-                          field.onChange(value);
-                        }}
+                        value={field.value || ''}
+                        onChange={field.onChange}
                         className="text-center text-lg tracking-widest font-mono"
                         data-testid="otp-input"
                         autoComplete="one-time-code"
@@ -348,7 +344,7 @@ export default function EmailVerification() {
                     </FormControl>
                     <FormMessage />
                     <div className="text-xs text-gray-500">
-                      Current OTP: "{field.value}" (Length: {field.value?.length || 0})
+                      Current OTP: "{field.value || ''}" (Length: {(field.value || '').length})
                     </div>
                   </FormItem>
                 )}
