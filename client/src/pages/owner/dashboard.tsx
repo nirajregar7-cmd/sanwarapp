@@ -1070,7 +1070,11 @@ export default function OwnerDashboard() {
                           <div className="flex items-center space-x-3">
                             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
                               {member.photoUrl ? (
-                                <img src={member.photoUrl} alt={member.name} className="w-12 h-12 rounded-full object-cover" />
+                                <img 
+                                  src={member.photoUrl.startsWith('/objects/') ? member.photoUrl : `/objects/uploads/${member.photoUrl}`} 
+                                  alt={member.name} 
+                                  className="w-12 h-12 rounded-full object-cover" 
+                                />
                               ) : (
                                 <Users className="h-6 w-6 text-gray-400" />
                               )}

@@ -263,7 +263,11 @@ export default function StaffManagement() {
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
                     {staff.photoUrl ? (
-                      <img src={staff.photoUrl} alt={staff.name} className="w-12 h-12 rounded-full object-cover" />
+                      <img 
+                        src={staff.photoUrl.startsWith('/objects/') ? staff.photoUrl : `/objects/uploads/${staff.photoUrl}`} 
+                        alt={staff.name} 
+                        className="w-12 h-12 rounded-full object-cover" 
+                      />
                     ) : (
                       <Users className="w-6 h-6 text-blue-600" />
                     )}

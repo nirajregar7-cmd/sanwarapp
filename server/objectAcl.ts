@@ -168,10 +168,13 @@ export async function canAccessObject({
     const objectPath = objectFile.name;
     if (objectPath.startsWith('uploads/') || objectPath.includes('staff_photos/')) {
       try {
+        // Extract just the file ID from the path (e.g., "uploads/abc123" -> "abc123")
+        const fileId = objectPath.replace('uploads/', '');
+        
         // Check if this object is a staff photo by looking in the database
         const [staffWithPhoto] = await db.select()
           .from(staff)
-          .where(eq(staff.photoUrl, objectPath))
+          .where(eq(staff.photoUrl, fileId))
           .limit(1);
         
         if (staffWithPhoto) {
