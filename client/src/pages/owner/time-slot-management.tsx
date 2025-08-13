@@ -37,6 +37,8 @@ export default function TimeSlotManagement() {
     openingTime: "09:00",
     closingTime: "18:00",
     slotDuration: "30", // 30 minutes
+    breakStartTime: "13:00", // 1:00 PM
+    breakEndTime: "14:00", // 2:00 PM
   });
 
   const { toast } = useToast();
@@ -98,14 +100,19 @@ export default function TimeSlotManagement() {
 
         const slotDurationMs = parseInt(bulkConfig.slotDuration) * 60 * 1000;
         const breakStart = new Date();
-        breakStart.setHours(13, 0, 0, 0); // 1:00 PM
+        const breakStartHour = parseInt(bulkConfig.breakStartTime.split(':')[0]);
+        const breakStartMin = parseInt(bulkConfig.breakStartTime.split(':')[1]);
+        breakStart.setHours(breakStartHour, breakStartMin, 0, 0);
+        
         const breakEnd = new Date();
-        breakEnd.setHours(14, 0, 0, 0); // 2:00 PM
+        const breakEndHour = parseInt(bulkConfig.breakEndTime.split(':')[0]);
+        const breakEndMin = parseInt(bulkConfig.breakEndTime.split(':')[1]);
+        breakEnd.setHours(breakEndHour, breakEndMin, 0, 0);
 
         while (currentTime < endTime) {
           const slotEnd = new Date(currentTime.getTime() + slotDurationMs);
           
-          // Skip break time (1:00-2:00 PM)
+          // Skip break time (customizable by salon owner)
           if (!(currentTime >= breakStart && currentTime < breakEnd)) {
             slotsToCreate.push({
               salonId: salon?.id,
@@ -179,24 +186,24 @@ export default function TimeSlotManagement() {
               Bulk Generate Slots
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Bulk Generate Time Slots</DialogTitle>
               <DialogDescription>
                 Generate time slots for multiple staff members at once
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 p-1">
               {/* Staff Selection */}
               <div>
                 <Label className="text-sm font-medium mb-2 block">Select Staff Members</Label>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-2">
                   {staff.map((member: any) => (
-                    <Card key={member.id} className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">{member.name}</h4>
-                          <p className="text-sm text-muted-foreground">{member.specialty}</p>
+                    <Card key={member.id} className="p-2 sm:p-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm sm:text-base truncate">{member.name}</h4>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{member.specialty}</p>
                         </div>
                         <Button
                           variant="outline"
@@ -204,6 +211,7 @@ export default function TimeSlotManagement() {
                           onClick={() => generateStaffSlotsMutation.mutate(member.id)}
                           disabled={generateStaffSlotsMutation.isPending}
                           data-testid={`button-generate-${member.name.replace(/\s+/g, '-').toLowerCase()}`}
+                          className="w-full sm:w-auto text-xs sm:text-sm"
                         >
                           {generateStaffSlotsMutation.isPending ? "Generating..." : "Generate Slots"}
                         </Button>
@@ -214,58 +222,88 @@ export default function TimeSlotManagement() {
               </div>
 
               {/* Date Range */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="start-date">Start Date</Label>
+                  <Label htmlFor="start-date" className="text-sm">Start Date</Label>
                   <Input
                     id="start-date"
                     type="date"
                     value={bulkConfig.startDate}
                     onChange={(e) => setBulkConfig(prev => ({ ...prev, startDate: e.target.value }))}
                     data-testid="input-start-date"
+                    className="text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="end-date">End Date</Label>
+                  <Label htmlFor="end-date" className="text-sm">End Date</Label>
                   <Input
                     id="end-date"
                     type="date"
                     value={bulkConfig.endDate}
                     onChange={(e) => setBulkConfig(prev => ({ ...prev, endDate: e.target.value }))}
                     data-testid="input-end-date"
+                    className="text-sm"
                   />
                 </div>
               </div>
 
               {/* Time Configuration */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="opening-time">Opening Time</Label>
+                  <Label htmlFor="opening-time" className="text-sm">Opening Time</Label>
                   <Input
                     id="opening-time"
                     type="time"
                     value={bulkConfig.openingTime}
                     onChange={(e) => setBulkConfig(prev => ({ ...prev, openingTime: e.target.value }))}
                     data-testid="input-opening-time"
+                    className="text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="closing-time">Closing Time</Label>
+                  <Label htmlFor="closing-time" className="text-sm">Closing Time</Label>
                   <Input
                     id="closing-time"
                     type="time"
                     value={bulkConfig.closingTime}
                     onChange={(e) => setBulkConfig(prev => ({ ...prev, closingTime: e.target.value }))}
                     data-testid="input-closing-time"
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Break Time Configuration */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="break-start-time" className="text-sm">Break Start Time</Label>
+                  <Input
+                    id="break-start-time"
+                    type="time"
+                    value={bulkConfig.breakStartTime}
+                    onChange={(e) => setBulkConfig(prev => ({ ...prev, breakStartTime: e.target.value }))}
+                    data-testid="input-break-start-time"
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="break-end-time" className="text-sm">Break End Time</Label>
+                  <Input
+                    id="break-end-time"
+                    type="time"
+                    value={bulkConfig.breakEndTime}
+                    onChange={(e) => setBulkConfig(prev => ({ ...prev, breakEndTime: e.target.value }))}
+                    data-testid="input-break-end-time"
+                    className="text-sm"
                   />
                 </div>
               </div>
 
               {/* Slot Duration */}
               <div>
-                <Label htmlFor="slot-duration">Slot Duration (minutes)</Label>
+                <Label htmlFor="slot-duration" className="text-sm">Slot Duration (minutes)</Label>
                 <Select value={bulkConfig.slotDuration} onValueChange={(value) => setBulkConfig(prev => ({ ...prev, slotDuration: value }))}>
-                  <SelectTrigger data-testid="select-slot-duration">
+                  <SelectTrigger data-testid="select-slot-duration" className="text-sm">
                     <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
                   <SelectContent>
@@ -276,9 +314,9 @@ export default function TimeSlotManagement() {
                 </Select>
               </div>
 
-              <div className="text-sm text-muted-foreground bg-muted p-3 rounded">
+              <div className="text-xs sm:text-sm text-muted-foreground bg-muted p-2 sm:p-3 rounded">
                 <p className="font-medium mb-1">Break Time Information:</p>
-                <p>Lunch break (1:00 PM - 2:00 PM) will be automatically excluded from generated slots.</p>
+                <p>Break time ({bulkConfig.breakStartTime} - {bulkConfig.breakEndTime}) will be automatically excluded from generated slots.</p>
               </div>
             </div>
           </DialogContent>
@@ -286,7 +324,7 @@ export default function TimeSlotManagement() {
       </div>
 
       {/* Current Slots Display */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Staff Members */}
         <Card>
           <CardHeader>
