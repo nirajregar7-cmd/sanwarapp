@@ -330,7 +330,15 @@ export default function SalonDetail() {
               if (!isResolved) {
                 isResolved = true;
                 console.error("Razorpay payment failed:", response.error);
-                reject(new Error(`Payment failed: ${response.error.description || 'Unknown error'}`));
+                
+                // Handle specific risk check failures
+                if (response.error.reason === 'payment_risk_check_failed') {
+                  reject(new Error('Payment blocked due to security checks. Please try a different payment method or contact support.'));
+                } else if (response.error.code === 'BAD_REQUEST_ERROR') {
+                  reject(new Error(`Payment failed: ${response.error.description}. Please try again with a different payment method.`));
+                } else {
+                  reject(new Error(`Payment failed: ${response.error.description || 'Unknown error'}`));
+                }
               }
             });
             

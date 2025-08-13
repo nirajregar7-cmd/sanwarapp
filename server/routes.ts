@@ -920,11 +920,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Get user details for better risk assessment
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+
       // Create Razorpay order for remaining amount
       console.log('🔄 Creating Razorpay order for amount:', finalAmount);
       const order = await createRazorpayOrder({
         amount: finalAmount,
         receipt: `booking_${Date.now()}`,
+        customerDetails: {
+          name: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Customer',
+          email: user?.email || '',
+          contact: user?.phone || ''
+        },
+        method: ['card', 'netbanking', 'upi'], // Prefer lower-risk methods
         notes: {
           salonId,
           serviceId,
@@ -936,7 +947,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           serviceName: service.name,
           servicePrice: service.price,
           referralCode: validReferralCode?.code || null,
-          discountApplied: appliedDiscount
+          discountApplied: appliedDiscount,
+          booking_type: 'advance_confirmation',
+          service_category: 'beauty_wellness'
         }
       });
       
@@ -944,9 +957,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`⚡ Payment order created in ${processingTime}ms for user ${userId}`);
       
       res.json({
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
+        orderId: (order as any).id,
+        amount: (order as any).amount,
+        currency: (order as any).currency,
         keyId: process.env.RAZORPAY_KEY_ID,
         confirmationAmount: salon.confirmationAmount || 10,
         finalAmount,

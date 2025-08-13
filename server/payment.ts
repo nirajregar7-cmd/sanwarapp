@@ -17,6 +17,14 @@ export interface CreateOrderData {
   currency?: string;
   receipt?: string;
   notes?: Record<string, any>;
+  // Additional fields to help prevent risk check failures
+  customerDetails?: {
+    name?: string;
+    email?: string;
+    contact?: string;
+  };
+  // Payment method preferences
+  method?: string[];
 }
 
 export async function createRazorpayOrder(data: CreateOrderData) {
@@ -25,12 +33,37 @@ export async function createRazorpayOrder(data: CreateOrderData) {
   }
 
   try {
-    const options = {
+    const options: any = {
       amount: Math.round(data.amount * 100), // Convert to paisa
       currency: data.currency || 'INR',
       receipt: data.receipt || `receipt_${Date.now()}`,
-      notes: data.notes || {},
+      notes: {
+        business_type: 'salon_booking',
+        booking_platform: 'sanwar',
+        service_category: 'beauty_wellness',
+        payment_purpose: 'advance_booking_confirmation',
+        ...data.notes || {},
+      },
     };
+
+    // Add customer details if provided to help with risk assessment
+    if (data.customerDetails?.name) {
+      options.notes.customer_name = data.customerDetails.name;
+    }
+    if (data.customerDetails?.email) {
+      options.notes.customer_email = data.customerDetails.email;
+    }
+    if (data.customerDetails?.contact) {
+      options.notes.customer_contact = data.customerDetails.contact;
+    }
+
+    // Set payment method preferences to reduce risk (prefer trusted methods)
+    if (data.method && data.method.length > 0) {
+      options.method = data.method;
+    } else {
+      // Default to lower-risk payment methods
+      options.method = ['card', 'netbanking', 'upi', 'wallet'];
+    }
 
     // Add timeout for Razorpay API call
     const orderPromise = razorpay.orders.create(options);
@@ -38,7 +71,7 @@ export async function createRazorpayOrder(data: CreateOrderData) {
       setTimeout(() => reject(new Error('Razorpay order creation timeout')), 15000)
     );
 
-    const order = await Promise.race([orderPromise, timeoutPromise]);
+    const order = await Promise.race([orderPromise, timeoutPromise]) as any;
     console.log('✅ Razorpay order created successfully:', order.id);
     return order;
   } catch (error) {
