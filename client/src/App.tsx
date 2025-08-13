@@ -64,6 +64,7 @@ function Router() {
     <Switch>
       {/* Authentication pages */}
       <Route path="/auth" component={AuthPage} />
+      <Route path="/business-signup" component={AuthPage} />
       <Route path="/clerk-signin" component={ClerkSignInPage} />
       <Route path="/clerk-signup" component={ClerkSignUpPage} />
       <Route path="/user-type-selection" component={UserTypeSelection} />

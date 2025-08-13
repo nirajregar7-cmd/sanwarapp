@@ -1,10 +1,27 @@
 import sgMail from '@sendgrid/mail';
+import nodemailer from 'nodemailer';
 
 // Initialize SendGrid with API key
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 } else {
   console.warn('SendGrid API key not configured. Email service will not work.');
+}
+
+// Gmail transporter for backup email service
+let gmailTransporter: nodemailer.Transporter | null = null;
+
+if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+  gmailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+  console.log('Gmail transporter initialized successfully');
+} else {
+  console.warn('Gmail credentials not configured');
 }
 
 export interface EmailMessage {
@@ -14,25 +31,61 @@ export interface EmailMessage {
   from?: string;
 }
 
-export async function sendEmail({ to, subject, html, from = 'noreply@sanwarhub.in' }: EmailMessage): Promise<boolean> {
+// Gmail email sending function
+export async function sendEmailWithGmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    if (!process.env.SENDGRID_API_KEY) {
-      console.error('SendGrid API key not configured');
+    if (!gmailTransporter) {
+      console.error('Gmail transporter not configured');
       return false;
     }
 
-    const msg = {
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
       to,
-      from,
       subject,
       html,
     };
 
-    await sgMail.send(msg);
-    console.log(`Email sent successfully to ${to}`);
+    await gmailTransporter.sendMail(mailOptions);
+    console.log(`Email sent successfully via Gmail to ${to}`);
     return true;
   } catch (error) {
+    console.error('Failed to send email via Gmail:', error);
+    return false;
+  }
+}
+
+export async function sendEmail({ to, subject, html, from = 'noreply@sanwarhub.in' }: EmailMessage): Promise<boolean> {
+  try {
+    // Try SendGrid first
+    if (process.env.SENDGRID_API_KEY) {
+      const msg = {
+        to,
+        from,
+        subject,
+        html,
+      };
+
+      await sgMail.send(msg);
+      console.log(`Email sent successfully via SendGrid to ${to}`);
+      return true;
+    } 
+    // Fallback to Gmail
+    else if (gmailTransporter) {
+      return await sendEmailWithGmail(to, subject, html);
+    } 
+    // No email service available
+    else {
+      console.error('No email service configured (neither SendGrid nor Gmail)');
+      return false;
+    }
+  } catch (error) {
     console.error('Failed to send email:', error);
+    // Try Gmail as fallback if SendGrid fails
+    if (process.env.SENDGRID_API_KEY && gmailTransporter) {
+      console.log('Trying Gmail as fallback...');
+      return await sendEmailWithGmail(to, subject, html);
+    }
     return false;
   }
 }
@@ -251,10 +304,16 @@ export async function sendEmailVerificationOtp(email: string, otp: string, userT
     </html>
   `;
 
-  return await sendEmail({
-    to: email,
-    subject: `🔐 Verify Your ${userTypeDisplay} Account - Sanwar`,
-    html,
-    from: 'noreply@sanwarhub.in'
-  });
+  // Try SendGrid first, fallback to Gmail
+  if (process.env.SENDGRID_API_KEY) {
+    return await sendEmail({
+      to: email,
+      subject: `🔐 Verify Your ${userTypeDisplay} Account - Sanwar`,
+      html,
+      from: 'noreply@sanwarhub.in'
+    });
+  } else {
+    // Use Gmail directly for email verification
+    return await sendEmailWithGmail(email, `🔐 Verify Your ${userTypeDisplay} Account - Sanwar`, html);
+  }
 }
