@@ -935,7 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user?.email || '',
           contact: user?.phone || ''
         },
-        method: ['card', 'netbanking', 'upi'], // Prefer lower-risk methods
+        // Note: payment methods are handled by Razorpay checkout
         notes: {
           salonId,
           serviceId,

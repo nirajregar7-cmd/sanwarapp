@@ -23,8 +23,7 @@ export interface CreateOrderData {
     email?: string;
     contact?: string;
   };
-  // Payment method preferences
-  method?: string[];
+  // Note: payment methods are configured in Razorpay dashboard
 }
 
 export async function createRazorpayOrder(data: CreateOrderData) {
@@ -57,13 +56,9 @@ export async function createRazorpayOrder(data: CreateOrderData) {
       options.notes.customer_contact = data.customerDetails.contact;
     }
 
-    // Set payment method preferences to reduce risk (prefer trusted methods)
-    if (data.method && data.method.length > 0) {
-      options.method = data.method;
-    } else {
-      // Default to lower-risk payment methods
-      options.method = ['card', 'netbanking', 'upi', 'wallet'];
-    }
+    // Note: Razorpay's method field is not used in order creation
+    // Payment methods are configured in the dashboard or during payment
+    // Remove method field to avoid validation errors
 
     // Add timeout for Razorpay API call
     const orderPromise = razorpay.orders.create(options);
