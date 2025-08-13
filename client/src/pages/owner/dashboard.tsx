@@ -622,10 +622,7 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="gallery" className="text-xs py-3">Gallery</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
-                  <TabsTrigger value="timeslots" className="text-xs py-3">Slots</TabsTrigger>
                   <TabsTrigger value="bookings" className="text-xs py-3">Bookings</TabsTrigger>
-                </TabsList>
-                <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="messages" className="text-xs py-3 relative">
                     Messages
                     {brandMessages.filter(msg => !msg.isRead).length > 0 && (
@@ -634,18 +631,19 @@ export default function OwnerDashboard() {
                       </span>
                     )}
                   </TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-1 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="settings" className="text-xs py-3">Settings</TabsTrigger>
                 </TabsList>
               </div>
               
               {/* Desktop Tab Navigation */}
               <div className="hidden sm:block">
-                <TabsList className="grid w-full grid-cols-8 gap-1">
+                <TabsList className="grid w-full grid-cols-7 gap-1">
                   <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
                   <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
                   <TabsTrigger value="staff" className="text-sm">Staff</TabsTrigger>
                   <TabsTrigger value="gallery" className="text-sm">Gallery</TabsTrigger>
-                  <TabsTrigger value="timeslots" className="text-sm">Slots</TabsTrigger>
                   <TabsTrigger value="bookings" className="text-sm">Bookings</TabsTrigger>
                   <TabsTrigger value="messages" className="text-sm relative">
                     Messages
@@ -667,18 +665,7 @@ export default function OwnerDashboard() {
                   <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
-                      onClick={() => window.location.href = '/owner/time-slots'}
-                    >
-                      <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 mb-2 flex-shrink-0" />
-                      <div className="text-center w-full px-2">
-                        <p className="font-medium text-sm sm:text-base mb-1">Manage Time Slots</p>
-                        <p className="text-xs text-gray-600 leading-tight break-words">Create and organize your salon's booking slots</p>
-                      </div>
-                    </Button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <Button 
                       variant="outline" 
                       className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
@@ -1209,89 +1196,6 @@ export default function OwnerDashboard() {
                       </Button>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="timeslots" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Time Slot Management
-                    <Button onClick={() => {
-                      window.location.href = "/owner/time-slots";
-                    }}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Manage Time Slots
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center">
-                        <Clock className="h-5 w-5 text-blue-600 mr-2" />
-                        <div>
-                          <h4 className="font-medium text-blue-900">Manual Time Slot Management</h4>
-                          <p className="text-sm text-blue-700">
-                            Create your own time slots exactly when you want them. You have complete control over your schedule - 
-                            only the slots you create will be available for customer bookings.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Sample time slots display */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {[
-                        { time: "9:00 AM - 10:00 AM", service: "Haircut", available: true },
-                        { time: "10:00 AM - 11:30 AM", service: "Facial", available: false },
-                        { time: "11:30 AM - 12:30 PM", service: "Haircut", available: true },
-                        { time: "2:00 PM - 3:00 PM", service: "Hair Styling", available: true },
-                        { time: "3:00 PM - 4:30 PM", service: "Bridal Package", available: false },
-                        { time: "4:30 PM - 5:30 PM", service: "Haircut", available: true },
-                      ].map((slot, index) => (
-                        <div key={index} className={`p-4 border rounded-lg ${
-                          slot.available ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
-                        }`}>
-                          <div className="font-medium">{slot.time}</div>
-                          <div className="text-sm text-gray-600">{slot.service}</div>
-                          <div className="mt-2">
-                            <Badge variant={slot.available ? "default" : "secondary"}>
-                              {slot.available ? "Available" : "Booked"}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="border-t pt-4">
-                      <h4 className="font-medium mb-3">Time Slot Settings</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Slot Duration
-                          </label>
-                          <Input defaultValue="30" type="number" className="w-full" />
-                          <p className="text-xs text-gray-500 mt-1">Default duration in minutes</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Break Between Slots
-                          </label>
-                          <Input defaultValue="15" type="number" className="w-full" />
-                          <p className="text-xs text-gray-500 mt-1">Minutes between appointments</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Advance Booking Days
-                          </label>
-                          <Input defaultValue="30" type="number" className="w-full" />
-                          <p className="text-xs text-gray-500 mt-1">How many days in advance</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
