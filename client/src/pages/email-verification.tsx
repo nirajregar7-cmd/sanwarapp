@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, Mail, Shield, CheckCircle2, Timer } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 // Email verification form schema
 const emailVerificationSchema = z.object({
@@ -311,17 +312,21 @@ export default function EmailVerification() {
                   <FormItem>
                     <FormLabel>Verification Code</FormLabel>
                     <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="000000"
+                      <InputOTP
                         maxLength={6}
-                        {...field}
-                        className="text-center text-2xl tracking-widest"
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                          field.onChange(value);
-                        }}
-                      />
+                        value={field.value}
+                        onChange={field.onChange}
+                        data-testid="otp-input"
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
