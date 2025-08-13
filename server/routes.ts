@@ -2822,16 +2822,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Date parameter is required" });
       }
 
-      console.log(`Fetching time slots for salon ${req.params.salonId} on date ${date}, service: ${serviceId}, staff: ${staffId}`);
+      console.log(`Fetching manual time slots for salon ${req.params.salonId} on date ${date}, service: ${serviceId}, staff: ${staffId}`);
 
-      // Use the new staff-based slot system with filtering
-      const timeSlots = await storage.getStaffBasedTimeSlots(
+      // Get manually created time slots (from salon owner dashboard) only
+      const timeSlots = await storage.getTimeSlotsBySalonAndDate(
         req.params.salonId, 
         date, 
         serviceId as string || undefined,
         staffId as string || undefined
       );
-      console.log(`Found ${timeSlots.length} staff-based time slots`);
+      console.log(`Found ${timeSlots.length} manually created time slots`);
       
       res.json(timeSlots);
     } catch (error) {

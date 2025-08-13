@@ -125,6 +125,7 @@ export interface IStorage {
   // Time slot operations
   createTimeSlot(timeSlot: InsertTimeSlot): Promise<TimeSlot>;
   getAvailableTimeSlots(salonId: string, date: string): Promise<TimeSlot[]>;
+  getTimeSlotsBySalonAndDate(salonId: string, date: string, serviceId?: string, staffId?: string): Promise<any[]>;
   updateTimeSlotAvailability(id: string, isAvailable: boolean): Promise<void>;
 
   // Booking operations
@@ -490,6 +491,80 @@ export class DatabaseStorage implements IStorage {
 
   async updateTimeSlotAvailability(id: string, isAvailable: boolean): Promise<void> {
     await db.update(timeSlots).set({ isAvailable }).where(eq(timeSlots.id, id));
+  }
+
+  async getTimeSlotsBySalonAndDate(salonId: string, date: string, serviceId?: string, staffId?: string): Promise<any[]> {
+    console.log(`[DEBUG] Fetching manual time slots for salon ${salonId} on date ${date}, service: ${serviceId}, staff: ${staffId}`);
+
+    // Build conditions for filtering manually created time slots
+    const conditions = [
+      eq(timeSlots.salonId, salonId),
+      eq(timeSlots.date, date)
+    ];
+
+    if (serviceId) {
+      conditions.push(eq(timeSlots.serviceId, serviceId));
+    }
+
+    if (staffId) {
+      conditions.push(eq(timeSlots.staffId, staffId));
+    }
+
+    // Get all time slots with staff and service details
+    const slotsWithDetails = await db
+      .select({
+        id: timeSlots.id,
+        salonId: timeSlots.salonId,
+        staffId: timeSlots.staffId,
+        serviceId: timeSlots.serviceId,
+        date: timeSlots.date,
+        startTime: timeSlots.startTime,
+        endTime: timeSlots.endTime,
+        isAvailable: timeSlots.isAvailable,
+        slotType: timeSlots.slotType,
+        staffName: staff.name,
+        staffRole: staff.role,
+        staffPhoto: staff.photoUrl,
+        serviceName: services.name,
+        servicePrice: services.price,
+        serviceDuration: services.duration,
+      })
+      .from(timeSlots)
+      .leftJoin(staff, eq(timeSlots.staffId, staff.id))
+      .leftJoin(services, eq(timeSlots.serviceId, services.id))
+      .where(and(...conditions))
+      .orderBy(asc(timeSlots.startTime));
+
+    console.log(`[DEBUG] Found ${slotsWithDetails.length} manually created time slots`);
+
+    // Get booked slots to determine real-time availability
+    const bookedSlots = await db
+      .select({
+        timeSlotId: bookings.timeSlotId
+      })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.salonId, salonId),
+          eq(bookings.date, date),
+          or(
+            eq(bookings.status, "pending"),
+            eq(bookings.status, "confirmed"),
+            eq(bookings.status, "completed")
+          )
+        )
+      );
+
+    const bookedSlotIds = new Set(bookedSlots.map(b => b.timeSlotId));
+
+    // Return slots with real-time availability
+    const result = slotsWithDetails.map(slot => ({
+      ...slot,
+      isAvailable: !bookedSlotIds.has(slot.id)
+    }));
+
+    console.log(`[DEBUG] Returning ${result.length} manually created slots`);
+    return result;
   }
 
   // Staff service assignment operations
