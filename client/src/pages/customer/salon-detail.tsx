@@ -252,13 +252,14 @@ export default function SalonDetail() {
         let isResolved = false;
         const paymentStartTime = Date.now();
         
-        // Set a timeout for the entire payment process
+        // Set a timeout for the entire payment process (increased to 5 minutes)
         const paymentTimeout = setTimeout(() => {
           if (!isResolved) {
             isResolved = true;
-            reject(new Error("Payment is taking too long. Please try again or contact support if money was deducted."));
+            console.warn("Payment timeout reached after 5 minutes");
+            reject(new Error("Payment session expired. Please try booking again. If money was deducted, it will be refunded automatically."));
           }
-        }, 120000); // 2 minutes timeout
+        }, 300000); // 5 minutes timeout
         
         const options = {
           key: orderData.keyId,
@@ -348,13 +349,16 @@ export default function SalonDetail() {
           modal: {
             escape: false, // Prevent accidental closure
             ondismiss: () => {
+              console.log("Razorpay modal dismissed by user");
               clearTimeout(paymentTimeout);
               if (!isResolved) {
                 isResolved = true;
-                reject(new Error("Payment cancelled by user"));
+                reject(new Error("Payment cancelled. Please try again if you wish to complete the booking."));
               }
             },
-            confirm_close: true // Ask for confirmation before closing
+            confirm_close: true, // Ask for confirmation before closing
+            animation: true,
+            backdrop_close: false // Prevent closing by clicking backdrop
           },
         };
 
