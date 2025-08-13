@@ -30,16 +30,13 @@ import type { Salon } from "@shared/schema";
 
 export default function TimeSlotManagement() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
-  const [selectedService, setSelectedService] = useState<string>("");
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkConfig, setBulkConfig] = useState({
     startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: format(addDays(new Date(), 30), "yyyy-MM-dd"),
+    endDate: format(addDays(new Date(), 7), "yyyy-MM-dd"),
     openingTime: "09:00",
     closingTime: "18:00",
     slotDuration: "30", // 30 minutes
-    breakTime: "13:00-14:00", // 1 hour lunch break
   });
 
   const { toast } = useToast();
@@ -73,11 +70,11 @@ export default function TimeSlotManagement() {
     },
   });
 
-  // Generate bulk time slots based on your design
-  const generateBulkSlotsMutation = useMutation({
-    mutationFn: async () => {
-      if (selectedStaff.length === 0) {
-        throw new Error("Please select at least one staff member");
+  // Generate time slots for individual staff member
+  const generateStaffSlotsMutation = useMutation({
+    mutationFn: async (staffId: string) => {
+      if (!staffId) {
+        throw new Error("Please select a staff member");
       }
 
       const slotsToCreate = [];
@@ -87,87 +84,86 @@ export default function TimeSlotManagement() {
       while (currentDate <= endDate) {
         const dateStr = format(currentDate, "yyyy-MM-dd");
         
-        // Generate slots for each selected staff member
-        for (const staffId of selectedStaff) {
-          // Generate time slots based on opening/closing times
-          const startHour = parseInt(bulkConfig.openingTime.split(':')[0]);
-          const startMin = parseInt(bulkConfig.openingTime.split(':')[1]);
-          const endHour = parseInt(bulkConfig.closingTime.split(':')[0]);
-          const endMin = parseInt(bulkConfig.closingTime.split(':')[1]);
+        // Generate time slots based on opening/closing times
+        const startHour = parseInt(bulkConfig.openingTime.split(':')[0]);
+        const startMin = parseInt(bulkConfig.openingTime.split(':')[1]);
+        const endHour = parseInt(bulkConfig.closingTime.split(':')[0]);
+        const endMin = parseInt(bulkConfig.closingTime.split(':')[1]);
 
-          let currentTime = new Date();
-          currentTime.setHours(startHour, startMin, 0, 0);
+        let currentTime = new Date();
+        currentTime.setHours(startHour, startMin, 0, 0);
+        
+        const endTime = new Date();
+        endTime.setHours(endHour, endMin, 0, 0);
+
+        const slotDurationMs = parseInt(bulkConfig.slotDuration) * 60 * 1000;
+        const breakStart = new Date();
+        breakStart.setHours(13, 0, 0, 0); // 1:00 PM
+        const breakEnd = new Date();
+        breakEnd.setHours(14, 0, 0, 0); // 2:00 PM
+
+        while (currentTime < endTime) {
+          const slotEnd = new Date(currentTime.getTime() + slotDurationMs);
           
-          const endTime = new Date();
-          endTime.setHours(endHour, endMin, 0, 0);
-
-          const slotDurationMs = parseInt(bulkConfig.slotDuration) * 60 * 1000;
-          const breakStart = new Date();
-          breakStart.setHours(13, 0, 0, 0); // 1:00 PM
-          const breakEnd = new Date();
-          breakEnd.setHours(14, 0, 0, 0); // 2:00 PM
-
-          while (currentTime < endTime) {
-            const slotEnd = new Date(currentTime.getTime() + slotDurationMs);
-            
-            // Skip break time
-            if (!(currentTime >= breakStart && currentTime < breakEnd)) {
-              slotsToCreate.push({
-                salonId: salon?.id,
-                staffId,
-                serviceId: selectedService === "all" ? null : selectedService,
-                date: dateStr,
-                startTime: format(currentTime, "HH:mm"),
-                endTime: format(slotEnd, "HH:mm"),
-                isAvailable: true,
-                slotType: "regular"
-              });
-            }
-            
-            currentTime = slotEnd;
+          // Skip break time (1:00-2:00 PM)
+          if (!(currentTime >= breakStart && currentTime < breakEnd)) {
+            slotsToCreate.push({
+              salonId: salon?.id,
+              staffId,
+              serviceId: null, // No specific service
+              date: dateStr,
+              startTime: format(currentTime, "HH:mm"),
+              endTime: format(slotEnd, "HH:mm"),
+              isAvailable: true,
+              slotType: "regular"
+            });
           }
+          
+          currentTime = slotEnd;
         }
         
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
-      return await apiRequest("POST", `/api/salons/${salon?.id}/time-slots/bulk-generate`, {
+      console.log(`Creating ${slotsToCreate.length} slots for staff ${staffId}`);
+      
+      // Send smaller batch to avoid PayloadTooLarge error
+      const response = await apiRequest("POST", `/api/salons/${salon?.id}/time-slots/bulk-generate`, {
         slots: slotsToCreate
       });
+      
+      if (!response.ok) {
+        throw new Error("Failed to generate slots");
+      }
+      
+      return response.json();
     },
-    onSuccess: (response: any) => {
+    onSuccess: (data, staffId) => {
+      const staffMember = staff.find((s: any) => s.id === staffId);
+      toast({
+        title: "Success!",
+        description: `Generated ${data.created} slots for ${staffMember?.name}. ${data.skipped} slots already existed.`,
+      });
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/time-slots`] });
       setBulkDialogOpen(false);
-      
-      toast({
-        title: "Time Slots Generated!",
-        description: `Successfully created time slots for ${selectedStaff.length} staff members`,
-      });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
-        title: "Error generating time slots",
-        description: error.message || "Failed to generate time slots",
+        title: "Error",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const toggleStaffSelection = (staffId: string) => {
-    setSelectedStaff(prev => 
-      prev.includes(staffId) 
-        ? prev.filter(id => id !== staffId)
-        : [...prev, staffId]
-    );
-  };
-
-  const selectAllStaff = () => {
-    setSelectedStaff(staff.map((s: any) => s.id));
-  };
-
-  const clearStaffSelection = () => {
-    setSelectedStaff([]);
-  };
+  // Group time slots by staff
+  const slotsByStaff = timeSlots.reduce((acc: any, slot: any) => {
+    if (!acc[slot.staffId]) {
+      acc[slot.staffId] = [];
+    }
+    acc[slot.staffId].push(slot);
+    return acc;
+  }, {});
 
   return (
     <div className="space-y-6" data-testid="time-slot-management-page">
@@ -194,59 +190,27 @@ export default function TimeSlotManagement() {
               {/* Staff Selection */}
               <div>
                 <Label className="text-sm font-medium mb-2 block">Select Staff Members</Label>
-                <div className="flex gap-2 mb-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={selectAllStaff}
-                    data-testid="button-select-all-staff"
-                  >
-                    Select All
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={clearStaffSelection}
-                    data-testid="button-clear-staff"
-                  >
-                    Clear
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                <div className="grid grid-cols-1 gap-3">
                   {staff.map((member: any) => (
-                    <div key={member.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`staff-${member.id}`}
-                        checked={selectedStaff.includes(member.id)}
-                        onCheckedChange={() => toggleStaffSelection(member.id)}
-                        data-testid={`checkbox-staff-${member.name}`}
-                      />
-                      <Label htmlFor={`staff-${member.id}`} className="text-sm">
-                        {member.name} ({member.role})
-                      </Label>
-                    </div>
+                    <Card key={member.id} className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{member.name}</h4>
+                          <p className="text-sm text-muted-foreground">{member.specialty}</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generateStaffSlotsMutation.mutate(member.id)}
+                          disabled={generateStaffSlotsMutation.isPending}
+                          data-testid={`button-generate-${member.name.replace(/\s+/g, '-').toLowerCase()}`}
+                        >
+                          {generateStaffSlotsMutation.isPending ? "Generating..." : "Generate Slots"}
+                        </Button>
+                      </div>
+                    </Card>
                   ))}
                 </div>
-              </div>
-
-              {/* Service Selection */}
-              <div>
-                <Label htmlFor="service-select">Service (Optional)</Label>
-                <Select value={selectedService} onValueChange={setSelectedService}>
-                  <SelectTrigger data-testid="select-service">
-                    <SelectValue placeholder="Select a service (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Services</SelectItem>
-                    {services.map((service: any) => (
-                      <SelectItem key={service.id} value={service.id}>
-                        {service.name} - ₹{service.price}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               {/* Date Range */}
@@ -257,7 +221,7 @@ export default function TimeSlotManagement() {
                     id="start-date"
                     type="date"
                     value={bulkConfig.startDate}
-                    onChange={(e) => setBulkConfig({ ...bulkConfig, startDate: e.target.value })}
+                    onChange={(e) => setBulkConfig(prev => ({ ...prev, startDate: e.target.value }))}
                     data-testid="input-start-date"
                   />
                 </div>
@@ -267,7 +231,7 @@ export default function TimeSlotManagement() {
                     id="end-date"
                     type="date"
                     value={bulkConfig.endDate}
-                    onChange={(e) => setBulkConfig({ ...bulkConfig, endDate: e.target.value })}
+                    onChange={(e) => setBulkConfig(prev => ({ ...prev, endDate: e.target.value }))}
                     data-testid="input-end-date"
                   />
                 </div>
@@ -281,7 +245,7 @@ export default function TimeSlotManagement() {
                     id="opening-time"
                     type="time"
                     value={bulkConfig.openingTime}
-                    onChange={(e) => setBulkConfig({ ...bulkConfig, openingTime: e.target.value })}
+                    onChange={(e) => setBulkConfig(prev => ({ ...prev, openingTime: e.target.value }))}
                     data-testid="input-opening-time"
                   />
                 </div>
@@ -291,64 +255,39 @@ export default function TimeSlotManagement() {
                     id="closing-time"
                     type="time"
                     value={bulkConfig.closingTime}
-                    onChange={(e) => setBulkConfig({ ...bulkConfig, closingTime: e.target.value })}
+                    onChange={(e) => setBulkConfig(prev => ({ ...prev, closingTime: e.target.value }))}
                     data-testid="input-closing-time"
                   />
                 </div>
               </div>
 
+              {/* Slot Duration */}
               <div>
                 <Label htmlFor="slot-duration">Slot Duration (minutes)</Label>
-                <Select 
-                  value={bulkConfig.slotDuration} 
-                  onValueChange={(value) => setBulkConfig({ ...bulkConfig, slotDuration: value })}
-                >
+                <Select value={bulkConfig.slotDuration} onValueChange={(value) => setBulkConfig(prev => ({ ...prev, slotDuration: value }))}>
                   <SelectTrigger data-testid="select-slot-duration">
-                    <SelectValue />
+                    <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15">15 minutes</SelectItem>
                     <SelectItem value="30">30 minutes</SelectItem>
                     <SelectItem value="45">45 minutes</SelectItem>
-                    <SelectItem value="60">1 hour</SelectItem>
+                    <SelectItem value="60">60 minutes</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <Button 
-                onClick={() => generateBulkSlotsMutation.mutate()}
-                disabled={generateBulkSlotsMutation.isPending || selectedStaff.length === 0}
-                className="w-full"
-                data-testid="button-generate-slots"
-              >
-                {generateBulkSlotsMutation.isPending ? "Generating..." : "Generate Time Slots"}
-              </Button>
+              <div className="text-sm text-muted-foreground bg-muted p-3 rounded">
+                <p className="font-medium mb-1">Break Time Information:</p>
+                <p>Lunch break (1:00 PM - 2:00 PM) will be automatically excluded from generated slots.</p>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5" />
-              Select Date
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              className="rounded-md border"
-              data-testid="calendar-date-select"
-            />
-          </CardContent>
-        </Card>
-
-        {/* Staff Overview */}
+      {/* Current Slots Display */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Staff Members */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -357,28 +296,26 @@ export default function TimeSlotManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {staff.map((member: any) => (
-                <div 
-                  key={member.id} 
-                  className={`p-3 rounded-lg border transition-colors ${
-                    selectedStaff.includes(member.id) 
-                      ? 'bg-primary/10 border-primary' 
-                      : 'hover:bg-muted/50'
-                  }`}
-                  data-testid={`staff-card-${member.name}`}
-                >
-                  <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              {staff.map((member: any) => {
+                const memberSlots = slotsByStaff[member.id] || [];
+                return (
+                  <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">{member.name}</p>
-                      <p className="text-sm text-muted-foreground">{member.role}</p>
+                      <p className="text-sm text-muted-foreground">{member.specialty}</p>
                     </div>
-                    <Badge variant={selectedStaff.includes(member.id) ? "default" : "secondary"}>
-                      {selectedStaff.includes(member.id) ? "Selected" : "Available"}
-                    </Badge>
+                    <div className="text-right">
+                      <Badge variant={memberSlots.length > 0 ? "default" : "secondary"}>
+                        {memberSlots.length} slots
+                      </Badge>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        for {format(selectedDate, "MMM dd")}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -392,33 +329,39 @@ export default function TimeSlotManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-4">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                className="rounded-md border"
+              />
+            </div>
+            
             {isLoading ? (
               <div className="text-center py-4">Loading slots...</div>
             ) : timeSlots.length === 0 ? (
               <div className="text-center py-4 text-muted-foreground">
-                No time slots created for this date
+                No time slots found for this date.
+                <br />
+                Use "Bulk Generate Slots" to create them.
               </div>
             ) : (
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {timeSlots.map((slot: any) => (
-                  <div 
-                    key={slot.id} 
-                    className="p-2 rounded border"
-                    data-testid={`time-slot-${slot.startTime}`}
-                  >
-                    <div className="flex items-center justify-between">
+                {timeSlots.map((slot: any) => {
+                  const staffMember = staff.find((s: any) => s.id === slot.staffId);
+                  return (
+                    <div key={slot.id} className="flex items-center justify-between p-2 border rounded">
                       <div>
                         <p className="font-medium">{slot.startTime} - {slot.endTime}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {slot.staffName} | {slot.serviceName || "Any Service"}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{staffMember?.name}</p>
                       </div>
                       <Badge variant={slot.isAvailable ? "default" : "secondary"}>
                         {slot.isAvailable ? "Available" : "Booked"}
                       </Badge>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
