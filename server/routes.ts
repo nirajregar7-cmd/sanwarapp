@@ -2972,6 +2972,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk generate time slots (new method for the management interface)
+  app.post("/api/salons/:salonId/time-slots/bulk-generate", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const salon = await storage.getSalonById(req.params.salonId);
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to create time slots for this salon" });
+      }
+
+      const { slots } = req.body;
+      
+      if (!Array.isArray(slots) || slots.length === 0) {
+        return res.status(400).json({ message: "No time slots provided" });
+      }
+
+      let created = 0;
+      let skipped = 0;
+
+      for (const slotData of slots) {
+        try {
+          // Check if slot already exists
+          const existing = await db
+            .select()
+            .from(timeSlots)
+            .where(
+              and(
+                eq(timeSlots.salonId, slotData.salonId),
+                eq(timeSlots.date, slotData.date),
+                eq(timeSlots.startTime, slotData.startTime),
+                eq(timeSlots.staffId, slotData.staffId)
+              )
+            )
+            .limit(1);
+
+          if (existing.length === 0) {
+            await storage.createTimeSlot(slotData);
+            created++;
+          } else {
+            skipped++;
+          }
+        } catch (error) {
+          console.error("Error creating individual slot:", error);
+          skipped++;
+        }
+      }
+
+      res.json({ 
+        message: `Bulk generation completed`,
+        created,
+        skipped,
+        total: slots.length
+      });
+    } catch (error) {
+      console.error("Error bulk generating time slots:", error);
+      res.status(500).json({ message: "Failed to generate time slots" });
+    }
+  });
+
   // Time slot management routes (for shopkeepers)
   app.post("/api/salons/:salonId/time-slots", isAuthenticated, async (req: any, res) => {
     try {
