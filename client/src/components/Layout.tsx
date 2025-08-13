@@ -84,18 +84,6 @@ export default function Layout({ children }: LayoutProps) {
                   {userType === "salon_owner" && (
                     <>
                       <Link 
-                        href="/shopkeeper/time-slots" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
-                      >
-                        Time Slots
-                      </Link>
-                      <Link 
-                        href="/shopkeeper/time-slot-management" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
-                      >
-                        Slot Manager
-                      </Link>
-                      <Link 
                         href="/shopkeeper/walk-in-bookings" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
