@@ -331,14 +331,19 @@ export default function EmailVerification() {
                   <FormItem>
                     <FormLabel>Verification Code</FormLabel>
                     <FormControl>
-                      <OtpInput
-                        length={6}
+                      <Input
+                        type="text"
+                        placeholder="Enter 6-digit code"
+                        maxLength={6}
                         value={field.value}
-                        onChange={(value) => {
-                          console.log("OTP changed:", value, "Length:", value.length);
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                          console.log("Simple input OTP changed:", value, "Length:", value.length);
                           field.onChange(value);
                         }}
-                        className="my-4"
+                        className="text-center text-lg tracking-widest font-mono"
+                        data-testid="otp-input"
+                        autoComplete="one-time-code"
                       />
                     </FormControl>
                     <FormMessage />

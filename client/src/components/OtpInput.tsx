@@ -21,7 +21,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
 
   useEffect(() => {
     // Initialize OTP array from value prop
-    const otpArray = value.split('').slice(0, length);
+    const otpArray = (value || '').split('').slice(0, length);
     while (otpArray.length < length) {
       otpArray.push('');
     }
@@ -37,6 +37,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     setOtp(newOtp);
 
     const otpValue = newOtp.join('');
+    console.log("OTP component calling onChange with:", otpValue);
     onChange(otpValue);
 
     // Focus next input
