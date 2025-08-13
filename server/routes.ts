@@ -942,11 +942,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           slot_id: timeSlotId,
           date: date,
           customer_id: userId,
-          salon: salon.name.substring(0, 30), // Truncate to save space
-          service: service.name.substring(0, 30),
-          price: service.price.toString(),
-          discount: appliedDiscount.toString()
-          // Removed: staffId, referralCode to stay under 15 fields
+          salon: salon.name.substring(0, 25),
+          service: service.name.substring(0, 25),
+          price: service.price.toString()
+          // Removed: discount to stay under 15 fields (2 base + 8 custom = 10 total)
         }
       });
       

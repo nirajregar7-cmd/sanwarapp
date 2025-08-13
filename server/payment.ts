@@ -39,11 +39,9 @@ export async function createRazorpayOrder(data: CreateOrderData) {
       notes: {
         business_type: 'salon_booking',
         platform: 'sanwar',
-        category: 'beauty_wellness',
-        purpose: 'booking_confirmation',
         // Keep only essential fields to stay under 15 field limit
         ...(data.notes ? Object.fromEntries(
-          Object.entries(data.notes).slice(0, 10) // Limit to 10 additional fields
+          Object.entries(data.notes).slice(0, 11) // Limit to 11 additional fields
         ) : {}),
       },
     };
