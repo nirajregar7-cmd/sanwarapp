@@ -7,9 +7,9 @@ Transform your Sanwar web app into native iOS and Android apps.
 - Android Studio (for Android app)
 - Xcode (for iOS app, Mac only)
 
-## Step 1: Get Your Web App URL (2 minutes)
-1. Click the "Deploy" button in Replit
-2. Copy your deployment URL (e.g., `https://sanwar.username.repl.co`)
+## Step 1: Use Your Deployed URL ✅
+Your app is deployed at:
+`https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev`
 
 ## Step 2: Create Mobile Project (3 minutes)
 ```bash
@@ -34,7 +34,7 @@ const config: CapacitorConfig = {
   appName: 'Sanwar',
   webDir: 'dist',
   server: {
-    url: 'https://your-actual-deployment-url.repl.co', // Replace with your URL
+    url: 'https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev',
     cleartext: true
   }
 };
