@@ -32,7 +32,8 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     if (isNaN(Number(element.value))) return;
 
     const newOtp = [...otp];
-    newOtp[index] = element.value;
+    // Only take the last character if user types multiple characters
+    newOtp[index] = element.value.slice(-1);
     setOtp(newOtp);
 
     const otpValue = newOtp.join('');

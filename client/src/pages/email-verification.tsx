@@ -83,6 +83,7 @@ export default function EmailVerification() {
     defaultValues: {
       otp: "",
     },
+    mode: "onChange", // Validate on change to prevent clearing
   });
 
   // Send email verification OTP mutation
@@ -130,13 +131,20 @@ export default function EmailVerification() {
       return response.json();
     },
     onSuccess: () => {
+      console.log("OTP verification successful, pending registration data:", pendingRegistrationData);
+      
       toast({
-        title: "Email Verified Successfully",
-        description: "Creating your business account...",
+        title: "Email Verified Successfully!",
+        description: "Taking you to your salon dashboard...",
       });
       
-      // If we have pending registration data, proceed with registration
-      if (pendingRegistrationData) {
+      // For salon owners, directly redirect to dashboard after email verification
+      if (verificationData?.userType === "salon_owner") {
+        setTimeout(() => {
+          setLocation("/owner/dashboard");
+        }, 1500);
+      } else if (pendingRegistrationData) {
+        // If we have pending registration data, proceed with registration
         registerMutation.mutate(pendingRegistrationData, {
           onSuccess: (data) => {
             // Clear the stored registration data
@@ -182,6 +190,7 @@ export default function EmailVerification() {
       }
     },
     onError: (error: Error) => {
+      console.log("OTP verification error:", error.message);
       toast({
         title: "Verification Failed",
         description: error.message,
@@ -311,7 +320,18 @@ export default function EmailVerification() {
         </CardHeader>
         <CardContent>
           <Form {...otpForm}>
-            <form onSubmit={otpForm.handleSubmit((data) => verifyOtpMutation.mutate(data))} className="space-y-4">
+            <form onSubmit={otpForm.handleSubmit((data) => {
+              console.log("Form submitted with OTP:", data.otp);
+              if (data.otp && data.otp.length === 6) {
+                verifyOtpMutation.mutate(data);
+              } else {
+                toast({
+                  title: "Invalid OTP",
+                  description: "Please enter a complete 6-digit verification code.",
+                  variant: "destructive",
+                });
+              }
+            })} className="space-y-4">
               <FormField
                 control={otpForm.control}
                 name="otp"
@@ -339,7 +359,8 @@ export default function EmailVerification() {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={verifyOtpMutation.isPending || timeLeft <= 0}
+                disabled={verifyOtpMutation.isPending || timeLeft <= 0 || !otpForm.watch("otp") || otpForm.watch("otp").length !== 6}
+                data-testid="button-verify-email"
               >
                 {verifyOtpMutation.isPending ? "Verifying..." : "Verify Email"}
               </Button>
