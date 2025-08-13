@@ -38,10 +38,13 @@ export async function createRazorpayOrder(data: CreateOrderData) {
       receipt: data.receipt || `receipt_${Date.now()}`,
       notes: {
         business_type: 'salon_booking',
-        booking_platform: 'sanwar',
-        service_category: 'beauty_wellness',
-        payment_purpose: 'advance_booking_confirmation',
-        ...data.notes || {},
+        platform: 'sanwar',
+        category: 'beauty_wellness',
+        purpose: 'booking_confirmation',
+        // Keep only essential fields to stay under 15 field limit
+        ...(data.notes ? Object.fromEntries(
+          Object.entries(data.notes).slice(0, 10) // Limit to 10 additional fields
+        ) : {}),
       },
     };
 

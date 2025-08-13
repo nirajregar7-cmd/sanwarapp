@@ -937,19 +937,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         // Note: payment methods are handled by Razorpay checkout
         notes: {
-          salonId,
-          serviceId,
-          timeSlotId,
-          date,
-          staffId: staffId || null,
-          customerId: userId,
-          salonName: salon.name,
-          serviceName: service.name,
-          servicePrice: service.price,
-          referralCode: validReferralCode?.code || null,
-          discountApplied: appliedDiscount,
-          booking_type: 'advance_confirmation',
-          service_category: 'beauty_wellness'
+          salon_id: salonId,
+          service_id: serviceId,
+          slot_id: timeSlotId,
+          date: date,
+          customer_id: userId,
+          salon: salon.name.substring(0, 30), // Truncate to save space
+          service: service.name.substring(0, 30),
+          price: service.price.toString(),
+          discount: appliedDiscount.toString()
+          // Removed: staffId, referralCode to stay under 15 fields
         }
       });
       
