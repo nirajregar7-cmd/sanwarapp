@@ -83,8 +83,17 @@ export default function EmailVerification() {
     defaultValues: {
       otp: "",
     },
-    mode: "onChange", // Validate on change to prevent clearing
+    resetOptions: {
+      keepDirtyValues: false,
+    },
   });
+
+  // Reset OTP form when step changes to OTP
+  useEffect(() => {
+    if (step === "otp") {
+      otpForm.reset({ otp: "" });
+    }
+  }, [step, otpForm]);
 
   // Send email verification OTP mutation
   const sendOtpMutation = useMutation({
@@ -320,7 +329,7 @@ export default function EmailVerification() {
         </CardHeader>
         <CardContent>
           <Form {...otpForm}>
-            <form onSubmit={otpForm.handleSubmit(verifyOtpMutation.mutate)} className="space-y-4">
+            <form onSubmit={otpForm.handleSubmit((data) => verifyOtpMutation.mutate(data))} className="space-y-4">
               <FormField
                 control={otpForm.control}
                 name="otp"
@@ -332,7 +341,11 @@ export default function EmailVerification() {
                         type="text"
                         placeholder="Enter 6-digit code"
                         maxLength={6}
-                        {...field}
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
                         className="text-center text-lg tracking-widest font-mono"
                         data-testid="otp-input"
                         autoComplete="one-time-code"
