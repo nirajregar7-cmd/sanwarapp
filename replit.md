@@ -5,6 +5,7 @@ Sanwar is a smart salon booking platform designed to digitize salon businesses a
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+Shopkeeper prefers: Single simple slot generation method to avoid confusion.
 
 ## System Architecture
 
@@ -15,7 +16,7 @@ The client is built with React and TypeScript, following a component-based archi
 The server is built using Express.js and TypeScript, adhering to a RESTful API design. It employs a service-oriented approach, separating concerns into route handlers, storage services for database operations, and middleware for authentication and logging. Business logic is encapsulated in service classes to promote reusability and maintainability.
 
 ### Database Design
-The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication.
+The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
 
 ### Authentication System
 The system uses traditional email/password authentication with bcrypt for secure password hashing and JWT tokens for session management. `express-session` with PostgreSQL storage maintains persistent login states. Users can register as either a customer or salon owner, with role-based access control implemented throughout the application. Social login integration with Google and Facebook OAuth is also supported. An automated welcome email system sends personalized onboarding messages to new users based on their role, integrated across all registration methods.

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { useToast } from "@/hooks/use-toast";
 import { Users, UserPlus, Calendar, Clock, Plus, Sparkles } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -48,10 +48,7 @@ export default function StaffManagement() {
   const [endDate, setEndDate] = useState(format(addDays(new Date(), 7), 'yyyy-MM-dd'));
   const [isAssigningService, setIsAssigningService] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
-  const [selectedStaffForSlots, setSelectedStaffForSlots] = useState("");
-  const [openingTime, setOpeningTime] = useState("09:00");
-  const [closingTime, setClosingTime] = useState("18:00");
-  const [breakDuration, setBreakDuration] = useState(60);
+
 
   // Get current salon
   const { data: salon } = useQuery({
@@ -180,17 +177,7 @@ export default function StaffManagement() {
     setIsAssigningService(true);
   };
 
-  const handleGenerateSlots = () => {
-    if (!selectedDate) {
-      toast({
-        title: "Date Required",
-        description: "Please select a date to generate slots.",
-        variant: "destructive",
-      });
-      return;
-    }
-    generateSlotsMutation.mutate(selectedDate);
-  };
+
 
   if (!salon) {
     return (
@@ -212,161 +199,55 @@ export default function StaffManagement() {
         </div>
       </div>
 
-      {/* Enhanced Slot Generation Section */}
+      {/* Simple Slot Generation Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            Intelligent Slot Generation
+            <Calendar className="w-5 h-5" />
+            Generate Booking Slots
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="bulk" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="bulk">Bulk Generation</TabsTrigger>
-              <TabsTrigger value="individual">Individual Staff</TabsTrigger>
-              <TabsTrigger value="quick">Quick Generate</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="bulk" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    min={format(new Date(), 'yyyy-MM-dd')}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    min={startDate || format(new Date(), 'yyyy-MM-dd')}
-                  />
-                </div>
-                <div className="flex items-end">
-                  <Button 
-                    onClick={() => generateBulkSlotsMutation.mutate({ startDate, endDate })} 
-                    disabled={!startDate || !endDate || generateBulkSlotsMutation.isPending}
-                    className="w-full bg-gradient-to-r from-green-600 to-blue-600"
-                  >
-                    {generateBulkSlotsMutation.isPending ? (
-                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                    ) : null}
-                    Generate Bulk Slots
-                  </Button>
-                </div>
+          <div className="space-y-4">
+            <p className="text-gray-600 dark:text-gray-400">
+              Generate booking slots for all your staff members and services automatically.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  min={format(new Date(), 'yyyy-MM-dd')}
+                />
               </div>
-            </TabsContent>
-
-            <TabsContent value="individual" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Select Staff Member</Label>
-                  <Select value={selectedStaffForSlots} onValueChange={setSelectedStaffForSlots}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose staff member" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {staffWithServices.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.name} - {member.role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Select Date</Label>
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    min={format(new Date(), 'yyyy-MM-dd')}
-                  />
-                </div>
+              <div>
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={startDate || format(new Date(), 'yyyy-MM-dd')}
+                />
               </div>
-              
-              {selectedStaffForSlots && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <Label>Opening Time</Label>
-                    <Input
-                      type="time"
-                      value={openingTime}
-                      onChange={(e) => setOpeningTime(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label>Closing Time</Label>
-                    <Input
-                      type="time"
-                      value={closingTime}
-                      onChange={(e) => setClosingTime(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label>Break Duration (minutes)</Label>
-                    <Input
-                      type="number"
-                      value={breakDuration}
-                      onChange={(e) => setBreakDuration(Number(e.target.value))}
-                      min="0"
-                      step="15"
-                    />
-                  </div>
-                  
-                  <div className="md:col-span-3">
-                    <Button 
-                      onClick={() => generateStaffSlotsMutation.mutate({
-                        staffId: selectedStaffForSlots,
-                        date: selectedDate,
-                        openingTime,
-                        closingTime,
-                        breakDuration
-                      })} 
-                      disabled={!selectedStaffForSlots || !selectedDate || generateStaffSlotsMutation.isPending}
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
-                    >
-                      {generateStaffSlotsMutation.isPending ? (
-                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                      ) : null}
-                      Generate Dynamic Service-Based Slots
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="quick" className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="slot-date">Generate for:</Label>
-                  <Input
-                    id="slot-date"
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-40"
-                  />
-                </div>
-                <Button
-                  onClick={handleGenerateSlots}
-                  disabled={generateSlotsMutation.isPending}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600"
+              <div className="flex items-end">
+                <Button 
+                  onClick={() => generateBulkSlotsMutation.mutate({ startDate, endDate })} 
+                  disabled={!startDate || !endDate || generateBulkSlotsMutation.isPending}
+                  className="w-full bg-gradient-to-r from-green-600 to-blue-600"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {generateSlotsMutation.isPending ? "Generating..." : "Quick Generate"}
+                  {generateBulkSlotsMutation.isPending ? (
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  ) : null}
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Generate Slots
                 </Button>
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
