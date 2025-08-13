@@ -115,7 +115,7 @@ export default function TimeSlotManagement() {
               slotsToCreate.push({
                 salonId: salon?.id,
                 staffId,
-                serviceId: selectedService || null,
+                serviceId: selectedService === "all" ? null : selectedService,
                 date: dateStr,
                 startTime: format(currentTime, "HH:mm"),
                 endTime: format(slotEnd, "HH:mm"),
@@ -239,7 +239,7 @@ export default function TimeSlotManagement() {
                     <SelectValue placeholder="Select a service (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Services</SelectItem>
+                    <SelectItem value="all">All Services</SelectItem>
                     {services.map((service: any) => (
                       <SelectItem key={service.id} value={service.id}>
                         {service.name} - ₹{service.price}
