@@ -1,0 +1,51 @@
+{
+  "appId": "com.sanwar.app",
+  "appName": "Sanwar",
+  "webDir": "dist",
+  "server": {
+    "url": "https://your-replit-url.replit.dev",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#8B5CF6",
+      "showSpinner": true,
+      "androidSpinnerStyle": "small",
+      "iosSpinnerStyle": "small",
+      "spinnerColor": "#ffffff",
+      "androidSplashResourceName": "splash",
+      "iosSplashResourceName": "Splash"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#8B5CF6"
+    },
+    "App": {
+      "launchUrl": "https://your-replit-url.replit.dev"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "Haptics": {}
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "",
+      "keystorePassword": "",
+      "keystoreAlias": "",
+      "keystoreAliasPassword": "",
+      "releaseType": "APK"
+    },
+    "backgroundColor": "#8B5CF6"
+  },
+  "ios": {
+    "backgroundColor": "#8B5CF6",
+    "contentInset": "automatic"
+  }
+}

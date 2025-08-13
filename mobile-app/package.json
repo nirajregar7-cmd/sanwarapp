@@ -1,0 +1,37 @@
+{
+  "name": "sanwar-mobile",
+  "version": "1.0.0",
+  "description": "Sanwar Mobile App - Smart Salon Booking",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run sync",
+    "sync": "cap sync",
+    "android": "cap run android",
+    "ios": "cap run ios",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/haptics": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/keyboard": "^6.0.0",
+    "@capacitor/push-notifications": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  },
+  "author": "Sanwar Team",
+  "license": "MIT",
+  "keywords": [
+    "salon",
+    "booking",
+    "mobile app",
+    "capacitor",
+    "ionic"
+  ]
+}
