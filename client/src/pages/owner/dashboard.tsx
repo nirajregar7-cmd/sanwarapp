@@ -665,7 +665,7 @@ export default function OwnerDashboard() {
                   <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
                     <Button 
                       variant="outline" 
                       className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
@@ -677,17 +677,7 @@ export default function OwnerDashboard() {
                         <p className="text-xs text-gray-600 leading-tight break-words">Add and organize your salon's services and pricing</p>
                       </div>
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
-                      onClick={() => window.location.href = '/owner/staff-management'}
-                    >
-                      <UserPlus className="h-6 w-6 sm:h-8 sm:w-8 text-cyan-600 mb-2 flex-shrink-0" />
-                      <div className="text-center w-full px-2">
-                        <p className="font-medium text-sm sm:text-base mb-1">Staff & Slots</p>
-                        <p className="text-xs text-gray-600 leading-tight break-words">Assign services to staff and generate slots</p>
-                      </div>
-                    </Button>
+
                     <Link href="/owner/account-details">
                       <Button 
                         variant="outline" 
