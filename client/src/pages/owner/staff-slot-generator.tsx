@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Calendar, Clock, User, Plus, Settings, AlertCircle } from "lucide-react";
+import { Calendar, Clock, User, Plus, Settings, AlertCircle, Eye } from "lucide-react";
 import { useState } from "react";
 import { format, addDays } from "date-fns";
 import type { Salon, Staff, TimeSlot } from "@shared/schema";
@@ -42,6 +43,11 @@ export default function StaffSlotGenerator() {
     breakStartTime: "13:00",
     breakEndTime: "14:00"
   });
+
+  const [selectedStaffId, setSelectedStaffId] = useState<string>("");
+  const [isSlotConfigOpen, setIsSlotConfigOpen] = useState(false);
+  const [staffConfig, setStaffConfig] = useState<Record<string, typeof generationConfig>>({});
+  const [generatedSlots, setGeneratedSlots] = useState<Record<string, any[]>>({});
 
   // Get salon info
   const { data: salon } = useQuery<Salon>({
@@ -94,7 +100,19 @@ export default function StaffSlotGenerator() {
     },
   });
 
-  const handleGenerateSlots = (staffId: string) => {
+  const handleOpenSlotConfig = (staffId: string) => {
+    setSelectedStaffId(staffId);
+    // Initialize staff config with default values if not exists
+    if (!staffConfig[staffId]) {
+      setStaffConfig(prev => ({
+        ...prev,
+        [staffId]: { ...generationConfig }
+      }));
+    }
+    setIsSlotConfigOpen(true);
+  };
+
+  const handleGenerateSlots = (staffId: string, config: typeof generationConfig) => {
     if (!staffId) {
       toast({
         title: "Please select a staff member",
@@ -105,8 +123,25 @@ export default function StaffSlotGenerator() {
 
     generateSlotsMutation.mutate({
       staffId,
-      config: generationConfig
+      config
     });
+
+    // Close the dialog
+    setIsSlotConfigOpen(false);
+  };
+
+  const getCurrentStaffConfig = (staffId: string) => {
+    return staffConfig[staffId] || generationConfig;
+  };
+
+  const updateStaffConfig = (staffId: string, updates: Partial<typeof generationConfig>) => {
+    setStaffConfig(prev => ({
+      ...prev,
+      [staffId]: {
+        ...getCurrentStaffConfig(staffId),
+        ...updates
+      }
+    }));
   };
 
   if (!salon) {
@@ -318,13 +353,13 @@ export default function StaffSlotGenerator() {
                         </div>
                         
                         <Button
-                          onClick={() => handleGenerateSlots(member.id)}
+                          onClick={() => handleOpenSlotConfig(member.id)}
                           disabled={generateSlotsMutation.isPending}
                           className="w-full"
                           data-testid={`generate-slots-${member.name.toLowerCase().replace(/\s+/g, '-')}`}
                         >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {generateSlotsMutation.isPending ? 'Generating...' : `Generate New Slots for ${member.name}`}
+                          <Settings className="h-4 w-4 mr-2" />
+                          {generateSlotsMutation.isPending ? 'Generating...' : `Configure Slots for ${member.name}`}
                         </Button>
                       </div>
                     ))}
@@ -364,6 +399,243 @@ export default function StaffSlotGenerator() {
             </Card>
           </div>
         </div>
+
+        {/* Individual Staff Slot Configuration Dialog */}
+        <Dialog open={isSlotConfigOpen} onOpenChange={setIsSlotConfigOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <Calendar className="h-5 w-5 mr-2" />
+                Configure Time Slots for {staff.find(s => s.id === selectedStaffId)?.name}
+              </DialogTitle>
+              <DialogDescription>
+                Set custom working hours, break times, and slot duration for this staff member.
+                You can see all generated slots below before confirming.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedStaffId && (
+              <div className="space-y-6">
+                {/* Configuration Form */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Date Range */}
+                  <div className="space-y-2">
+                    <Label>Start Date</Label>
+                    <Input
+                      type="date"
+                      value={getCurrentStaffConfig(selectedStaffId).startDate}
+                      onChange={(e) => updateStaffConfig(selectedStaffId, { startDate: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>End Date</Label>
+                    <Input
+                      type="date"
+                      value={getCurrentStaffConfig(selectedStaffId).endDate}
+                      onChange={(e) => updateStaffConfig(selectedStaffId, { endDate: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Working Hours */}
+                  <div className="space-y-2">
+                    <Label>Opening Time</Label>
+                    <Input
+                      type="time"
+                      value={getCurrentStaffConfig(selectedStaffId).openingTime}
+                      onChange={(e) => updateStaffConfig(selectedStaffId, { openingTime: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Closing Time</Label>
+                    <Input
+                      type="time"
+                      value={getCurrentStaffConfig(selectedStaffId).closingTime}
+                      onChange={(e) => updateStaffConfig(selectedStaffId, { closingTime: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Break Time */}
+                  <div className="space-y-2">
+                    <Label>Break Start Time</Label>
+                    <Input
+                      type="time"
+                      value={getCurrentStaffConfig(selectedStaffId).breakStartTime}
+                      onChange={(e) => updateStaffConfig(selectedStaffId, { breakStartTime: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Break End Time</Label>
+                    <Input
+                      type="time"
+                      value={getCurrentStaffConfig(selectedStaffId).breakEndTime}
+                      onChange={(e) => updateStaffConfig(selectedStaffId, { breakEndTime: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Slot Duration */}
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Slot Duration</Label>
+                    <Select
+                      value={getCurrentStaffConfig(selectedStaffId).slotDuration.toString()}
+                      onValueChange={(value) => updateStaffConfig(selectedStaffId, { slotDuration: parseInt(value) })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {slotDurations.map((duration) => (
+                          <SelectItem key={duration.value} value={duration.value}>
+                            {duration.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Preview Section */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium flex items-center">
+                      <Eye className="h-4 w-4 mr-2" />
+                      Slot Preview
+                    </h4>
+                    <Badge variant="secondary">
+                      {(() => {
+                        const config = getCurrentStaffConfig(selectedStaffId);
+                        const startTime = config.openingTime;
+                        const endTime = config.closingTime;
+                        const breakStart = config.breakStartTime;
+                        const breakEnd = config.breakEndTime;
+                        const duration = config.slotDuration;
+                        
+                        // Calculate slots per day
+                        const startMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+                        const endMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+                        const breakStartMinutes = parseInt(breakStart.split(':')[0]) * 60 + parseInt(breakStart.split(':')[1]);
+                        const breakEndMinutes = parseInt(breakEnd.split(':')[0]) * 60 + parseInt(breakEnd.split(':')[1]);
+                        
+                        const workingMinutes = (endMinutes - startMinutes) - (breakEndMinutes - breakStartMinutes);
+                        const slotsPerDay = Math.floor(workingMinutes / duration);
+                        
+                        const startDate = new Date(config.startDate);
+                        const endDate = new Date(config.endDate);
+                        const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+                        
+                        return `~${slotsPerDay * days} total slots`;
+                      })()}
+                    </Badge>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                    <div className="text-sm space-y-1">
+                      <p><strong>Daily Schedule:</strong> {getCurrentStaffConfig(selectedStaffId).openingTime} - {getCurrentStaffConfig(selectedStaffId).closingTime}</p>
+                      <p><strong>Break Time:</strong> {getCurrentStaffConfig(selectedStaffId).breakStartTime} - {getCurrentStaffConfig(selectedStaffId).breakEndTime}</p>
+                      <p><strong>Slot Duration:</strong> {getCurrentStaffConfig(selectedStaffId).slotDuration} minutes</p>
+                    </div>
+                  </div>
+                  
+                  {/* Sample slots for today */}
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-32 overflow-y-auto">
+                    {(() => {
+                      const config = getCurrentStaffConfig(selectedStaffId);
+                      const startTime = config.openingTime;
+                      const breakStart = config.breakStartTime;
+                      const breakEnd = config.breakEndTime;
+                      const endTime = config.closingTime;
+                      const duration = config.slotDuration;
+                      
+                      const slots = [];
+                      let currentMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+                      const endMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+                      const breakStartMinutes = parseInt(breakStart.split(':')[0]) * 60 + parseInt(breakStart.split(':')[1]);
+                      const breakEndMinutes = parseInt(breakEnd.split(':')[0]) * 60 + parseInt(breakEnd.split(':')[1]);
+                      
+                      while (currentMinutes + duration <= endMinutes) {
+                        // Skip break time
+                        if (!(currentMinutes >= breakStartMinutes && currentMinutes < breakEndMinutes)) {
+                          const hours = Math.floor(currentMinutes / 60);
+                          const mins = currentMinutes % 60;
+                          const endHours = Math.floor((currentMinutes + duration) / 60);
+                          const endMins = (currentMinutes + duration) % 60;
+                          
+                          slots.push(`${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}-${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`);
+                        }
+                        currentMinutes += duration;
+                        
+                        // Skip over break time
+                        if (currentMinutes >= breakStartMinutes && currentMinutes < breakEndMinutes) {
+                          currentMinutes = breakEndMinutes;
+                        }
+                      }
+                      
+                      return slots.slice(0, 18).map((slot, index) => (
+                        <div key={index} className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded text-center">
+                          {slot}
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                  {(() => {
+                    const config = getCurrentStaffConfig(selectedStaffId);
+                    const startTime = config.openingTime;
+                    const breakStart = config.breakStartTime;
+                    const breakEnd = config.breakEndTime;
+                    const endTime = config.closingTime;
+                    const duration = config.slotDuration;
+                    
+                    let currentMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+                    const endMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+                    const breakStartMinutes = parseInt(breakStart.split(':')[0]) * 60 + parseInt(breakStart.split(':')[1]);
+                    const breakEndMinutes = parseInt(breakEnd.split(':')[0]) * 60 + parseInt(breakEnd.split(':')[1]);
+                    
+                    let slotCount = 0;
+                    while (currentMinutes + duration <= endMinutes) {
+                      if (!(currentMinutes >= breakStartMinutes && currentMinutes < breakEndMinutes)) {
+                        slotCount++;
+                      }
+                      currentMinutes += duration;
+                      
+                      if (currentMinutes >= breakStartMinutes && currentMinutes < breakEndMinutes) {
+                        currentMinutes = breakEndMinutes;
+                      }
+                    }
+                    
+                    return slotCount > 18 ? (
+                      <p className="text-xs text-gray-500 mt-2">... and {slotCount - 18} more slots per day</p>
+                    ) : null;
+                  })()}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsSlotConfigOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => handleGenerateSlots(selectedStaffId, getCurrentStaffConfig(selectedStaffId))}
+                    disabled={generateSlotsMutation.isPending}
+                  >
+                    {generateSlotsMutation.isPending ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Generate Slots
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
