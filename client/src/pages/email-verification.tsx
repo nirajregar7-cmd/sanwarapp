@@ -25,7 +25,7 @@ const emailVerificationSchema = z.object({
 
 // OTP verification form schema
 const otpVerificationSchema = z.object({
-  otp: z.string().min(6, "OTP must be 6 digits").max(6, "OTP must be 6 digits"),
+  otp: z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d+$/, "OTP must contain only numbers"),
 });
 
 type EmailVerificationForm = z.infer<typeof emailVerificationSchema>;
@@ -321,16 +321,8 @@ export default function EmailVerification() {
         <CardContent>
           <Form {...otpForm}>
             <form onSubmit={otpForm.handleSubmit((data) => {
-              console.log("Form submitted with OTP:", data.otp);
-              if (data.otp && data.otp.length === 6) {
-                verifyOtpMutation.mutate(data);
-              } else {
-                toast({
-                  title: "Invalid OTP",
-                  description: "Please enter a complete 6-digit verification code.",
-                  variant: "destructive",
-                });
-              }
+              console.log("Form submitted with OTP:", data.otp, "Length:", data.otp.length);
+              verifyOtpMutation.mutate(data);
             })} className="space-y-4">
               <FormField
                 control={otpForm.control}
