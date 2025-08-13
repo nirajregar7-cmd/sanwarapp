@@ -320,10 +320,7 @@ export default function EmailVerification() {
         </CardHeader>
         <CardContent>
           <Form {...otpForm}>
-            <form onSubmit={otpForm.handleSubmit((data) => {
-              console.log("Form submitted with OTP:", data.otp, "Length:", data.otp.length);
-              verifyOtpMutation.mutate(data);
-            })} className="space-y-4">
+            <form onSubmit={otpForm.handleSubmit(verifyOtpMutation.mutate)} className="space-y-4">
               <FormField
                 control={otpForm.control}
                 name="otp"
@@ -335,17 +332,13 @@ export default function EmailVerification() {
                         type="text"
                         placeholder="Enter 6-digit code"
                         maxLength={6}
-                        value={field.value || ''}
-                        onChange={field.onChange}
+                        {...field}
                         className="text-center text-lg tracking-widest font-mono"
                         data-testid="otp-input"
                         autoComplete="one-time-code"
                       />
                     </FormControl>
                     <FormMessage />
-                    <div className="text-xs text-gray-500">
-                      Current OTP: "{field.value || ''}" (Length: {(field.value || '').length})
-                    </div>
                   </FormItem>
                 )}
               />
@@ -355,10 +348,7 @@ export default function EmailVerification() {
                 <span>Time remaining: {formatTime(timeLeft)}</span>
               </div>
 
-              <div className="text-xs text-gray-500 mb-2">
-                Form Valid: {otpForm.formState.isValid ? "Yes" : "No"} | 
-                Errors: {JSON.stringify(otpForm.formState.errors)}
-              </div>
+
               <Button 
                 type="submit" 
                 className="w-full" 
