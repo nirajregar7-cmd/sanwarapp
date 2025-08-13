@@ -25,7 +25,7 @@ const emailVerificationSchema = z.object({
 
 // OTP verification form schema
 const otpVerificationSchema = z.object({
-  otp: z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d+$/, "OTP must contain only numbers"),
+  otp: z.string().min(1, "Please enter your verification code"),
 });
 
 type EmailVerificationForm = z.infer<typeof emailVerificationSchema>;
@@ -334,11 +334,17 @@ export default function EmailVerification() {
                       <OtpInput
                         length={6}
                         value={field.value}
-                        onChange={field.onChange}
+                        onChange={(value) => {
+                          console.log("OTP changed:", value, "Length:", value.length);
+                          field.onChange(value);
+                        }}
                         className="my-4"
                       />
                     </FormControl>
                     <FormMessage />
+                    <div className="text-xs text-gray-500">
+                      Current OTP: "{field.value}" (Length: {field.value?.length || 0})
+                    </div>
                   </FormItem>
                 )}
               />
@@ -348,6 +354,10 @@ export default function EmailVerification() {
                 <span>Time remaining: {formatTime(timeLeft)}</span>
               </div>
 
+              <div className="text-xs text-gray-500 mb-2">
+                Form Valid: {otpForm.formState.isValid ? "Yes" : "No"} | 
+                Errors: {JSON.stringify(otpForm.formState.errors)}
+              </div>
               <Button 
                 type="submit" 
                 className="w-full" 
