@@ -48,6 +48,7 @@ export default function StaffManagement() {
   const [endDate, setEndDate] = useState(format(addDays(new Date(), 7), 'yyyy-MM-dd'));
   const [isAssigningService, setIsAssigningService] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [selectedStaffForSlots, setSelectedStaffForSlots] = useState<string>("");
 
 
   // Get current salon

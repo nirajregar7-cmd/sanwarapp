@@ -347,8 +347,7 @@ export default function EmailVerification() {
                   const otpValue = otpInput?.value || '';
                   if (otpValue.length === 6) {
                     verifyOtpMutation.mutate({ 
-                      otp: otpValue,
-                      email: verificationData?.email || ''
+                      otp: otpValue
                     });
                   } else {
                     toast({

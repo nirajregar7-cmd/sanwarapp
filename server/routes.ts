@@ -2327,7 +2327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         waitlistData.preferredDate
       );
       
-      if (activeEmergencyCount >= config.maxEmergencyBookingsPerDay) {
+      if (activeEmergencyCount >= (config.maxEmergencyBookingsPerDay || 0)) {
         return res.status(400).json({ 
           message: "Maximum emergency bookings reached for this day" 
         });
@@ -4174,7 +4174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get bookings made with this referral code
       const referredBookings = await db.select({
         id: bookings.id,
-        customerName: users.name,
+        customerName: users.firstName,
         customerPhone: users.phone,
         customerEmail: users.email,
         confirmationAmount: bookings.confirmationAmount,
@@ -4457,9 +4457,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users/:userId/block", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { userId } = req.params;
-      const adminId = req.adminUser.id;
+      const adminId = req.user?.id;
       
-      await storage.blockUser(userId, adminId);
+      await storage.blockUser(userId, adminId!);
       res.json({ success: true });
     } catch (error) {
       console.error("Error blocking user:", error);
@@ -4470,9 +4470,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users/:userId/unblock", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { userId } = req.params;
-      const adminId = req.adminUser.id;
+      const adminId = req.user?.id;
       
-      await storage.unblockUser(userId, adminId);
+      await storage.unblockUser(userId, adminId!);
       res.json({ success: true });
     } catch (error) {
       console.error("Error unblocking user:", error);
@@ -4502,9 +4502,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { salonId } = req.params;
       const { notes } = req.body;
-      const adminId = req.adminUser.id;
+      const adminId = req.user?.id;
       
-      await storage.approveSalon(salonId, adminId, notes);
+      await storage.approveSalon(salonId, adminId!, notes);
       res.json({ success: true });
     } catch (error) {
       console.error("Error approving salon:", error);
@@ -4516,13 +4516,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { salonId } = req.params;
       const { notes } = req.body;
-      const adminId = req.adminUser.id;
+      const adminId = req.user?.id;
       
       if (!notes) {
         return res.status(400).json({ error: "Rejection notes are required" });
       }
       
-      await storage.rejectSalon(salonId, adminId, notes);
+      await storage.rejectSalon(salonId, adminId!, notes);
       res.json({ success: true });
     } catch (error) {
       console.error("Error rejecting salon:", error);
@@ -4576,7 +4576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/content-moderations/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const updates = { ...req.body, moderatedBy: req.adminUser.id, moderatedAt: new Date() };
+      const updates = { ...req.body, moderatedBy: req.user?.id, moderatedAt: new Date() };
       
       await storage.updateContentModeration(id, updates);
       res.json({ success: true });
@@ -5146,11 +5146,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(feedback)
         .leftJoin(users, eq(feedback.userId, users.id));
       
+      let conditions = [];
       if (status) {
-        query = query.where(eq(feedback.status, status as any));
+        conditions.push(eq(feedback.status, status as any));
       }
       if (category) {
-        query = query.where(eq(feedback.category, category as any));
+        conditions.push(eq(feedback.category, category as any));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
       }
       
       const adminFeedback = await query
