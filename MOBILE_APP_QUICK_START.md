@@ -1,80 +1,91 @@
-# Sanwar Mobile App - Quick Start Guide
+# Sanwar Mobile App - 15 Minute Setup
 
-Transform your Sanwar web app into native iOS/Android apps in under 30 minutes.
+Transform your Sanwar web app into native iOS and Android apps.
 
-## Prerequisites
-- Node.js installed locally
-- Android Studio (for Android)
-- Your Replit project URL
+## Prerequisites (5 minutes)
+- Node.js installed on your computer
+- Android Studio (for Android app)
+- Xcode (for iOS app, Mac only)
 
-## 5-Step Setup
+## Step 1: Get Your Web App URL (2 minutes)
+1. Click the "Deploy" button in Replit
+2. Copy your deployment URL (e.g., `https://sanwar.username.repl.co`)
 
-### Step 1: Create Mobile App
+## Step 2: Create Mobile Project (3 minutes)
 ```bash
+# Create new directory
 mkdir sanwar-mobile
 cd sanwar-mobile
-npm init @capacitor/app
+
+# Initialize Capacitor project
+npm create @capacitor/app
+
+# When prompted, enter:
+# App name: Sanwar
+# Package ID: com.sanwar.app
+# Create app? Yes
 ```
 
-**When prompted:**
-- App name: `Sanwar`
-- App ID: `com.sanwar.app`
-- Framework: `None`
-
-### Step 2: Configure Your Replit URL
-Edit `capacitor.config.json`:
-
-```json
-{
-  "appId": "com.sanwar.app",
-  "appName": "Sanwar",
-  "webDir": "dist",
-  "server": {
-    "url": "https://your-replit-url.replit.dev",
-    "cleartext": true
-  },
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 2000,
-      "backgroundColor": "#8B5CF6"
-    }
+## Step 3: Configure Your App (2 minutes)
+Edit `capacitor.config.ts` and replace the server URL:
+```typescript
+const config: CapacitorConfig = {
+  appId: 'com.sanwar.app',
+  appName: 'Sanwar',
+  webDir: 'dist',
+  server: {
+    url: 'https://your-actual-deployment-url.repl.co', // Replace with your URL
+    cleartext: true
   }
-}
+};
 ```
 
-**Replace URL**: Use your actual Replit deployment URL
-
-### Step 3: Add Platforms
+## Step 4: Add Mobile Platforms (3 minutes)
 ```bash
+# Install platform dependencies
+npm install @capacitor/android @capacitor/ios
+
+# Add platforms
 npx cap add android
-# npx cap add ios  (for iOS)
+npx cap add ios
+
+# Sync files
+npx cap sync
 ```
 
-### Step 4: Build & Test
+## Step 5: Test Your App
 ```bash
-npx cap sync android
-npx cap open android
+# Open Android Studio
+npx cap run android
+
+# Open Xcode (Mac only)
+npx cap run ios
 ```
 
-Android Studio opens → Click "Run" → Your app installs on device/emulator
+Your mobile app will load your live web application with all functionality!
 
-### Step 5: App Store Ready
-In Android Studio:
-- Build → Generate Signed Bundle/APK
-- Upload to Google Play Console
+## App Store Submission (When Ready)
 
-## Your App Features
-✅ All existing Sanwar functionality  
-✅ Native mobile performance  
-✅ Payment processing (Razorpay)  
-✅ Staff booking system  
-✅ Real-time availability  
-✅ Push notifications ready  
+### Android (Google Play)
+1. `npx cap open android`
+2. Build → Generate Signed Bundle/APK
+3. Upload to Google Play Console
 
-## Next Steps
-1. Test the app thoroughly
-2. Add app icon (1024x1024 PNG)
-3. Create app store listing
-4. Submit for review
+### iOS (App Store)
+1. `npx cap open ios`  
+2. Product → Archive
+3. Upload to App Store Connect
 
-Your mobile app will automatically stay updated with your Replit backend changes!
+## App Features Included
+- All your web app functionality
+- Native mobile performance
+- Push notifications ready
+- Camera and location access
+- Offline capability
+- App store optimization
+
+## Support
+Your mobile app automatically updates when you update your web app - no separate deployment needed!
+
+**Total setup time: ~15 minutes**
+**Time to app stores: 1-2 days**
