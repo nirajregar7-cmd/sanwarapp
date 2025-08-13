@@ -1100,24 +1100,7 @@ export default function OwnerDashboard() {
                   )}
                 </CardContent>
               </Card>
-              
-              {/* Staff Schedule Management Link */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Staff Schedule Management</CardTitle>
-                  <CardDescription>
-                    Set working hours and manage schedules for your staff members
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Link href="/owner/staff-schedule">
-                    <Button className="w-full">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Manage Staff Schedules
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+
             </TabsContent>
 
             <TabsContent value="gallery" className="space-y-6">
