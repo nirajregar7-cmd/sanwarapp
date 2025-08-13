@@ -147,13 +147,8 @@ export default function EmailVerification() {
         description: "Taking you to your salon dashboard...",
       });
       
-      // For salon owners, directly redirect to dashboard after email verification
-      if (verificationData?.userType === "salon_owner") {
-        setTimeout(() => {
-          setLocation("/owner/dashboard");
-        }, 1500);
-      } else if (pendingRegistrationData) {
-        // If we have pending registration data, proceed with registration
+      // If we have pending registration data, proceed with registration
+      if (pendingRegistrationData) {
         registerMutation.mutate(pendingRegistrationData, {
           onSuccess: (data) => {
             // Clear the stored registration data
@@ -169,14 +164,9 @@ export default function EmailVerification() {
               description: successMessage,
             });
             
-            // Redirect based on user type
-            if (pendingRegistrationData.userType === "salon_owner") {
-              setLocation("/owner/dashboard");
-            } else if (pendingRegistrationData.userType === "brand_owner") {
-              setLocation("/brand-owner/dashboard");
-            } else {
-              setLocation("/");
-            }
+            // Redirect to home page after successful registration
+            // The auth system will automatically redirect to the right dashboard
+            setLocation("/");
           },
           onError: (error: any) => {
             toast({
