@@ -1002,20 +1002,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const originalAmount = finalAmount;
       let paymentAdjusted = false;
       
-      // Cashfree production environment may have minimum amount requirements
-      // Ensure we meet the minimum while keeping the confirmation fee model
+      // Only adjust if amount is actually less than ₹1 for payment gateway compatibility
       if (finalAmount < 1) {
         console.log(`⚠️ Amount ${finalAmount} is below ₹1, adjusting to ₹1 for gateway compatibility`);
         finalAmount = 1;
         paymentAdjusted = true;
       }
       
-      // Test if the issue is with ₹2 specifically - try ₹3 minimum for production reliability
-      if (finalAmount === 2) {
-        console.log(`⚠️ Testing: Adjusting ₹2 to ₹3 for Cashfree production reliability`);
-        finalAmount = 3;
-        paymentAdjusted = true;
-      }
+      console.log(`🔍 Payment processing: Salon ${salon.name} confirmation amount: ${confirmationAmountPaise} paise (₹${confirmationAmountPaise/100}), Final charge: ₹${finalAmount}`);
 
       // Create Cashfree order for remaining amount
       console.log('🔄 Creating Cashfree order for amount:', finalAmount);
