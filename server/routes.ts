@@ -1506,6 +1506,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cashfree Payment Verification
+  app.post('/api/bookings/verify-cashfree-payment', isAuthenticated, async (req: any, res) => {
+    const startTime = Date.now();
+    
+    try {
+      const { orderId, paymentId, salonId, serviceId, staffId, timeSlotId, date, referralCodeData, discountApplied } = req.body;
+      
+      if (!orderId || !paymentId) {
+        return res.status(400).json({ message: "Missing order ID or payment ID" });
+      }
+
+      console.log(`🔍 Verifying Cashfree payment for order: ${orderId}, payment: ${paymentId}`);
+
+      // Verify payment with Cashfree
+      const verificationResult = await verifyCashfreePayment(orderId);
+      
+      if (!verificationResult.success) {
+        console.error(`❌ Cashfree payment verification failed for order ${orderId}:`, verificationResult.error);
+        return res.status(400).json({ 
+          message: verificationResult.error || "Payment verification failed" 
+        });
+      }
+
+      console.log(`✅ Cashfree payment verified for order: ${orderId}`);
+
+      // Get user information
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Get service details
+      const [service] = await db.select()
+        .from(services)
+        .where(eq(services.id, serviceId));
+
+      if (!service) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+
+      // Get salon details
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+
+      // Get time slot and verify availability
+      const [timeSlot] = await db.select()
+        .from(timeSlots)
+        .where(eq(timeSlots.id, timeSlotId));
+
+      if (!timeSlot) {
+        return res.status(404).json({ message: "Time slot not found" });
+      }
+
+      // Check if slot is still available
+      const existingBookings = await db.select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.timeSlotId, timeSlotId),
+            eq(bookings.date, date),
+            not(inArray(bookings.status, ['cancelled', 'no_show']))
+          )
+        );
+
+      if (existingBookings.length > 0) {
+        return res.status(409).json({ message: "Time slot is no longer available" });
+      }
+
+      // Calculate amounts
+      const confirmationAmount = verificationResult.amount || parseFloat(service.price) * 0.05; // 5% confirmation
+      const remainingAmount = parseFloat(service.price) - confirmationAmount;
+
+      // Create booking
+      const [booking] = await db.insert(bookings)
+        .values({
+          id: `bk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          customerId: userId,
+          salonId,
+          serviceId,
+          staffId: staffId || null,
+          timeSlotId,
+          date,
+          status: 'confirmed',
+          paymentStatus: 'partial',
+          totalAmount: parseFloat(service.price),
+          paidAmount: confirmationAmount,
+          remainingAmount: remainingAmount,
+          paymentId: paymentId,
+          notes: `Cashfree payment: ${paymentId}`,
+          createdAt: new Date(),
+          paymentGateway: 'cashfree'
+        })
+        .returning();
+
+      // Create revenue share record
+      const revenueShare = calculateRevenueShare(
+        confirmationAmount,
+        discountApplied || 0,
+        salon.commissionRate || 0.8
+      );
+
+      await db.insert(revenueShares).values({
+        id: `rs_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        bookingId: booking.id,
+        salonId: booking.salonId,
+        totalAmount: confirmationAmount,
+        salonShare: revenueShare.salonAmount,
+        platformShare: revenueShare.platformAmount,
+        commissionRate: revenueShare.commissionRate,
+        discountApplied: discountApplied || 0,
+        status: 'pending',
+        createdAt: new Date()
+      });
+
+      // Handle referral code if provided
+      try {
+        if (referralCodeData && referralCodeData.id) {
+          console.log(`🎁 Processing referral code for booking: ${booking.id}`);
+          
+          const referralRecord = await storage.getReferralById(referralCodeData.id);
+          if (referralRecord) {
+            const referrer = await storage.getUserById(referralRecord.referrerId);
+            
+            if (referrer && referralRecord.referralType === "customer_first_booking" && referrer.userType === "customer") {
+              // Customer first booking referral
+              await storage.addWalletTransaction(
+                referralRecord.referrerId,
+                referralRecord.rewardAmount,
+                "Referral reward for completing first booking",
+                referralRecord.id,
+                "referral"
+              );
+            }
+          }
+        }
+      } catch (referralError) {
+        console.error("Referral processing failed:", referralError);
+        // Don't fail the booking if referral processing fails
+      }
+
+      // Send booking confirmation notification
+      try {
+        await sendBookingConfirmationNotification(booking.id);
+      } catch (notificationError) {
+        console.error("Failed to send booking confirmation notification:", notificationError);
+      }
+
+      const processingTime = Date.now() - startTime;
+      console.log(`✅ Cashfree booking created successfully in ${processingTime}ms:`, booking.id);
+
+      // Send booking confirmation email (async)
+      setImmediate(async () => {
+        try {
+          const { sendBookingConfirmationEmail, getBookingNotificationData } = await import('./email-notifications');
+          const notificationData = await getBookingNotificationData(booking.id);
+          if (notificationData) {
+            await sendBookingConfirmationEmail(notificationData);
+            console.log('📧 Booking confirmation email sent for:', booking.id);
+          }
+        } catch (emailError) {
+          console.error('❌ Error sending confirmation email:', emailError);
+        }
+      });
+
+      res.json({ 
+        success: true, 
+        booking,
+        message: "Booking confirmed with Cashfree payment!",
+        processingTime: `${processingTime}ms`,
+        paymentId: paymentId
+      });
+
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      console.error(`❌ Error verifying Cashfree payment after ${processingTime}ms:`, error);
+      
+      let errorMessage = "Failed to process Cashfree payment and create booking";
+      let statusCode = 500;
+      
+      if (error instanceof Error) {
+        if (error.message.includes('slot')) {
+          errorMessage = "Selected time slot is no longer available. Please choose another time.";
+          statusCode = 409;
+        } else if (error.message.includes('payment')) {
+          errorMessage = "Payment processing failed. Please contact support if money was deducted.";
+          statusCode = 402;
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      res.status(statusCode).json({ 
+        message: errorMessage,
+        processingTime: `${processingTime}ms`,
+        retryable: statusCode !== 409
+      });
+    }
+  });
+
   // Get salon owner account details
   app.get('/api/owner/account', isAuthenticated, async (req: any, res) => {
     try {

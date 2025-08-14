@@ -27,6 +27,14 @@ import { ReviewForm } from "./review-form";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { CustomerSalonMap } from "@/components/CustomerSalonMap";
 import { EmergencyBookingBanner } from "@/components/EmergencyBookingBanner";
+import { loadCashfreeSDK } from "@/lib/payment";
+
+// Declare Cashfree types for window
+declare global {
+  interface Window {
+    Cashfree: any;
+  }
+}
 
 const bookingSchema = z.object({
   serviceId: z.string().min(1, "Please select a service"),
@@ -247,153 +255,66 @@ export default function SalonDetail() {
         return freeBookingData;
       }
       
-      // Step 2: Initialize Razorpay payment with improved timeout handling
-      return new Promise((resolve, reject) => {
-        let isResolved = false;
-        const paymentStartTime = Date.now();
-        
-        // Set a timeout for the entire payment process (increased to 5 minutes)
-        const paymentTimeout = setTimeout(() => {
-          if (!isResolved) {
-            isResolved = true;
-            console.warn("Payment timeout reached after 5 minutes");
-            reject(new Error("Payment session expired. Please try booking again. If money was deducted, it will be refunded automatically."));
+      // Step 2: Initialize Cashfree payment
+      return new Promise(async (resolve, reject) => {
+        try {
+          // Load Cashfree SDK if not already loaded
+          if (!window.Cashfree) {
+            await loadCashfreeSDK();
           }
-        }, 300000); // 5 minutes timeout
-        
-        const options = {
-          key: orderData.keyId,
-          amount: orderData.amount,
-          currency: orderData.currency,
-          name: orderData.salonName || salon?.name || "Sanwar",
-          description: `Booking confirmation for ${orderData.serviceName || "service"}`,
-          order_id: orderData.orderId,
-          timeout: 300, // 5 minutes for Razorpay itself
-          retry: {
-            enabled: true,
-            max_count: 3
-          },
-          handler: async (response: any) => {
-            if (isResolved) return;
+          
+          const cashfree = window.Cashfree({
+            mode: process.env.NODE_ENV === 'production' ? 'production' : 'production' // Always use production for production keys
+          });
+
+          const checkoutOptions = {
+            paymentSessionId: orderData.paymentSessionId,
+            redirectTarget: '_modal',
+          };
+
+          // Open Cashfree checkout
+          const result = await cashfree.checkout(checkoutOptions);
+          
+          if (result.error) {
+            console.error('Cashfree payment error:', result.error);
+            reject(new Error(result.error.message || 'Payment failed'));
+            return;
+          }
+          
+          if (result.paymentDetails) {
+            console.log('Cashfree payment success:', result.paymentDetails);
             
-            const paymentTime = Date.now() - paymentStartTime;
-            console.log(`💳 Payment completed in ${paymentTime}ms`);
-            
+            // Step 3: Verify payment and create booking
             try {
-              // Step 3: Verify payment and create booking with retry logic
-              const verifyStartTime = Date.now();
-              let verifyAttempts = 0;
-              const maxVerifyAttempts = 3;
-              
-              const attemptVerification = async (): Promise<any> => {
-                verifyAttempts++;
-                try {
-                  const verifyResponse = await apiRequest("POST", "/api/bookings/verify-payment", {
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_signature: response.razorpay_signature,
-                    salonId,
-                    serviceId: data.serviceId,
-                    staffId: data.staffId || null,
-                    timeSlotId: data.timeSlotId,
-                    date: data.date.toISOString().split('T')[0],
-                    referralCodeData: orderData.referralCodeApplied ? appliedReferralCode : null,
-                    discountApplied: orderData.discountApplied || 0,
-                  });
+              const verifyResponse = await apiRequest("POST", "/api/bookings/verify-cashfree-payment", {
+                orderId: orderData.orderId,
+                paymentId: result.paymentDetails.paymentId,
+                salonId,
+                serviceId: data.serviceId,
+                staffId: data.staffId || null,
+                timeSlotId: data.timeSlotId,
+                date: data.date.toISOString().split('T')[0],
+                referralCodeData: orderData.referralCodeApplied ? appliedReferralCode : null,
+                discountApplied: orderData.discountApplied || 0,
+              });
 
-                  const bookingData = await verifyResponse.json();
-                  const verifyTime = Date.now() - verifyStartTime;
-                  console.log(`✅ Payment verified and booking created in ${verifyTime}ms`);
-                  return bookingData;
-                } catch (error) {
-                  console.log(`❌ Verification attempt ${verifyAttempts} failed:`, error);
-                  
-                  if (verifyAttempts < maxVerifyAttempts) {
-                    console.log(`🔄 Retrying verification in 2 seconds...`);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    return attemptVerification();
-                  }
-                  throw error;
-                }
-              };
-
-              const bookingData = await attemptVerification();
-              
-              clearTimeout(paymentTimeout);
-              if (!isResolved) {
-                isResolved = true;
-                resolve(bookingData);
-              }
+              const bookingData = await verifyResponse.json();
+              console.log('✅ Cashfree payment verified and booking created');
+              resolve(bookingData);
             } catch (error) {
-              clearTimeout(paymentTimeout);
-              if (!isResolved) {
-                isResolved = true;
-                console.error("Payment verification failed:", error);
-                reject(new Error(
-                  error instanceof Error && error.message.includes('slot') 
-                    ? "Time slot is no longer available. Please choose another time."
-                    : error instanceof Error && error.message.includes('timeout')
-                    ? "Booking is taking longer than expected. Please check your booking status or contact support."
-                    : "Payment was successful but booking confirmation failed. Please contact support with your payment ID: " + response.razorpay_payment_id
-                ));
-              }
+              console.error("Payment verification failed:", error);
+              reject(new Error(
+                error instanceof Error && error.message.includes('slot') 
+                  ? "Time slot is no longer available. Please choose another time."
+                  : error instanceof Error && error.message.includes('timeout')
+                  ? "Booking is taking longer than expected. Please check your booking status or contact support."
+                  : "Payment was successful but booking confirmation failed. Please contact support with your payment ID: " + result.paymentDetails.paymentId
+              ));
             }
-          },
-          prefill: {
-            name: (user as any)?.firstName || "",
-            email: (user as any)?.email || "",
-          },
-          theme: {
-            color: "#3B82F6",
-          },
-          modal: {
-            escape: false, // Prevent accidental closure
-            ondismiss: () => {
-              console.log("Razorpay modal dismissed by user");
-              clearTimeout(paymentTimeout);
-              if (!isResolved) {
-                isResolved = true;
-                reject(new Error("Payment cancelled. Please try again if you wish to complete the booking."));
-              }
-            },
-            confirm_close: true, // Ask for confirmation before closing
-            animation: true,
-            backdrop_close: false // Prevent closing by clicking backdrop
-          },
-        };
-
-        // @ts-ignore - Razorpay is loaded from CDN
-        if (typeof window !== 'undefined' && window.Razorpay) {
-          try {
-            // @ts-ignore
-            const rzp = new window.Razorpay(options);
-            
-            // Add error handling for Razorpay initialization
-            rzp.on('payment.failed', (response: any) => {
-              clearTimeout(paymentTimeout);
-              if (!isResolved) {
-                isResolved = true;
-                console.error("Razorpay payment failed:", response.error);
-                
-                // Handle specific risk check failures
-                if (response.error.reason === 'payment_risk_check_failed') {
-                  reject(new Error('Payment blocked due to security checks. Please try a different payment method or contact support.'));
-                } else if (response.error.code === 'BAD_REQUEST_ERROR') {
-                  reject(new Error(`Payment failed: ${response.error.description}. Please try again with a different payment method.`));
-                } else {
-                  reject(new Error(`Payment failed: ${response.error.description || 'Unknown error'}`));
-                }
-              }
-            });
-            
-            rzp.open();
-          } catch (error) {
-            clearTimeout(paymentTimeout);
-            reject(new Error("Failed to initialize payment. Please refresh the page and try again."));
           }
-        } else {
-          clearTimeout(paymentTimeout);
-          reject(new Error("Payment system not available. Please refresh the page and ensure you have a stable internet connection."));
+        } catch (error) {
+          console.error('Cashfree payment initialization failed:', error);
+          reject(new Error(error instanceof Error ? error.message : 'Payment initialization failed'));
         }
       });
     },
