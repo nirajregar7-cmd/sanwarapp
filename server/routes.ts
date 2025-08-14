@@ -15,7 +15,7 @@ import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
-import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount, createSalonFundAccount, processSalonPayout } from "./payment";
+// All payment processing now handled by Cashfree
 import { createCashfreeOrder, verifyCashfreePayment, verifyCashfreeWebhookSignature } from "./cashfree-payment";
 import { calculateRevenueShare } from "@shared/revenue";
 import { sendPasswordResetOTP, generateOTP } from "./whatsapp";
@@ -1536,7 +1536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         booking,
         message: "Booking confirmed! You've paid the confirmation amount. Pay the remaining service cost at the salon.",
         processingTime: `${processingTime}ms`,
-        paymentId: razorpay_payment_id
+        paymentId: paymentVerification.transactionId
       });
     } catch (error) {
       const processingTime = Date.now() - startTime;
@@ -1822,8 +1822,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(salonOwnerAccounts)
         .where(eq(salonOwnerAccounts.salonId, salon.id));
       
-      // Temporary fix: Skip automatic verification due to Razorpay API issues
-      // Allow manual verification by admin later
+      // Using Cashfree for payment processing - bank verification handled separately
       console.log('Skipping automatic verification for:', accountData.accountNumber);
       const verificationResult = {
         success: true,
@@ -5159,20 +5158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Payment webhook (Razorpay)
-  app.post("/api/payment/webhook", async (req, res) => {
-    try {
-      // Handle Razorpay webhook
-      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
-      
-      // In a real app, verify the signature and update booking status
-      // For now, just acknowledge receipt
-      res.json({ message: "Webhook received" });
-    } catch (error) {
-      console.error("Error processing payment webhook:", error);
-      res.status(500).json({ message: "Webhook processing failed" });
-    }
-  });
+  // Legacy payment webhook removed - now using Cashfree webhooks
 
   // Admin middleware to check admin permissions
   const isAdmin = async (req: any, res: any, next: any) => {
