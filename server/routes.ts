@@ -1516,17 +1516,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const processingTime = Date.now() - startTime;
       console.log(`✅ Booking created successfully after payment in ${processingTime}ms:`, booking.id);
 
-      // Send booking confirmation email (async)
+      // Send booking confirmation emails to both customer and shopkeeper (async)
       setImmediate(async () => {
         try {
-          const { sendBookingConfirmationEmail, getBookingNotificationData } = await import('./email-notifications');
-          const notificationData = await getBookingNotificationData(booking.id);
-          if (notificationData) {
-            await sendBookingConfirmationEmail(notificationData);
-            console.log('📧 Booking confirmation email sent for:', booking.id);
-          }
+          const { sendBookingNotificationEmails } = await import('./booking-notifications');
+          const emailResults = await sendBookingNotificationEmails(booking.id);
+          console.log(`📧 Booking emails sent - Customer: ${emailResults.customerSent}, Shopkeeper: ${emailResults.shopkeeperSent}`);
         } catch (emailError) {
-          console.error('❌ Error sending confirmation email:', emailError);
+          console.error('❌ Error sending booking notification emails:', emailError);
           // Don't fail the booking if email fails
         }
       });
