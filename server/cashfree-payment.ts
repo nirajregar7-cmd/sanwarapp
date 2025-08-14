@@ -22,7 +22,13 @@ const initializeCashfree = async () => {
       const isProdKey = process.env.CASHFREE_SECRET_KEY?.includes('prod');
       cashfreeInstance.XEnvironment = isProdKey ? 'PRODUCTION' : 'SANDBOX';
       
+      // Manually set the base path for production
+      if (isProdKey) {
+        cashfreeInstance.basePath = 'https://api.cashfree.com/pg';
+      }
+      
       console.log('🔧 Cashfree Environment:', isProdKey ? 'PRODUCTION' : 'SANDBOX');
+      console.log('🔧 Cashfree Base URL:', cashfreeInstance.basePath);
       initialized = true;
       console.log('✅ Cashfree payment gateway initialized successfully');
       return cashfreeInstance;
