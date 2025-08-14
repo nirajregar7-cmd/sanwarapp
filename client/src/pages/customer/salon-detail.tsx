@@ -321,7 +321,7 @@ export default function SalonDetail() {
             }
           };
 
-          // Open Cashfree checkout
+          // Open Cashfree checkout - this will redirect to payment callback
           const result = await cashfree.checkout(checkoutOptions);
           
           if (result.error) {
@@ -330,37 +330,10 @@ export default function SalonDetail() {
             return;
           }
           
-          if (result.paymentDetails) {
-            console.log('Cashfree payment success:', result.paymentDetails);
-            
-            // Step 3: Verify payment and create booking
-            try {
-              const verifyResponse = await apiRequest("POST", "/api/bookings/verify-cashfree-payment", {
-                orderId: orderData.orderId,
-                paymentId: result.paymentDetails.paymentId,
-                salonId,
-                serviceId: data.serviceId,
-                staffId: data.staffId || null,
-                timeSlotId: data.timeSlotId,
-                date: data.date.toISOString().split('T')[0],
-                referralCodeData: orderData.referralCodeApplied ? appliedReferralCode : null,
-                discountApplied: orderData.discountApplied || 0,
-              });
-
-              const bookingData = await verifyResponse.json();
-              console.log('✅ Cashfree payment verified and booking created');
-              resolve(bookingData);
-            } catch (error) {
-              console.error("Payment verification failed:", error);
-              reject(new Error(
-                error instanceof Error && error.message.includes('slot') 
-                  ? "Time slot is no longer available. Please choose another time."
-                  : error instanceof Error && error.message.includes('timeout')
-                  ? "Booking is taking longer than expected. Please check your booking status or contact support."
-                  : "Payment was successful but booking confirmation failed. Please contact support with your payment ID: " + result.paymentDetails.paymentId
-              ));
-            }
-          }
+          // For redirect mode, we don't get result.paymentDetails
+          // The payment callback page will handle verification
+          console.log('Payment initiated, redirecting to payment gateway...');
+          resolve({ redirected: true });
         } catch (error) {
           console.error('Cashfree payment initialization failed:', error);
           reject(new Error(error instanceof Error ? error.message : 'Payment initialization failed'));

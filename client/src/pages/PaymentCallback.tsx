@@ -15,13 +15,20 @@ export default function PaymentCallback() {
   useEffect(() => {
     const processPaymentCallback = async () => {
       try {
-        // Get order_id from URL parameters
+        // Get all parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('order_id');
         const orderToken = urlParams.get('order_token');
+        const salonId = urlParams.get('salon_id');
+        const serviceId = urlParams.get('service_id');
+        const timeSlotId = urlParams.get('time_slot_id');
+        const date = urlParams.get('date');
+        const staffId = urlParams.get('staff_id');
+        const notes = urlParams.get('notes');
+        const referralId = urlParams.get('referral_id');
 
-        if (!orderId) {
-          throw new Error('No order ID found in callback');
+        if (!orderId || !salonId || !serviceId || !timeSlotId || !date) {
+          throw new Error('Missing required booking parameters in callback');
         }
 
         // Verify payment with backend
@@ -30,7 +37,16 @@ export default function PaymentCallback() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ orderId }),
+          body: JSON.stringify({ 
+            orderId,
+            salonId,
+            serviceId,
+            timeSlotId,
+            date,
+            staffId: staffId || null,
+            notes: notes ? decodeURIComponent(notes) : null,
+            referralCodeData: referralId ? { id: referralId } : null
+          }),
         });
 
         if (!response.ok) {

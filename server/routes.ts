@@ -985,9 +985,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create Cashfree order for remaining amount
       console.log('🔄 Creating Cashfree order for amount:', finalAmount);
+      const orderIdPrefix = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       const order = await createCashfreeOrder({
         amount: finalAmount,
-        orderId: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        orderId: orderIdPrefix,
         customerDetails: {
           customerId: userId,
           customerName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Customer',
@@ -995,7 +997,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customerPhone: user?.phone || '9999999999'
         },
         orderMeta: {
-          returnUrl: getBaseUrl() + '/payment-success',
+          returnUrl: `${getBaseUrl()}/payment-callback?order_id=${orderIdPrefix}&salon_id=${salonId}&service_id=${serviceId}&time_slot_id=${timeSlotId}&date=${date}&staff_id=${staffId || ''}&notes=${encodeURIComponent(notes || '')}${validReferralCode ? `&referral_id=${validReferralCode.id}` : ''}`,
           notifyUrl: getBaseUrl() + '/api/cashfree/webhook',
           paymentMethods: 'cc,dc,nb,upi,paylater,emi,app'
         },
@@ -1300,9 +1302,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startTime: timeSlot.startTime,
         endTime: timeSlot.endTime,
         totalAmount: service.price,
+        confirmationAmount: confirmationAmount.toString(),
         status: 'confirmed', // Automatically confirmed when payment is successful
         paymentId: paymentVerification.transactionId || orderId,
-        paymentStatus: 'completed'
+        paymentStatus: 'completed',
+        notes: notes || 'Online payment successful'
       }).returning();
       
       // Calculate and record revenue share
