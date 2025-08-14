@@ -132,7 +132,7 @@ export function BookingModal({
                 <CreditCard className="h-5 w-5 text-gray-400" />
                 <div>
                   <p className="font-medium">Credit/Debit Card</p>
-                  <p className="text-sm text-gray-600">Secure payment via Razorpay</p>
+                  <p className="text-sm text-gray-600">Secure payment via Cashfree</p>
                 </div>
               </div>
             </div>

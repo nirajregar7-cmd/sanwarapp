@@ -80,27 +80,53 @@ export const initiateCashfreePayment = async (options: PaymentOptions) => {
 
     console.log('🚀 Initiating Cashfree checkout with options:', checkoutOptions);
     
+    // Validate payment session ID
+    if (!checkoutOptions.paymentSessionId) {
+      console.error('❌ Missing payment session ID');
+      options.onFailure({ error: 'Missing payment session ID' });
+      return;
+    }
+    
     // Open Cashfree checkout
     cashfree.checkout(checkoutOptions).then((result: any) => {
       console.log('💳 Cashfree checkout result:', result);
       
       if (result.error) {
         console.error('❌ Cashfree payment error:', result.error);
-        options.onFailure(result.error);
+        options.onFailure({ 
+          error: result.error.message || result.error, 
+          details: 'Payment interface error' 
+        });
+        return;
       }
       
       if (result.redirect) {
         console.log('🔄 Cashfree payment redirect:', result.redirect);
-        // Handle redirect if needed
+        // Cashfree will handle the redirect
+        return;
       }
       
       if (result.paymentDetails) {
         console.log('✅ Cashfree payment success:', result.paymentDetails);
         options.onSuccess(result.paymentDetails);
+        return;
       }
+      
+      // If no specific result type, log for debugging
+      console.log('🤔 Unknown result type:', result);
+      
     }).catch((error: any) => {
       console.error('💥 Cashfree checkout error:', error);
-      options.onFailure({ error: error.message || 'Checkout failed to open' });
+      console.error('💥 Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
+      options.onFailure({ 
+        error: error.message || 'Checkout failed to open',
+        details: 'Failed to initialize payment interface. Please check your internet connection and try again.'
+      });
     });
 
   } catch (error) {
