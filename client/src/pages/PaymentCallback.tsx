@@ -27,7 +27,12 @@ export default function PaymentCallback() {
         const notes = urlParams.get('notes');
         const referralId = urlParams.get('referral_id');
 
+        console.log('Payment callback parameters:', {
+          orderId, salonId, serviceId, timeSlotId, date, staffId, notes, referralId
+        });
+
         if (!orderId || !salonId || !serviceId || !timeSlotId || !date) {
+          console.error('Missing required parameters:', { orderId, salonId, serviceId, timeSlotId, date });
           throw new Error('Missing required booking parameters in callback');
         }
 

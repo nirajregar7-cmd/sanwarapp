@@ -983,8 +983,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const originalAmount = finalAmount;
       let paymentAdjusted = false;
       
+      // For very small amounts, Cashfree production might have issues
+      // Let's ensure minimum viable amount while keeping user experience smooth
+      if (finalAmount < 2) {
+        console.log(`⚠️ Amount ${finalAmount} is very small, adjusting to ₹2 for reliability`);
+        finalAmount = 2;
+      }
+
       // Create Cashfree order for remaining amount
       console.log('🔄 Creating Cashfree order for amount:', finalAmount);
+      console.log('🔄 Booking details:', { salonId, serviceId, timeSlotId, date, staffId });
+      
       const orderIdPrefix = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       const order = await createCashfreeOrder({
@@ -1240,10 +1249,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } = req.body;
       
       console.log('🔐 Starting payment verification for user:', userId, 'order ID:', orderId);
+      console.log('📝 Verification request body:', { 
+        orderId, salonId, serviceId, timeSlotId, date, staffId, notes 
+      });
       
       // Verify payment with Cashfree
       console.log('🔍 Verifying Cashfree payment...');
       const paymentVerification = await verifyCashfreePayment(orderId);
+      console.log('💳 Payment verification result:', paymentVerification);
       
       if (!paymentVerification.success || paymentVerification.orderStatus !== 'PAID') {
         console.error('❌ Payment verification failed for order:', orderId);
