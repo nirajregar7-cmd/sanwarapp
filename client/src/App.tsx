@@ -54,6 +54,9 @@ import BrandDashboard from "@/pages/brand-owner/brand-dashboard";
 // Payment Pages
 import PaymentCallback from "@/pages/PaymentCallback";
 
+// Owner Settings Pages
+import ConfirmationSettings from "@/pages/owner/confirmation-settings";
+
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
@@ -291,6 +294,11 @@ function Router() {
                   <AccountDetails />
                 </Layout>
               </Route>
+              <Route path="/shopkeeper/confirmation-settings">
+                <Layout>
+                  <ConfirmationSettings />
+                </Layout>
+              </Route>
               
               {/* Legacy owner routes for backward compatibility */}
               <Route path="/owner/time-slots">
@@ -334,6 +342,11 @@ function Router() {
               <Route path="/owner/account-details">
                 <Layout>
                   <AccountDetails />
+                </Layout>
+              </Route>
+              <Route path="/owner/confirmation-settings">
+                <Layout>
+                  <ConfirmationSettings />
                 </Layout>
               </Route>
             </>

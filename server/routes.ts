@@ -877,7 +877,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Time slot is already booked" });
       }
       
-      let finalAmount = salon.confirmationAmount || 10;
+      // Use salon-specific confirmation amount (in paise) or default to ₹3 (300 paise)
+      let confirmationAmountPaise = salon.confirmationAmount || 300;
+      let finalAmount = confirmationAmountPaise / 100; // Convert to rupees for Cashfree
+      
+      console.log(`💰 Using confirmation amount for ${salon.name}: ₹${finalAmount} (${confirmationAmountPaise} paise)`);
+      
+      // Calculate revenue split (will be used in webhook)
+      const adminShare = Math.round(confirmationAmountPaise * (salon.adminRevenueShare || 20) / 100);
+      const shopkeeperShare = confirmationAmountPaise - adminShare;
+      
+      console.log(`💸 Revenue split: Admin ₹${adminShare/100} (${salon.adminRevenueShare || 20}%), Shopkeeper ₹${shopkeeperShare/100} (${salon.shopkeeperRevenueShare || 80}%)`);
+      
+      // Store revenue split info for later use
+      const revenueInfo = {
+        adminShare,
+        shopkeeperShare,
+        totalConfirmationAmount: confirmationAmountPaise,
+        adminPercent: salon.adminRevenueShare || 20,
+        shopkeeperPercent: salon.shopkeeperRevenueShare || 80
+      };
       let validReferralCode = null;
       let appliedDiscount = 0;
       let usedFreeCredit = null;
@@ -896,7 +915,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (availableCredit) {
         // Apply free credit - make booking completely free
         finalAmount = 0;
-        appliedDiscount = salon.confirmationAmount || 10;
+        appliedDiscount = confirmationAmountPaise / 100; // Convert paise to rupees for display
         usedFreeCredit = availableCredit;
         
         return res.json({
@@ -1761,6 +1780,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
         processingTime: `${processingTime}ms`,
         retryable: statusCode !== 409
       });
+    }
+  });
+
+  // Get salon settings for confirmation fee
+  app.get('/api/owner/salon-settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Get salon owned by this user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      res.json({
+        id: salon.id,
+        confirmationAmount: salon.confirmationAmount || 300, // Default ₹3
+        adminRevenueShare: salon.adminRevenueShare || 20,
+        shopkeeperRevenueShare: salon.shopkeeperRevenueShare || 80
+      });
+    } catch (error) {
+      console.error("Error fetching salon settings:", error);
+      res.status(500).json({ message: "Failed to fetch salon settings" });
+    }
+  });
+
+  // Update salon settings for confirmation fee
+  app.post('/api/owner/salon-settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { confirmationAmount } = req.body;
+      
+      if (!confirmationAmount || confirmationAmount < 100 || confirmationAmount > 50000) {
+        return res.status(400).json({ 
+          message: "Confirmation amount must be between ₹1 and ₹500 (100-50000 paise)" 
+        });
+      }
+      
+      // Get salon owned by this user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Update salon settings
+      const [updatedSalon] = await db.update(salons)
+        .set({
+          confirmationAmount: confirmationAmount,
+          updatedAt: new Date()
+        })
+        .where(eq(salons.id, salon.id))
+        .returning();
+      
+      console.log(`✅ Updated confirmation fee for salon ${salon.name}: ₹${confirmationAmount/100}`);
+      
+      res.json({
+        success: true,
+        salon: updatedSalon,
+        message: `Confirmation fee updated to ₹${confirmationAmount/100}`
+      });
+    } catch (error) {
+      console.error("Error updating salon settings:", error);
+      res.status(500).json({ message: "Failed to update salon settings" });
     }
   });
 

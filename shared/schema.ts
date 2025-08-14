@@ -72,8 +72,11 @@ export const salons = pgTable("salons", {
   averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0"),
   totalReviews: integer("total_reviews").default(0),
   // Business settings
-  confirmationAmount: integer("confirmation_amount").default(0), // in paise (₹20 = 2000 paise)
+  confirmationAmount: integer("confirmation_amount").default(300), // in paise (₹3 = 300 paise) - shopkeeper can modify
   monthlyFee: integer("monthly_fee").default(10000), // ₹100 in paise
+  // Revenue split settings
+  adminRevenueShare: integer("admin_revenue_share").default(20), // 20% goes to admin
+  shopkeeperRevenueShare: integer("shopkeeper_revenue_share").default(80), // 80% goes to shopkeeper
   isActive: boolean("is_active").default(true),
   isPremium: boolean("is_premium").default(false), // for premium features
   verificationStatus: varchar("verification_status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
@@ -1203,6 +1206,8 @@ export interface BookingWithDetails extends Booking {
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type PlatformStats = typeof platformStats.$inferSelect;
+export type AdminRevenueTransaction = typeof adminRevenueTransactions.$inferSelect;
+export type InsertAdminRevenueTransaction = z.infer<typeof createInsertSchema<typeof adminRevenueTransactions>>;
 export type Wallet = typeof wallets.$inferSelect;
 export type InsertWallet = z.infer<typeof insertWalletSchema>;
 export type WalletTransaction = typeof walletTransactions.$inferSelect;

@@ -703,6 +703,19 @@ export default function OwnerDashboard() {
                         </div>
                       </Button>
                     </Link>
+
+                    <Link href="/owner/confirmation-settings">
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
+                      >
+                        <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mb-2 flex-shrink-0" />
+                        <div className="text-center w-full px-2">
+                          <p className="font-medium text-sm sm:text-base mb-1">Confirmation Fee</p>
+                          <p className="text-xs text-gray-600 leading-tight break-words">Set your booking confirmation amount</p>
+                        </div>
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

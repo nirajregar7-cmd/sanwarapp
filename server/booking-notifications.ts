@@ -69,8 +69,8 @@ export async function getBookingEmailData(bookingId: string): Promise<BookingEma
       startTime: bookingData.booking.startTime,
       endTime: bookingData.booking.endTime,
       totalAmount: parseFloat(bookingData.service.price),
-      confirmationAmount: 3, // Fixed confirmation fee
-      remainingAmount: parseFloat(bookingData.service.price) - 3,
+      confirmationAmount: parseFloat(bookingData.booking.confirmationAmount) / 100 || 3, // Dynamic confirmation fee from booking
+      remainingAmount: parseFloat(bookingData.service.price) - (parseFloat(bookingData.booking.confirmationAmount) / 100 || 3),
     };
   } catch (error) {
     console.error('Error fetching booking data for email:', error);
