@@ -83,8 +83,8 @@ export async function createCashfreeOrder(data: CreateOrderData) {
 
   try {
     const baseUrl = getBaseUrl();
-    const returnUrl = data.orderMeta?.returnUrl || `${baseUrl}/payment-success?order_id={order_id}&order_token={order_token}`;
-    const notifyUrl = data.orderMeta?.notifyUrl || baseUrl + '/api/cashfree/webhook';
+    const returnUrl = data.orderMeta?.returnUrl || `${baseUrl}/payment-success`;
+    const notifyUrl = data.orderMeta?.notifyUrl || `${baseUrl}/api/cashfree/webhook`;
     
     const orderRequest = {
       order_id: data.orderId || `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
