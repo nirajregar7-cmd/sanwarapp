@@ -95,7 +95,7 @@ export async function createCashfreeOrder(data: CreateOrderData) {
         customer_phone: data.customerDetails.customerPhone,
       },
       order_meta: {
-        return_url: data.orderMeta?.returnUrl || getBaseUrl() + '/api/cashfree/callback',
+        return_url: data.orderMeta?.returnUrl || getBaseUrl() + '/payment-success',
         notify_url: data.orderMeta?.notifyUrl || getBaseUrl() + '/api/cashfree/webhook',
         payment_methods: data.orderMeta?.paymentMethods || 'cc,dc,nb,upi,paylater,emi,app',
       },

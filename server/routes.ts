@@ -7339,6 +7339,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cashfree payment success page
+  app.get('/payment-success', (req, res) => {
+    res.send(`
+      <html>
+        <head>
+          <title>Payment Successful</title>
+          <style>
+            body { font-family: Arial; text-align: center; padding: 50px; background: #f5f5f5; }
+            .success { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .icon { font-size: 48px; color: #4CAF50; margin-bottom: 20px; }
+            h1 { color: #333; margin: 0 0 10px 0; }
+            p { color: #666; margin: 10px 0; }
+            .button { background: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="success">
+            <div class="icon">✅</div>
+            <h1>Payment Successful!</h1>
+            <p>Your booking has been confirmed successfully.</p>
+            <p>You'll receive a confirmation email shortly.</p>
+            <a href="https://sanwar-book-nirajregar7.replit.app" class="button">Back to Sanwar</a>
+          </div>
+          <script>
+            // Auto close after 10 seconds
+            setTimeout(() => {
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'payment_success' }, '*');
+              } else {
+                window.location.href = 'https://sanwar-book-nirajregar7.replit.app';
+              }
+            }, 10000);
+          </script>
+        </body>
+      </html>
+    `);
+  });
+
   // Cashfree payment webhook (for server-to-server payment notifications)
   app.post('/api/cashfree/webhook', async (req, res) => {
     try {
