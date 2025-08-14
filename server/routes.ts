@@ -16,13 +16,29 @@ import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount, createSalonFundAccount, processSalonPayout } from "./payment";
-import { createCashfreeOrder, verifyCashfreePayment, processCashfreeRefund, verifyCashfreeWebhookSignature } from "./cashfree-payment";
+import { createCashfreeOrder, verifyCashfreePayment, verifyCashfreeWebhookSignature } from "./cashfree-payment";
 import { calculateRevenueShare } from "@shared/revenue";
 import { sendPasswordResetOTP, generateOTP } from "./whatsapp";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
 const scryptAsync = promisify(scrypt);
+
+// Helper function to get the correct base URL
+function getBaseUrl(): string {
+  if (process.env.BASE_URL) {
+    return process.env.BASE_URL;
+  }
+  
+  // For Replit deployment, construct HTTPS URL from domains
+  if (process.env.REPLIT_DOMAINS) {
+    const domains = process.env.REPLIT_DOMAINS.split(',');
+    return `https://${domains[0]}`;
+  }
+  
+  // Development fallback - Cashfree production requires HTTPS
+  return 'http://localhost:5000';
+}
 
 // Helper function to generate time slots for a specific date
 function generateTimeSlotsForDate(date: string, openingTime: string, closingTime: string, slotDuration: number, breakStartTime: string, breakEndTime: string) {
@@ -981,8 +997,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customerPhone: user?.phone || '9999999999'
         },
         orderMeta: {
-          returnUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/payment-success`,
-          notifyUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/api/cashfree/webhook`,
+          returnUrl: getBaseUrl() + '/payment-success',
+          notifyUrl: getBaseUrl() + '/api/cashfree/webhook',
           paymentMethods: 'cc,dc,nb,upi,paylater,emi,wallet'
         },
         orderNote: `Sanwar booking: ${salon.name} - ${service.name} on ${date}`

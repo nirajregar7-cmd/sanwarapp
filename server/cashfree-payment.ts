@@ -42,6 +42,23 @@ const initializeCashfree = async () => {
   }
 };
 
+// Helper function to get the correct base URL
+function getBaseUrl(): string {
+  if (process.env.BASE_URL) {
+    return process.env.BASE_URL;
+  }
+  
+  // For Replit deployment, construct HTTPS URL from domains
+  if (process.env.REPLIT_DOMAINS) {
+    const domains = process.env.REPLIT_DOMAINS.split(',');
+    return `https://${domains[0]}`;
+  }
+  
+  // Development fallback - Cashfree production requires HTTPS
+  // Use ngrok or similar for local testing with production keys
+  return 'http://localhost:5000';
+}
+
 // Initialize on module load
 initializeCashfree();
 
