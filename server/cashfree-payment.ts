@@ -85,7 +85,7 @@ export async function createCashfreeOrder(data: CreateOrderData) {
 
     console.log('Creating Cashfree order:', orderRequest.order_id);
     
-    const response = await cf.PGCreateOrder("2023-08-01", orderRequest);
+    const response = await cf.PGCreateOrder(orderRequest);
     
     if (response.data && response.data.order_id) {
       console.log('✅ Cashfree order created successfully:', response.data.order_id);
@@ -145,7 +145,7 @@ export async function verifyCashfreePayment(orderId: string): Promise<{
   try {
     console.log('Verifying Cashfree payment for order:', orderId);
     
-    const response = await cf.PGOrderFetchPayments("2023-08-01", orderId);
+    const response = await cf.PGOrderFetchPayments(orderId);
     
     if (response.data && response.data.length > 0) {
       const payment = response.data[0]; // Get the latest payment
@@ -280,7 +280,7 @@ export async function refundCashfreePayment(orderId: string, refundAmount?: numb
       refundRequest.refund_amount = refundAmount;
     }
 
-    const response = await cf.PGOrderCreateRefund("2023-08-01", orderId, refundRequest);
+    const response = await cf.PGOrderCreateRefund(orderId, refundRequest);
     
     if (response.data) {
       console.log('✅ Refund processed successfully:', {
