@@ -1,0 +1,251 @@
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+stripe.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+value @ stripe.js:1
+recaptcha__en.js:638  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:638
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+js?id=AW-11411994397:127  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+Lc @ js?id=AW-11411994397:127
+js?id=AW-11411994397:127  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+Lc @ js?id=AW-11411994397:127
+js?id=AW-11411994397:519  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+q @ js?id=AW-11411994397:519
+stripe.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+value @ stripe.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+recaptcha__en.js:638  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:638
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+recaptcha__en.js:638  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:638
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+recaptcha__en.js:638  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:638
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+recaptcha__en.js:638  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:638
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+recaptcha__en.js:638  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:638
+(anonymous) @ recaptcha__en.js:1494
+(anonymous) @ recaptcha__en.js:647
+(anonymous) @ recaptcha__en.js:84
+D.next.Z @ recaptcha__en.js:632
+BmK.S @ recaptcha__en.js:1512
+(anonymous) @ recaptcha__en.js:80
+(anonymous) @ recaptcha__en.js:80
+(anonymous) @ recaptcha__en.js:576
+(anonymous) @ recaptcha__en.js:633
+m @ recaptcha__en.js:126
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+(anonymous) @ recaptcha__en.js:423
+(anonymous) @ recaptcha__en.js:341
+(anonymous) @ recaptcha__en.js:576
+(anonymous) @ recaptcha__en.js:633
+(anonymous) @ recaptcha__en.js:126
+(anonymous) @ recaptcha__en.js:126
+(anonymous) @ recaptcha__en.js:585
+(anonymous) @ recaptcha__en.js:341
+(anonymous) @ recaptcha__en.js:463
+(anonymous) @ recaptcha__en.js:576
+(anonymous) @ recaptcha__en.js:633
+(anonymous) @ recaptcha__en.js:126
+(anonymous) @ recaptcha__en.js:126
+(anonymous) @ recaptcha__en.js:585
+(anonymous) @ recaptcha__en.js:463
+(anonymous) @ recaptcha__en.js:80
+recaptcha__en.js:327  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+(anonymous) @ recaptcha__en.js:327
+(anonymous) @ recaptcha__en.js:423
+(anonymous) @ recaptcha__en.js:341
+(anonymous) @ recaptcha__en.js:576
+(anonymous) @ recaptcha__en.js:633
+(anonymous) @ recaptcha__en.js:126
+(anonymous) @ recaptcha__en.js:126
+(anonymous) @ recaptcha__en.js:585
+(anonymous) @ recaptcha__en.js:341
+(anonymous) @ recaptcha__en.js:463
+(anonymous) @ recaptcha__en.js:576
+(anonymous) @ recaptcha__en.js:633
+(anonymous) @ recaptcha__en.js:126
+(anonymous) @ recaptcha__en.js:126
+(anonymous) @ recaptcha__en.js:585
+(anonymous) @ recaptcha__en.js:463
+(anonymous) @ recaptcha__en.js:80
+framework-7939d1dbf2fad88c.js:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+e @ framework-7939d1dbf2fad88c.js:1
+53The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+53The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+_app-d44b75b765479f04.js:13 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+/~:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+/~:1  The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+/~:1  The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+/~:1  Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <div.cm-content cm-lineWrapping>
+Ancestor with aria-hidden: <div. useView_view__C2mnv css-17qdd0f Surface_surfaceRoot__TeA2u> null
+85Tracking Prevention blocked access to storage for <URL>.
+_app-d44b75b765479f04.js:13 [LaunchDarkly] LaunchDarkly client initialized
+/repls:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+/repls:1  Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <a.NavItem_root__DZrwo css-w3oj38>
+Ancestor with aria-hidden: <div> null
+30Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'battery'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'layout-animations'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'navigation-override'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'oversized-images'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'publickey-credentials'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'speaker-selection'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'unoptimized-images'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'unsized-media'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Unrecognized feature: 'pointer-lock'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-7939d1dbf2fad88c.js:1
+framework-7939d1dbf2fad88c.js:1  Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-7939d1dbf2fad88c.js:1
+stallwart.build.js:1 stallwart: failed ping 1
+3635-a0ca0a2cfc20458e.js:1  WebSocket connection to 'wss://eval.janeway.platform.replit.com/wsv2/v2.public.Q2dZSXk4WDN4QVlTQmdqcTRmZkVCaUlIYW1GdVpYZGhlVEFBT3RVQkNpUmhZemxsTldFeU9DMWtaR05qTFRRelpUY3RPREUyT0MxallqQTNOakkxTkRObU1USVNBMjVwZUJvWmNtVndiR2wwTFhKbGNHd3RabWxzWlhNdGFtRnVaWGRoZVNJS1UyRnVkMkZ5UW05dmF5b0xibWx5WVdweVpXZGhjamRDVndvYWNtVndiR2wwTFhKbGNHd3RZbXh2WTJ0ekxXcGhibVYzWVhrU0dISmxjR3hwZEMxeVpYQnNMVzFsZEdFdGFtRnVaWGRoZVJvZmNtVndiR2wwTFcxaGNtZGhjbWx1WlMxaWJHOWphM010YW1GdVpYZGhlVW9IQ0lQLzVCVVFBVkFBV2c1cGJuUmxiblJmYzNSMVpHVnVkSGdBVWlNSUFSQ0FnSUNBSUJrQUFBQUFBQUFRUUNFQUFBQUFBQUFRUUNpQWdJQ0F5QUV3QW1BQWFoSUlnLy9rRlJJTGJtbHlZV3B5WldkaGNqZUNBUUlxQUpvQkNnb0lNQzR3TGpFMk1UV2dBUUU9WlZJ-SQxi_Hxup7AGfNSPwv-jlEqvYRE9evccG1Inkq94ts1JZOU07bu6QNaXBcFZGDdN6E_MdeP3fMmBw_yCw.Q2dad2NtOWtPak1pQ25KbGNHeHBkQzVqYjIwPQ' failed: 
+connect @ 3635-a0ca0a2cfc20458e.js:1
+3635-a0ca0a2cfc20458e.js:1  WebSocket connection to 'wss://eval.janeway.platform.replit.com/wsv2/v2.public.Q2dZSXk4WDN4QVlTQmdqcTRmZkVCaUlIYW1GdVpYZGhlVEFBT3RVQkNpUmhZemxsTldFeU9DMWtaR05qTFRRelpUY3RPREUyT0MxallqQTNOakkxTkRObU1USVNBMjVwZUJvWmNtVndiR2wwTFhKbGNHd3RabWxzWlhNdGFtRnVaWGRoZVNJS1UyRnVkMkZ5UW05dmF5b0xibWx5WVdweVpXZGhjamRDVndvYWNtVndiR2wwTFhKbGNHd3RZbXh2WTJ0ekxXcGhibVYzWVhrU0dISmxjR3hwZEMxeVpYQnNMVzFsZEdFdGFtRnVaWGRoZVJvZmNtVndiR2wwTFcxaGNtZGhjbWx1WlMxaWJHOWphM010YW1GdVpYZGhlVW9IQ0lQLzVCVVFBVkFBV2c1cGJuUmxiblJmYzNSMVpHVnVkSGdBVWlNSUFSQ0FnSUNBSUJrQUFBQUFBQUFRUUNFQUFBQUFBQUFRUUNpQWdJQ0F5QUV3QW1BQWFoSUlnLy9rRlJJTGJtbHlZV3B5WldkaGNqZUNBUUlxQUpvQkNnb0lNQzR3TGpFMk1UV2dBUUU9WlZJ-SQxi_Hxup7AGfNSPwv-jlEqvYRE9evccG1Inkq94ts1JZOU07bu6QNaXBcFZGDdN6E_MdeP3fMmBw_yCw.Q2dad2NtOWtPak1pQ25KbGNHeHBkQzVqYjIwPQ' failed: WebSocket is closed before the connection is established.
+cleanupSocket @ 3635-a0ca0a2cfc20458e.js:1
+stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 3
+stallwart.build.js:1 stallwart: failed ping 4
+stallwart.build.js:1 stallwart: failed ping 5
+stallwart.build.js:1 stallwart: session stalled
+SanwarBook:1  WebGL: CONTEXT_LOST_WEBGL: loseContext: context lost
+_app-d44b75b765479f04.js:13 webglcontextlost event received
+_app-d44b75b765479f04.js:13  webglcontextrestored event received
+(anonymous) @ _app-d44b75b765479f04.js:13
+24WebGL: INVALID_OPERATION: delete: object does not belong to this context
+SanwarBook:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'battery'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'layout-animations'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'navigation-override'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'oversized-images'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Unrecognized feature: 'unsized-media'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar3iu%3A:32  Allow attribute will take precedence over 'allowpaymentrequest'.
+[Violation] Potential permissions policy violation: publickey-credentials-get is not allowed in this document.
+[Violation] Potential permissions policy violation: otp-credentials is not allowed in this document.
+[Violation] Potential permissions policy violation: publickey-credentials-create is not allowed in this document.
+Console.js:61 Order data received: Object
+checkout:1   Failed to load resource: the server responded with a status of 400 ()
+checkout:1   Failed to load resource: the server responded with a status of 400 ()
+mobile_sdk_web_error_handler.js:5  Uncaught ReferenceError: PaymentJSInterface is not defined
+    at window.onload (mobile_sdk_web_error_handler.js:5:37)
