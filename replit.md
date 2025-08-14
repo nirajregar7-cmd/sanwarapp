@@ -57,7 +57,7 @@ Vite is used for fast development builds and hot module replacement. The build p
 - **Vercel Deployment**: Production hosting.
 - **Twilio**: SMS OTP for password reset.
 - **Nodemailer with Gmail**: Automated welcome email system for new user registrations.
-- **Razorpay**: Payment gateway with live API keys for real transaction processing and automatic payout system.
+- **Cashfree**: Payment gateway with live production credentials for ₹3 confirmation fee processing and real transaction handling.
 
 ### Mobile App Development
 - **Capacitor**: Native mobile app wrapper for iOS and Android deployment.
