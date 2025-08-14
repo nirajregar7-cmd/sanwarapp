@@ -107,6 +107,7 @@ export async function createCashfreeOrder(data: CreateOrderData) {
     console.log('Creating Cashfree order:', orderRequest.order_id);
     console.log('📤 Return URL:', returnUrl);
     console.log('📤 Notify URL:', notifyUrl);
+    console.log('📋 Full order request:', JSON.stringify(orderRequest, null, 2));
     
     const response = await cf.PGCreateOrder(orderRequest);
     

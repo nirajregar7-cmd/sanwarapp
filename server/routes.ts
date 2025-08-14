@@ -7339,6 +7339,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint to verify domain whitelisting
+  app.get('/test-cashfree-domain', (req, res) => {
+    res.json({
+      message: 'Domain test successful',
+      domain: 'https://sanwar-book-nirajregar7.replit.app',
+      timestamp: new Date().toISOString(),
+      requiredWhitelisting: [
+        'https://sanwar-book-nirajregar7.replit.app',
+        'https://sanwar-book-nirajregar7.replit.app/payment-success',
+        'https://sanwar-book-nirajregar7.replit.app/api/cashfree/webhook'
+      ]
+    });
+  });
+
   // Cashfree payment success page
   app.get('/payment-success', (req, res) => {
     res.send(`
