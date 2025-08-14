@@ -1,0 +1,77 @@
+Payment callback parameters: {orderId: 'booking_1755206514542_n3e96j4os', salonId: '70c56a53-af63-4186-a882-f55c74106536', serviceId: '11ead92a-a610-47f7-8b31-5d1d411af529', timeSlotId: '473d3fcc-c2b0-40a6-8be7-272b28636c5a', date: '2025-08-14', …}
+index-CLiB-6yM.js:702   POST https://sanwar-book-nirajregar7.replit.app/api/bookings/verify-payment 400 (Bad Request)
+(anonymous) @ index-CLiB-6yM.js:702
+(anonymous) @ index-CLiB-6yM.js:702
+Wy @ index-CLiB-6yM.js:40
+Pd @ index-CLiB-6yM.js:40
+_W @ index-CLiB-6yM.js:40
+Al @ index-CLiB-6yM.js:40
+SC @ index-CLiB-6yM.js:40
+pl @ index-CLiB-6yM.js:38
+(anonymous) @ index-CLiB-6yM.js:40
+setTimeout
+i @ index-CLiB-6yM.js:48
+o @ index-CLiB-6yM.js:48
+batch @ index-CLiB-6yM.js:48
+Ia @ index-CLiB-6yM.js:48
+setData @ index-CLiB-6yM.js:48
+onSuccess @ index-CLiB-6yM.js:48
+f @ index-CLiB-6yM.js:48
+Promise.then
+w @ index-CLiB-6yM.js:48
+start @ index-CLiB-6yM.js:48
+fetch @ index-CLiB-6yM.js:48
+Lh @ index-CLiB-6yM.js:48
+onSubscribe @ index-CLiB-6yM.js:48
+subscribe @ index-CLiB-6yM.js:48
+(anonymous) @ index-CLiB-6yM.js:48
+tI @ index-CLiB-6yM.js:38
+Wy @ index-CLiB-6yM.js:40
+Pd @ index-CLiB-6yM.js:40
+SC @ index-CLiB-6yM.js:40
+pl @ index-CLiB-6yM.js:38
+_W @ index-CLiB-6yM.js:40
+Al @ index-CLiB-6yM.js:40
+OI @ index-CLiB-6yM.js:40
+P @ index-CLiB-6yM.js:25
+X @ index-CLiB-6yM.js:25
+index-CLiB-6yM.js:702  Payment callback error: Error: Payment verification failed
+    at index-CLiB-6yM.js:702:285136
+(anonymous) @ index-CLiB-6yM.js:702
+await in (anonymous)
+(anonymous) @ index-CLiB-6yM.js:702
+Wy @ index-CLiB-6yM.js:40
+Pd @ index-CLiB-6yM.js:40
+_W @ index-CLiB-6yM.js:40
+Al @ index-CLiB-6yM.js:40
+SC @ index-CLiB-6yM.js:40
+pl @ index-CLiB-6yM.js:38
+(anonymous) @ index-CLiB-6yM.js:40
+setTimeout
+i @ index-CLiB-6yM.js:48
+o @ index-CLiB-6yM.js:48
+batch @ index-CLiB-6yM.js:48
+Ia @ index-CLiB-6yM.js:48
+setData @ index-CLiB-6yM.js:48
+onSuccess @ index-CLiB-6yM.js:48
+f @ index-CLiB-6yM.js:48
+Promise.then
+w @ index-CLiB-6yM.js:48
+start @ index-CLiB-6yM.js:48
+fetch @ index-CLiB-6yM.js:48
+Lh @ index-CLiB-6yM.js:48
+onSubscribe @ index-CLiB-6yM.js:48
+subscribe @ index-CLiB-6yM.js:48
+(anonymous) @ index-CLiB-6yM.js:48
+tI @ index-CLiB-6yM.js:38
+Wy @ index-CLiB-6yM.js:40
+Pd @ index-CLiB-6yM.js:40
+SC @ index-CLiB-6yM.js:40
+pl @ index-CLiB-6yM.js:38
+_W @ index-CLiB-6yM.js:40
+Al @ index-CLiB-6yM.js:40
+OI @ index-CLiB-6yM.js:40
+P @ index-CLiB-6yM.js:25
+X @ index-CLiB-6yM.js:25
+manifest.json:1  Manifest: Line: 1, column: 1, Syntax error.
+payment-callback?order_id=booking_1755206514542_n3e96j4os&salon_id=70c56a53-af63-4186-a882-f55c7410…:1  <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">

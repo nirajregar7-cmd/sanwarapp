@@ -1260,16 +1260,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('📝 Verification request body:', { 
         orderId, salonId, serviceId, timeSlotId, date, staffId, notes 
       });
+
+      // Validate required fields
+      if (!orderId || !salonId || !serviceId || !timeSlotId || !date) {
+        console.error('❌ Missing required fields in verification request');
+        return res.status(400).json({ 
+          message: "Missing required fields for payment verification",
+          required: ['orderId', 'salonId', 'serviceId', 'timeSlotId', 'date'],
+          received: { orderId, salonId, serviceId, timeSlotId, date }
+        });
+      }
       
       // Verify payment with Cashfree
       console.log('🔍 Verifying Cashfree payment...');
       const paymentVerification = await verifyCashfreePayment(orderId);
       console.log('💳 Payment verification result:', paymentVerification);
       
-      if (!paymentVerification.success || paymentVerification.orderStatus !== 'PAID') {
+      if (!paymentVerification.success) {
         console.error('❌ Payment verification failed for order:', orderId);
+        console.error('❌ Verification details:', paymentVerification);
         return res.status(400).json({ 
           message: "Payment verification failed. Payment not completed.",
+          orderId: orderId,
+          status: paymentVerification.orderStatus,
+          error: paymentVerification.error,
+          details: paymentVerification
+        });
+      }
+
+      if (paymentVerification.orderStatus !== 'PAID') {
+        console.error('❌ Payment not in PAID status for order:', orderId, 'Status:', paymentVerification.orderStatus);
+        return res.status(400).json({ 
+          message: `Payment not completed. Status: ${paymentVerification.orderStatus}`,
           orderId: orderId,
           status: paymentVerification.orderStatus,
           error: paymentVerification.error
