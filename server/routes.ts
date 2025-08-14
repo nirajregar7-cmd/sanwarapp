@@ -1240,10 +1240,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Verify payment and create booking
-  app.post('/api/bookings/verify-payment', isAuthenticated, async (req: any, res) => {
+  app.post('/api/bookings/verify-payment', async (req: any, res) => {
     const startTime = Date.now();
     try {
-      const userId = req.user?.id;
+      // Get userId from the payment order data instead of session
+      let userId: string;
       const {
         orderId,
         salonId,
@@ -1256,7 +1257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         discountApplied
       } = req.body;
       
-      console.log('🔐 Starting payment verification for user:', userId, 'order ID:', orderId);
+      console.log('🔐 Starting payment verification for order ID:', orderId);
       console.log('📝 Verification request body:', { 
         orderId, salonId, serviceId, timeSlotId, date, staffId, notes 
       });
@@ -1297,6 +1298,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: paymentVerification.error
         });
       }
+
+      // Get userId from payment verification data
+      userId = paymentVerification.customerId;
+      console.log('👤 Customer ID from payment:', userId);
       
       console.log('✅ Payment signature verified successfully');
       

@@ -161,6 +161,7 @@ export async function verifyCashfreePayment(orderId: string): Promise<{
   paymentAmount?: number;
   paymentTime?: string;
   paymentMode?: string;
+  customerId?: string;
   error?: string;
 }> {
   console.log('🔍 Verifying payment for order:', orderId);
@@ -179,10 +180,15 @@ export async function verifyCashfreePayment(orderId: string): Promise<{
   try {
     console.log('Verifying Cashfree payment for order:', orderId);
     
-    const response = await cf.PGOrderFetchPayments(orderId);
+    // Fetch both payment and order details
+    const [paymentResponse, orderResponse] = await Promise.all([
+      cf.PGOrderFetchPayments(orderId),
+      cf.PGOrderFetchOrders(orderId)
+    ]);
     
-    if (response.data && response.data.length > 0) {
-      const payment = response.data[0]; // Get the latest payment
+    if (paymentResponse.data && paymentResponse.data.length > 0) {
+      const payment = paymentResponse.data[0]; // Get the latest payment
+      const order = orderResponse.data || {};
       
       console.log('✅ Cashfree payment verified:', {
         orderId,
@@ -196,7 +202,8 @@ export async function verifyCashfreePayment(orderId: string): Promise<{
         transactionId: payment.cf_payment_id,
         paymentAmount: payment.payment_amount,
         paymentTime: payment.payment_time,
-        paymentMode: payment.payment_method_type || 'unknown'
+        paymentMode: payment.payment_method_type || 'unknown',
+        customerId: order.customer_details?.customer_id
       };
     } else {
       return {
