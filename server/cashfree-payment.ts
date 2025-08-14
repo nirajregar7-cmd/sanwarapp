@@ -11,16 +11,18 @@ const initializeCashfree = async () => {
     if (process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY) {
       const { Cashfree } = await import('cashfree-pg');
       
-      // Set static configuration on the Cashfree class
-      (Cashfree as any).XClientId = process.env.CASHFREE_APP_ID;
-      (Cashfree as any).XClientSecret = process.env.CASHFREE_SECRET_KEY;
-      // Use production environment for production credentials (secret key contains 'prod')
-      (Cashfree as any).XEnvironment = process.env.CASHFREE_SECRET_KEY?.includes('prod')
-        ? 'production' 
-        : 'sandbox';
-      
-      // Create an instance of Cashfree
+      // Create an instance of Cashfree first
       cashfreeInstance = new (Cashfree as any)();
+      
+      // Set configuration on the instance
+      cashfreeInstance.XClientId = process.env.CASHFREE_APP_ID;
+      cashfreeInstance.XClientSecret = process.env.CASHFREE_SECRET_KEY;
+      
+      // Force production environment for production credentials
+      const isProdKey = process.env.CASHFREE_SECRET_KEY?.includes('prod');
+      cashfreeInstance.XEnvironment = isProdKey ? 'PRODUCTION' : 'SANDBOX';
+      
+      console.log('🔧 Cashfree Environment:', isProdKey ? 'PRODUCTION' : 'SANDBOX');
       initialized = true;
       console.log('✅ Cashfree payment gateway initialized successfully');
       return cashfreeInstance;
