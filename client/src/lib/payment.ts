@@ -61,22 +61,29 @@ export const initiateCashfreePayment = async (options: PaymentOptions) => {
       redirectTarget: '_modal', // Opens in modal overlay
     };
 
+    console.log('🚀 Initiating Cashfree checkout with options:', checkoutOptions);
+    
     // Open Cashfree checkout
     cashfree.checkout(checkoutOptions).then((result: any) => {
+      console.log('💳 Cashfree checkout result:', result);
+      
       if (result.error) {
-        console.error('Cashfree payment error:', result.error);
+        console.error('❌ Cashfree payment error:', result.error);
         options.onFailure(result.error);
       }
       
       if (result.redirect) {
-        console.log('Cashfree payment redirect:', result.redirect);
+        console.log('🔄 Cashfree payment redirect:', result.redirect);
         // Handle redirect if needed
       }
       
       if (result.paymentDetails) {
-        console.log('Cashfree payment success:', result.paymentDetails);
+        console.log('✅ Cashfree payment success:', result.paymentDetails);
         options.onSuccess(result.paymentDetails);
       }
+    }).catch((error: any) => {
+      console.error('💥 Cashfree checkout error:', error);
+      options.onFailure({ error: error.message || 'Checkout failed to open' });
     });
 
   } catch (error) {
