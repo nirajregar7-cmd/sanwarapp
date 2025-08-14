@@ -44,9 +44,9 @@ const initializeCashfree = async () => {
 
 // Helper function to get the correct base URL
 function getBaseUrl(): string {
-  // Always use the production domain for Cashfree
-  const prodDomain = 'https://sanwar-book-nirajregar7.replit.app';
-  console.log('🌐 Using production domain for Cashfree:', prodDomain);
+  // Use the whitelisted domain for Cashfree production
+  const prodDomain = 'https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev';
+  console.log('🌐 Using whitelisted domain for Cashfree:', prodDomain);
   return prodDomain;
 }
 
