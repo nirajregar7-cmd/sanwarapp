@@ -19,6 +19,14 @@ The server is built using Express.js and TypeScript, adhering to a RESTful API d
 ### Database Design
 The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
 
+## Recent Updates (August 15, 2025)
+- **Dynamic Confirmation Fees**: Implemented salon-specific confirmation fee system allowing each salon owner to set their own confirmation amount (₹1-₹500) instead of fixed ₹3
+- **Revenue Splitting Logic**: Added automatic 80/20 revenue split between shopkeeper and platform with proper database tracking  
+- **Confirmation Settings Page**: New dashboard section for salon owners to manage their confirmation fees
+- **Database Schema Updates**: Added confirmation_amount, admin_revenue_share, and shopkeeper_revenue_share columns to salons table
+- **Email System Enhancement**: Updated notification system to use dynamic confirmation amounts per salon
+- **Payment Bug Fix**: Resolved issue where payments showed ₹1 instead of salon's custom confirmation fee
+
 ### Authentication System
 The system uses traditional email/password authentication with bcrypt for secure password hashing and JWT tokens for session management. `express-session` with PostgreSQL storage maintains persistent login states. Users can register as either a customer or salon owner, with role-based access control implemented throughout the application. Social login integration with Google and Facebook OAuth is also supported. An automated welcome email system sends personalized onboarding messages to new users based on their role, integrated across all registration methods.
 
