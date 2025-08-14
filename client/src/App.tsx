@@ -51,6 +51,9 @@ import ClerkSignInPage, { ClerkSignUpPage } from "@/pages/clerk-auth";
 // Brand Owner Pages
 import BrandDashboard from "@/pages/brand-owner/brand-dashboard";
 
+// Payment Pages
+import PaymentCallback from "@/pages/PaymentCallback";
+
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
@@ -77,6 +80,9 @@ function Router() {
       
       {/* Password reset page */}
       <Route path="/forgot-password" component={ForgotPasswordPage} />
+      
+      {/* Payment callback page */}
+      <Route path="/payment-callback" component={PaymentCallback} />
       
       {/* Landing page - accessible to all users */}
       <Route path="/landing" component={Landing} />

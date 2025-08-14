@@ -16,6 +16,7 @@ import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 import { createRazorpayOrder, verifyRazorpayPayment, verifyBankAccount, createSalonFundAccount, processSalonPayout } from "./payment";
+import { createCashfreeOrder, verifyCashfreePayment, processCashfreeRefund, verifyCashfreeWebhookSignature } from "./cashfree-payment";
 import { calculateRevenueShare } from "@shared/revenue";
 import { sendPasswordResetOTP, generateOTP } from "./whatsapp";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -968,38 +969,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(users)
         .where(eq(users.id, userId));
 
-      // Create Razorpay order for remaining amount
-      console.log('🔄 Creating Razorpay order for amount:', finalAmount);
-      const order = await createRazorpayOrder({
+      // Create Cashfree order for remaining amount
+      console.log('🔄 Creating Cashfree order for amount:', finalAmount);
+      const order = await createCashfreeOrder({
         amount: finalAmount,
-        receipt: `booking_${Date.now()}`,
+        orderId: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         customerDetails: {
-          name: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Customer',
-          email: user?.email || '',
-          contact: user?.phone || ''
+          customerId: userId,
+          customerName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Customer',
+          customerEmail: user?.email || 'customer@sanwar.app',
+          customerPhone: user?.phone || '9999999999'
         },
-        // Note: payment methods are handled by Razorpay checkout
-        notes: {
-          salon_id: salonId,
-          service_id: serviceId,
-          slot_id: timeSlotId,
-          date: date,
-          customer_id: userId,
-          salon: salon.name.substring(0, 25),
-          service: service.name.substring(0, 25),
-          price: service.price.toString()
-          // Removed: discount to stay under 15 fields (2 base + 8 custom = 10 total)
-        }
+        orderMeta: {
+          returnUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/payment-success`,
+          notifyUrl: `${process.env.BASE_URL || 'http://localhost:5000'}/api/cashfree/webhook`,
+          paymentMethods: 'cc,dc,nb,upi,paylater,emi,wallet'
+        },
+        orderNote: `Sanwar booking: ${salon.name} - ${service.name} on ${date}`
       });
       
       const processingTime = Date.now() - startTime;
       console.log(`⚡ Payment order created in ${processingTime}ms for user ${userId}`);
       
       res.json({
-        orderId: (order as any).id,
-        amount: (order as any).amount,
-        currency: (order as any).currency,
-        keyId: process.env.RAZORPAY_KEY_ID,
+        orderId: order.orderId,
+        paymentSessionId: order.paymentSessionId,
+        orderAmount: order.orderAmount,
+        orderCurrency: order.orderCurrency,
         confirmationAmount: salon.confirmationAmount || 10,
         finalAmount,
         discountApplied: appliedDiscount,
@@ -1007,7 +1003,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         servicePrice: service.price,
         salonName: salon.name,
         serviceName: service.name,
-        processingTime: `${processingTime}ms`
+        processingTime: `${processingTime}ms`,
+        // Cashfree payment gateway metadata
+        gateway: 'cashfree'
       });
     } catch (error) {
       const processingTime = Date.now() - startTime;
@@ -1211,9 +1209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
       const {
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
+        orderId,
         salonId,
         serviceId,
         timeSlotId,
@@ -1224,21 +1220,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         discountApplied
       } = req.body;
       
-      console.log('🔐 Starting payment verification for user:', userId, 'payment ID:', razorpay_payment_id);
+      console.log('🔐 Starting payment verification for user:', userId, 'order ID:', orderId);
       
-      // Verify payment signature
-      console.log('🔍 Verifying payment signature...');
-      const isValidPayment = verifyRazorpayPayment(
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature
-      );
+      // Verify payment with Cashfree
+      console.log('🔍 Verifying Cashfree payment...');
+      const paymentVerification = await verifyCashfreePayment(orderId);
       
-      if (!isValidPayment) {
-        console.error('❌ Invalid payment signature for payment:', razorpay_payment_id);
+      if (!paymentVerification.success || paymentVerification.orderStatus !== 'PAID') {
+        console.error('❌ Payment verification failed for order:', orderId);
         return res.status(400).json({ 
-          message: "Payment verification failed. Invalid signature.",
-          paymentId: razorpay_payment_id
+          message: "Payment verification failed. Payment not completed.",
+          orderId: orderId,
+          status: paymentVerification.orderStatus,
+          error: paymentVerification.error
         });
       }
       
@@ -1290,7 +1284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endTime: timeSlot.endTime,
         totalAmount: service.price,
         status: 'confirmed', // Automatically confirmed when payment is successful
-        paymentId: razorpay_payment_id,
+        paymentId: paymentVerification.transactionId || orderId,
         paymentStatus: 'completed'
       }).returning();
       
@@ -7128,6 +7122,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error sending test email:', error);
       res.status(500).json({ message: 'Failed to send test email' });
+    }
+  });
+
+  // Cashfree payment webhook (for server-to-server payment notifications)
+  app.post('/api/cashfree/webhook', async (req, res) => {
+    try {
+      const webhookData = req.body;
+      console.log('🔔 Received Cashfree webhook:', JSON.stringify(webhookData, null, 2));
+
+      // Verify webhook signature if needed
+      const signature = req.headers['x-webhook-signature'] as string;
+      if (signature) {
+        const isValidSignature = verifyCashfreeWebhookSignature(JSON.stringify(webhookData), signature);
+        if (!isValidSignature) {
+          console.error('❌ Invalid webhook signature');
+          return res.status(400).json({ error: 'Invalid signature' });
+        }
+      }
+
+      // Process webhook data
+      if (webhookData.type === 'PAYMENT_SUCCESS_WEBHOOK') {
+        const { order } = webhookData.data;
+        console.log(`✅ Payment successful for order: ${order.order_id}`);
+        
+        // Update payment status in database if needed
+        // This is handled by the verify-payment endpoint when user returns
+      }
+
+      res.status(200).json({ status: 'OK' });
+    } catch (error) {
+      console.error('❌ Error processing Cashfree webhook:', error);
+      res.status(500).json({ error: 'Webhook processing failed' });
+    }
+  });
+
+  // Cashfree payment callback (when user returns from payment page)
+  app.get('/api/cashfree/callback', async (req, res) => {
+    try {
+      const { order_id, order_token } = req.query;
+      console.log('🔙 Cashfree callback received for order:', order_id);
+
+      // Redirect to frontend with order details
+      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+      res.redirect(`${baseUrl}/payment-callback?order_id=${order_id}&order_token=${order_token}`);
+    } catch (error) {
+      console.error('❌ Error processing Cashfree callback:', error);
+      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+      res.redirect(`${baseUrl}/payment-error`);
     }
   });
 

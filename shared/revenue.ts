@@ -1,6 +1,6 @@
 export const REVENUE_SHARE = {
-  PLATFORM_PERCENTAGE: 45, // Platform gets 45%
-  SALON_PERCENTAGE: 55,     // Salon owner gets 55%
+  PLATFORM_PERCENTAGE: 20, // Platform gets 20%
+  SALON_PERCENTAGE: 80,     // Salon owner gets 80%
 } as const;
 
 export function calculateRevenueShare(confirmationAmount: number) {

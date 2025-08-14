@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { X, CreditCard } from "lucide-react";
+import { initiateCashfreePayment, CashfreeOrderData } from "@/lib/payment";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -15,38 +16,70 @@ interface BookingModalProps {
     time: string;
     amount: string;
   };
+  orderData?: CashfreeOrderData;
+  customerDetails?: {
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+  };
 }
 
-export function BookingModal({ isOpen, onClose, onConfirm, booking }: BookingModalProps) {
+export function BookingModal({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  booking, 
+  orderData, 
+  customerDetails 
+}: BookingModalProps) {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
 
   const handlePayment = async () => {
+    if (!orderData || !customerDetails) {
+      toast({
+        title: "Payment Error",
+        description: "Missing payment details. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
-      // In a real implementation, integrate with Razorpay
-      // For now, simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Generate mock payment ID
-      const paymentId = `pay_${Date.now()}`;
-      
-      toast({
-        title: "Payment Successful",
-        description: "Your payment has been processed successfully!",
+      await initiateCashfreePayment({
+        orderData,
+        customerDetails,
+        onSuccess: (paymentDetails) => {
+          toast({
+            title: "Payment Successful",
+            description: "Your payment has been processed successfully!",
+          });
+          
+          // Extract payment ID from Cashfree response
+          const paymentId = paymentDetails.paymentId || paymentDetails.transactionId || orderData.orderId;
+          onConfirm(paymentId);
+        },
+        onFailure: (error) => {
+          console.error('Payment failed:', error);
+          toast({
+            title: "Payment Failed",
+            description: error.message || "There was an error processing your payment. Please try again.",
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+        }
       });
-      
-      onConfirm(paymentId);
     } catch (error) {
+      console.error('Payment initiation error:', error);
       toast({
-        title: "Payment Failed",
-        description: "There was an error processing your payment. Please try again.",
+        title: "Payment Error",
+        description: "Unable to start payment process. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsProcessing(false);
     }
   };
