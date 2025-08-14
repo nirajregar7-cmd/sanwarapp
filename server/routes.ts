@@ -30,14 +30,8 @@ function getBaseUrl(): string {
     return process.env.BASE_URL;
   }
   
-  // For Replit deployment, construct HTTPS URL from domains
-  if (process.env.REPLIT_DOMAINS) {
-    const domains = process.env.REPLIT_DOMAINS.split(',');
-    return `https://${domains[0]}`;
-  }
-  
-  // Development fallback - Cashfree production requires HTTPS
-  return 'http://localhost:5000';
+  // Use the provided production domain
+  return 'https://sanwar-book-nirajregar7.replit.app';
 }
 
 // Helper function to generate time slots for a specific date
@@ -999,7 +993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orderMeta: {
           returnUrl: getBaseUrl() + '/payment-success',
           notifyUrl: getBaseUrl() + '/api/cashfree/webhook',
-          paymentMethods: 'cc,dc,nb,upi,paylater,emi,wallet'
+          paymentMethods: 'cc,dc,nb,upi,paylater,emi,app'
         },
         orderNote: `Sanwar booking: ${salon.name} - ${service.name} on ${date}`
       });

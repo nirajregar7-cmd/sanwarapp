@@ -48,15 +48,8 @@ function getBaseUrl(): string {
     return process.env.BASE_URL;
   }
   
-  // For Replit deployment, construct HTTPS URL from domains
-  if (process.env.REPLIT_DOMAINS) {
-    const domains = process.env.REPLIT_DOMAINS.split(',');
-    return `https://${domains[0]}`;
-  }
-  
-  // Development fallback - Cashfree production requires HTTPS
-  // Use ngrok or similar for local testing with production keys
-  return 'http://localhost:5000';
+  // Use the provided production domain
+  return 'https://sanwar-book-nirajregar7.replit.app';
 }
 
 // Initialize on module load
@@ -104,7 +97,7 @@ export async function createCashfreeOrder(data: CreateOrderData) {
       order_meta: {
         return_url: data.orderMeta?.returnUrl || `${process.env.BASE_URL || 'http://localhost:5000'}/api/cashfree/callback`,
         notify_url: data.orderMeta?.notifyUrl || `${process.env.BASE_URL || 'http://localhost:5000'}/api/cashfree/webhook`,
-        payment_methods: data.orderMeta?.paymentMethods || 'cc,dc,nb,upi,paylater,emi,wallet',
+        payment_methods: data.orderMeta?.paymentMethods || 'cc,dc,nb,upi,paylater,emi,app',
       },
       order_note: data.orderNote || 'Sanwar Salon Booking Payment',
     };
