@@ -1014,8 +1014,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customerPhone: user?.phone || '9999999999'
         },
         orderMeta: {
-          returnUrl: `${getBaseUrl()}/payment-callback?order_id=${orderIdPrefix}&salon_id=${salonId}&service_id=${serviceId}&time_slot_id=${timeSlotId}&date=${date}&staff_id=${staffId || ''}&notes=${encodeURIComponent(notes || '')}${validReferralCode ? `&referral_id=${validReferralCode.id}` : ''}`,
-          notifyUrl: getBaseUrl() + '/api/cashfree/webhook',
+          returnUrl: `https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/payment-callback?order_id=${orderIdPrefix}&salon_id=${salonId}&service_id=${serviceId}&time_slot_id=${timeSlotId}&date=${date}&staff_id=${staffId || ''}&notes=${encodeURIComponent(notes || '')}${validReferralCode ? `&referral_id=${validReferralCode.id}` : ''}`,
+          notifyUrl: 'https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/api/cashfree/webhook',
           paymentMethods: 'cc,dc,nb,upi,paylater,emi,app'
         },
         orderNote: `Sanwar booking: ${salon.name} - ${service.name} on ${date}`

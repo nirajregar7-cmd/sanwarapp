@@ -36,12 +36,13 @@ export default function PaymentCallback() {
           throw new Error('Missing required booking parameters in callback');
         }
 
-        // Verify payment with backend
+        // Verify payment with backend (include credentials for auth)
         const response = await fetch('/api/bookings/verify-payment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // Include cookies for authentication
           body: JSON.stringify({ 
             orderId,
             salonId,
@@ -55,7 +56,9 @@ export default function PaymentCallback() {
         });
 
         if (!response.ok) {
-          throw new Error('Payment verification failed');
+          const errorData = await response.text();
+          console.error('Payment verification error:', response.status, errorData);
+          throw new Error(`Payment verification failed: ${response.status} ${errorData}`);
         }
 
         const result = await response.json();
