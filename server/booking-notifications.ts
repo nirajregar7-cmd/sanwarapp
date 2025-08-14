@@ -59,18 +59,18 @@ export async function getBookingEmailData(bookingId: string): Promise<BookingEma
     return {
       bookingId: bookingData.booking.id,
       customerName: bookingData.customer.firstName || 'Customer',
-      customerEmail: bookingData.customer.email,
+      customerEmail: bookingData.customer.email || '',
       salonName: bookingData.salon.name,
-      salonEmail: ownerData?.email,
-      salonPhone: bookingData.salon.phone,
-      salonAddress: bookingData.salon.address,
+      salonEmail: ownerData?.email || undefined,
+      salonPhone: bookingData.salon.phone || undefined,
+      salonAddress: bookingData.salon.address || undefined,
       serviceName: bookingData.service.name,
       date: bookingData.booking.date,
       startTime: bookingData.booking.startTime,
       endTime: bookingData.booking.endTime,
-      totalAmount: bookingData.service.price,
+      totalAmount: parseFloat(bookingData.service.price),
       confirmationAmount: 3, // Fixed confirmation fee
-      remainingAmount: bookingData.service.price - 3,
+      remainingAmount: parseFloat(bookingData.service.price) - 3,
     };
   } catch (error) {
     console.error('Error fetching booking data for email:', error);

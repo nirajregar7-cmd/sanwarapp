@@ -180,20 +180,47 @@ export async function verifyCashfreePayment(orderId: string): Promise<{
   try {
     console.log('Verifying Cashfree payment for order:', orderId);
     
-    // Fetch both payment and order details
-    const [paymentResponse, orderResponse] = await Promise.all([
-      cf.PGOrderFetchPayments(orderId),
-      cf.PGOrderFetchOrders(orderId)
-    ]);
+    // Use direct API calls instead of SDK methods to control headers
+    const headers = {
+      'X-Client-Id': process.env.CASHFREE_APP_ID!,
+      'X-Client-Secret': process.env.CASHFREE_SECRET_KEY!,
+      'X-Api-Version': '2023-08-01',
+      'X-Environment': process.env.CASHFREE_SECRET_KEY?.includes('prod') ? 'PRODUCTION' : 'SANDBOX',
+      'Content-Type': 'application/json'
+    };
     
-    if (paymentResponse.data && paymentResponse.data.length > 0) {
-      const payment = paymentResponse.data[0]; // Get the latest payment
-      const order = orderResponse.data || {};
+    const baseUrl = process.env.CASHFREE_SECRET_KEY?.includes('prod') 
+      ? 'https://api.cashfree.com/pg' 
+      : 'https://sandbox.cashfree.com/pg';
+    
+    // Fetch both payment and order details using direct API calls
+    const [paymentResponse, orderResponse] = await Promise.all([
+      fetch(`${baseUrl}/orders/${orderId}/payments`, { 
+        method: 'GET', 
+        headers 
+      }),
+      fetch(`${baseUrl}/orders/${orderId}`, { 
+        method: 'GET', 
+        headers 
+      })
+    ]);
+
+    if (!paymentResponse.ok || !orderResponse.ok) {
+      throw new Error(`API call failed: Payment ${paymentResponse.status}, Order ${orderResponse.status}`);
+    }
+
+    const paymentsData = await paymentResponse.json();
+    const orderData = await orderResponse.json();
+    
+    if (paymentsData && paymentsData.length > 0) {
+      const payment = paymentsData[0]; // Get the latest payment
+      const order = orderData || {};
       
       console.log('✅ Cashfree payment verified:', {
         orderId,
         status: payment.payment_status,
-        transactionId: payment.cf_payment_id
+        transactionId: payment.cf_payment_id,
+        amount: payment.payment_amount
       });
       
       return {
@@ -202,7 +229,7 @@ export async function verifyCashfreePayment(orderId: string): Promise<{
         transactionId: payment.cf_payment_id,
         paymentAmount: payment.payment_amount,
         paymentTime: payment.payment_time,
-        paymentMode: payment.payment_method_type || 'unknown',
+        paymentMode: payment.payment_group || 'unknown',
         customerId: order.customer_details?.customer_id
       };
     } else {
