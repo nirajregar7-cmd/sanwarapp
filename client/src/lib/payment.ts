@@ -58,7 +58,10 @@ export const initiateCashfreePayment = async (options: PaymentOptions) => {
 
     const checkoutOptions = {
       paymentSessionId: options.orderData.paymentSessionId,
-      redirectTarget: '_modal', // Opens in modal overlay
+      redirectTarget: '_self', // Use _self instead of _modal to avoid iframe issues
+      theme: {
+        color: '#8B5CF6' // Match app theme
+      }
     };
 
     console.log('🚀 Initiating Cashfree checkout with options:', checkoutOptions);
@@ -87,8 +90,11 @@ export const initiateCashfreePayment = async (options: PaymentOptions) => {
     });
 
   } catch (error) {
-    console.error('Error initiating Cashfree payment:', error);
-    options.onFailure({ error: error instanceof Error ? error.message : 'Unknown payment error' });
+    console.error('💥 Error initiating Cashfree payment:', error);
+    options.onFailure({ 
+      error: error instanceof Error ? error.message : 'Failed to load payment interface',
+      details: 'Please try again or contact support if the issue persists'
+    });
   }
 };
 
