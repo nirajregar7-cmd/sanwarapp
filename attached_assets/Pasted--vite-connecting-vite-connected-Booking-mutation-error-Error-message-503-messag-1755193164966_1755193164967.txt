@@ -1,0 +1,22 @@
+[vite] connecting...
+[vite] connected.
+Booking mutation error: 
+Error {}
+message: "503: {"message":"Network issue. Please check your connection and try again.","processingTime":"173ms","retryable":true}"
+stack: "Error: 503: {"message":"Network issue. Please check your connection and try again.","processingTime":"173ms","retryable":true}↵ at throwIfResNotOk (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/src/lib/queryClient.ts:5:11)↵ at async apiRequest (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/src/lib/queryClient.ts:22:5)↵ at async Object.mutationFn (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/src/pages/customer/salon-detail.tsx:193:29)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+Booking mutation error: 
+Error {}
+message: "503: {"message":"Network issue. Please check your connection and try again.","processingTime":"142ms","retryable":true}"
+stack: "Error: 503: {"message":"Network issue. Please check your connection and try again.","processingTime":"142ms","retryable":true}↵ at throwIfResNotOk (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/src/lib/queryClient.ts:5:11)↵ at async apiRequest (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/src/lib/queryClient.ts:22:5)↵ at async Object.mutationFn (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/src/pages/customer/salon-detail.tsx:193:29)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+at t.value (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400

@@ -1,22 +1,40 @@
-import { Cashfree } from 'cashfree-pg';
 import crypto from 'crypto';
 
-// Initialize Cashfree client configuration
-if (process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY) {
-  Cashfree.XClientId = process.env.CASHFREE_APP_ID;
-  Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY;
-  Cashfree.XEnvironment = process.env.NODE_ENV === 'production' 
-    ? 'production' 
-    : 'sandbox';
-}
+// Dynamic import for Cashfree SDK (CommonJS module)
+let cashfreeInstance: any = null;
+let initialized = false;
 
-export const cashfree = process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY ? Cashfree : null;
+const initializeCashfree = async () => {
+  if (initialized) return cashfreeInstance;
+  
+  try {
+    if (process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY) {
+      const { Cashfree } = await import('cashfree-pg');
+      
+      (Cashfree as any).XClientId = process.env.CASHFREE_APP_ID;
+      (Cashfree as any).XClientSecret = process.env.CASHFREE_SECRET_KEY;
+      (Cashfree as any).XEnvironment = process.env.NODE_ENV === 'production' 
+        ? 'production' 
+        : 'sandbox';
+      
+      cashfreeInstance = Cashfree;
+      initialized = true;
+      console.log('✅ Cashfree payment gateway initialized successfully');
+      return Cashfree;
+    } else {
+      console.warn('Cashfree keys not configured. Payment features will not work.');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Error initializing Cashfree:', error);
+    return null;
+  }
+};
 
-if (!cashfree) {
-  console.warn('Cashfree keys not configured. Payment features will not work.');
-} else {
-  console.log('✅ Cashfree payment gateway initialized successfully');
-}
+// Initialize on module load
+initializeCashfree();
+
+export const cashfree = cashfreeInstance;
 
 export interface CreateOrderData {
   amount: number; // in rupees (Cashfree uses actual amount, not paisa)
@@ -37,7 +55,10 @@ export interface CreateOrderData {
 }
 
 export async function createCashfreeOrder(data: CreateOrderData) {
-  if (!cashfree) {
+  // Ensure Cashfree is initialized
+  const cf = await initializeCashfree();
+  
+  if (!cf) {
     throw new Error('Cashfree not configured. Please provide CASHFREE_APP_ID and CASHFREE_SECRET_KEY.');
   }
 
@@ -62,7 +83,7 @@ export async function createCashfreeOrder(data: CreateOrderData) {
 
     console.log('Creating Cashfree order:', orderRequest.order_id);
     
-    const response = await cashfree.PGCreateOrder("2023-08-01", orderRequest);
+    const response = await cf.PGCreateOrder("2023-08-01", orderRequest);
     
     if (response.data && response.data.order_id) {
       console.log('✅ Cashfree order created successfully:', response.data.order_id);
@@ -106,17 +127,23 @@ export async function verifyCashfreePayment(orderId: string): Promise<{
   paymentMode?: string;
   error?: string;
 }> {
-  if (!cashfree) {
+  console.log('🔍 Verifying payment for order:', orderId);
+
+  // Ensure Cashfree is initialized
+  const cf = await initializeCashfree();
+
+  if (!cf) {
+    console.error('❌ Cashfree not configured');
     return {
       success: false,
-      error: 'Cashfree not configured'
+      error: 'Payment gateway not configured'
     };
   }
 
   try {
     console.log('Verifying Cashfree payment for order:', orderId);
     
-    const response = await cashfree.PGOrderFetchPayments("2023-08-01", orderId);
+    const response = await cf.PGOrderFetchPayments("2023-08-01", orderId);
     
     if (response.data && response.data.length > 0) {
       const payment = response.data[0]; // Get the latest payment
@@ -156,40 +183,85 @@ export function verifyCashfreeWebhookSignature(
   timestamp: string
 ): boolean {
   if (!process.env.CASHFREE_SECRET_KEY) {
-    console.error('CASHFREE_SECRET_KEY not configured');
+    console.error('❌ Cashfree secret key not configured for webhook verification');
     return false;
   }
 
   try {
-    // Cashfree webhook signature verification
-    const signedPayload = timestamp + rawBody;
-    const expectedSignature = crypto
+    // Cashfree webhook signature format: timestamp.rawBody
+    const payload = `${timestamp}.${rawBody}`;
+    const computedSignature = crypto
       .createHmac('sha256', process.env.CASHFREE_SECRET_KEY)
-      .update(signedPayload)
-      .digest('base64');
+      .update(payload)
+      .digest('hex');
+
+    const expectedSignature = `sha256=${computedSignature}`;
     
+    console.log('🔍 Webhook signature verification:', {
+      received: signature,
+      expected: expectedSignature,
+      matches: signature === expectedSignature
+    });
+
     return signature === expectedSignature;
   } catch (error) {
-    console.error('Error verifying Cashfree webhook signature:', error);
+    console.error('❌ Error verifying webhook signature:', error);
     return false;
   }
 }
 
-// Refund functionality
-export interface RefundData {
-  orderId: string;
-  refundAmount: number;
-  refundNote?: string;
-  refundSpeed?: 'STANDARD' | 'INSTANT';
+export async function processWebhookData(data: any): Promise<{
+  success: boolean;
+  orderId?: string;
+  orderStatus?: string;
+  transactionId?: string;
+  paymentAmount?: number;
+  error?: string;
+}> {
+  try {
+    console.log('🔄 Processing Cashfree webhook data:', data);
+
+    const eventType = data.type;
+    const orderData = data.data?.order || data.data;
+
+    if (!orderData) {
+      return {
+        success: false,
+        error: 'Invalid webhook data: missing order information'
+      };
+    }
+
+    const result = {
+      success: true,
+      orderId: orderData.order_id,
+      orderStatus: orderData.order_status,
+      transactionId: orderData.cf_order_id,
+      paymentAmount: parseFloat(orderData.order_amount),
+    };
+
+    console.log('✅ Webhook processed successfully:', result);
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error processing webhook data:', error);
+    return {
+      success: false,
+      error: `Failed to process webhook: ${error.message}`
+    };
+  }
 }
 
-export async function processCashfreeRefund(data: RefundData): Promise<{
+export async function refundCashfreePayment(orderId: string, refundAmount?: number): Promise<{
   success: boolean;
   refundId?: string;
   refundStatus?: string;
   error?: string;
 }> {
-  if (!cashfree) {
+  console.log('🔄 Processing refund for order:', orderId, 'amount:', refundAmount);
+
+  // Ensure Cashfree is initialized
+  const cf = await initializeCashfree();
+
+  if (!cf) {
     return {
       success: false,
       error: 'Cashfree not configured'
@@ -197,30 +269,34 @@ export async function processCashfreeRefund(data: RefundData): Promise<{
   }
 
   try {
-    const refundRequest = {
-      refund_amount: data.refundAmount,
-      refund_id: `refund_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      refund_note: data.refundNote || 'Booking cancellation refund',
-      refund_speed: data.refundSpeed || 'STANDARD',
+    const refundRequest: any = {
+      refund_id: `refund_${orderId}_${Date.now()}`,
+      refund_note: 'Booking cancellation refund'
     };
 
-    console.log('Processing Cashfree refund for order:', data.orderId);
+    if (refundAmount) {
+      refundRequest.refund_amount = refundAmount;
+    }
+
+    const response = await cf.PGOrderCreateRefund("2023-08-01", orderId, refundRequest);
     
-    const response = await cashfree.PGOrderCreateRefund("2023-08-01", data.orderId, refundRequest);
-    
-    if (response.data && response.data.refund_id) {
-      console.log('✅ Cashfree refund processed:', response.data.refund_id);
-      
+    if (response.data) {
+      console.log('✅ Refund processed successfully:', {
+        orderId,
+        refundId: response.data.refund_id,
+        status: response.data.refund_status
+      });
+
       return {
         success: true,
         refundId: response.data.refund_id,
-        refundStatus: response.data.refund_status,
+        refundStatus: response.data.refund_status
       };
     } else {
       throw new Error('Invalid refund response from Cashfree');
     }
   } catch (error: any) {
-    console.error('❌ Error processing Cashfree refund:', error);
+    console.error('❌ Error processing refund:', error);
     return {
       success: false,
       error: error.response?.data?.message || 'Failed to process refund'
@@ -228,4 +304,4 @@ export async function processCashfreeRefund(data: RefundData): Promise<{
   }
 }
 
-export default cashfree;
+export { initializeCashfree };
