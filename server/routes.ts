@@ -1288,8 +1288,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      if (paymentVerification.orderStatus !== 'PAID') {
-        console.error('❌ Payment not in PAID status for order:', orderId, 'Status:', paymentVerification.orderStatus);
+      if (paymentVerification.orderStatus !== 'SUCCESS') {
+        console.error('❌ Payment not in SUCCESS status for order:', orderId, 'Status:', paymentVerification.orderStatus);
         return res.status(400).json({ 
           message: `Payment not completed. Status: ${paymentVerification.orderStatus}`,
           orderId: orderId,
