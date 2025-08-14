@@ -107,6 +107,7 @@ export async function createCashfreeOrder(data: CreateOrderData) {
     console.log('Creating Cashfree order:', orderRequest.order_id);
     console.log('📤 Return URL:', returnUrl);
     console.log('📤 Notify URL:', notifyUrl);
+    console.log('💰 Order Amount:', orderRequest.order_amount);
     console.log('📋 Full order request:', JSON.stringify(orderRequest, null, 2));
     
     const response = await cf.PGCreateOrder(orderRequest);
@@ -125,11 +126,20 @@ export async function createCashfreeOrder(data: CreateOrderData) {
     }
   } catch (error: any) {
     console.error('❌ Error creating Cashfree order:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
+    
     if (error.response?.data) {
-      console.error('Cashfree API Error:', error.response.data);
-      throw new Error(`Cashfree API Error: ${error.response.data.message || 'Unknown error'}`);
+      console.error('Cashfree API Error Response:', JSON.stringify(error.response.data, null, 2));
+      const errorMsg = error.response.data.message || error.response.data.error_description || 'Unknown Cashfree error';
+      throw new Error(`Cashfree API Error: ${errorMsg}`);
     }
-    throw new Error('Failed to create payment order. Please check your connection and try again.');
+    
+    throw new Error(`Payment order creation failed: ${error.message}`);
   }
 }
 
