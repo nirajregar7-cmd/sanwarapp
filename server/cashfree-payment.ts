@@ -95,8 +95,8 @@ export async function createCashfreeOrder(data: CreateOrderData) {
         customer_phone: data.customerDetails.customerPhone,
       },
       order_meta: {
-        return_url: data.orderMeta?.returnUrl || `${process.env.BASE_URL || 'http://localhost:5000'}/api/cashfree/callback`,
-        notify_url: data.orderMeta?.notifyUrl || `${process.env.BASE_URL || 'http://localhost:5000'}/api/cashfree/webhook`,
+        return_url: data.orderMeta?.returnUrl || getBaseUrl() + '/api/cashfree/callback',
+        notify_url: data.orderMeta?.notifyUrl || getBaseUrl() + '/api/cashfree/webhook',
         payment_methods: data.orderMeta?.paymentMethods || 'cc,dc,nb,upi,paylater,emi,app',
       },
       order_note: data.orderNote || 'Sanwar Salon Booking Payment',
