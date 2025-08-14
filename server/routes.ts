@@ -981,9 +981,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Cashfree requires minimum ₹100 for production environment
       const minimumAmount = 100;
+      const originalAmount = finalAmount;
+      let paymentAdjusted = false;
+      
       if (finalAmount < minimumAmount) {
         console.log(`🔧 Adjusting amount from ₹${finalAmount} to minimum ₹${minimumAmount} for Cashfree production`);
         finalAmount = minimumAmount;
+        paymentAdjusted = true;
       }
       
       // Create Cashfree order for remaining amount
@@ -1014,7 +1018,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orderAmount: order.orderAmount,
         orderCurrency: order.orderCurrency,
         confirmationAmount: salon.confirmationAmount || 10,
+        originalAmount: originalAmount,
         finalAmount,
+        paymentAdjusted,
+        paymentAdjustmentReason: paymentAdjusted ? 'Payment gateway minimum amount requirement' : null,
         discountApplied: appliedDiscount,
         referralCodeApplied: validReferralCode?.code || null,
         servicePrice: service.price,

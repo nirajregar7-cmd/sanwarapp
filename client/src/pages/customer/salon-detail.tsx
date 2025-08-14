@@ -168,6 +168,49 @@ export default function SalonDetail() {
     },
   });
 
+  // Pay at Salon mutation
+  const payAtSalonMutation = useMutation({
+    mutationFn: async (data: BookingFormData) => {
+      if (!isAuthenticated) {
+        throw new Error("Please log in to book an appointment");
+      }
+
+      const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
+        salonId,
+        serviceId: data.serviceId,
+        staffId: data.staffId || null,
+        timeSlotId: data.timeSlotId,
+        date: data.date.toISOString().split('T')[0],
+        notes: "Pay at salon booking"
+      });
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Booking Confirmed!",
+        description: "Your appointment is booked! Please pay the full service amount when you visit the salon.",
+      });
+      
+      setBookingDialogOpen(false);
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/time-slots`] });
+    },
+    onError: (error) => {
+      console.error("Pay at salon booking failed:", error);
+      toast({
+        title: "Booking Failed",
+        description: "Unable to create booking. Please try again or contact the salon directly.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handler for Pay at Salon button
+  const handlePayAtSalon = (data: BookingFormData) => {
+    payAtSalonMutation.mutate(data);
+  };
+
   // Alternative "Pay at Salon" booking when online payment fails
   const handlePayAtSalonBooking = async () => {
     try {
@@ -219,6 +262,15 @@ export default function SalonDetail() {
 
       const orderData = await orderResponse.json();
       console.log("Order data received:", orderData);
+      
+      // Show payment adjustment notification if amount was adjusted
+      if (orderData.paymentAdjusted) {
+        toast({
+          title: "Payment Amount Notice",
+          description: `Due to payment gateway requirements, the minimum charge is ₹${orderData.finalAmount}. The original confirmation fee was ₹${orderData.originalAmount}.`,
+          variant: "default",
+        });
+      }
       
       // Handle free bookings (when referral code covers full amount OR user has free credits)
       if (orderData.isFreeBooking || orderData.freeBooking) {
@@ -1078,22 +1130,58 @@ export default function SalonDetail() {
                             </div>
                           )}
 
-                          <Button 
-                            type="submit" 
-                            className="w-full" 
-                            disabled={bookingMutation.isPending}
-                          >
-                            {bookingMutation.isPending 
-                              ? (
-                                  <span className="flex items-center justify-center gap-2">
-                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                    {rescheduleBookingId ? "Processing Reschedule..." : "Processing Booking..."}
-                                  </span>
-                                )
-                              : appliedReferralCode?.discountType === 'free'
-                              ? "Book for FREE!"
-                              : (rescheduleBookingId ? "Reschedule Booking" : "Confirm Booking")}
-                          </Button>
+                          <div className="space-y-3">
+                            {/* Notice for payment gateway minimum */}
+                            {selectedService && !appliedReferralCode?.discountType && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <p className="text-sm text-blue-800">
+                                  <span className="font-medium">Payment Options:</span>
+                                  <br />• Online Payment: ₹100 minimum (covers confirmation + advance)
+                                  <br />• Pay at Salon: Just confirm your slot for free
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {/* Online Payment Button */}
+                              <Button 
+                                type="submit" 
+                                className="w-full" 
+                                disabled={bookingMutation.isPending}
+                              >
+                                {bookingMutation.isPending 
+                                  ? (
+                                      <span className="flex items-center justify-center gap-2">
+                                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                        "Processing..."
+                                      </span>
+                                    )
+                                  : appliedReferralCode?.discountType === 'free'
+                                  ? "Book for FREE!"
+                                  : "Pay Online ₹100"}
+                              </Button>
+
+                              {/* Pay at Salon Button */}
+                              {!appliedReferralCode?.discountType && (
+                                <Button 
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full"
+                                  disabled={payAtSalonMutation.isPending}
+                                  onClick={() => handlePayAtSalon(form.getValues())}
+                                >
+                                  {payAtSalonMutation.isPending ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
+                                      Confirming...
+                                    </span>
+                                  ) : (
+                                    "Pay at Salon"
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
                           
                           {bookingMutation.isPending && (
                             <div className="text-xs text-gray-500 text-center mt-2">
