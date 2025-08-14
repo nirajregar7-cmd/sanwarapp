@@ -44,12 +44,10 @@ const initializeCashfree = async () => {
 
 // Helper function to get the correct base URL
 function getBaseUrl(): string {
-  if (process.env.BASE_URL) {
-    return process.env.BASE_URL;
-  }
-  
-  // Use the provided production domain
-  return 'https://sanwar-book-nirajregar7.replit.app';
+  // Always use the production domain for Cashfree
+  const prodDomain = 'https://sanwar-book-nirajregar7.replit.app';
+  console.log('🌐 Using production domain for Cashfree:', prodDomain);
+  return prodDomain;
 }
 
 // Initialize on module load
@@ -84,6 +82,10 @@ export async function createCashfreeOrder(data: CreateOrderData) {
   }
 
   try {
+    const baseUrl = getBaseUrl();
+    const returnUrl = data.orderMeta?.returnUrl || baseUrl + '/payment-success';
+    const notifyUrl = data.orderMeta?.notifyUrl || baseUrl + '/api/cashfree/webhook';
+    
     const orderRequest = {
       order_id: data.orderId || `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       order_amount: data.amount, // Cashfree uses actual amount in rupees
@@ -95,14 +97,16 @@ export async function createCashfreeOrder(data: CreateOrderData) {
         customer_phone: data.customerDetails.customerPhone,
       },
       order_meta: {
-        return_url: data.orderMeta?.returnUrl || getBaseUrl() + '/payment-success',
-        notify_url: data.orderMeta?.notifyUrl || getBaseUrl() + '/api/cashfree/webhook',
+        return_url: returnUrl,
+        notify_url: notifyUrl,
         payment_methods: data.orderMeta?.paymentMethods || 'cc,dc,nb,upi,paylater,emi,app',
       },
       order_note: data.orderNote || 'Sanwar Salon Booking Payment',
     };
 
     console.log('Creating Cashfree order:', orderRequest.order_id);
+    console.log('📤 Return URL:', returnUrl);
+    console.log('📤 Notify URL:', notifyUrl);
     
     const response = await cf.PGCreateOrder(orderRequest);
     

@@ -53,7 +53,7 @@ export const initiateCashfreePayment = async (options: PaymentOptions) => {
     }
 
     const cashfree = window.Cashfree({
-      mode: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox'
+      mode: 'production' // Always use production since we have production Cashfree credentials
     });
 
     const checkoutOptions = {
