@@ -82,11 +82,6 @@ export async function createCashfreeOrder(data: CreateOrderData) {
   }
 
   try {
-    // Validate minimum amount for Cashfree production
-    if (data.amount < 1) {
-      throw new Error('Payment amount must be at least ₹1');
-    }
-    
     const baseUrl = getBaseUrl();
     const returnUrl = data.orderMeta?.returnUrl || `${baseUrl}/payment-success`;
     const notifyUrl = data.orderMeta?.notifyUrl || `${baseUrl}/api/cashfree/webhook`;

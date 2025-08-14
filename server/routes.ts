@@ -979,16 +979,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(users)
         .where(eq(users.id, userId));
 
-      // Cashfree requires minimum ₹100 for production environment
-      const minimumAmount = 100;
+      // Keep the original confirmation amount as set by salon owner
       const originalAmount = finalAmount;
       let paymentAdjusted = false;
-      
-      if (finalAmount < minimumAmount) {
-        console.log(`🔧 Adjusting amount from ₹${finalAmount} to minimum ₹${minimumAmount} for Cashfree production`);
-        finalAmount = minimumAmount;
-        paymentAdjusted = true;
-      }
       
       // Create Cashfree order for remaining amount
       console.log('🔄 Creating Cashfree order for amount:', finalAmount);
