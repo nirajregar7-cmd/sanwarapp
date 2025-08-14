@@ -825,7 +825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const startTime = Date.now();
     try {
       const userId = req.user?.id;
-      const { salonId, serviceId, timeSlotId, date, staffId, referralCode } = req.body;
+      const { salonId, serviceId, timeSlotId, date, staffId, referralCode, notes } = req.body;
       
       console.log('🎯 Creating payment order for user:', userId, 'amount processing...');
       
