@@ -14,7 +14,8 @@ const initializeCashfree = async () => {
       // Set static configuration on the Cashfree class
       (Cashfree as any).XClientId = process.env.CASHFREE_APP_ID;
       (Cashfree as any).XClientSecret = process.env.CASHFREE_SECRET_KEY;
-      (Cashfree as any).XEnvironment = process.env.NODE_ENV === 'production' 
+      // Use production environment for production credentials (secret key contains 'prod')
+      (Cashfree as any).XEnvironment = process.env.CASHFREE_SECRET_KEY?.includes('prod')
         ? 'production' 
         : 'sandbox';
       
