@@ -70,7 +70,7 @@ export async function getBookingEmailData(bookingId: string): Promise<BookingEma
       endTime: bookingData.booking.endTime,
       totalAmount: parseFloat(bookingData.service.price),
       confirmationAmount: parseFloat(bookingData.booking.confirmationAmount) / 100 || 3, // Dynamic confirmation fee from booking
-      remainingAmount: parseFloat(bookingData.service.price) - (parseFloat(bookingData.booking.confirmationAmount) / 100 || 3),
+      remainingAmount: parseFloat(bookingData.service.price), // Full service amount to be paid at salon (confirmation fee is separate)
     };
   } catch (error) {
     console.error('Error fetching booking data for email:', error);
@@ -152,9 +152,12 @@ function generateCustomerConfirmationEmail(data: BookingEmailData): string {
 
                 <div class="payment-info">
                     <h3 style="margin: 0 0 10px 0; color: #1976d2;">💳 Payment Information</h3>
-                    <p style="margin: 5px 0;"><strong>Paid (Confirmation Fee):</strong> ₹${data.confirmationAmount}</p>
-                    <p style="margin: 5px 0;"><strong>Remaining Amount:</strong> ₹${data.remainingAmount}</p>
-                    <p style="margin: 5px 0; color: #666; font-size: 14px;">Please pay the remaining amount at the salon.</p>
+                    <p style="margin: 5px 0;"><strong>Confirmation Fee (Paid Online):</strong> ₹${data.confirmationAmount}</p>
+                    <p style="margin: 5px 0;"><strong>Service Fee (Pay at Salon):</strong> ₹${data.totalAmount}</p>
+                    <p style="margin: 5px 0; color: #666; font-size: 14px;">
+                        <strong>Note:</strong> The confirmation fee is separate from the service fee. 
+                        You will pay the full service amount (₹${data.totalAmount}) when you visit the salon.
+                    </p>
                 </div>
 
                 <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
@@ -247,7 +250,7 @@ function generateShopkeeperNotificationEmail(data: BookingEmailData): string {
                 <div class="revenue-info">
                     <h3 style="margin: 0 0 10px 0; color: #388e3c;">💰 Payment Details</h3>
                     <p style="margin: 5px 0;"><strong>Confirmation Fee (Paid Online):</strong> ₹${data.confirmationAmount}</p>
-                    <p style="margin: 5px 0;"><strong>Amount to Collect at Salon:</strong> ₹${data.remainingAmount}</p>
+                    <p style="margin: 5px 0;"><strong>Service Fee to Collect:</strong> ₹${data.remainingAmount}</p>
                     <p style="margin: 5px 0;"><strong>Total Service Value:</strong> ₹${data.totalAmount}</p>
                 </div>
 
@@ -261,7 +264,7 @@ function generateShopkeeperNotificationEmail(data: BookingEmailData): string {
                     </ul>
                 </div>
 
-                <p>The customer has paid the confirmation fee of ₹${data.confirmationAmount}. Please collect the remaining ₹${data.remainingAmount} when they arrive for their appointment.</p>
+                <p>The customer has paid the confirmation fee of ₹${data.confirmationAmount}. Please collect the full service fee of ₹${data.remainingAmount} when they arrive for their appointment.</p>
                 
                 <div style="text-align: center; margin: 30px 0;">
                     <a href="https://sanwar.in/shopkeeper/dashboard" style="background: #4caf50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View in Dashboard</a>

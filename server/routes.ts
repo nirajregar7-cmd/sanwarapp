@@ -1042,7 +1042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentSessionId: order.paymentSessionId,
         orderAmount: order.orderAmount,
         orderCurrency: order.orderCurrency,
-        confirmationAmount: salon.confirmationAmount || 10,
+        confirmationAmount: salon.confirmationAmount || 300, // Default ₹3 in paise
         originalAmount: originalAmount,
         finalAmount,
         paymentAdjusted,
