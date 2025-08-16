@@ -623,6 +623,9 @@ export default function OwnerDashboard() {
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="bookings" className="text-xs py-3">Bookings</TabsTrigger>
+                  <TabsTrigger value="offers" className="text-xs py-3">Offers</TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="messages" className="text-xs py-3 relative">
                     Messages
                     {brandMessages.filter(msg => !msg.isRead).length > 0 && (
@@ -631,20 +634,19 @@ export default function OwnerDashboard() {
                       </span>
                     )}
                   </TabsTrigger>
-                </TabsList>
-                <TabsList className="grid w-full grid-cols-1 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="settings" className="text-xs py-3">Settings</TabsTrigger>
                 </TabsList>
               </div>
               
               {/* Desktop Tab Navigation */}
               <div className="hidden sm:block">
-                <TabsList className="grid w-full grid-cols-7 gap-1">
+                <TabsList className="grid w-full grid-cols-8 gap-1">
                   <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
                   <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
                   <TabsTrigger value="staff" className="text-sm">Staff</TabsTrigger>
                   <TabsTrigger value="gallery" className="text-sm">Gallery</TabsTrigger>
                   <TabsTrigger value="bookings" className="text-sm">Bookings</TabsTrigger>
+                  <TabsTrigger value="offers" className="text-sm">Offers</TabsTrigger>
                   <TabsTrigger value="messages" className="text-sm relative">
                     Messages
                     {brandMessages.filter(msg => !msg.isRead).length > 0 && (
@@ -1429,6 +1431,44 @@ export default function OwnerDashboard() {
                       <BarChart3 className="h-6 w-6" />
                       <span>View Reports</span>
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="offers" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Percent className="h-5 w-5 mr-2" />
+                      Promotional Offers Management
+                    </div>
+                    <Link href="/shopkeeper/offers">
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create New Offer
+                      </Button>
+                    </Link>
+                  </CardTitle>
+                  <CardDescription>
+                    Create and manage special offers to attract more customers to your salon
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Percent className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Manage Your Offers</h3>
+                    <p className="text-gray-600 mb-6">
+                      Click "Create New Offer" to set up promotional campaigns for your services.
+                      You can create percentage-based or fixed-amount discounts with custom validity periods.
+                    </p>
+                    <Link href="/shopkeeper/offers">
+                      <Button>
+                        <Percent className="h-4 w-4 mr-2" />
+                        Go to Offers Management
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

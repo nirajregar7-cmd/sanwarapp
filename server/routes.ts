@@ -708,7 +708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pageViewed: req.body.pageViewed || 'profile',
       };
 
-      const result = await db.insert(profileVisits).values(visitData).returning();
+      const result = await db.insert(profileVisits).values([visitData]).returning();
       
       res.json({ tracked: true, visitId: result[0].id });
     } catch (error) {
@@ -720,7 +720,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get profile visit analytics for salon owner
   app.get('/api/owner/salon/profile-analytics', isAuthenticated, async (req, res) => {
     try {
-      const ownerId = req.user.id;
+      const ownerId = req.user!.id;
       
       // Get salon owned by this user
       const [salon] = await db.select()

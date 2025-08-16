@@ -20,11 +20,15 @@ The server is built using Express.js and TypeScript, adhering to a RESTful API d
 The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
 
 ## Recent Updates (August 16, 2025)
+- **Profile Visit Analytics System**: Implemented comprehensive salon profile visit tracking with database schema, API endpoints, and dashboard analytics
+- **Analytics Dashboard**: Built analytics page showing total visits (30 days), unique customers, today's visits, and 7-day trend charts for salon owners
+- **Visit Tracking Integration**: Added automatic visit tracking on salon detail pages with visitor ID, IP address, and timestamp logging
+- **Navigation Reorganization**: Moved "Offers" from main navigation to lower navigation tabs alongside Overview, Services, Staff, Gallery, Bookings, Messages, and Settings
+- **Enhanced Dashboard Tabs**: Added "Offers" and "View Insights" tabs to salon owner dashboard for better organization
 - **Comprehensive Offers Management System**: Implemented full promotional offers functionality allowing salon owners to create, manage, and track marketing campaigns
 - **Salon Offers Database Schema**: Added salon_offers and customer_offers tables with comprehensive tracking (usage counts, validity periods, discount types)
 - **Offers Creation Interface**: Built complete offers management page for salon owners with form validation and real-time preview
 - **Customer Offers Integration**: Added offers display on customer dashboard with attractive cards showing discount details and usage limits
-- **Navigation Enhancement**: Added "Offers" menu links to both desktop and mobile navigation for salon owners
 - **API Endpoints**: Implemented complete CRUD operations for offers management with proper authentication and validation
 
 ## Previous Updates (August 15, 2025)
