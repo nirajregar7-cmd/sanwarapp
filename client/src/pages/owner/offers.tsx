@@ -80,7 +80,7 @@ export default function OffersPage() {
       validUntil: "",
       maxUsagePerCustomer: "1",
       maxTotalUsage: "",
-      isApplicableToAllServices: true,
+      isApplicableToAllServices: false,
       applicableServices: [],
       isActive: true,
       isVisible: true,
@@ -102,6 +102,8 @@ export default function OffersPage() {
       if (!response.ok) throw new Error("Failed to fetch services");
       return response.json();
     },
+    refetchOnWindowFocus: true,
+    refetchInterval: false, // Don't auto-refetch, but allow manual invalidation
   });
 
   const createOfferMutation = useMutation({
@@ -121,6 +123,7 @@ export default function OffersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/owner/salon/offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/owner/salon/services"] }); // Also refresh services
       setIsCreateDialogOpen(false);
       form.reset();
       toast({
@@ -505,7 +508,20 @@ export default function OffersPage() {
                             </div>
                           ))}
                           {services.length === 0 && (
-                            <p className="text-sm text-muted-foreground">No services found. Please add services first.</p>
+                            <div className="text-center py-4">
+                              <p className="text-sm text-muted-foreground mb-2">No services found. Please add services first.</p>
+                              <Button 
+                                type="button"
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  // Refresh services query
+                                  queryClient.invalidateQueries({ queryKey: ["/api/owner/salon/services"] });
+                                }}
+                              >
+                                Refresh Services
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </FormControl>
