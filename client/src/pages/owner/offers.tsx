@@ -215,6 +215,8 @@ export default function OffersPage() {
       priority: offer.priority.toString(),
       promoCode: offer.promoCode || "",
       isPromoCodeRequired: offer.isPromoCodeRequired,
+      isApplicableToAllServices: offer.isApplicableToAllServices || false,
+      applicableServices: offer.applicableServices || [],
     });
     setIsEditDialogOpen(true);
   };
@@ -484,30 +486,34 @@ export default function OffersPage() {
                       </FormDescription>
                       <FormControl>
                         <div className="grid grid-cols-1 gap-3 max-h-40 overflow-y-auto border rounded-md p-3">
-                          {services.map((service: any) => (
-                            <div key={service.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={service.id}
-                                checked={field.value?.includes(service.id) || false}
-                                onCheckedChange={(checked) => {
-                                  const currentServices = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...currentServices, service.id]);
-                                  } else {
-                                    field.onChange(currentServices.filter((id: string) => id !== service.id));
-                                  }
-                                }}
-                                data-testid={`checkbox-service-${service.id}`}
-                              />
-                              <label
-                                htmlFor={service.id}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                              >
-                                {service.name} - ₹{service.price}
-                              </label>
-                            </div>
-                          ))}
-                          {services.length === 0 && (
+                          {services && services.length > 0 ? (
+                            services.map((service: any) => (
+                              <div key={service.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={service.id}
+                                  checked={field.value?.includes(service.id) || false}
+                                  onCheckedChange={(checked) => {
+                                    const currentServices = field.value || [];
+                                    if (checked) {
+                                      field.onChange([...currentServices, service.id]);
+                                    } else {
+                                      field.onChange(currentServices.filter((id: string) => id !== service.id));
+                                    }
+                                  }}
+                                  data-testid={`checkbox-service-${service.id}`}
+                                />
+                                <label
+                                  htmlFor={service.id}
+                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                >
+                                  {service.name} - ₹{service.price}
+                                </label>
+                              </div>
+                            ))
+                          ) : (
+                            null
+                          )}
+                          {(!services || services.length === 0) && (
                             <div className="text-center py-4">
                               <p className="text-sm text-muted-foreground mb-2">No services found. Please add services first.</p>
                               <Button 

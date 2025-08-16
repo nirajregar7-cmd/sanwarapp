@@ -25,7 +25,6 @@ export default function CustomerHome() {
   const getSalonOffers = (salonId: string) => {
     if (!offers || !Array.isArray(offers)) return [];
     const salonOffers = offers.filter((offer: any) => offer.salonId === salonId);
-    console.log(`Offers for salon ${salonId}:`, salonOffers); // Debug log
     return salonOffers;
   };
 
