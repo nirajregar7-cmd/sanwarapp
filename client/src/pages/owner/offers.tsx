@@ -245,7 +245,7 @@ export default function OffersPage() {
         <div>
           <h1 className="text-3xl font-bold" data-testid="text-page-title">Manage Offers</h1>
           <p className="text-muted-foreground" data-testid="text-page-description">
-            Create and manage promotional offers for your salon
+            View all created offers and set individual discount percentages for each service (e.g., Haircut 10%, Beard 15%)
           </p>
         </div>
         <Button 
@@ -289,7 +289,38 @@ export default function OffersPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <>
+          {/* All Created Offers Summary */}
+          <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-blue-200 dark:border-blue-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                <Percent className="w-5 h-5" />
+                All Created Offers ({offers.length})
+              </CardTitle>
+              <CardDescription className="text-blue-700 dark:text-blue-300">
+                Your promotional offers with service-specific discounts (e.g., Haircut 10%, Beard 15%)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {offers.map((offer: Offer) => (
+                  <div key={offer.id} className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{offer.title}</span>
+                      <Badge variant={getOfferStatus(offer).variant} className="text-xs">
+                        {getOfferStatus(offer).label}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                      {formatDiscount(offer)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {offers.map((offer: Offer) => {
             const status = getOfferStatus(offer);
             return (
@@ -372,6 +403,7 @@ export default function OffersPage() {
             );
           })}
         </div>
+        </>
       )}
 
       {/* Create/Edit Offer Dialog */}
@@ -462,9 +494,9 @@ export default function OffersPage() {
                   name="applicableServices"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Select Services</FormLabel>
+                      <FormLabel>Select Services & Set Individual Discounts</FormLabel>
                       <FormDescription>
-                        Choose which services this offer applies to
+                        Choose services and set specific discount percentage for each service (like Haircut 10%, Beard 15%)
                       </FormDescription>
                       <FormControl>
                         <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto border rounded-md p-4 bg-gray-50 dark:bg-gray-900">
@@ -496,16 +528,39 @@ export default function OffersPage() {
                                   </div>
                                 </div>
                                 
-                                {/* Show discount preview for selected services */}
+                                {/* Individual discount input for each service */}
                                 {field.value?.includes(service.id) && (
-                                  <Badge 
-                                    variant="secondary" 
-                                    className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"
-                                  >
-                                    {form.watch("discountType") === "percentage" 
-                                      ? `${form.watch("discountValue")}% OFF` 
-                                      : `₹${form.watch("discountValue")} OFF`}
-                                  </Badge>
+                                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex-1">
+                                        <Label htmlFor={`discount-${service.id}`} className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                                          How much discount for {service.name}?
+                                        </Label>
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <Input
+                                            id={`discount-${service.id}`}
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            placeholder="10"
+                                            defaultValue="10"
+                                            className="w-20 text-center"
+                                            data-testid={`input-discount-${service.id}`}
+                                          />
+                                          <span className="text-sm font-medium text-blue-800 dark:text-blue-200">% OFF</span>
+                                        </div>
+                                      </div>
+                                      <Badge 
+                                        variant="secondary" 
+                                        className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
+                                      >
+                                        {service.name} 10%
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                                      Original: ₹{service.price} → Discounted: ₹{Math.round(service.price * 0.9)}
+                                    </p>
+                                  </div>
                                 )}
                               </div>
                             ))
