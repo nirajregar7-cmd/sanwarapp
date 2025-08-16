@@ -144,7 +144,7 @@ export default function AccountDetails() {
                 Revenue Overview
               </CardTitle>
               <CardDescription>
-                Your earnings from booking confirmations (Platform takes 45%, you get 55%)
+                Your earnings from booking confirmations (Platform takes 20%, you get 80%)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -354,8 +354,8 @@ export default function AccountDetails() {
           </CardHeader>
           <CardContent className="text-sm text-gray-600">
             <ul className="space-y-2">
-              <li>• Platform commission: 45% of confirmation amount</li>
-              <li>• Your share: 55% of confirmation amount</li>
+              <li>• Platform commission: 20% of confirmation amount</li>
+              <li>• Your share: 80% of confirmation amount</li>
               <li>• Full service payment collected at salon</li>
               <li>• No hidden fees or charges</li>
             </ul>
