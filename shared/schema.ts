@@ -1106,6 +1106,8 @@ export const insertSalonOfferSchema = createInsertSchema(salonOffers).omit({
   currentUsageCount: true,
   createdAt: true,
   updatedAt: true,
+  salonId: true,
+  createdBy: true,
 });
 
 export const insertSalonOfferUsageSchema = createInsertSchema(salonOfferUsage).omit({
