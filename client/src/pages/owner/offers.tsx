@@ -98,7 +98,7 @@ export default function OffersPage() {
   const { data: services = [] } = useQuery({
     queryKey: ["/api/owner/salon/services"],
     queryFn: async () => {
-      const response = await fetch("/api/owner/salon/services");
+      const response = await apiRequest("GET", "/api/owner/salon/services");
       if (!response.ok) throw new Error("Failed to fetch services");
       return response.json();
     },

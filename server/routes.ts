@@ -567,6 +567,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Owner salon services endpoint - get services for owner's salon
+  app.get('/api/owner/salon/services', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Get the salon owned by this user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId))
+        .limit(1);
+
+      if (!salon) {
+        return res.status(404).json({ message: "No salon found for this owner" });
+      }
+
+      // Get all services for this salon
+      const salonServices = await db.select()
+        .from(services)
+        .where(eq(services.salonId, salon.id))
+        .orderBy(services.name);
+      
+      res.json(salonServices);
+    } catch (error) {
+      console.error("Error fetching owner salon services:", error);
+      res.status(500).json({ message: "Failed to fetch salon services" });
+    }
+  });
+
   // Get salon offers for customers
   app.get('/api/salons/:salonId/offers', async (req, res) => {
     try {
