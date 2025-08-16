@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import SalonCard from "@/components/SalonCard";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -288,62 +289,8 @@ export default function Landing() {
               ))
             ) : topSalons && topSalons.length > 0 ? (
               topSalons.map((salon) => (
-              <Link key={salon.id} href={`/salon/${salon.id}`}>
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
-                  <div className="aspect-video bg-gray-200 overflow-hidden">
-                    {salon.imageUrl ? (
-                      <img 
-                        src={salon.imageUrl} 
-                        alt={salon.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <Scissors className="h-12 w-12 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  <CardContent className="p-3 sm:p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-base sm:text-lg pr-2">{salon.name}</h3>
-                      <div className="flex items-center flex-shrink-0">
-                        <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="ml-1 text-xs sm:text-sm font-medium">
-                          {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
-                        </span>
-                        <span className="ml-1 text-xs sm:text-sm text-gray-600">
-                          ({salon.totalReviews || 0})
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center text-xs sm:text-sm text-gray-700 mb-2">
-                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
-                      <span className="truncate">{salon.address}</span>
-                    </div>
-                    <div className="mb-3">
-                      <p className="text-xs sm:text-sm text-gray-700 line-clamp-2">
-                        {salon.description || "Professional salon services"}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs sm:text-sm font-medium text-green-600">
-                        Book with ₹{salon.confirmationAmount || 0}
-                      </span>
-                      <Button 
-                        size="sm" 
-                        className="bg-primary hover:bg-primary/90" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          // Button will be handled by parent Link
-                        }}
-                      >
-                        Book Now
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
+                <SalonCard key={salon.id} salon={salon} />
+              ))
             ) : (
               // No salons found state
               <div className="col-span-full text-center py-12">

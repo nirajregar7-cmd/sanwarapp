@@ -17,9 +17,6 @@ export default function SalonCard({ salon }: SalonCardProps) {
     enabled: !!salon.id,
   });
 
-  // Debug logging
-  console.log(`SalonCard [${salon.name}] - Offers:`, offers, 'Loading:', isLoading, 'Error:', error);
-
   const getAvailabilityStatus = () => {
     // In a real app, you'd check actual availability
     const isOpen = true; // Simplified for now
@@ -33,7 +30,6 @@ export default function SalonCard({ salon }: SalonCardProps) {
 
   // Get the best offer to display
   const bestOffer = offers.find(offer => offer.isActive && offer.isVisible);
-  console.log(`SalonCard [${salon.name}] - Best offer:`, bestOffer);
   const getOfferText = (offer: SalonOffer) => {
     if (offer.discountType === 'percentage') {
       return `${offer.discountValue}% OFF`;
