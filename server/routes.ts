@@ -701,14 +701,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const visitData = {
         salonId,
         visitorId,
-        visitorType,
+        visitorType: visitorType as 'customer' | 'anonymous',
         ipAddress,
         userAgent,
         referrer,
         pageViewed: req.body.pageViewed || 'profile',
       };
 
-      const result = await db.insert(profileVisits).values([visitData]).returning();
+      const result = await db.insert(profileVisits).values(visitData).returning();
       
       res.json({ tracked: true, visitId: result[0].id });
     } catch (error) {
