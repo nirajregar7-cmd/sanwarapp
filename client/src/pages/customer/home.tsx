@@ -14,12 +14,7 @@ import OffersDisplayCard from "@/components/OffersDisplayCard";
 export default function CustomerHome() {
   const { user } = useAuth();
   const { data: salons, isLoading } = useQuery<Salon[]>({
-    queryKey: ["/api/salons"],
-    queryFn: async () => {
-      const response = await fetch("/api/salons");
-      if (!response.ok) throw new Error("Failed to fetch salons");
-      return response.json();
-    },
+    queryKey: ["/api/salons/featured"],
   });
 
   const { data: offers, isLoading: isLoadingOffers } = useQuery({
@@ -29,7 +24,9 @@ export default function CustomerHome() {
   // Create a function to get offers for a specific salon
   const getSalonOffers = (salonId: string) => {
     if (!offers || !Array.isArray(offers)) return [];
-    return offers.filter((offer: any) => offer.salonId === salonId);
+    const salonOffers = offers.filter((offer: any) => offer.salonId === salonId);
+    console.log(`Offers for salon ${salonId}:`, salonOffers); // Debug log
+    return salonOffers;
   };
 
   if (isLoading) {
