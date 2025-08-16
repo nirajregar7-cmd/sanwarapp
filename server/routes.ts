@@ -5542,7 +5542,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/owner/salon/offers', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const offerData = insertSalonOfferSchema.parse(req.body);
+      // Transform the data to match schema expectations
+      const transformedData = {
+        ...req.body,
+        discountValue: parseFloat(req.body.discountValue),
+        minOrderAmount: req.body.minOrderAmount ? parseFloat(req.body.minOrderAmount) : 0,
+        maxDiscountAmount: req.body.maxDiscountAmount ? parseFloat(req.body.maxDiscountAmount) : null,
+        validFrom: new Date(req.body.validFrom),
+        validUntil: new Date(req.body.validUntil),
+        maxUsagePerCustomer: parseInt(req.body.maxUsagePerCustomer),
+        maxTotalUsage: req.body.maxTotalUsage ? parseInt(req.body.maxTotalUsage) : null,
+        priority: parseInt(req.body.priority || "0"),
+      };
+      
+      const offerData = insertSalonOfferSchema.parse(transformedData);
       
       // First get the salon for this owner
       const [salon] = await db.select()
@@ -5557,6 +5570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...offerData,
         salonId: salon.id,
         createdBy: userId,
+        promoCode: offerData.promoCode || null,
       }).returning();
       
       res.json(newOffer);
@@ -5571,7 +5585,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
       const { offerId } = req.params;
-      const offerData = req.body;
+      
+      // Transform the data to match schema expectations
+      const transformedData = {
+        ...req.body,
+        discountValue: parseFloat(req.body.discountValue),
+        minOrderAmount: req.body.minOrderAmount ? parseFloat(req.body.minOrderAmount) : 0,
+        maxDiscountAmount: req.body.maxDiscountAmount ? parseFloat(req.body.maxDiscountAmount) : null,
+        validFrom: new Date(req.body.validFrom),
+        validUntil: new Date(req.body.validUntil),
+        maxUsagePerCustomer: parseInt(req.body.maxUsagePerCustomer),
+        maxTotalUsage: req.body.maxTotalUsage ? parseInt(req.body.maxTotalUsage) : null,
+        priority: parseInt(req.body.priority || "0"),
+      };
+      
+      const offerData = insertSalonOfferSchema.parse(transformedData);
       
       // Verify offer ownership through salon
       const [existingOffer] = await db.select({
