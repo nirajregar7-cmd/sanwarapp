@@ -522,6 +522,20 @@ export const customerReferralCampaigns = pgTable("customer_referral_campaigns", 
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Profile visits tracking table
+export const profileVisits = pgTable("profile_visits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  visitorId: varchar("visitor_id").references(() => users.id, { onDelete: "set null" }), // null for anonymous visitors
+  visitorType: varchar("visitor_type", { enum: ["customer", "anonymous"] }).default("anonymous"),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  referrer: text("referrer"),
+  visitDuration: integer("visit_duration"), // in seconds, can be updated when user leaves
+  pageViewed: varchar("page_viewed").default("profile"), // profile, services, reviews, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Free booking credits table
 export const freeBookingCredits = pgTable("free_booking_credits", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1034,6 +1048,18 @@ export const salonOfferUsageRelations = relations(salonOfferUsage, ({ one }) => 
   }),
 }));
 
+// Profile visits relations
+export const profileVisitsRelations = relations(profileVisits, ({ one }) => ({
+  salon: one(salons, {
+    fields: [profileVisits.salonId],
+    references: [salons.id],
+  }),
+  visitor: one(users, {
+    fields: [profileVisits.visitorId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -1487,3 +1513,12 @@ export type BrandInvitation = typeof brandInvitations.$inferSelect;
 
 export type InsertBrandMessage = z.infer<typeof insertBrandMessageSchema>;
 export type BrandMessage = typeof brandMessages.$inferSelect;
+
+// Profile visits schema and types
+export const insertProfileVisitSchema = createInsertSchema(profileVisits).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ProfileVisit = typeof profileVisits.$inferSelect;
+export type InsertProfileVisit = z.infer<typeof insertProfileVisitSchema>;

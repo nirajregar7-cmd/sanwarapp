@@ -10,7 +10,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -672,7 +672,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile visit tracking endpoints
+  // Track a profile visit (when someone views a salon profile)
+  app.post('/api/salons/:salonId/profile-visit', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const visitorId = req.user?.id; // null for anonymous visitors
+      const visitorType = req.user ? 'customer' : 'anonymous';
+      const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+      const userAgent = req.get('User-Agent') || 'unknown';
+      const referrer = req.get('Referer') || null;
 
+      // Check if salon exists
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+
+      // Don't track visits from salon owner
+      if (visitorId === salon.ownerId) {
+        return res.json({ tracked: false, reason: "Owner visit not tracked" });
+      }
+
+      // Create visit record
+      const visitData = {
+        salonId,
+        visitorId,
+        visitorType,
+        ipAddress,
+        userAgent,
+        referrer,
+        pageViewed: req.body.pageViewed || 'profile',
+      };
+
+      const result = await db.insert(profileVisits).values(visitData).returning();
+      
+      res.json({ tracked: true, visitId: result[0].id });
+    } catch (error) {
+      console.error("Error tracking profile visit:", error);
+      res.status(500).json({ message: "Failed to track profile visit" });
+    }
+  });
+
+  // Get profile visit analytics for salon owner
+  app.get('/api/owner/salon/profile-analytics', isAuthenticated, async (req, res) => {
+    try {
+      const ownerId = req.user.id;
+      
+      // Get salon owned by this user
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, ownerId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+
+      // Get visit counts for last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Total visits in last 30 days
+      const totalVisitsResult = await db.select({ count: count() })
+        .from(profileVisits)
+        .where(
+          and(
+            eq(profileVisits.salonId, salon.id),
+            gte(profileVisits.createdAt, thirtyDaysAgo)
+          )
+        );
+
+      // Unique visitors (registered users)
+      const uniqueVisitorsResult = await db.select({ 
+        count: sql`COUNT(DISTINCT ${profileVisits.visitorId})`
+      })
+        .from(profileVisits)
+        .where(
+          and(
+            eq(profileVisits.salonId, salon.id),
+            gte(profileVisits.createdAt, thirtyDaysAgo),
+            isNotNull(profileVisits.visitorId)
+          )
+        );
+
+      // Today's visits
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayVisitsResult = await db.select({ count: count() })
+        .from(profileVisits)
+        .where(
+          and(
+            eq(profileVisits.salonId, salon.id),
+            gte(profileVisits.createdAt, today)
+          )
+        );
+
+      // Daily visits for the last 7 days
+      const dailyVisits = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+        const nextDay = new Date(date);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        const visitsResult = await db.select({ count: count() })
+          .from(profileVisits)
+          .where(
+            and(
+              eq(profileVisits.salonId, salon.id),
+              gte(profileVisits.createdAt, date),
+              lte(profileVisits.createdAt, nextDay)
+            )
+          );
+
+        dailyVisits.push({
+          date: date.toISOString().split('T')[0],
+          visits: Number(visitsResult[0]?.count) || 0
+        });
+      }
+
+      const analytics = {
+        totalVisits: Number(totalVisitsResult[0]?.count) || 0,
+        uniqueVisitors: Number(uniqueVisitorsResult[0]?.count) || 0,
+        todayVisits: Number(todayVisitsResult[0]?.count) || 0,
+        dailyVisits,
+        lastUpdated: new Date()
+      };
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching profile analytics:", error);
+      res.status(500).json({ message: "Failed to fetch profile analytics" });
+    }
+  });
 
   // Notification settings endpoints
   app.get('/api/notifications/settings/:userId', isAuthenticated, async (req: any, res) => {

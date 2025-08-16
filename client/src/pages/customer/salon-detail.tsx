@@ -65,6 +65,26 @@ export default function SalonDetail() {
   const searchParams = new URLSearchParams(window.location.search);
   const rescheduleBookingId = searchParams.get('reschedule');
 
+  // Profile visit tracking mutation
+  const trackVisitMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", `/api/salons/${salonId}/profile-visit`, {
+        pageViewed: 'profile'
+      });
+    },
+    onError: (error) => {
+      // Silently ignore tracking errors - don't show to user
+      console.log('Visit tracking error:', error);
+    }
+  });
+
+  // Track profile visit when component mounts
+  useEffect(() => {
+    if (salonId && !trackVisitMutation.isSuccess) {
+      trackVisitMutation.mutate();
+    }
+  }, [salonId]);
+
   // Fetch salon details
   const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
     queryKey: [`/api/salons/${salonId}`],
