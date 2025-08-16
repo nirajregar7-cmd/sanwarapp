@@ -16,6 +16,7 @@ import { z } from "zod";
 import { Plus, Edit, Trash2, Calendar, Users, Percent, IndianRupee } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import type { SalonOffer } from "@shared/schema";
 
 const offerFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -38,27 +39,7 @@ const offerFormSchema = z.object({
 });
 
 type OfferForm = z.infer<typeof offerFormSchema>;
-
-interface Offer {
-  id: string;
-  title: string;
-  description: string;
-  discountType: "percentage" | "fixed_amount";
-  discountValue: string;
-  minOrderAmount?: string;
-  maxDiscountAmount?: string;
-  validFrom: string;
-  validUntil: string;
-  maxUsagePerCustomer: number;
-  maxTotalUsage?: number;
-  currentUsageCount: number;
-  isActive: boolean;
-  isVisible: boolean;
-  priority: number;
-  promoCode?: string;
-  isPromoCodeRequired: boolean;
-  createdAt: string;
-}
+type Offer = SalonOffer;
 
 export default function OffersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

@@ -1321,6 +1321,9 @@ export type SalonProduct = typeof salonProducts.$inferSelect;
 export type InsertSalonProduct = z.infer<typeof insertSalonProductSchema>;
 export type PasswordResetOtp = typeof passwordResetOtps.$inferSelect;
 export type InsertPasswordResetOtp = z.infer<typeof insertPasswordResetOtpSchema>;
+export type SalonOffer = typeof salonOffers.$inferSelect;
+export type InsertSalonOffer = z.infer<typeof insertSalonOfferSchema>;
+export type Offer = SalonOffer; // Alias for backwards compatibility
 
 // Feedback system types
 export type Feedback = typeof feedback.$inferSelect;

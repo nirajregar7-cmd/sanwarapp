@@ -18,7 +18,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { Salon, Service, Staff, WorkingHours, TimeSlot, Review } from "@shared/schema";
+import type { Salon, Service, Staff, WorkingHours, TimeSlot, Review, SalonOffer } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
