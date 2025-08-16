@@ -2,14 +2,21 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Clock, MapPin } from "lucide-react";
-import type { Salon } from "@shared/schema";
+import { Star, Clock, MapPin, Percent } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { Salon, SalonOffer } from "@shared/schema";
 
 interface SalonCardProps {
   salon: Salon;
 }
 
 export default function SalonCard({ salon }: SalonCardProps) {
+  // Fetch salon offers
+  const { data: offers = [] } = useQuery<SalonOffer[]>({
+    queryKey: [`/api/salons/${salon.id}/offers`],
+    enabled: !!salon.id,
+  });
+
   const getAvailabilityStatus = () => {
     // In a real app, you'd check actual availability
     const isOpen = true; // Simplified for now
@@ -21,6 +28,16 @@ export default function SalonCard({ salon }: SalonCardProps) {
     return status === "Available Now" ? "bg-accent text-white" : "bg-orange-500 text-white";
   };
 
+  // Get the best offer to display
+  const bestOffer = offers.find(offer => offer.isActive);
+  const getOfferText = (offer: SalonOffer) => {
+    if (offer.discountType === 'percentage') {
+      return `${offer.discountValue}% OFF`;
+    } else {
+      return `₹${offer.discountValue} OFF`;
+    }
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-shadow">
       <div className="relative">
@@ -29,6 +46,14 @@ export default function SalonCard({ salon }: SalonCardProps) {
           alt={salon.name} 
           className="w-full h-48 object-cover"
         />
+        {bestOffer && (
+          <div className="absolute top-3 left-3">
+            <Badge className="bg-green-500 text-white font-semibold px-3 py-1">
+              <Percent className="h-3 w-3 mr-1" />
+              {getOfferText(bestOffer)}
+            </Badge>
+          </div>
+        )}
       </div>
       
       <CardContent className="p-6">
@@ -68,9 +93,21 @@ export default function SalonCard({ salon }: SalonCardProps) {
           </span>
         </div>
         
+        {bestOffer && (
+          <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center text-green-700">
+              <Percent className="h-4 w-4 mr-1" />
+              <span className="text-sm font-medium">{bestOffer.title}</span>
+            </div>
+            <p className="text-xs text-green-600 mt-1">
+              Save {getOfferText(bestOffer)} on services
+            </p>
+          </div>
+        )}
+        
         <Link href={`/salon/${salon.id}`}>
           <Button className="w-full bg-primary hover:bg-primary/90">
-            View Details & Book
+            {bestOffer ? `Book with ${getOfferText(bestOffer)}` : "View Details & Book"}
           </Button>
         </Link>
       </CardContent>
