@@ -67,16 +67,25 @@ export default function OffersPage() {
   const form = useForm<OfferForm>({
     resolver: zodResolver(offerFormSchema),
     defaultValues: {
+      title: "",
+      description: "",
       discountType: "percentage",
+      discountValue: "",
+      minOrderAmount: "",
+      maxDiscountAmount: "",
+      validFrom: "",
+      validUntil: "",
+      maxUsagePerCustomer: "1",
+      maxTotalUsage: "",
       isActive: true,
       isVisible: true,
       isPromoCodeRequired: false,
-      maxUsagePerCustomer: "1",
+      promoCode: "",
       priority: "0",
     },
   });
 
-  const { data: offers = [], isLoading } = useQuery({
+  const { data: offers = [], isLoading } = useQuery<Offer[]>({
     queryKey: ["/api/owner/salon/offers"],
   });
 
@@ -176,7 +185,7 @@ export default function OffersPage() {
       title: offer.title,
       description: offer.description,
       discountType: offer.discountType,
-      discountValue: offer.discountValue.toString(),
+      discountValue: offer.discountValue?.toString() || "",
       minOrderAmount: offer.minOrderAmount?.toString() || "",
       maxDiscountAmount: offer.maxDiscountAmount?.toString() || "",
       validFrom: new Date(offer.validFrom).toISOString().split('T')[0],

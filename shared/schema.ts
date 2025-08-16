@@ -1298,8 +1298,7 @@ export interface BookingWithDetails extends Booking {
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type PlatformStats = typeof platformStats.$inferSelect;
-export type AdminRevenueTransaction = typeof adminRevenueTransactions.$inferSelect;
-export type InsertAdminRevenueTransaction = z.infer<typeof createInsertSchema<typeof adminRevenueTransactions>>;
+// Admin revenue transaction types will be added when needed
 export type Wallet = typeof wallets.$inferSelect;
 export type InsertWallet = z.infer<typeof insertWalletSchema>;
 export type WalletTransaction = typeof walletTransactions.$inferSelect;
