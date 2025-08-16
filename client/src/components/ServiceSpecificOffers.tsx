@@ -18,15 +18,41 @@ export function ServiceSpecificOffers({ offers, services, showTitle = true }: Se
     
     offers.forEach(offer => {
       if (!offer.isApplicableToAllServices && offer.applicableServices) {
+        // Check if offer has service-specific discounts
+        const hasServiceSpecificDiscounts = offer.serviceSpecificDiscounts;
+        let parsedServiceDiscounts: Record<string, string> = {};
+        
+        if (hasServiceSpecificDiscounts) {
+          try {
+            parsedServiceDiscounts = typeof offer.serviceSpecificDiscounts === 'string' 
+              ? JSON.parse(offer.serviceSpecificDiscounts) 
+              : offer.serviceSpecificDiscounts || {};
+          } catch (e) {
+            console.warn('Failed to parse service specific discounts:', e);
+          }
+        }
+        
         offer.applicableServices.forEach(serviceId => {
           const service = services.find(s => s.id === serviceId);
           if (service) {
             if (!serviceOffers[serviceId]) {
               serviceOffers[serviceId] = { name: service.name, discounts: [] };
             }
-            const discount = offer.discountType === "percentage" 
-              ? `${offer.discountValue}%` 
-              : `₹${offer.discountValue}`;
+            
+            // Use service-specific discount if available, otherwise fall back to general discount
+            const serviceDiscount = parsedServiceDiscounts[serviceId];
+            let discount: string;
+            
+            if (serviceDiscount) {
+              discount = offer.discountType === "percentage" 
+                ? `${serviceDiscount}%` 
+                : `₹${serviceDiscount}`;
+            } else {
+              discount = offer.discountType === "percentage" 
+                ? `${offer.discountValue}%` 
+                : `₹${offer.discountValue}`;
+            }
+            
             serviceOffers[serviceId].discounts.push(discount);
           }
         });

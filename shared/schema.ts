@@ -337,6 +337,8 @@ export const salonOffers = pgTable("salon_offers", {
   // Service targeting
   applicableServices: text("applicable_services").array(), // Array of service IDs
   isApplicableToAllServices: boolean("is_applicable_to_all_services").default(true),
+  // Service-specific discounts (JSON object mapping serviceId to discount percentage)
+  serviceSpecificDiscounts: text("service_specific_discounts"), // JSON: {"serviceId": "10", "serviceId2": "15"}
   // Offer settings
   isActive: boolean("is_active").default(true),
   isVisible: boolean("is_visible").default(true), // Show on customer dashboard

@@ -5613,6 +5613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         priority: parseInt(req.body.priority || "0"),
         applicableServices: req.body.applicableServices || [],
         isApplicableToAllServices: req.body.isApplicableToAllServices ?? true,
+        serviceSpecificDiscounts: req.body.serviceSpecificDiscounts ? JSON.stringify(req.body.serviceSpecificDiscounts) : null,
       };
       
       const offerData = insertSalonOfferSchema.parse(transformedData);
@@ -5631,6 +5632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         salonId: salon.id,
         createdBy: userId,
         promoCode: offerData.promoCode || null,
+        serviceSpecificDiscounts: transformedData.serviceSpecificDiscounts,
       }).returning();
       
       res.json(newOffer);

@@ -46,6 +46,7 @@ export default function OffersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
+  const [serviceSpecificDiscounts, setServiceSpecificDiscounts] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -100,6 +101,7 @@ export default function OffersPage() {
         maxUsagePerCustomer: parseInt(data.maxUsagePerCustomer),
         maxTotalUsage: data.maxTotalUsage ? parseInt(data.maxTotalUsage) : null,
         priority: parseInt(data.priority || "0"),
+        serviceSpecificDiscounts: !data.isApplicableToAllServices ? serviceSpecificDiscounts : null,
       };
       return apiRequest("POST", "/api/owner/salon/offers", payload);
     },
@@ -108,9 +110,10 @@ export default function OffersPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/owner/salon/services"] }); // Also refresh services
       setIsCreateDialogOpen(false);
       form.reset();
+      setServiceSpecificDiscounts({}); // Reset service discounts
       toast({
         title: "Success",
-        description: "Offer created successfully!",
+        description: "Offer created successfully with service-specific discounts!",
       });
     },
     onError: () => {
@@ -543,7 +546,13 @@ export default function OffersPage() {
                                             min="1"
                                             max="100"
                                             placeholder="10"
-                                            defaultValue="10"
+                                            value={serviceSpecificDiscounts[service.id] || "10"}
+                                            onChange={(e) => {
+                                              setServiceSpecificDiscounts(prev => ({
+                                                ...prev,
+                                                [service.id]: e.target.value
+                                              }));
+                                            }}
                                             className="w-20 text-center"
                                             data-testid={`input-discount-${service.id}`}
                                           />
@@ -554,11 +563,11 @@ export default function OffersPage() {
                                         variant="secondary" 
                                         className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
                                       >
-                                        {service.name} 10%
+                                        {service.name} {serviceSpecificDiscounts[service.id] || "10"}%
                                       </Badge>
                                     </div>
                                     <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                                      Original: ₹{service.price} → Discounted: ₹{Math.round(service.price * 0.9)}
+                                      Original: ₹{service.price} → Discounted: ₹{Math.round(service.price * (1 - (parseInt(serviceSpecificDiscounts[service.id] || "10") / 100)))}
                                     </p>
                                   </div>
                                 )}
