@@ -185,16 +185,59 @@ export default function CustomerHome() {
                       </Badge>
                     </div>
 
-                    {/* Offer Preview */}
+                    {/* Enhanced Offer Preview with Individual Service Discounts */}
                     {topOffer && (
                       <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
                         <div className="flex items-center gap-2 mb-1">
                           <Gift className="h-4 w-4 text-purple-600" />
                           <span className="text-sm font-semibold text-purple-800">{topOffer.title}</span>
                         </div>
-                        <p className="text-xs text-gray-600 line-clamp-1">{topOffer.description}</p>
+                        <p className="text-xs text-gray-600 line-clamp-1 mb-2">{topOffer.description}</p>
+                        
+                        {/* Show Individual Service Offers as requested: Haircut 10%, Haircolor 15%, Beard 5% */}
+                        {!topOffer.isApplicableToAllServices && topOffer.applicableServices && salon.services && (
+                          <div className="mb-2">
+                            <p className="text-xs text-purple-700 mb-1">Service Offers:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {topOffer.applicableServices
+                                .slice(0, 4) // Show more services on salon card
+                                .map(serviceId => {
+                                  const service = salon.services?.find(s => s.id === serviceId);
+                                  if (!service) return null;
+                                  return (
+                                    <Badge 
+                                      key={serviceId} 
+                                      variant="secondary" 
+                                      className="bg-red-100 text-red-700 text-xs px-2 py-0.5 font-medium"
+                                    >
+                                      {service.name} {topOffer.discountType === "percentage" 
+                                        ? `${topOffer.discountValue}%` 
+                                        : `₹${topOffer.discountValue}`}
+                                    </Badge>
+                                  );
+                                })
+                                .filter(Boolean)}
+                              {topOffer.applicableServices && topOffer.applicableServices.length > 4 && (
+                                <Badge variant="outline" className="text-xs bg-white">
+                                  +{topOffer.applicableServices.length - 4} more
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {topOffer.isApplicableToAllServices && (
+                          <div className="mb-2">
+                            <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm">
+                              All Services {topOffer.discountType === "percentage" 
+                                ? `${topOffer.discountValue}% OFF` 
+                                : `₹${topOffer.discountValue} OFF`}
+                            </Badge>
+                          </div>
+                        )}
+                        
                         {topOffer.promoCode && (
-                          <div className="mt-2 flex items-center gap-1">
+                          <div className="flex items-center gap-1">
                             <span className="text-xs text-gray-500">Code:</span>
                             <Badge variant="outline" className="text-xs font-mono bg-white">
                               {topOffer.promoCode}

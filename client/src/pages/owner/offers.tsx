@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -189,13 +190,13 @@ export default function OffersPage() {
       maxDiscountAmount: offer.maxDiscountAmount?.toString() || "",
       validFrom: new Date(offer.validFrom).toISOString().split('T')[0],
       validUntil: new Date(offer.validUntil).toISOString().split('T')[0],
-      maxUsagePerCustomer: offer.maxUsagePerCustomer.toString(),
+      maxUsagePerCustomer: offer.maxUsagePerCustomer?.toString() || "1",
       maxTotalUsage: offer.maxTotalUsage?.toString() || "",
-      isActive: offer.isActive,
-      isVisible: offer.isVisible,
-      priority: offer.priority.toString(),
+      isActive: offer.isActive || false,
+      isVisible: offer.isVisible || false,
+      priority: offer.priority?.toString() || "1",
       promoCode: offer.promoCode || "",
-      isPromoCodeRequired: offer.isPromoCodeRequired,
+      isPromoCodeRequired: offer.isPromoCodeRequired || false,
       isApplicableToAllServices: offer.isApplicableToAllServices || false,
       applicableServices: offer.applicableServices || [],
     });
@@ -466,29 +467,46 @@ export default function OffersPage() {
                         Choose which services this offer applies to
                       </FormDescription>
                       <FormControl>
-                        <div className="grid grid-cols-1 gap-3 max-h-40 overflow-y-auto border rounded-md p-3">
+                        <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto border rounded-md p-4 bg-gray-50 dark:bg-gray-900">
                           {services && services.length > 0 ? (
                             services.map((service: any) => (
-                              <div key={service.id} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={service.id}
-                                  checked={field.value?.includes(service.id) || false}
-                                  onCheckedChange={(checked) => {
-                                    const currentServices = field.value || [];
-                                    if (checked) {
-                                      field.onChange([...currentServices, service.id]);
-                                    } else {
-                                      field.onChange(currentServices.filter((id: string) => id !== service.id));
-                                    }
-                                  }}
-                                  data-testid={`checkbox-service-${service.id}`}
-                                />
-                                <label
-                                  htmlFor={service.id}
-                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                >
-                                  {service.name} - ₹{service.price}
-                                </label>
+                              <div key={service.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border">
+                                <div className="flex items-center space-x-3">
+                                  <Checkbox
+                                    id={service.id}
+                                    checked={field.value?.includes(service.id) || false}
+                                    onCheckedChange={(checked) => {
+                                      const currentServices = field.value || [];
+                                      if (checked) {
+                                        field.onChange([...currentServices, service.id]);
+                                      } else {
+                                        field.onChange(currentServices.filter((id: string) => id !== service.id));
+                                      }
+                                    }}
+                                    data-testid={`checkbox-service-${service.id}`}
+                                  />
+                                  <div>
+                                    <label
+                                      htmlFor={service.id}
+                                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                    >
+                                      {service.name}
+                                    </label>
+                                    <p className="text-xs text-gray-500 mt-1">₹{service.price}</p>
+                                  </div>
+                                </div>
+                                
+                                {/* Show discount preview for selected services */}
+                                {field.value?.includes(service.id) && (
+                                  <Badge 
+                                    variant="secondary" 
+                                    className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"
+                                  >
+                                    {form.watch("discountType") === "percentage" 
+                                      ? `${form.watch("discountValue")}% OFF` 
+                                      : `₹${form.watch("discountValue")} OFF`}
+                                  </Badge>
+                                )}
                               </div>
                             ))
                           ) : (
@@ -512,6 +530,26 @@ export default function OffersPage() {
                           )}
                         </div>
                       </FormControl>
+                      
+                      {/* Service Selection Summary */}
+                      {field.value && field.value.length > 0 && (
+                        <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                          <Label className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                            Selected Services Preview:
+                          </Label>
+                          <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                            {services
+                              .filter((service: any) => field.value?.includes(service.id))
+                              .map((service: any) => 
+                                `${service.name} ${form.watch("discountType") === "percentage" 
+                                  ? `${form.watch("discountValue")}%` 
+                                  : `₹${form.watch("discountValue")}`}`
+                              )
+                              .join(", ")
+                            }
+                          </p>
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
