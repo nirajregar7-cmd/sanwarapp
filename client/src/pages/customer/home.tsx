@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Star, Clock, MapPin, Search, Heart } from "lucide-react";
+import { Star, Clock, MapPin, Search, Heart, Percent, Gift } from "lucide-react";
 import type { Salon } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import SalonLikeButton from "@/components/SalonLikeButton";
+import OffersDisplayCard from "@/components/OffersDisplayCard";
 
 export default function CustomerHome() {
   const { user } = useAuth();
@@ -19,6 +20,11 @@ export default function CustomerHome() {
       if (!response.ok) throw new Error("Failed to fetch salons");
       return response.json();
     },
+  });
+
+  const { data: offers, isLoading: isLoadingOffers } = useQuery({
+    queryKey: ["/api/customer/available-offers"],
+    enabled: !!user,
   });
 
   if (isLoading) {
@@ -114,6 +120,40 @@ export default function CustomerHome() {
           </div>
         </div>
       </section>
+
+      {/* Special Offers Section */}
+      {user && offers && offers.length > 0 && (
+        <section className="py-8 sm:py-12 bg-gradient-to-br from-purple-50 to-blue-50">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Gift className="h-6 w-6 text-purple-600" />
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+                  Special Offers Just for You
+                </h2>
+              </div>
+              <p className="text-sm sm:text-base md:text-lg text-gray-600">
+                Exclusive deals and discounts from your favorite salons
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {offers.slice(0, 3).map((offer: any) => (
+                <OffersDisplayCard key={offer.id} offer={offer} />
+              ))}
+            </div>
+
+            {offers.length > 3 && (
+              <div className="text-center mt-6">
+                <Button variant="outline" className="bg-white">
+                  <Percent className="h-4 w-4 mr-2" />
+                  View All Offers ({offers.length})
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Featured Salons */}
       <section className="py-8 sm:py-12 lg:py-16">

@@ -19,7 +19,15 @@ The server is built using Express.js and TypeScript, adhering to a RESTful API d
 ### Database Design
 The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
 
-## Recent Updates (August 15, 2025)
+## Recent Updates (August 16, 2025)
+- **Comprehensive Offers Management System**: Implemented full promotional offers functionality allowing salon owners to create, manage, and track marketing campaigns
+- **Salon Offers Database Schema**: Added salon_offers and customer_offers tables with comprehensive tracking (usage counts, validity periods, discount types)
+- **Offers Creation Interface**: Built complete offers management page for salon owners with form validation and real-time preview
+- **Customer Offers Integration**: Added offers display on customer dashboard with attractive cards showing discount details and usage limits
+- **Navigation Enhancement**: Added "Offers" menu links to both desktop and mobile navigation for salon owners
+- **API Endpoints**: Implemented complete CRUD operations for offers management with proper authentication and validation
+
+## Previous Updates (August 15, 2025)
 - **Dynamic Confirmation Fees**: Implemented salon-specific confirmation fee system allowing each salon owner to set their own confirmation amount (₹1-₹500) instead of fixed ₹3
 - **Revenue Splitting Logic**: Added automatic 80/20 revenue split between shopkeeper and platform with proper database tracking  
 - **Confirmation Settings Page**: New dashboard section for salon owners to manage their confirmation fees

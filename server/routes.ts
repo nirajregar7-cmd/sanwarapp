@@ -10,7 +10,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -5506,6 +5506,190 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating notification settings:", error);
       res.status(500).json({ message: "Failed to update notification settings" });
+    }
+  });
+
+  // Salon Offers API endpoints
+
+  // Get salon offers for owner
+  app.get('/api/owner/salon/offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // First get the salon for this owner
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Get all offers for this salon
+      const offers = await db.select()
+        .from(salonOffers)
+        .where(eq(salonOffers.salonId, salon.id))
+        .orderBy(desc(salonOffers.createdAt));
+      
+      res.json(offers);
+    } catch (error) {
+      console.error("Error fetching salon offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // Create salon offer
+  app.post('/api/owner/salon/offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const offerData = insertSalonOfferSchema.parse(req.body);
+      
+      // First get the salon for this owner
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      const [newOffer] = await db.insert(salonOffers).values({
+        ...offerData,
+        salonId: salon.id,
+        createdBy: userId,
+      }).returning();
+      
+      res.json(newOffer);
+    } catch (error) {
+      console.error("Error creating salon offer:", error);
+      res.status(500).json({ message: "Failed to create offer" });
+    }
+  });
+
+  // Update salon offer
+  app.put('/api/owner/salon/offers/:offerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { offerId } = req.params;
+      const offerData = req.body;
+      
+      // Verify offer ownership through salon
+      const [existingOffer] = await db.select({
+        offer: salonOffers,
+        salon: salons
+      })
+      .from(salonOffers)
+      .innerJoin(salons, eq(salonOffers.salonId, salons.id))
+      .where(eq(salonOffers.id, offerId));
+      
+      if (!existingOffer || existingOffer.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this offer" });
+      }
+      
+      const [updatedOffer] = await db.update(salonOffers)
+        .set({ ...offerData, updatedAt: new Date() })
+        .where(eq(salonOffers.id, offerId))
+        .returning();
+      
+      res.json(updatedOffer);
+    } catch (error) {
+      console.error("Error updating salon offer:", error);
+      res.status(500).json({ message: "Failed to update offer" });
+    }
+  });
+
+  // Delete salon offer
+  app.delete('/api/owner/salon/offers/:offerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { offerId } = req.params;
+      
+      // Verify offer ownership through salon
+      const [existingOffer] = await db.select({
+        offer: salonOffers,
+        salon: salons
+      })
+      .from(salonOffers)
+      .innerJoin(salons, eq(salonOffers.salonId, salons.id))
+      .where(eq(salonOffers.id, offerId));
+      
+      if (!existingOffer || existingOffer.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this offer" });
+      }
+      
+      await db.delete(salonOffers).where(eq(salonOffers.id, offerId));
+      
+      res.json({ message: "Offer deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting salon offer:", error);
+      res.status(500).json({ message: "Failed to delete offer" });
+    }
+  });
+
+  // Get available offers for customers (shows on customer dashboard)
+  app.get('/api/customer/available-offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.query;
+      
+      let whereCondition = and(
+        eq(salonOffers.isActive, true),
+        eq(salonOffers.isVisible, true),
+        gte(salonOffers.validUntil, new Date())
+      );
+      
+      // Filter by salon if provided
+      if (salonId) {
+        whereCondition = and(whereCondition, eq(salonOffers.salonId, salonId as string));
+      }
+      
+      const offers = await db.select({
+        id: salonOffers.id,
+        salonId: salonOffers.salonId,
+        salonName: salons.name,
+        title: salonOffers.title,
+        description: salonOffers.description,
+        discountType: salonOffers.discountType,
+        discountValue: salonOffers.discountValue,
+        minOrderAmount: salonOffers.minOrderAmount,
+        maxDiscountAmount: salonOffers.maxDiscountAmount,
+        validFrom: salonOffers.validFrom,
+        validUntil: salonOffers.validUntil,
+        maxUsagePerCustomer: salonOffers.maxUsagePerCustomer,
+        currentUsageCount: salonOffers.currentUsageCount,
+        maxTotalUsage: salonOffers.maxTotalUsage,
+        promoCode: salonOffers.promoCode,
+        isPromoCodeRequired: salonOffers.isPromoCodeRequired,
+        priority: salonOffers.priority
+      })
+      .from(salonOffers)
+      .innerJoin(salons, eq(salonOffers.salonId, salons.id))
+      .where(whereCondition)
+      .orderBy(desc(salonOffers.priority), desc(salonOffers.createdAt));
+      
+      // Check usage for each offer by this customer
+      const offersWithUsage = await Promise.all(
+        offers.map(async (offer) => {
+          const [usage] = await db.select({ count: sql<number>`count(*)` })
+            .from(salonOfferUsage)
+            .where(and(
+              eq(salonOfferUsage.offerId, offer.id),
+              eq(salonOfferUsage.customerId, userId)
+            ));
+          
+          return {
+            ...offer,
+            customerUsageCount: usage?.count || 0,
+            canUse: (usage?.count || 0) < (offer.maxUsagePerCustomer || 1) &&
+                   (!offer.maxTotalUsage || offer.currentUsageCount < offer.maxTotalUsage)
+          };
+        })
+      );
+      
+      res.json(offersWithUsage);
+    } catch (error) {
+      console.error("Error fetching available offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
     }
   });
 

@@ -317,6 +317,57 @@ export const platformStats = pgTable("platform_stats", {
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
+// Salon-specific offers table for individual salon promotions
+export const salonOffers = pgTable("salon_offers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  discountType: varchar("discount_type", { enum: ["percentage", "fixed_amount"] }).notNull(),
+  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).notNull(),
+  minOrderAmount: decimal("min_order_amount", { precision: 10, scale: 2 }).default("0"),
+  maxDiscountAmount: decimal("max_discount_amount", { precision: 10, scale: 2 }),
+  // Validity period
+  validFrom: timestamp("valid_from").notNull(),
+  validUntil: timestamp("valid_until").notNull(),
+  // Usage limits
+  maxUsagePerCustomer: integer("max_usage_per_customer").default(1),
+  maxTotalUsage: integer("max_total_usage"),
+  currentUsageCount: integer("current_usage_count").default(0),
+  // Service restrictions
+  applicableServices: text("applicable_services").array(), // Array of service IDs
+  isApplicableToAllServices: boolean("is_applicable_to_all_services").default(true),
+  // Customer targeting
+  targetCustomerType: varchar("target_customer_type", { 
+    enum: ["all", "new_customers", "returning_customers", "specific_customers"] 
+  }).default("all"),
+  targetCustomerIds: text("target_customer_ids").array(), // Array of customer IDs for specific targeting
+  // Offer settings
+  isActive: boolean("is_active").default(true),
+  isVisible: boolean("is_visible").default(true), // Show on customer dashboard
+  priority: integer("priority").default(0), // Higher priority shows first
+  // Promo code
+  promoCode: varchar("promo_code", { length: 50 }).unique(),
+  isPromoCodeRequired: boolean("is_promo_code_required").default(false),
+  // Tracking
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Salon offer usage tracking table
+export const salonOfferUsage = pgTable("salon_offer_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  offerId: varchar("offer_id").references(() => salonOffers.id, { onDelete: "cascade" }).notNull(),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  bookingId: varchar("booking_id").references(() => bookings.id, { onDelete: "cascade" }),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).notNull(),
+  originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
+  finalAmount: decimal("final_amount", { precision: 10, scale: 2 }).notNull(),
+  promoCodeUsed: varchar("promo_code_used", { length: 50 }),
+  usedAt: timestamp("used_at").defaultNow(),
+});
+
 // Password reset OTP table
 export const passwordResetOtps = pgTable("password_reset_otps", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -694,6 +745,7 @@ export const salonsRelations = relations(salons, ({ one, many }) => ({
   gallery: many(salonGallery),
   account: one(salonOwnerAccounts),
   likes: many(salonLikes),
+  salonOffers: many(salonOffers),
 }));
 
 export const salonOwnerAccountsRelations = relations(salonOwnerAccounts, ({ one }) => ({
@@ -957,6 +1009,34 @@ export const helpTicketMessagesRelations = relations(helpTicketMessages, ({ one 
   }),
 }));
 
+// Salon offers relations
+export const salonOffersRelations = relations(salonOffers, ({ one, many }) => ({
+  salon: one(salons, {
+    fields: [salonOffers.salonId],
+    references: [salons.id],
+  }),
+  creator: one(users, {
+    fields: [salonOffers.createdBy],
+    references: [users.id],
+  }),
+  usages: many(salonOfferUsage),
+}));
+
+export const salonOfferUsageRelations = relations(salonOfferUsage, ({ one }) => ({
+  offer: one(salonOffers, {
+    fields: [salonOfferUsage.offerId],
+    references: [salonOffers.id],
+  }),
+  customer: one(users, {
+    fields: [salonOfferUsage.customerId],
+    references: [users.id],
+  }),
+  booking: one(bookings, {
+    fields: [salonOfferUsage.bookingId],
+    references: [bookings.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -1019,6 +1099,18 @@ export const insertWalkInBookingSchema = createInsertSchema(bookings).omit({
   walkInPaymentMethod: z.enum(["cash", "card", "upi", "online"]),
   walkInCustomerName: z.string().min(1, "Customer name is required"),
   walkInCustomerPhone: z.string().min(10, "Valid phone number is required"),
+});
+
+export const insertSalonOfferSchema = createInsertSchema(salonOffers).omit({
+  id: true,
+  currentUsageCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSalonOfferUsageSchema = createInsertSchema(salonOfferUsage).omit({
+  id: true,
+  usedAt: true,
 });
 
 export const insertReviewSchema = createInsertSchema(reviews).omit({
