@@ -71,6 +71,7 @@ Vite is used for fast development builds and hot module replacement. The build p
 - **Capacitor**: Native mobile app wrapper for iOS and Android deployment.
 - **Progressive Web App**: Mobile-optimized interface with native app capabilities.
 - **Push Notifications**: Firebase integration for booking confirmations and updates.
+- **Android Build System**: Complete Gradle configuration with all necessary build files for APK generation.
 
 ### Development Tools
 - **Vite**: Build tool and development server.
