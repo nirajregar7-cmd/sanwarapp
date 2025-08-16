@@ -5542,12 +5542,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/owner/salon/offers', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      // Transform the data to match schema expectations
+      // Transform the data to match schema expectations (Drizzle expects strings for decimal fields)
       const transformedData = {
         ...req.body,
-        discountValue: parseFloat(req.body.discountValue),
-        minOrderAmount: req.body.minOrderAmount ? parseFloat(req.body.minOrderAmount) : 0,
-        maxDiscountAmount: req.body.maxDiscountAmount ? parseFloat(req.body.maxDiscountAmount) : null,
+        discountValue: req.body.discountValue.toString(),
+        minOrderAmount: req.body.minOrderAmount ? req.body.minOrderAmount.toString() : "0",
+        maxDiscountAmount: req.body.maxDiscountAmount ? req.body.maxDiscountAmount.toString() : null,
         validFrom: new Date(req.body.validFrom),
         validUntil: new Date(req.body.validUntil),
         maxUsagePerCustomer: parseInt(req.body.maxUsagePerCustomer),
@@ -5586,12 +5586,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.id;
       const { offerId } = req.params;
       
-      // Transform the data to match schema expectations
+      // Transform the data to match schema expectations (Drizzle expects strings for decimal fields)
       const transformedData = {
         ...req.body,
-        discountValue: parseFloat(req.body.discountValue),
-        minOrderAmount: req.body.minOrderAmount ? parseFloat(req.body.minOrderAmount) : 0,
-        maxDiscountAmount: req.body.maxDiscountAmount ? parseFloat(req.body.maxDiscountAmount) : null,
+        discountValue: req.body.discountValue.toString(),
+        minOrderAmount: req.body.minOrderAmount ? req.body.minOrderAmount.toString() : "0",
+        maxDiscountAmount: req.body.maxDiscountAmount ? req.body.maxDiscountAmount.toString() : null,
         validFrom: new Date(req.body.validFrom),
         validUntil: new Date(req.body.validUntil),
         maxUsagePerCustomer: parseInt(req.body.maxUsagePerCustomer),
