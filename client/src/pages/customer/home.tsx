@@ -26,6 +26,12 @@ export default function CustomerHome() {
     queryKey: ["/api/public/offers"],
   });
 
+  // Create a function to get offers for a specific salon
+  const getSalonOffers = (salonId: string) => {
+    if (!offers || !Array.isArray(offers)) return [];
+    return offers.filter((offer: any) => offer.salonId === salonId);
+  };
+
   if (isLoading) {
     return (
       <div className="interface-panel">
@@ -120,39 +126,7 @@ export default function CustomerHome() {
         </div>
       </section>
 
-      {/* Special Offers Section */}
-      {offers && offers.length > 0 && (
-        <section className="py-8 sm:py-12 bg-gradient-to-br from-purple-50 to-blue-50">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Gift className="h-6 w-6 text-purple-600" />
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-                  Special Offers Available
-                </h2>
-              </div>
-              <p className="text-sm sm:text-base md:text-lg text-gray-600">
-                Exclusive deals and discounts from your favorite salons
-              </p>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {offers.slice(0, 3).map((offer: any) => (
-                <OffersDisplayCard key={offer.id} offer={offer} />
-              ))}
-            </div>
-
-            {offers.length > 3 && (
-              <div className="text-center mt-6">
-                <Button variant="outline" className="bg-white">
-                  <Percent className="h-4 w-4 mr-2" />
-                  View All Offers ({offers.length})
-                </Button>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
 
       {/* Featured Salons */}
       <section className="py-8 sm:py-12 lg:py-16">
@@ -164,7 +138,11 @@ export default function CustomerHome() {
 
           {salons && salons.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-              {salons.map((salon) => (
+              {salons.map((salon) => {
+                const salonOffers = getSalonOffers(salon.id);
+                const topOffer = salonOffers[0]; // Get the top priority offer
+                
+                return (
                 <Card key={salon.id} className="overflow-hidden hover:shadow-xl transition-shadow">
                   <div className="relative">
                     <img 
@@ -172,6 +150,17 @@ export default function CustomerHome() {
                       alt={salon.name} 
                       className="w-full h-48 object-cover"
                     />
+                    
+                    {/* Offer Badge */}
+                    {topOffer && (
+                      <div className="absolute top-3 left-3 z-10">
+                        <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                          {topOffer.discountType === "percentage" 
+                            ? `${topOffer.discountValue}% OFF` 
+                            : `₹${topOffer.discountValue} OFF`}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <CardContent className="p-6">
@@ -199,6 +188,25 @@ export default function CustomerHome() {
                         Available
                       </Badge>
                     </div>
+
+                    {/* Offer Preview */}
+                    {topOffer && (
+                      <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Gift className="h-4 w-4 text-purple-600" />
+                          <span className="text-sm font-semibold text-purple-800">{topOffer.title}</span>
+                        </div>
+                        <p className="text-xs text-gray-600 line-clamp-1">{topOffer.description}</p>
+                        {topOffer.promoCode && (
+                          <div className="mt-2 flex items-center gap-1">
+                            <span className="text-xs text-gray-500">Code:</span>
+                            <Badge variant="outline" className="text-xs font-mono bg-white">
+                              {topOffer.promoCode}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     <Link href={`/salon/${salon.id}`}>
                       <Button className="w-full bg-primary hover:bg-primary/90">
@@ -207,7 +215,8 @@ export default function CustomerHome() {
                     </Link>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12">
