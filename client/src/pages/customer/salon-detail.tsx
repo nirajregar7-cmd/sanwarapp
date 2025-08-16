@@ -122,6 +122,12 @@ export default function SalonDetail() {
     enabled: !!salonId,
   });
 
+  // Fetch salon offers
+  const { data: offers = [], isLoading: offersLoading } = useQuery({
+    queryKey: [`/api/salons/${salonId}/offers`],
+    enabled: !!salonId,
+  });
+
   // Fetch available time slots for selected date and staff (ignore service filter since slots are service-agnostic)
   const { data: timeSlots = [], isLoading: timeSlotsLoading } = useQuery({
     queryKey: [`/api/salons/${salonId}/time-slots`, selectedDate?.toISOString().split('T')[0], selectedStaff],
@@ -1284,6 +1290,149 @@ export default function SalonDetail() {
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Special Offers Section */}
+            {Array.isArray(offers) && offers.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <span className="mr-2">🎯</span>
+                    Special Offers
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {offers.map((offer: any) => {
+                      const formatDiscount = () => {
+                        if (offer.discountType === "percentage") {
+                          return `${offer.discountValue}% OFF`;
+                        } else {
+                          return `₹${offer.discountValue} OFF`;
+                        }
+                      };
+
+                      const getApplicableServices = () => {
+                        if (offer.isApplicableToAllServices) {
+                          return "All Services";
+                        }
+                        if (!offer.applicableServices || offer.applicableServices.length === 0) {
+                          return "Select Services";
+                        }
+                        const applicableServiceNames = services
+                          .filter(service => offer.applicableServices?.includes(service.id))
+                          .map(service => service.name);
+                        if (applicableServiceNames.length <= 2) {
+                          return applicableServiceNames.join(", ");
+                        }
+                        return `${applicableServiceNames.slice(0, 2).join(", ")} +${applicableServiceNames.length - 2} more`;
+                      };
+
+                      return (
+                        <div
+                          key={offer.id}
+                          className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950"
+                          data-testid={`offer-card-${offer.id}`}
+                        >
+                          <div className="space-y-3">
+                            {/* Offer Title and Discount */}
+                            <div>
+                              <h4 className="font-semibold text-lg mb-1" data-testid={`offer-title-${offer.id}`}>
+                                {offer.title}
+                              </h4>
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold">
+                                  {formatDiscount()}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  Active
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {/* Description */}
+                            <p className="text-sm text-gray-700 dark:text-gray-300" data-testid={`offer-desc-${offer.id}`}>
+                              {offer.description}
+                            </p>
+
+                            {/* Applicable Services */}
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                Applicable to:
+                              </p>
+                              <p className="text-sm text-blue-600 dark:text-blue-400 font-medium" data-testid={`offer-services-${offer.id}`}>
+                                {getApplicableServices()}
+                              </p>
+                            </div>
+
+                            {/* Validity */}
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <CalendarIcon className="w-3 h-3" />
+                              <span data-testid={`offer-validity-${offer.id}`}>
+                                Valid till {new Date(offer.validUntil).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            {/* Usage Info */}
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <Users className="w-3 h-3" />
+                              <span data-testid={`offer-usage-${offer.id}`}>
+                                Used {offer.currentUsageCount || 0} times
+                                {offer.maxTotalUsage && ` of ${offer.maxTotalUsage}`}
+                              </span>
+                            </div>
+
+                            {/* Min Order Amount */}
+                            {offer.minOrderAmount && parseFloat(offer.minOrderAmount) > 0 && (
+                              <div className="text-xs text-orange-600 dark:text-orange-400">
+                                <IndianRupee className="w-3 h-3 inline mr-1" />
+                                Min order: ₹{offer.minOrderAmount}
+                              </div>
+                            )}
+
+                            {/* Promo Code */}
+                            {offer.promoCode && (
+                              <div className="bg-gray-100 dark:bg-gray-800 rounded p-2">
+                                <p className="text-xs font-medium mb-1">Use Code:</p>
+                                <Badge variant="outline" className="font-mono" data-testid={`offer-promo-${offer.id}`}>
+                                  {offer.promoCode}
+                                </Badge>
+                              </div>
+                            )}
+
+                            {/* Book with Offer Button */}
+                            <Button 
+                              size="sm" 
+                              className="w-full mt-3"
+                              onClick={() => {
+                                // Auto-select services if specific services are applicable
+                                if (!offer.isApplicableToAllServices && offer.applicableServices && offer.applicableServices.length > 0) {
+                                  setSelectedService(offer.applicableServices[0]);
+                                }
+                                setBookingDialogOpen(true);
+                              }}
+                              data-testid={`button-book-offer-${offer.id}`}
+                            >
+                              Book with This Offer
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* View All Offers Button */}
+                  {offers.length > 3 && (
+                    <div className="mt-6 text-center">
+                      <Link href={`/salon/${salonId}/offers`}>
+                        <Button variant="outline" data-testid="button-view-all-offers">
+                          View All Offers ({offers.length})
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

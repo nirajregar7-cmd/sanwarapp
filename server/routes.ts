@@ -567,6 +567,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get salon offers for customers
+  app.get('/api/salons/:salonId/offers', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      
+      // Get active and visible offers for this salon
+      const currentDate = new Date();
+      const offers = await db.select()
+        .from(salonOffers)
+        .where(
+          and(
+            eq(salonOffers.salonId, salonId),
+            eq(salonOffers.isActive, true),
+            eq(salonOffers.isVisible, true),
+            lte(salonOffers.validFrom, currentDate),
+            gte(salonOffers.validUntil, currentDate)
+          )
+        )
+        .orderBy(desc(salonOffers.priority), desc(salonOffers.createdAt));
+      
+      res.json(offers);
+    } catch (error) {
+      console.error("Error fetching salon offers:", error);
+      res.status(500).json({ message: "Failed to fetch salon offers" });
+    }
+  });
+
   // Salon staff endpoint
   app.get('/api/salons/:salonId/staff', async (req, res) => {
     try {
