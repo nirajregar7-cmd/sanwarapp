@@ -334,6 +334,9 @@ export const salonOffers = pgTable("salon_offers", {
   maxUsagePerCustomer: integer("max_usage_per_customer").default(1),
   maxTotalUsage: integer("max_total_usage"),
   currentUsageCount: integer("current_usage_count").default(0),
+  // Service targeting
+  applicableServices: text("applicable_services").array(), // Array of service IDs
+  isApplicableToAllServices: boolean("is_applicable_to_all_services").default(true),
   // Offer settings
   isActive: boolean("is_active").default(true),
   isVisible: boolean("is_visible").default(true), // Show on customer dashboard

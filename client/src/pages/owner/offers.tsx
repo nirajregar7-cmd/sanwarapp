@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +28,8 @@ const offerFormSchema = z.object({
   validUntil: z.string().min(1, "End date is required"),
   maxUsagePerCustomer: z.string().min(1, "Usage limit per customer is required"),
   maxTotalUsage: z.string().optional(),
+  isApplicableToAllServices: z.boolean().default(true),
+  applicableServices: z.array(z.string()).optional(),
   isActive: z.boolean().default(true),
   isVisible: z.boolean().default(true),
   priority: z.string().optional(),
@@ -77,6 +80,8 @@ export default function OffersPage() {
       validUntil: "",
       maxUsagePerCustomer: "1",
       maxTotalUsage: "",
+      isApplicableToAllServices: true,
+      applicableServices: [],
       isActive: true,
       isVisible: true,
       isPromoCodeRequired: false,
@@ -87,6 +92,16 @@ export default function OffersPage() {
 
   const { data: offers = [], isLoading } = useQuery<Offer[]>({
     queryKey: ["/api/owner/salon/offers"],
+  });
+
+  // Fetch salon services for service selection
+  const { data: services = [] } = useQuery({
+    queryKey: ["/api/owner/salon/services"],
+    queryFn: async () => {
+      const response = await fetch("/api/owner/salon/services");
+      if (!response.ok) throw new Error("Failed to fetch services");
+      return response.json();
+    },
   });
 
   const createOfferMutation = useMutation({
@@ -430,6 +445,75 @@ export default function OffersPage() {
                   )}
                 />
               </div>
+
+              {/* Service Selection */}
+              <FormField
+                control={form.control}
+                name="isApplicableToAllServices"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Apply to All Services</FormLabel>
+                      <FormDescription>
+                        Enable this if the offer applies to all salon services
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="switch-all-services"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {!form.watch("isApplicableToAllServices") && (
+                <FormField
+                  control={form.control}
+                  name="applicableServices"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Services</FormLabel>
+                      <FormDescription>
+                        Choose which services this offer applies to
+                      </FormDescription>
+                      <FormControl>
+                        <div className="grid grid-cols-1 gap-3 max-h-40 overflow-y-auto border rounded-md p-3">
+                          {services.map((service: any) => (
+                            <div key={service.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={service.id}
+                                checked={field.value?.includes(service.id) || false}
+                                onCheckedChange={(checked) => {
+                                  const currentServices = field.value || [];
+                                  if (checked) {
+                                    field.onChange([...currentServices, service.id]);
+                                  } else {
+                                    field.onChange(currentServices.filter((id: string) => id !== service.id));
+                                  }
+                                }}
+                                data-testid={`checkbox-service-${service.id}`}
+                              />
+                              <label
+                                htmlFor={service.id}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {service.name} - ₹{service.price}
+                              </label>
+                            </div>
+                          ))}
+                          {services.length === 0 && (
+                            <p className="text-sm text-muted-foreground">No services found. Please add services first.</p>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}

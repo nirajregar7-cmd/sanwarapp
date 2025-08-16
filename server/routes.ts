@@ -5553,6 +5553,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxUsagePerCustomer: parseInt(req.body.maxUsagePerCustomer),
         maxTotalUsage: req.body.maxTotalUsage ? parseInt(req.body.maxTotalUsage) : null,
         priority: parseInt(req.body.priority || "0"),
+        applicableServices: req.body.applicableServices || [],
+        isApplicableToAllServices: req.body.isApplicableToAllServices ?? true,
       };
       
       const offerData = insertSalonOfferSchema.parse(transformedData);
@@ -5597,6 +5599,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxUsagePerCustomer: parseInt(req.body.maxUsagePerCustomer),
         maxTotalUsage: req.body.maxTotalUsage ? parseInt(req.body.maxTotalUsage) : null,
         priority: parseInt(req.body.priority || "0"),
+        applicableServices: req.body.applicableServices || [],
+        isApplicableToAllServices: req.body.isApplicableToAllServices ?? true,
       };
       
       const offerData = insertSalonOfferSchema.parse(transformedData);
