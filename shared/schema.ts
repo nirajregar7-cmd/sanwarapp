@@ -334,20 +334,12 @@ export const salonOffers = pgTable("salon_offers", {
   maxUsagePerCustomer: integer("max_usage_per_customer").default(1),
   maxTotalUsage: integer("max_total_usage"),
   currentUsageCount: integer("current_usage_count").default(0),
-  // Service restrictions
-  applicableServices: text("applicable_services").array(), // Array of service IDs
-  isApplicableToAllServices: boolean("is_applicable_to_all_services").default(true),
-  // Customer targeting
-  targetCustomerType: varchar("target_customer_type", { 
-    enum: ["all", "new_customers", "returning_customers", "specific_customers"] 
-  }).default("all"),
-  targetCustomerIds: text("target_customer_ids").array(), // Array of customer IDs for specific targeting
   // Offer settings
   isActive: boolean("is_active").default(true),
   isVisible: boolean("is_visible").default(true), // Show on customer dashboard
   priority: integer("priority").default(0), // Higher priority shows first
   // Promo code
-  promoCode: varchar("promo_code", { length: 50 }).unique(),
+  promoCode: varchar("promo_code", { length: 50 }),
   isPromoCodeRequired: boolean("is_promo_code_required").default(false),
   // Tracking
   createdBy: varchar("created_by").references(() => users.id).notNull(),

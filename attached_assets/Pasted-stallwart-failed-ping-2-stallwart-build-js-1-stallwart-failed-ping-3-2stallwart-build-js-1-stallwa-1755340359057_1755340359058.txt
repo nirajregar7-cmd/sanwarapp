@@ -1,0 +1,34 @@
+stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 3
+2stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 3
+3635-94c5b10d372c1319.js:1  WebSocket connection to 'wss://eval.janeway.platform.replit.com/wsv2/v2.public.Q2dZSXZZYUF4UVlTQmdqY29vREZCaUlIYW1GdVpYZGhlVEFBT3RVQkNpUmhZemxsTldFeU9DMWtaR05qTFRRelpUY3RPREUyT0MxallqQTNOakkxTkRObU1USVNBMjVwZUJvWmNtVndiR2wwTFhKbGNHd3RabWxzWlhNdGFtRnVaWGRoZVNJS1UyRnVkMkZ5UW05dmF5b0xibWx5WVdweVpXZGhjamRDVndvYWNtVndiR2wwTFhKbGNHd3RZbXh2WTJ0ekxXcGhibVYzWVhrU0dISmxjR3hwZEMxeVpYQnNMVzFsZEdFdGFtRnVaWGRoZVJvZmNtVndiR2wwTFcxaGNtZGhjbWx1WlMxaWJHOWphM010YW1GdVpYZGhlVW9IQ0lQLzVCVVFBVkFBV2c1cGJuUmxiblJmYzNSMVpHVnVkSGdBVWlNSUFSQ0FnSUNBSUJrQUFBQUFBQUFRUUNFQUFBQUFBQUFRUUNpQWdJQ0F5QUV3QW1BQWFoSUlnLy9rRlJJTGJtbHlZV3B5WldkaGNqZUNBUUlxQUpvQkNnb0lNQzR3TGpFMk16R2dBUUU9PoO2RXEWmDWMwkC0uHkdlxAX7CgiGNGILcUMqYsMLH5GOjQqhOBHSht28SIFuln55bST8QqCbaM2Kpvv5qG4Bw.Q2dad2NtOWtPak1pQ25KbGNHeHBkQzVqYjIwPQ' failed: WebSocket is closed before the connection is established.
+cleanupSocket @ 3635-94c5b10d372c1319.js:1
+stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 3
+stallwart.build.js:1 stallwart: failed ping 1
+3635-94c5b10d372c1319.js:1  WebSocket is already in CLOSING or CLOSED state.
+send @ 3635-94c5b10d372c1319.js:1
+SanwarBook:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+2stallwart.build.js:1 stallwart: failed ping 1
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'battery'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'layout-animations'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'navigation-override'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'oversized-images'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Unrecognized feature: 'unsized-media'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar22r%3A:32  Allow attribute will take precedence over 'allowpaymentrequest'.
+[Violation] Potential permissions policy violation: publickey-credentials-get is not allowed in this document.
+[Violation] Potential permissions policy violation: otp-credentials is not allowed in this document.
+[Violation] Potential permissions policy violation: publickey-credentials-create is not allowed in this document.
+ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/api/owner/salon/offers:1   Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/api/owner/salon/offers:1   Failed to load resource: the server responded with a status of 500 (Internal Server Error)
