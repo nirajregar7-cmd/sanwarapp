@@ -14,7 +14,7 @@ import {
   Store, Users, Calendar, IndianRupee, Clock, Star, Plus, 
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
-  CreditCard, Camera, User, MessageSquare, AlertCircle
+  CreditCard, Camera, User, MessageSquare, AlertCircle, Percent
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
