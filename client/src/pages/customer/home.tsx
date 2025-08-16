@@ -23,8 +23,7 @@ export default function CustomerHome() {
   });
 
   const { data: offers, isLoading: isLoadingOffers } = useQuery({
-    queryKey: ["/api/customer/available-offers"],
-    enabled: !!user,
+    queryKey: ["/api/public/offers"],
   });
 
   if (isLoading) {
@@ -122,14 +121,14 @@ export default function CustomerHome() {
       </section>
 
       {/* Special Offers Section */}
-      {user && offers && offers.length > 0 && (
+      {offers && offers.length > 0 && (
         <section className="py-8 sm:py-12 bg-gradient-to-br from-purple-50 to-blue-50">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <Gift className="h-6 w-6 text-purple-600" />
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-                  Special Offers Just for You
+                  Special Offers Available
                 </h2>
               </div>
               <p className="text-sm sm:text-base md:text-lg text-gray-600">

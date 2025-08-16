@@ -5655,6 +5655,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get available offers for customers (shows on customer dashboard)
+  // Public endpoint for all offers (no authentication required)
+  app.get('/api/public/offers', async (req: any, res) => {
+    try {
+      const { salonId } = req.query;
+      
+      let whereCondition = and(
+        eq(salonOffers.isActive, true),
+        eq(salonOffers.isVisible, true),
+        gte(salonOffers.validUntil, new Date())
+      );
+      
+      // Filter by salon if provided
+      if (salonId) {
+        whereCondition = and(whereCondition, eq(salonOffers.salonId, salonId as string));
+      }
+      
+      const offers = await db.select({
+        id: salonOffers.id,
+        salonId: salonOffers.salonId,
+        salonName: salons.name,
+        title: salonOffers.title,
+        description: salonOffers.description,
+        discountType: salonOffers.discountType,
+        discountValue: salonOffers.discountValue,
+        minOrderAmount: salonOffers.minOrderAmount,
+        maxDiscountAmount: salonOffers.maxDiscountAmount,
+        validFrom: salonOffers.validFrom,
+        validUntil: salonOffers.validUntil,
+        maxUsagePerCustomer: salonOffers.maxUsagePerCustomer,
+        currentUsageCount: salonOffers.currentUsageCount,
+        maxTotalUsage: salonOffers.maxTotalUsage,
+        promoCode: salonOffers.promoCode,
+        isPromoCodeRequired: salonOffers.isPromoCodeRequired,
+        priority: salonOffers.priority
+      })
+      .from(salonOffers)
+      .innerJoin(salons, eq(salonOffers.salonId, salons.id))
+      .where(whereCondition)
+      .orderBy(desc(salonOffers.priority), desc(salonOffers.createdAt));
+      
+      // For public endpoint, set default usage values
+      const offersWithDefaults = offers.map(offer => ({
+        ...offer,
+        customerUsageCount: 0,
+        canUse: true
+      }));
+      
+      res.json(offersWithDefaults);
+    } catch (error) {
+      console.error("Error fetching public offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
   app.get('/api/customer/available-offers', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
