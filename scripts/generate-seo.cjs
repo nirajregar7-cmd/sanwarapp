@@ -272,12 +272,12 @@ const serviceSchema = ({ cityName, serviceLabel, url }) => `
 
 const salonCard = (s, i, citySlug, cityName) => `
 <article id="salon-${i+1}" class="salon-card">
-  <h3><a href="/${slugify(s.name)}-${citySlug}/" style="text-decoration:none;color:inherit">${s.name}</a></h3>
+  <h3><a href="/" style="text-decoration:none;color:inherit">${s.name}</a></h3>
   <div class="rating">⭐ ${s.rating} (${s.reviews} reviews)</div>
   <p><strong>Services:</strong> ${s.services.join(', ')}</p>
   <p><strong>Area:</strong> ${s.area} ${cityName}</p>
   <p><strong>Specialties:</strong> Professional hair styling, relaxing spa treatments, expert beauty services</p>
-  <a href="/" class="btn">View Details & Book Now</a>
+  <a href="/" class="btn">Find This Salon & Book Now</a>
 </article>`;
 
 const cityPageHTML = ({ cityName, citySlug, altName, state }) => {
@@ -303,7 +303,7 @@ ${headerNav()}
   <div class="cta-section">
     <h2>Find & Book Top Salons in ${cityName}</h2>
     <p>Discover ${cityName}'s best salons for haircuts, spa treatments, bridal makeup, and beauty services. Book instantly with verified reviews and transparent pricing.</p>
-    <a href="/" class="btn">Browse All Salons in ${cityName}</a>
+    <a href="/" class="btn">Book Salon in ${cityName} Now</a>
   </div>
 
   <section>
@@ -378,7 +378,7 @@ ${headerNav()}
   <div class="cta-section">
     <h2>Professional ${serviceLabel} Services in ${cityName}</h2>
     <p>Discover top-rated salons offering expert ${serviceLabel.toLowerCase()} services in ${cityName}. Compare prices, read authentic reviews, and book your appointment instantly.</p>
-    <a href="/" class="btn">Book ${serviceLabel} Now</a>
+    <a href="/" class="btn">Book ${serviceLabel} in ${cityName}</a>
   </div>
 
   <section>

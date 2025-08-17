@@ -5830,6 +5830,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // SEO static page routes - serve generated SEO pages
+  // Redirect SEO directory access to main website (customers shouldn't see this)
+  app.get('/seo', (req, res) => {
+    res.redirect(301, '/');
+  });
+  
+  app.get('/seo/', (req, res) => {
+    res.redirect(301, '/');
+  });
+  
+  app.get('/seo/index.html', (req, res) => {
+    res.redirect(301, '/');
+  });
+  
+  // Serve individual city/service SEO pages for search engines
   app.use('/seo', express.static(path.join(__dirname, '../public/seo')));
   
   // Sitemap for SEO
