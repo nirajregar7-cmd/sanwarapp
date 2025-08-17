@@ -409,9 +409,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Featured salons endpoint (real data only)
   app.get('/api/salons/featured', async (req, res) => {
     try {
-      // Fetch all salons (since we may not have many yet)
+      // Fetch only approved salons for public browsing
       const featuredSalons = await db.select()
         .from(salons)
+        .where(
+          and(
+            eq(salons.isActive, true),
+            or(
+              eq(salons.verificationStatus, 'approved'),
+              eq(salons.verificationStatus, 'pending') // Allow pending salons to show for now
+            )
+          )
+        )
         .orderBy(desc(salons.averageRating), desc(salons.totalReviews))
         .limit(6);
       
@@ -464,7 +473,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxPrice = '10000'
       } = req.query;
 
-      let conditions = [eq(salons.isActive, true)];
+      let conditions = [
+        eq(salons.isActive, true),
+        or(
+          eq(salons.verificationStatus, 'approved'),
+          eq(salons.verificationStatus, 'pending') // Allow pending salons to show for now
+        )
+      ];
       
       // Apply name filter
       if (name && typeof name === 'string') {
@@ -539,7 +554,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { salonId } = req.params;
       const [salon] = await db.select()
         .from(salons)
-        .where(eq(salons.id, salonId));
+        .where(
+          and(
+            eq(salons.id, salonId),
+            // Only allow access to non-rejected salons for public
+            or(
+              eq(salons.verificationStatus, 'approved'),
+              eq(salons.verificationStatus, 'pending')
+            )
+          )
+        );
       
       if (!salon) {
         return res.status(404).json({ message: "Salon not found" });

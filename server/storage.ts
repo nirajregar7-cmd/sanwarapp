@@ -1544,13 +1544,14 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async rejectSalon(salonId: string, adminId: string, notes: string): Promise<void> {
+  async rejectSalon(salonId: string, adminId: string, reason: string): Promise<void> {
     await db.update(salons)
       .set({
         verificationStatus: 'rejected',
-        verificationNotes: notes,
-        verifiedAt: new Date(),
-        verifiedBy: adminId
+        rejectedAt: new Date(),
+        rejectedBy: adminId,
+        rejectionReason: reason,
+        verificationNotes: reason
       })
       .where(eq(salons.id, salonId));
     
@@ -1559,7 +1560,7 @@ export class DatabaseStorage implements IStorage {
       action: 'reject_salon',
       targetType: 'salon',
       targetId: salonId,
-      details: JSON.stringify({ notes })
+      details: JSON.stringify({ reason })
     });
   }
 
