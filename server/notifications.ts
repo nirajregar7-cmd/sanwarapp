@@ -49,8 +49,32 @@ export async function sendNotification(payload: NotificationPayload) {
       .where(eq(notificationSettings.userId, payload.userId));
 
     if (!userSettings) {
-      console.log(`No notification settings found for user ${payload.userId}`);
-      return;
+      console.log(`No notification settings found for user ${payload.userId}, creating default settings and proceeding with email notification`);
+      
+      // Create default notification settings for the user
+      try {
+        await db.insert(notificationSettings).values({
+          userId: payload.userId,
+          emailNotifications: true,
+          webPushNotifications: true,
+          smsNotifications: true,
+          bookingConfirmation: true,
+          bookingReminder: true,
+          dayBeforeReminder: true,
+          hourBeforeReminder: true,
+          promotionalNotifications: false
+        });
+        
+        // Proceed to send email notification directly
+        const emailResult = await sendEmailNotification(payload);
+        console.log(`Email notification sent directly to user ${payload.userId}: ${emailResult?.success}`);
+        return [emailResult];
+      } catch (error) {
+        console.error(`Failed to create default notification settings for user ${payload.userId}:`, error);
+        // Still try to send email notification directly
+        const emailResult = await sendEmailNotification(payload);
+        return [emailResult];
+      }
     }
 
     // Check if this type of notification is enabled

@@ -2807,8 +2807,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send cancellation notification
       try {
-        const { sendBookingCancellationNotification } = await import('./notifications');
-        await sendBookingCancellationNotification(bookingId);
+        const { sendBookingCancellationNotification } = await import('./email-notifications');
+        const notificationSent = await sendBookingCancellationNotification(bookingId);
+        if (notificationSent) {
+          console.log(`Booking cancellation email sent successfully for booking ${bookingId}`);
+        } else {
+          console.log(`Booking cancellation email failed for booking ${bookingId}`);
+        }
       } catch (notificationError) {
         console.error("Failed to send booking cancellation notification:", notificationError);
         // Don't fail the cancellation if notification fails
@@ -5724,6 +5729,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating notification settings:", error);
       res.status(500).json({ message: "Failed to update notification settings" });
+    }
+  });
+
+  // Test email sending endpoint for debugging
+  app.post("/api/test-send-email", async (req, res) => {
+    try {
+      const { to, subject, message, type } = req.body;
+      
+      if (!to || !subject || !message) {
+        return res.status(400).json({ error: "Missing required fields: to, subject, message" });
+      }
+
+      if (type === 'welcome') {
+        // Test welcome email
+        const success = await sendWelcomeEmail(to, 'Test User', 'customer');
+        return res.json({ success, message: success ? "Welcome email sent" : "Welcome email failed" });
+      } else if (type === 'booking') {
+        // Test booking confirmation email using email service directly
+        const { sendEmail } = await import('./emailService');
+        const success = await sendEmail({
+          to,
+          subject: subject || "🎉 Test Booking Confirmation",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #8B5CF6;">Test Booking Confirmation</h1>
+              <p>This is a test email to verify the booking confirmation system is working.</p>
+              <p><strong>Message:</strong> ${message}</p>
+              <p>If you receive this email, the system is working correctly.</p>
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>Sent from:</strong> Sanwar booking system</p>
+                <p style="margin: 5px 0 0 0;"><strong>Test time:</strong> ${new Date().toLocaleString()}</p>
+              </div>
+            </div>
+          `
+        });
+        return res.json({ success, message: success ? "Booking test email sent" : "Booking test email failed" });
+      } else {
+        // Simple test email
+        const { sendEmail } = await import('./emailService');
+        const success = await sendEmail({
+          to,
+          subject,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1>Test Email</h1>
+              <p>${message}</p>
+              <p><em>Sent from Sanwar at ${new Date().toLocaleString()}</em></p>
+            </div>
+          `
+        });
+        return res.json({ success, message: success ? "Test email sent" : "Test email failed" });
+      }
+    } catch (error) {
+      console.error("Test email error:", error);
+      res.status(500).json({ success: false, error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Test booking notification system
+  app.post("/api/test-booking-notification", async (req, res) => {
+    try {
+      const { bookingId } = req.body;
+      
+      if (!bookingId) {
+        return res.status(400).json({ error: "Booking ID is required" });
+      }
+
+      // Test both notification systems
+      const results = [];
+
+      try {
+        // Test notification system
+        const notificationResult = await sendBookingConfirmationNotification(bookingId);
+        results.push({ system: 'notification', success: !!notificationResult, result: notificationResult });
+      } catch (error) {
+        results.push({ system: 'notification', success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+
+      try {
+        // Test direct email system
+        const { sendBookingNotificationEmails } = await import('./booking-notifications');
+        const emailResult = await sendBookingNotificationEmails(bookingId);
+        results.push({ system: 'direct_email', success: emailResult.customerSent || emailResult.shopkeeperSent, result: emailResult });
+      } catch (error) {
+        results.push({ system: 'direct_email', success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+
+      res.json({ results });
+    } catch (error) {
+      console.error("Test booking notification error:", error);
+      res.status(500).json({ success: false, error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
