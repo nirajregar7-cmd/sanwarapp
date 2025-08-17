@@ -20,6 +20,10 @@ The server is built using Express.js and TypeScript, adhering to a RESTful API d
 The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
 
 ## Recent Updates (August 17, 2025)
+- **Admin Salon Rejection System**: Implemented comprehensive salon rejection tracking with database schema fields (rejectedAt, rejectedBy, rejectionReason)
+- **Public API Protection**: Updated featured salons, search, and individual salon APIs to exclude rejected salons from customer browsing
+- **Database Schema Enhancement**: Added rejection tracking columns and resolved migration issues for proper admin control
+- **Quality Control Implementation**: Rejected salons are immediately hidden from all customer-facing areas while remaining visible in admin panel
 - **Brand Logo Integration**: Added official Sanwar logo with orange gradient design to navigation header and homepage hero section
 - **Visual Brand Enhancement**: Replaced generic scissors icons with authentic brand identity across the platform
 - **Homepage Offers Display**: Fixed salon cards to properly show promotional offers with green discount badges and detailed savings information
