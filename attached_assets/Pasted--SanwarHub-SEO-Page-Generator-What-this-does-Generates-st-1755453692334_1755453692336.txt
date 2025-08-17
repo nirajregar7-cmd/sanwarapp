@@ -1,0 +1,324 @@
+/*
+SanwarHub SEO Page Generator
+---------------------------------
+What this does:
+- Generates static SEO pages for Indian cities + services
+- Creates city pages: /salons/<city>/index.html (e.g., /salons/chennai/)
+- Creates service pages: /salons/<city>/<service>/index.html (e.g., /salons/chennai/haircut/)
+- Builds sitemap.xml and robots.txt
+
+How to use (on Replit/Node):
+1) Add this file as scripts/generate-seo.js
+2) Run:  node scripts/generate-seo.js
+3) Deploy the generated /public folder to your hosting and map it to sanwarhub.in
+4) Submit https://sanwarhub.in/sitemap.xml in Google Search Console
+
+Customize:
+- Edit the CITIES and SERVICES arrays below to add/remove items.
+- Replace EXAMPLE_SALONS lookup with real salons from your DB when available.
+
+Notes:
+- All pages include: <title>, meta description, H1, internal links, and JSON-LD schema.
+- Canonical URLs are set to avoid duplicates.
+*/
+
+const fs = require('fs');
+const path = require('path');
+
+// ----------------------------------------------
+// 1) Config
+// ----------------------------------------------
+const SITE = {
+  domain: 'https://sanwarhub.in',
+  brand: 'SanwarHub',
+  outDir: path.join(process.cwd(), 'public'),
+  today: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
+};
+
+// Top Indian cities including your asks (Chennai, Trichy) + state capitals + major smart cities
+const CITIES = [
+  { name: 'Delhi', state: 'Delhi' },
+  { name: 'Mumbai', state: 'Maharashtra' },
+  { name: 'Bengaluru', alt: 'Bangalore', state: 'Karnataka' },
+  { name: 'Chennai', state: 'Tamil Nadu' },
+  { name: 'Kolkata', state: 'West Bengal' },
+  { name: 'Hyderabad', state: 'Telangana' },
+  { name: 'Ahmedabad', state: 'Gujarat' },
+  { name: 'Pune', state: 'Maharashtra' },
+  { name: 'Jaipur', state: 'Rajasthan' },
+  { name: 'Surat', state: 'Gujarat' },
+  { name: 'Lucknow', state: 'Uttar Pradesh' },
+  { name: 'Kanpur', state: 'Uttar Pradesh' },
+  { name: 'Nagpur', state: 'Maharashtra' },
+  { name: 'Indore', state: 'Madhya Pradesh' },
+  { name: 'Bhopal', state: 'Madhya Pradesh' },
+  { name: 'Patna', state: 'Bihar' },
+  { name: 'Ranchi', state: 'Jharkhand' },
+  { name: 'Bhubaneswar', state: 'Odisha' },
+  { name: 'Chandigarh', state: 'Chandigarh' },
+  { name: 'Tiruchirappalli', alt: 'Trichy', state: 'Tamil Nadu' },
+  { name: 'Coimbatore', state: 'Tamil Nadu' },
+  { name: 'Madurai', state: 'Tamil Nadu' },
+  { name: 'Kochi', alt: 'Cochin', state: 'Kerala' },
+  { name: 'Thiruvananthapuram', alt: 'Trivandrum', state: 'Kerala' },
+  { name: 'Visakhapatnam', alt: 'Vizag', state: 'Andhra Pradesh' },
+  { name: 'Vijayawada', state: 'Andhra Pradesh' },
+  { name: 'Guwahati', state: 'Assam' },
+  { name: 'Dehradun', state: 'Uttarakhand' },
+  { name: 'Noida', state: 'Uttar Pradesh' },
+  { name: 'Gurugram', alt: 'Gurgaon', state: 'Haryana' },
+  { name: 'Faridabad', state: 'Haryana' },
+  { name: 'Ghaziabad', state: 'Uttar Pradesh' },
+  { name: 'Varanasi', state: 'Uttar Pradesh' },
+  { name: 'Prayagraj', alt: 'Allahabad', state: 'Uttar Pradesh' },
+  { name: 'Agra', state: 'Uttar Pradesh' },
+  { name: 'Meerut', state: 'Uttar Pradesh' },
+  { name: 'Ludhiana', state: 'Punjab' },
+  { name: 'Amritsar', state: 'Punjab' },
+  { name: 'Jalandhar', state: 'Punjab' },
+  { name: 'Jammu', state: 'Jammu and Kashmir' },
+  { name: 'Srinagar', state: 'Jammu and Kashmir' },
+  { name: 'Raipur', state: 'Chhattisgarh' },
+  { name: 'Dhanbad', state: 'Jharkhand' },
+  { name: 'Jamshedpur', state: 'Jharkhand' },
+  { name: 'Vadodara', state: 'Gujarat' },
+  { name: 'Nashik', state: 'Maharashtra' },
+  { name: 'Aurangabad', state: 'Maharashtra' },
+  { name: 'Thane', state: 'Maharashtra' },
+  { name: 'Pimpri-Chinchwad', state: 'Maharashtra' },
+  { name: 'Mysuru', alt: 'Mysore', state: 'Karnataka' },
+  { name: 'Mangaluru', alt: 'Mangalore', state: 'Karnataka' },
+  { name: 'Hubballi', alt: 'Hubli', state: 'Karnataka' },
+  { name: 'Warangal', state: 'Telangana' },
+  { name: 'Tirupati', state: 'Andhra Pradesh' }
+];
+
+// Services you want to rank for
+const SERVICES = [
+  { slug: 'haircut', label: 'Haircut' },
+  { slug: 'spa', label: 'Spa' },
+  { slug: 'bridal-makeup', label: 'Bridal Makeup' },
+  { slug: 'facial', label: 'Facials' },
+  { slug: 'hair-color', label: 'Hair Color' },
+  { slug: 'manicure', label: 'Manicure' },
+  { slug: 'pedicure', label: 'Pedicure' },
+  { slug: 'waxing', label: 'Waxing' },
+  { slug: "men's-haircut", label: "Men's Haircut" },
+  { slug: 'kids-haircut', label: 'Kids Haircut' }
+];
+
+// Example salons to showcase (replace with dynamic data)
+const EXAMPLE_SALONS = [
+  { name: 'ABC Salon', rating: 4.8, reviews: 120, services: ['Haircut', 'Spa', 'Bridal Makeup'], area: 'Central' },
+  { name: 'Glow & Go Studio', rating: 4.6, reviews: 95, services: ['Facials', 'Hair Spa', 'Styling'], area: 'South' },
+  { name: 'Style Street', rating: 4.5, reviews: 80, services: ['Haircut', 'Hair Color', 'Waxing'], area: 'North' }
+];
+
+// ----------------------------------------------
+// 2) Helpers
+// ----------------------------------------------
+const slugify = (str) => str
+  .toString()
+  .toLowerCase()
+  .replace(/&/g, 'and')
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, '');
+
+const ensureDir = (dir) => fs.mkdirSync(dir, { recursive: true });
+
+const writeFile = (filePath, content) => {
+  ensureDir(path.dirname(filePath));
+  fs.writeFileSync(filePath, content, 'utf8');
+};
+
+const canonical = (url) => `<link rel="canonical" href="${url}" />`;
+
+// ----------------------------------------------
+// 3) HTML Templates
+// ----------------------------------------------
+const baseHead = ({ title, description, url }) => `
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${title}</title>
+<meta name="description" content="${description}" />
+${canonical(url)}
+<meta property="og:title" content="${title}" />
+<meta property="og:description" content="${description}" />
+<meta property="og:url" content="${url}" />
+<meta property="og:type" content="website" />
+`;
+
+const headerNav = () => `
+<header style="max-width:960px;margin:24px auto 0;padding:0 16px;">
+  <a href="/" style="text-decoration:none;color:inherit"><h1 style="font-family:system-ui,Arial,sans-serif;margin:0">${SITE.brand}</h1></a>
+  <p style="color:#444;margin:4px 0 16px">Book Salons, Haircuts & Spas Across India</p>
+  <hr/>
+</header>`;
+
+const footer = () => `
+<footer style="max-width:960px;margin:40px auto;padding:16px;color:#555;border-top:1px solid #eee">
+  <p>© ${new Date().getFullYear()} ${SITE.brand}. India’s Salon Booking Platform.</p>
+</footer>`;
+
+const citySchema = ({ cityName, url }) => `
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Salons in ${cityName}",
+  "itemListElement": [
+    ${EXAMPLE_SALONS.map((s, i) => `{
+      "@type": "ListItem",
+      "position": ${i + 1},
+      "name": "${s.name} ${cityName}",
+      "url": "${url}#salon-${i+1}"
+    }`).join(',\n    ')}
+  ]
+}
+</script>`;
+
+const serviceSchema = ({ cityName, serviceLabel, url }) => `
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "${serviceLabel} in ${cityName}",
+  "itemListElement": [
+    ${EXAMPLE_SALONS.map((s, i) => `{
+      "@type": "ListItem",
+      "position": ${i + 1},
+      "name": "${s.name} - ${serviceLabel} - ${cityName}",
+      "url": "${url}#salon-${i+1}"
+    }`).join(',\n    ')}
+  ]
+}
+</script>`;
+
+const salonCard = (s, i, citySlug) => `
+<article id="salon-${i+1}" style="border:1px solid #eee;border-radius:12px;padding:16px;margin:12px 0">
+  <h3 style="margin:0 0 8px"><a href="/salon/${slugify(s.name)}-${citySlug}/" style="text-decoration:none">${s.name}</a></h3>
+  <p>⭐ ${s.rating} (${s.reviews} reviews) – ${s.services.join(', ')}</p>
+  <p>Area: ${s.area}</p>
+  <p><a href="/salon/${slugify(s.name)}-${citySlug}/">View Details & Book</a></p>
+</article>`;
+
+const cityPageHTML = ({ cityName, citySlug, altName }) => {
+  const url = `${SITE.domain}/salons/${citySlug}/`;
+  const title = `Best Salons, Haircuts & Spas in ${cityName} | ${SITE.brand}`;
+  const description = `Find and book top salons, spas, and haircuts in ${cityName}. Compare services, reviews, and prices. Book your salon appointment online with ${SITE.brand}.`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+${baseHead({ title, description, url })}
+${citySchema({ cityName, url })}
+</head>
+<body>
+${headerNav()}
+<main style="max-width:960px;margin:24px auto;padding:0 16px">
+  <h2 style="margin-top:0">Best Salons, Haircuts & Spas in ${cityName}${altName ? ` (aka ${altName})` : ''}</h2>
+  <p>Looking for a <strong>salon near you in ${cityName}</strong>? ${SITE.brand} lists top-rated salons for haircuts, facials, spas, and bridal makeup.</p>
+
+  <section>
+    <h3>Popular Services in ${cityName}</h3>
+    <ul>
+      ${SERVICES.map(s => `<li><a href="/salons/${citySlug}/${s.slug}/">${s.label} in ${cityName}</a></li>`).join('\n      ')}
+    </ul>
+  </section>
+
+  <section>
+    <h3>Top Salons in ${cityName}</h3>
+    ${EXAMPLE_SALONS.map((s, i) => salonCard(s, i, citySlug)).join('\n    ')}
+  </section>
+
+  <section>
+    <h3>Why Book with ${SITE.brand}?</h3>
+    <ul>
+      <li>Compare prices & services</li>
+      <li>Verified salons with real reviews</li>
+      <li>Instant online booking</li>
+      <li>Exclusive offers & discounts</li>
+    </ul>
+  </section>
+</main>
+${footer()}
+</body>
+</html>`;
+};
+
+const servicePageHTML = ({ cityName, citySlug, serviceSlug, serviceLabel }) => {
+  const url = `${SITE.domain}/salons/${citySlug}/${serviceSlug}/`;
+  const title = `Best ${serviceLabel} in ${cityName} | ${SITE.brand}`;
+  const description = `Discover top salons for ${serviceLabel.toLowerCase()} in ${cityName}. Browse ratings, services, and book online with ${SITE.brand}.`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+${baseHead({ title, description, url })}
+${serviceSchema({ cityName, serviceLabel, url })}
+</head>
+<body>
+${headerNav()}
+<main style="max-width:960px;margin:24px auto;padding:0 16px">
+  <nav style="font-size:14px"><a href="/salons/${citySlug}/">← All salons in ${cityName}</a></nav>
+  <h2 style="margin-top:8px">Top ${serviceLabel} in ${cityName}</h2>
+  <p>Explore the best places for <strong>${serviceLabel.toLowerCase()}</strong> in ${cityName}. Compare ratings, pricing and availability, then book instantly.</p>
+
+  <section>
+    ${EXAMPLE_SALONS.map((s, i) => salonCard(s, i, citySlug)).join('\n    ')}
+  </section>
+</main>
+${footer()}
+</body>
+</html>`;
+};
+
+// ----------------------------------------------
+// 4) Generator
+// ----------------------------------------------
+function generate() {
+  ensureDir(SITE.outDir);
+
+  // robots.txt
+  writeFile(path.join(SITE.outDir, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE.domain}/sitemap.xml\n`);
+
+  const sitemapUrls = [];
+
+  CITIES.forEach((city) => {
+    const citySlug = slugify(city.name);
+
+    // City page
+    const cityDir = path.join(SITE.outDir, 'salons', citySlug);
+    const cityUrl = `${SITE.domain}/salons/${citySlug}/`;
+    writeFile(path.join(cityDir, 'index.html'), cityPageHTML({
+      cityName: city.name,
+      citySlug,
+      altName: city.alt || ''
+    }));
+    sitemapUrls.push({ url: cityUrl, lastmod: SITE.today });
+
+    // Service pages
+    SERVICES.forEach((svc) => {
+      const svcDir = path.join(cityDir, svc.slug);
+      const svcUrl = `${SITE.domain}/salons/${citySlug}/${svc.slug}/`;
+      writeFile(path.join(svcDir, 'index.html'), servicePageHTML({
+        cityName: city.name,
+        citySlug,
+        serviceSlug: svc.slug,
+        serviceLabel: svc.label
+      }));
+      sitemapUrls.push({ url: svcUrl, lastmod: SITE.today });
+    });
+  });
+
+  // sitemap.xml
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    sitemapUrls.map(({ url, lastmod }) => `  <url>\n    <loc>${url}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`).join('\n') +
+    `\n</urlset>\n`;
+  writeFile(path.join(SITE.outDir, 'sitemap.xml'), sitemap);
+
+  console.log(`Generated ${sitemapUrls.length} pages + sitemap.xml + robots.txt in:`, SITE.outDir);
+}
+
+generate();

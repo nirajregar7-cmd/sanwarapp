@@ -1,5 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import path from "path";
+import express from "express";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { withClerkAuth, isAuthenticated as clerkIsAuthenticated } from "./clerk";
@@ -5821,6 +5827,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Test booking notification error:", error);
       res.status(500).json({ success: false, error: error instanceof Error ? error.message : "Unknown error" });
     }
+  });
+
+  // SEO static page routes - serve generated SEO pages
+  app.use('/seo', express.static(path.join(__dirname, '../public/seo')));
+  
+  // Sitemap for SEO
+  app.get('/sitemap.xml', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/seo/sitemap.xml'));
+  });
+  
+  // Robots.txt for SEO
+  app.get('/robots.txt', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/seo/robots.txt'));
   });
 
   // Salon Offers API endpoints
