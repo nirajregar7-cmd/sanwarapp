@@ -10,16 +10,22 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/pwa-192x192.svg",
+      "src": "/favicon.jpg",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/pwa-512x512.svg",
+      "src": "/favicon.jpg",
       "sizes": "512x512", 
-      "type": "image/svg+xml",
+      "type": "image/jpeg",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "categories": ["lifestyle", "business"],
