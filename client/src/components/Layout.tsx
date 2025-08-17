@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import sanwarLogo from "@assets/WhatsApp Image 2025-08-17 at 18.09.29_dd534b02_1755434431399.jpg";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -38,9 +39,12 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center space-x-6">
               <Link href="/">
-                <div className="flex items-center space-x-2 text-lg sm:text-2xl font-bold text-primary cursor-pointer">
-                  <Scissors className="h-5 w-5 sm:h-6 sm:w-6" />
-                  <span className="hidden sm:inline">Sanwar</span>
+                <div className="flex items-center cursor-pointer">
+                  <img 
+                    src={sanwarLogo} 
+                    alt="Sanwar" 
+                    className="h-8 w-auto sm:h-10"
+                  />
                 </div>
               </Link>
               

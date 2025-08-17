@@ -19,7 +19,13 @@ The server is built using Express.js and TypeScript, adhering to a RESTful API d
 ### Database Design
 The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
 
-## Recent Updates (August 16, 2025)
+## Recent Updates (August 17, 2025)
+- **Brand Logo Integration**: Added official Sanwar logo with orange gradient design to navigation header and homepage hero section
+- **Visual Brand Enhancement**: Replaced generic scissors icons with authentic brand identity across the platform
+- **Homepage Offers Display**: Fixed salon cards to properly show promotional offers with green discount badges and detailed savings information
+- **SalonCard Component Integration**: Updated homepage to use enhanced SalonCard component for consistent offer display across all salon listings
+
+## Previous Updates (August 16, 2025)
 - **Profile Visit Analytics System**: Implemented comprehensive salon profile visit tracking with database schema, API endpoints, and dashboard analytics
 - **Analytics Dashboard**: Built analytics page showing total visits (30 days), unique customers, today's visits, and 7-day trend charts for salon owners
 - **Visit Tracking Integration**: Added automatic visit tracking on salon detail pages with visitor ID, IP address, and timestamp logging

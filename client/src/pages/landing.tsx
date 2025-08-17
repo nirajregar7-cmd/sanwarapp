@@ -9,6 +9,7 @@ import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import SalonCard from "@/components/SalonCard";
+import sanwarLogo from "@assets/WhatsApp Image 2025-08-17 at 18.09.29_dd534b02_1755434431399.jpg";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -58,10 +59,11 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center justify-center mb-4 sm:mb-6">
-              <div className="p-3 bg-white/20 rounded-full mr-4">
-                <Scissors className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-white" />
-              </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">Sanwar</h1>
+              <img 
+                src={sanwarLogo} 
+                alt="Sanwar - Smart Salon Booking Platform" 
+                className="h-16 w-auto sm:h-20 md:h-24 lg:h-32"
+              />
             </div>
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-3 sm:mb-4 opacity-95 font-medium">
               {t('hero.title')}
