@@ -43,7 +43,7 @@ export default function Layout({ children }: LayoutProps) {
                   <img 
                     src={sanwarLogo} 
                     alt="Sanwar" 
-                    className="h-8 w-auto sm:h-10"
+                    className="h-8 w-auto sm:h-10 rounded-lg shadow-sm"
                   />
                 </div>
               </Link>

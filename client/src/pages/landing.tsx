@@ -62,7 +62,7 @@ export default function Landing() {
               <img 
                 src={sanwarLogo} 
                 alt="Sanwar - Smart Salon Booking Platform" 
-                className="h-16 w-auto sm:h-20 md:h-24 lg:h-32"
+                className="h-16 w-auto sm:h-20 md:h-24 lg:h-32 rounded-xl shadow-lg"
               />
             </div>
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-3 sm:mb-4 opacity-95 font-medium">
