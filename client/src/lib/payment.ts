@@ -79,16 +79,34 @@ export const initiateCashfreePayment = async (options: PaymentOptions) => {
     };
 
     console.log('🚀 Initiating Cashfree checkout with options:', checkoutOptions);
+    console.log('💡 Payment debugging - Order data:', options.orderData);
+    console.log('👤 Payment debugging - Customer:', options.customerDetails);
     
     // Validate payment session ID
     if (!checkoutOptions.paymentSessionId) {
       console.error('❌ Missing payment session ID');
+      console.error('❌ Order data received:', options.orderData);
       options.onFailure({ error: 'Missing payment session ID' });
       return;
     }
     
+    // Track payment initiation
+    console.log('🎯 Payment initiation successful - waiting for user action');
+    console.log('🔗 Cashfree environment: production');
+    console.log('💰 Order amount: ₹' + options.orderData.orderAmount);
+    
+    // Add payment abandonment tracking
+    let paymentAbandoned = false;
+    const abandonmentTimer = setTimeout(() => {
+      if (!paymentAbandoned) {
+        console.warn('⚠️ Payment taking longer than expected - user may abandon');
+      }
+    }, 30000); // 30 seconds warning
+    
     // Open Cashfree checkout
     cashfree.checkout(checkoutOptions).then((result: any) => {
+      paymentAbandoned = true;
+      clearTimeout(abandonmentTimer);
       console.log('💳 Cashfree checkout result:', result);
       
       if (result.error) {
@@ -116,16 +134,20 @@ export const initiateCashfreePayment = async (options: PaymentOptions) => {
       console.log('🤔 Unknown result type:', result);
       
     }).catch((error: any) => {
+      paymentAbandoned = true;
+      clearTimeout(abandonmentTimer);
       console.error('💥 Cashfree checkout error:', error);
       console.error('💥 Error details:', {
         message: error.message,
         stack: error.stack,
-        name: error.name
+        name: error.name,
+        timestamp: new Date().toISOString()
       });
       
       options.onFailure({ 
         error: error.message || 'Checkout failed to open',
-        details: 'Failed to initialize payment interface. Please check your internet connection and try again.'
+        details: 'Failed to initialize payment interface. Please check your internet connection and try again.',
+        showPayAtSalonOption: true // Flag to show alternative payment option
       });
     });
 

@@ -34,6 +34,54 @@ export function BookingModal({
 }: BookingModalProps) {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Handle pay-at-salon alternative
+  const handlePayAtSalon = async () => {
+    if (!orderData) return;
+    
+    try {
+      setIsProcessing(true);
+      
+      // Create booking without online payment
+      const response = await fetch('/api/bookings/create-pay-at-salon', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          orderId: orderData.orderId,
+          // Extract booking details from orderData
+          salonId: orderData.salonId,
+          serviceId: orderData.serviceId, 
+          timeSlotId: orderData.timeSlotId,
+          date: orderData.date,
+          staffId: orderData.staffId,
+          notes: 'Pay at salon - Online payment alternative'
+        }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Booking Confirmed!",
+          description: "Your booking is confirmed. Please pay at the salon.",
+        });
+        onConfirm(result.id);
+      } else {
+        throw new Error('Failed to create booking');
+      }
+    } catch (error) {
+      console.error('Pay-at-salon booking failed:', error);
+      toast({
+        title: "Booking Failed",
+        description: "Unable to create booking. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -65,11 +113,29 @@ export function BookingModal({
         },
         onFailure: (error) => {
           console.error('Payment failed:', error);
-          toast({
-            title: "Payment Failed",
-            description: error.message || "There was an error processing your payment. Please try again.",
-            variant: "destructive",
-          });
+          
+          // Show pay-at-salon option if payment fails
+          if (error.showPayAtSalonOption) {
+            toast({
+              title: "Payment Issues?",
+              description: "Having trouble with online payment? You can book and pay at the salon instead!",
+              variant: "default",
+              action: (
+                <button 
+                  onClick={() => handlePayAtSalon()}
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                >
+                  Book & Pay at Salon
+                </button>
+              )
+            });
+          } else {
+            toast({
+              title: "Payment Failed",
+              description: error.message || "There was an error processing your payment. Please try again.",
+              variant: "destructive",
+            });
+          }
           setIsProcessing(false);
         }
       });
@@ -147,32 +213,48 @@ export function BookingModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              className="flex-1" 
-              onClick={onClose}
-              disabled={isProcessing}
-            >
-              Cancel
-            </Button>
-            <Button 
-              className="flex-1 bg-accent hover:bg-accent/90" 
-              onClick={handlePayment}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Pay ₹{booking.amount}
-                </>
-              )}
-            </Button>
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                className="flex-1" 
+                onClick={onClose}
+                disabled={isProcessing}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1 bg-accent hover:bg-accent/90" 
+                onClick={handlePayment}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Pay ₹{booking.amount}
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {/* Alternative Pay at Salon Option */}
+            <div className="text-center">
+              <div className="text-xs text-gray-500 mb-2">Having payment issues?</div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handlePayAtSalon}
+                disabled={isProcessing}
+                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+              >
+                Book Now & Pay at Salon
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
