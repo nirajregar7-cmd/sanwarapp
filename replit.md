@@ -19,7 +19,17 @@ The server is built using Express.js and TypeScript, adhering to a RESTful API d
 ### Database Design
 The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
 
-## Recent Updates (August 17, 2025)
+## Recent Updates (August 18, 2025)
+- **Multi-Domain Payment Setup**: Configured payment processing to support both original domain and sanwarhub.in for seamless payment acceptance across domains
+- **Dynamic Domain Detection**: Implemented intelligent domain detection that automatically configures payment callbacks based on the request domain
+- **SanwarHub.in Integration**: Added complete support for custom domain with proper payment URL routing and webhook handling
+- **Payment Gateway Enhancement**: Updated Cashfree integration to dynamically generate return URLs and webhook URLs based on the requesting domain
+- **Cross-Domain Compatibility**: Ensured payment flow works seamlessly whether customers access from Replit domain or sanwarhub.in
+- **Domain-Specific Configuration**: Created comprehensive setup guide for sanwarhub.in DNS configuration and payment testing
+- **Timezone Handling Fix**: Resolved critical timezone issue causing past time slots to appear available by implementing proper IST (Indian Standard Time) conversion
+- **Time Slot Filtering Enhancement**: Updated server-side filtering to use IST for accurate past/future slot determination regardless of server timezone
+
+## Previous Updates (August 17, 2025)
 - **Email Notification System Fixed**: Completely resolved email delivery issues for signup confirmations, booking confirmations, and reminders
 - **Gmail Integration**: Successfully configured Gmail SMTP service for reliable email delivery with automatic fallback system
 - **Default Notification Settings**: Implemented automatic creation of notification preferences for users to prevent delivery failures

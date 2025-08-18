@@ -31,12 +31,17 @@ import { promisify } from "util";
 const scryptAsync = promisify(scrypt);
 
 // Helper function to get the correct base URL
-function getBaseUrl(): string {
+function getBaseUrl(requestHost?: string): string {
   if (process.env.BASE_URL) {
     return process.env.BASE_URL;
   }
   
-  // Use the provided production domain
+  // Check if request is from sanwarhub.in
+  if (requestHost && (requestHost.includes('sanwarhub.in') || requestHost === 'sanwarhub.in')) {
+    return 'https://sanwarhub.in';
+  }
+  
+  // Use the provided production domain as fallback
   return 'https://sanwar-book-nirajregar7.replit.app';
 }
 
@@ -1241,9 +1246,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const orderIdPrefix = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
+      // Get the request host for domain-specific payment callbacks
+      const requestHost = req.get('host');
+      const baseUrl = getBaseUrl(requestHost);
+      
       const order = await createCashfreeOrder({
         amount: finalAmount,
         orderId: orderIdPrefix,
+        requestHost: requestHost,
         customerDetails: {
           customerId: userId,
           customerName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Customer',
@@ -1251,8 +1261,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customerPhone: user?.phone || '9999999999'
         },
         orderMeta: {
-          returnUrl: `https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/payment-callback?order_id=${orderIdPrefix}&salon_id=${salonId}&service_id=${serviceId}&time_slot_id=${timeSlotId}&date=${date}&staff_id=${staffId || ''}&notes=${encodeURIComponent(notes || '')}${validReferralCode ? `&referral_id=${validReferralCode.id}` : ''}`,
-          notifyUrl: 'https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/api/cashfree/webhook',
+          returnUrl: `${baseUrl}/payment-callback?order_id=${orderIdPrefix}&salon_id=${salonId}&service_id=${serviceId}&time_slot_id=${timeSlotId}&date=${date}&staff_id=${staffId || ''}&notes=${encodeURIComponent(notes || '')}${validReferralCode ? `&referral_id=${validReferralCode.id}` : ''}`,
+          notifyUrl: `${baseUrl}/api/cashfree/webhook`,
           paymentMethods: 'cc,dc,nb,upi,paylater,emi,app'
         },
         orderNote: `Sanwar booking: ${salon.name} - ${service.name} on ${date}`

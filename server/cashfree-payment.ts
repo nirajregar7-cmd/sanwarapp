@@ -43,10 +43,22 @@ const initializeCashfree = async () => {
 };
 
 // Helper function to get the correct base URL
-function getBaseUrl(): string {
-  // Use the whitelisted domain for Cashfree production
+function getBaseUrl(requestHost?: string): string {
+  // If environment variable is set, use it (for production)
+  if (process.env.BASE_URL) {
+    console.log('🌐 Using environment BASE_URL:', process.env.BASE_URL);
+    return process.env.BASE_URL;
+  }
+  
+  // Check if request is from sanwarhub.in
+  if (requestHost && (requestHost.includes('sanwarhub.in') || requestHost === 'sanwarhub.in')) {
+    console.log('🌐 Using sanwarhub.in domain for payment callbacks');
+    return 'https://sanwarhub.in';
+  }
+  
+  // Use the whitelisted replit domain as fallback
   const prodDomain = 'https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev';
-  console.log('🌐 Using whitelisted domain for Cashfree:', prodDomain);
+  console.log('🌐 Using whitelisted Replit domain for Cashfree:', prodDomain);
   return prodDomain;
 }
 
@@ -73,7 +85,7 @@ export interface CreateOrderData {
   orderNote?: string;
 }
 
-export async function createCashfreeOrder(data: CreateOrderData) {
+export async function createCashfreeOrder(data: CreateOrderData & { requestHost?: string }) {
   // Ensure Cashfree is initialized
   const cf = await initializeCashfree();
   
@@ -82,7 +94,7 @@ export async function createCashfreeOrder(data: CreateOrderData) {
   }
 
   try {
-    const baseUrl = getBaseUrl();
+    const baseUrl = getBaseUrl(data.requestHost);
     const returnUrl = data.orderMeta?.returnUrl || `${baseUrl}/payment-success`;
     const notifyUrl = data.orderMeta?.notifyUrl || `${baseUrl}/api/cashfree/webhook`;
     
