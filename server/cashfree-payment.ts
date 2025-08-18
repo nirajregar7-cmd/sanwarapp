@@ -51,9 +51,11 @@ function getBaseUrl(requestHost?: string): string {
   }
   
   // Check if request is from sanwarhub.in
+  // Note: Currently using Replit domain until sanwarhub.in is whitelisted in Cashfree
   if (requestHost && (requestHost.includes('sanwarhub.in') || requestHost === 'sanwarhub.in')) {
-    console.log('🌐 Using sanwarhub.in domain for payment callbacks');
-    return 'https://sanwarhub.in';
+    console.log('🌐 Request from sanwarhub.in - using whitelisted Replit domain for payment callbacks until sanwarhub.in is approved in Cashfree');
+    // Use the whitelisted Replit domain for now
+    return 'https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev';
   }
   
   // Use the whitelisted replit domain as fallback

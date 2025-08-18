@@ -10,11 +10,36 @@ Your Sanwar platform now supports payment processing for both domains:
 
 ### Cashfree Domain Whitelisting
 
-Both domains are configured for Cashfree payment processing:
+**IMPORTANT**: You need to whitelist sanwarhub.in in your Cashfree merchant dashboard before it can accept payments.
 
-1. **Return URLs**: Customers will be redirected back to the same domain they initiated payment from
-2. **Webhook URLs**: Payment notifications will be sent to the appropriate domain
-3. **Dynamic Domain Detection**: System automatically detects the request domain and configures payment URLs accordingly
+### Steps to Whitelist sanwarhub.in in Cashfree:
+
+1. **Login to Cashfree Merchant Dashboard**
+   - Go to: https://merchant.cashfree.com/
+   - Login with your merchant credentials
+
+2. **Navigate to Webhooks & Return URLs**
+   - Go to Developers → Webhooks
+   - Or Settings → Payment Configuration
+
+3. **Add sanwarhub.in Domain**
+   - Add these URLs to your whitelist:
+     - `https://sanwarhub.in/payment-callback`
+     - `https://sanwarhub.in/api/cashfree/webhook`
+     - `https://sanwarhub.in/payment-success`
+
+4. **Submit for Approval**
+   - Submit the whitelisting request
+   - Wait for Cashfree to approve (usually 24-48 hours)
+
+### Current Configuration:
+- **Temporary Solution**: All payments currently redirect to the whitelisted Replit domain
+- **After Approval**: System will automatically use sanwarhub.in for customers accessing from that domain
+
+### Payment Flow Status:
+1. **Return URLs**: Currently using whitelisted Replit domain until sanwarhub.in is approved
+2. **Webhook URLs**: Payment notifications go to Replit domain for now
+3. **Dynamic Domain Detection**: Ready to switch to sanwarhub.in once whitelisted
 
 ### Domain-Specific Features
 
