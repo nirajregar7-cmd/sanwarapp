@@ -818,6 +818,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBookingsByCustomer(customerId: string): Promise<Booking[]> {
+    // Get current date in IST (UTC+5:30)
+    const currentDate = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+    const currentISTDate = new Date(currentDate.getTime() + istOffset);
+    const todayIST = currentISTDate.toISOString().split('T')[0]; // YYYY-MM-DD format
     const bookingsWithDetails = await db
       .select({
         // Booking fields
@@ -859,7 +864,12 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(salons, eq(bookings.salonId, salons.id))
       .leftJoin(services, eq(bookings.serviceId, services.id))
       .leftJoin(staff, eq(bookings.staffId, staff.id))
-      .where(eq(bookings.customerId, customerId))
+      .where(
+        and(
+          eq(bookings.customerId, customerId),
+          gte(bookings.date, todayIST) // Only show today and future bookings
+        )
+      )
       .orderBy(desc(bookings.createdAt));
 
     // Transform flat results back to nested structure for API compatibility
