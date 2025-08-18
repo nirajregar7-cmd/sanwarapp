@@ -216,17 +216,20 @@ export class SmartSchedulingService {
 
     // Filter by preferred staff if specified
     const targetStaff = request.preferredStaffId
-      ? availableStaff.filter(s => s.staffId === request.preferredStaffId)
+      ? availableStaff.filter((s: any) => s.staffId === request.preferredStaffId)
       : availableStaff;
 
     const availableSlots: AvailableSlot[] = [];
 
     for (const staffMember of targetStaff) {
       // Generate or get existing slots for this staff member
-      const slots = await this.getStaffTimeSlotsForDate(staffMember.staffId, request.date);
+      const allSlots = await this.getStaffTimeSlotsForDate(staffMember.staffId, request.date);
+      
+      // Filter out unavailable/booked slots
+      const availableOnlySlots = allSlots.filter(slot => slot.isAvailable);
       
       // Find consecutive available slots
-      const consecutiveSlots = this.findConsecutiveSlots(slots, slotsNeeded, request.preferredStartTime);
+      const consecutiveSlots = this.findConsecutiveSlots(availableOnlySlots, slotsNeeded, request.preferredStartTime);
       
       for (const slotGroup of consecutiveSlots) {
         availableSlots.push({
@@ -478,7 +481,7 @@ export class SmartSchedulingService {
       ))
       .orderBy(staffTimeSlots.startTime);
 
-    return slots.map((slot: any) => ({
+    const mappedSlots = slots.map((slot: any) => ({
       id: slot.id,
       staffId: slot.staffId,
       startTime: slot.startTime,
@@ -487,6 +490,22 @@ export class SmartSchedulingService {
       slotType: slot.slotType as 'regular' | 'break' | 'blocked',
       compatibleServices: slot.compatibleServices || [],
     }));
+
+    // Filter out past slots for today's date
+    const now = new Date();
+    const selectedDate = new Date(date);
+    const isToday = selectedDate.toDateString() === now.toDateString();
+    
+    if (isToday) {
+      const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes
+      
+      return mappedSlots.filter(slot => {
+        const slotStartTime = this.timeToMinutes((slot as any).startTime);
+        return slotStartTime > currentTime; // Only return future slots for today
+      });
+    }
+    
+    return mappedSlots;
   }
 
   /**
