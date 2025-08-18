@@ -3505,6 +3505,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/salons/:salonId/time-slots", async (req, res) => {
+    // Disable caching for time slots to ensure real-time filtering
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     try {
       const { date, serviceId, staffId } = req.query;
       if (!date || typeof date !== 'string') {
@@ -3521,23 +3525,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         staffId as string || undefined
       );
       console.log(`Found ${timeSlots.length} manually created time slots`);
+      console.log(`[DEBUG] First 3 slots: ${JSON.stringify(timeSlots.slice(0, 3).map(s => ({start: s.startTime, available: s.isAvailable})))}`);
       
       // Filter out past slots for today's date and booked slots
+      // Always use IST (UTC+5:30) for consistent time comparison since most users are in India
       const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+      const istNow = new Date(now.getTime() + istOffset);
+      
       const selectedDate = new Date(date);
-      const isToday = selectedDate.toDateString() === now.toDateString();
+      const istTodayDate = new Date(istNow.toISOString().split('T')[0]);
+      const isToday = selectedDate.toDateString() === istTodayDate.toDateString();
+      
+      console.log(`[DEBUG] UTC time: ${now.toTimeString()}, IST time: ${istNow.toTimeString()}`);
+      console.log(`[DEBUG] Selected date: ${selectedDate.toDateString()}, IST Today: ${istTodayDate.toDateString()}, Is today: ${isToday}`);
       
       if (isToday) {
-        const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes
+        const currentTime = istNow.getHours() * 60 + istNow.getMinutes(); // Current IST time in minutes
+        console.log(`[DEBUG] Current IST time in minutes: ${currentTime} (${istNow.getHours()}:${istNow.getMinutes()})`);
         
+        const beforeFiltering = timeSlots.length;
         timeSlots = timeSlots.filter(slot => {
           // Parse start time (format: "HH:MM")
           const [hours, minutes] = slot.startTime.split(':').map(Number);
           const slotStartTime = hours * 60 + minutes;
           
+          const isAvailable = slot.isAvailable;
+          const isFuture = slotStartTime > currentTime;
+          
+          console.log(`[DEBUG] Slot ${slot.startTime} - Start time minutes: ${slotStartTime}, Available: ${isAvailable}, Is future: ${isFuture}`);
+          
           // Only return future slots for today that are also available
-          return slotStartTime > currentTime && slot.isAvailable;
+          return isFuture && isAvailable;
         });
+        console.log(`[DEBUG] Filtered ${beforeFiltering} slots down to ${timeSlots.length} for today using IST`);
       } else {
         // For other dates, just filter out booked slots
         timeSlots = timeSlots.filter(slot => slot.isAvailable);
