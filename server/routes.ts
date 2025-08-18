@@ -3514,7 +3514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Fetching manual time slots for salon ${req.params.salonId} on date ${date}, service: ${serviceId}, staff: ${staffId}`);
 
       // Get manually created time slots (from salon owner dashboard) only
-      const timeSlots = await storage.getTimeSlotsBySalonAndDate(
+      let timeSlots = await storage.getTimeSlotsBySalonAndDate(
         req.params.salonId, 
         date, 
         serviceId as string || undefined,
@@ -3522,6 +3522,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       console.log(`Found ${timeSlots.length} manually created time slots`);
       
+      // Filter out past slots for today's date and booked slots
+      const now = new Date();
+      const selectedDate = new Date(date);
+      const isToday = selectedDate.toDateString() === now.toDateString();
+      
+      if (isToday) {
+        const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes
+        
+        timeSlots = timeSlots.filter(slot => {
+          // Parse start time (format: "HH:MM")
+          const [hours, minutes] = slot.startTime.split(':').map(Number);
+          const slotStartTime = hours * 60 + minutes;
+          
+          // Only return future slots for today that are also available
+          return slotStartTime > currentTime && slot.isAvailable;
+        });
+      } else {
+        // For other dates, just filter out booked slots
+        timeSlots = timeSlots.filter(slot => slot.isAvailable);
+      }
+      
+      console.log(`Returning ${timeSlots.length} available slots after filtering`);
       res.json(timeSlots);
     } catch (error) {
       console.error("Error fetching time slots:", error);
