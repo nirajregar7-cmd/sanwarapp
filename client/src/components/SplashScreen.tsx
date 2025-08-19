@@ -29,7 +29,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         data-testid="splash-screen"
       >
         <img 
-          src="@assets/WhatsApp Image 2025-08-20 at 01.29.07_bb81326b_1755635226638.jpg" 
+          src="/sanwar-new-logo.jpg" 
           alt="SanWar Logo" 
           className="splash-logo"
         />
@@ -63,7 +63,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         data-testid="welcome-screen"
       >
         <img 
-          src="@assets/WhatsApp Image 2025-08-20 at 01.29.07_bb81326b_1755635226638.jpg" 
+          src="/sanwar-new-logo.jpg" 
           alt="SanWar Official Logo" 
           className="welcome-logo"
           data-testid="img-welcome-logo"
