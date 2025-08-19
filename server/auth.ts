@@ -187,10 +187,10 @@ export function setupAuth(app: Express) {
   // Register route
   app.post("/api/register", async (req, res, next) => {
     try {
-      const { email, password, firstName, lastName, userType, referralCode } = req.body;
+      const { email, password, firstName, lastName, phone, userType, referralCode } = req.body;
 
       // Validate input
-      if (!email || !password || !firstName || !userType) {
+      if (!email || !password || !firstName || !phone || !userType) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
@@ -227,6 +227,7 @@ export function setupAuth(app: Express) {
         password: hashedPassword,
         firstName,
         lastName,
+        phone,
         userType,
         profileImageUrl: null,
       });

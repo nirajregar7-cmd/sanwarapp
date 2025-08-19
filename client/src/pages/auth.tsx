@@ -21,6 +21,7 @@ const AuthPageEnhanced = () => {
     password: "",
     firstName: "",
     lastName: "",
+    mobileNumber: "",
     referralCode: ""
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -62,6 +63,10 @@ const AuthPageEnhanced = () => {
           setError("First name is required");
           return;
         }
+        if (!formData.mobileNumber) {
+          setError("Mobile number is required");
+          return;
+        }
 
         const response = await fetch("/api/register", {
           method: "POST",
@@ -71,6 +76,7 @@ const AuthPageEnhanced = () => {
             password: formData.password,
             firstName: formData.firstName,
             lastName: formData.lastName,
+            phone: formData.mobileNumber,
             userType: userType,
             referralCode: formData.referralCode,
           }),
@@ -97,7 +103,13 @@ const AuthPageEnhanced = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 px-4">
       <div className="max-w-md w-full">
-        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">Welcome to Sanwar</h1>
+          <p className="text-white/90 text-lg">Your smart salon booking platform</p>
+        </div>
+
+        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl rounded-3xl">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-2xl font-bold text-gray-900">
               Get Started
@@ -109,10 +121,10 @@ const AuthPageEnhanced = () => {
           
           <CardContent className="space-y-6">
             {/* Toggle between Sign In and Sign Up */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex bg-gray-100 rounded-full p-1">
               <button
                 onClick={() => setActiveTab("signin")}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-3 px-6 rounded-full text-sm font-medium transition-colors ${
                   activeTab === "signin"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -122,7 +134,7 @@ const AuthPageEnhanced = () => {
               </button>
               <button
                 onClick={() => setActiveTab("signup")}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-3 px-6 rounded-full text-sm font-medium transition-colors ${
                   activeTab === "signup"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -135,32 +147,32 @@ const AuthPageEnhanced = () => {
             {/* Role Selection for Sign Up */}
             {activeTab === "signup" && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">I am a:</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">I am a:</h3>
                 <RadioGroup 
                   value={userType} 
                   onValueChange={(value) => setUserType(value as "customer" | "salon_owner" | "brand_owner")}
-                  className="space-y-3"
+                  className="space-y-2"
                 >
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                  <div className="flex items-center space-x-3 p-2">
                     <RadioGroupItem value="customer" id="customer" />
-                    <Users className="h-5 w-5 text-gray-600" />
-                    <Label htmlFor="customer" className="flex-1 cursor-pointer font-medium">
+                    <Users className="h-4 w-4 text-gray-600" />
+                    <Label htmlFor="customer" className="flex-1 cursor-pointer text-sm">
                       Customer
                     </Label>
                   </div>
                   
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                  <div className="flex items-center space-x-3 p-2">
                     <RadioGroupItem value="salon_owner" id="salon_owner" />
-                    <Scissors className="h-5 w-5 text-gray-600" />
-                    <Label htmlFor="salon_owner" className="flex-1 cursor-pointer font-medium">
+                    <Scissors className="h-4 w-4 text-gray-600" />
+                    <Label htmlFor="salon_owner" className="flex-1 cursor-pointer text-sm">
                       Salon Owner
                     </Label>
                   </div>
                   
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                  <div className="flex items-center space-x-3 p-2">
                     <RadioGroupItem value="brand_owner" id="brand_owner" />
-                    <Gift className="h-5 w-5 text-gray-600" />
-                    <Label htmlFor="brand_owner" className="flex-1 cursor-pointer font-medium">
+                    <Gift className="h-4 w-4 text-gray-600" />
+                    <Label htmlFor="brand_owner" className="flex-1 cursor-pointer text-sm">
                       Brand Owner (Multiple Salons)
                     </Label>
                   </div>
@@ -169,6 +181,11 @@ const AuthPageEnhanced = () => {
             )}
 
 
+
+            {/* OR CONTINUE WITH EMAIL */}
+            <div className="text-center">
+              <div className="text-sm text-gray-500 font-medium">OR CONTINUE WITH EMAIL</div>
+            </div>
 
             {/* Email/Password Form */}
             <div className="space-y-4">
@@ -180,30 +197,81 @@ const AuthPageEnhanced = () => {
                 </Alert>
               )}
 
+              {activeTab === "signup" && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                        First Name *
+                      </Label>
+                      <Input 
+                        id="firstName"
+                        placeholder="First name"
+                        className="mt-1 rounded-lg"
+                        value={formData.firstName}
+                        onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                        data-testid="input-firstName"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                        Last Name
+                      </Label>
+                      <Input 
+                        id="lastName"
+                        placeholder="Last name"
+                        className="mt-1 rounded-lg"
+                        value={formData.lastName}
+                        onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                        data-testid="input-lastName"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div>
                 <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email
+                  Email {activeTab === "signup" ? "*" : ""}
                 </Label>
                 <Input 
                   id="email"
                   type="email" 
                   placeholder="Enter your email"
-                  className="mt-1"
+                  className="mt-1 rounded-lg"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   data-testid="input-email"
                 />
               </div>
+
+              {activeTab === "signup" && (
+                <div>
+                  <Label htmlFor="mobileNumber" className="text-sm font-medium text-gray-700">
+                    Mobile Number *
+                  </Label>
+                  <Input 
+                    id="mobileNumber"
+                    type="tel" 
+                    placeholder="Enter your mobile number"
+                    className="mt-1 rounded-lg"
+                    value={formData.mobileNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, mobileNumber: e.target.value }))}
+                    data-testid="input-mobileNumber"
+                  />
+                </div>
+              )}
               
               <div>
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
+                  Password {activeTab === "signup" ? "*" : ""}
                 </Label>
                 <div className="relative mt-1">
                   <Input 
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder={activeTab === "signup" ? "Create a password (min. 6 characters)" : "Enter your password"}
+                    className="rounded-lg"
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     data-testid="input-password"
@@ -220,69 +288,45 @@ const AuthPageEnhanced = () => {
                     )}
                   </button>
                 </div>
+                {activeTab === "signup" && (
+                  <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters long</p>
+                )}
               </div>
 
               {activeTab === "signup" && (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
-                        First Name *
-                      </Label>
-                      <Input 
-                        id="firstName"
-                        placeholder="First name"
-                        className="mt-1"
-                        value={formData.firstName}
-                        onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                        data-testid="input-firstName"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                        Last Name
-                      </Label>
-                      <Input 
-                        id="lastName"
-                        placeholder="Last name"
-                        className="mt-1"
-                        value={formData.lastName}
-                        onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                        data-testid="input-lastName"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="referralCode" className="text-sm font-medium text-gray-700">
-                      Referral Code (Optional)
-                    </Label>
+                <div>
+                  <Label htmlFor="referralCode" className="text-sm font-medium text-gray-700">
+                    Referral Code (Optional)
+                  </Label>
+                  <div className="relative mt-1">
                     <Input 
                       id="referralCode"
-                      placeholder="Enter referral code"
-                      className="mt-1"
+                      placeholder="Enter referral code (if you have one)"
+                      className="rounded-lg pr-10"
                       value={formData.referralCode}
                       onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value }))}
                       data-testid="input-referralCode"
                     />
+                    <Gift className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
-                </>
+                  <p className="text-xs text-gray-500 mt-1">Have a referral code? Enter it to get special benefits during registration!</p>
+                </div>
               )}
 
               <Button 
                 type="submit"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50"
+                className="w-full bg-black text-white font-semibold py-4 rounded-lg transition-all duration-200 disabled:opacity-50 hover:bg-gray-800"
                 data-testid={activeTab === "signin" ? "button-signin" : "button-signup"}
               >
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {activeTab === "signin" ? "Signing In..." : "Signing Up..."}
+                    {activeTab === "signin" ? "Signing In..." : activeTab === "signup" ? "Create Account" : "Signing Up..."}
                   </>
                 ) : (
-                  activeTab === "signin" ? "Sign In" : "Sign Up"
+                  activeTab === "signin" ? "Sign In" : "Create Account"
                 )}
               </Button>
 
@@ -291,6 +335,16 @@ const AuthPageEnhanced = () => {
                   <Link href="/forgot-password" className="text-sm text-purple-600 hover:text-purple-700">
                     Forgot your password?
                   </Link>
+                </div>
+              )}
+
+              {activeTab === "signup" && (
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">
+                    By continuing, you agree to our{" "}
+                    <span className="text-purple-600">Terms of Service</span> and{" "}
+                    <span className="text-purple-600">Privacy Policy</span>
+                  </p>
                 </div>
               )}
             </div>
