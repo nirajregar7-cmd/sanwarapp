@@ -34,6 +34,7 @@ export function SocialLoginButtons({ userType, isLogin = true, showRoleSelection
         variant="outline"
         className="w-full flex items-center justify-center gap-3 h-11 bg-white hover:bg-gray-50"
         onClick={() => handleSocialLogin('google')}
+        data-testid="button-google-oauth"
       >
         <FaGoogle className="h-5 w-5 text-red-500" />
         <span className="text-gray-700">{actionText} with Google</span>

@@ -114,15 +114,19 @@ export function setupSocialAuth(app: Express) {
 
   // Social auth routes
   app.get('/api/auth/google', (req, res, next) => {
+    console.log('🔧 Google OAuth route hit');
     // Store user type in session for callback
     const { userType } = req.query;
     if (userType) {
       (req.session as any).pendingUserType = userType;
+      console.log('🔧 Storing user type in session:', userType);
     }
     
+    console.log('🔧 Initiating Google OAuth with scopes: profile, email');
     passport.authenticate('google', { 
       scope: ['profile', 'email'],
-      state: JSON.stringify({ userType })
+      state: JSON.stringify({ userType || {} }),
+      accessType: 'offline'
     })(req, res, next);
   });
 
