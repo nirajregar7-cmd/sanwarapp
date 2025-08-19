@@ -4,7 +4,8 @@ export function useSplashScreen() {
   const [showSplash, setShowSplash] = useState(() => {
     // Check if splash was already shown in this session
     const splashShown = sessionStorage.getItem('sanwar_splash_shown');
-    return !splashShown;
+    // Temporarily force splash to show for testing the new logo
+    return true;
   });
 
   const hideSplash = () => {
