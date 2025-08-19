@@ -41,6 +41,56 @@ export const sendWelcomeEmail = async (
     // Customize welcome message based on user type
     const getWelcomeContent = (type: string) => {
       switch (type) {
+        case 'customer':
+          return {
+            subject: 'Welcome to Sanwar - Your Smart Salon Booking Platform!',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+                <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                  <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #8B5CF6; margin: 0;">Welcome to Sanwar!</h1>
+                    <p style="color: #666; font-size: 18px;">Your Smart Salon Booking Platform</p>
+                  </div>
+                  
+                  <h2 style="color: #333;">Hello ${userName},</h2>
+                  
+                  <p style="color: #555; line-height: 1.6;">
+                    Thank you for joining Sanwar! We're excited to help you discover and book the best salon services in your area with just a few clicks.
+                  </p>
+                  
+                  <div style="background-color: #f8f4ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: #8B5CF6; margin-top: 0;">What you can do now:</h3>
+                    <ul style="color: #555;">
+                      <li>Browse and discover top-rated salons near you</li>
+                      <li>Book appointments instantly with real-time availability</li>
+                      <li>Enjoy exclusive offers and promotions</li>
+                      <li>Rate and review your salon experiences</li>
+                      <li>Manage all your bookings in one place</li>
+                    </ul>
+                  </div>
+                  
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/" 
+                       style="background-color: #8B5CF6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                      Start Booking Now
+                    </a>
+                  </div>
+                  
+                  <p style="color: #555; line-height: 1.6;">
+                    Ready to discover your next favorite salon? Browse our featured salons and book your appointment today!
+                  </p>
+                  
+                  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+                    <p style="color: #888; font-size: 14px;">
+                      Best regards,<br>
+                      The Sanwar Team
+                    </p>
+                  </div>
+                </div>
+              </div>
+            `
+          };
+          
         case 'salon_owner':
           return {
             subject: 'Welcome to Sanwar - Start Growing Your Salon Business!',
@@ -141,7 +191,7 @@ export const sendWelcomeEmail = async (
             `
           };
           
-        default: // customer
+        default:
           return {
             subject: 'Welcome to Sanwar - Your Smart Salon Booking Journey Begins!',
             html: `
@@ -170,7 +220,7 @@ export const sendWelcomeEmail = async (
                   </div>
                   
                   <div style="text-align: center; margin: 30px 0;">
-                    <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/salons" 
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/" 
                        style="background-color: #8B5CF6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                       Start Exploring Salons
                     </a>

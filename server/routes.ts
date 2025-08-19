@@ -8244,6 +8244,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Customer welcome email test endpoint
+  app.post('/api/test-customer-welcome-email', async (req, res) => {
+    try {
+      const { email, firstName } = req.body;
+      
+      if (!email || !firstName) {
+        return res.status(400).json({ message: "Email and firstName are required" });
+      }
+
+      const { sendWelcomeEmail } = await import('./welcomeEmail');
+      const success = await sendWelcomeEmail(email, firstName, 'customer');
+      
+      if (success) {
+        res.json({ message: "Customer welcome email sent successfully!" });
+      } else {
+        res.status(500).json({ message: "Failed to send customer welcome email" });
+      }
+    } catch (error) {
+      console.error("Test customer welcome email error:", error);
+      res.status(500).json({ message: "Error sending test email" });
+    }
+  });
+
   // Register smart scheduling routes
   const { registerSmartSchedulingRoutes } = await import('./smart-scheduling-routes');
   registerSmartSchedulingRoutes(app);

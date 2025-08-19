@@ -27,6 +27,8 @@ The application uses PostgreSQL as the primary database, with Drizzle ORM for ty
 - **Social Login Removal**: Removed all social login buttons, OAuth routes, and related authentication components
 - **Authentication Backend Cleanup**: Cleaned up authentication system to use only traditional email/password flow
 - **Mobile Dashboard Optimization**: Enhanced brand owner dashboard with comprehensive mobile responsiveness including responsive grid layouts, mobile-friendly tabs, optimized card sizing, and improved touch interactions
+- **Customer Welcome Email Fix**: Fixed missing customer welcome email template - customers now receive personalized welcome emails after signup with platform introduction and features overview
+- **Authentication Link Styling Fix**: Updated "Forgot your password?" link to black color matching design specifications
 
 ## Previous Updates (August 18, 2025)
 - **Multi-Domain Payment Setup**: Configured payment processing to support both original domain and sanwarhub.in for seamless payment acceptance across domains
