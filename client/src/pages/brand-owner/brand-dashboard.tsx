@@ -291,33 +291,36 @@ export default function BrandDashboard() {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Brand Dashboard</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold">Brand Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600">
             Welcome back, {user.firstName}! Managing {(user as any).brandName || 'Your'} brand
           </p>
         </div>
         
-        {/* Date Range Filter */}
-        <div className="flex flex-wrap gap-2">
-          {quickDateRanges.map((range) => (
-            <Button
-              key={range.label}
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedDateRange(range.value())}
-            >
-              {range.label}
-            </Button>
-          ))}
+        {/* Date Range Filter - Mobile Optimized */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+            {quickDateRanges.map((range) => (
+              <Button
+                key={range.label}
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedDateRange(range.value())}
+                className="text-xs sm:text-sm"
+              >
+                {range.label}
+              </Button>
+            ))}
+          </div>
           
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <CalendarIcon className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Custom Range
               </Button>
             </PopoverTrigger>
@@ -340,57 +343,57 @@ export default function BrandDashboard() {
         </div>
       </div>
 
-      {/* Quick Stats Cards */}
+      {/* Quick Stats Cards - Mobile Optimized */}
       {brandStats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Salons</p>
-                  <p className="text-2xl font-bold">{brandStats.totalSalons}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Total Salons</p>
+                  <p className="text-lg sm:text-2xl font-bold">{brandStats.totalSalons}</p>
                   <p className="text-xs text-gray-500">{brandStats.activeSalons} active</p>
                 </div>
-                <Building2 className="h-8 w-8 text-blue-600" />
+                <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                  <p className="text-2xl font-bold">{brandStats.totalBookings}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Total Bookings</p>
+                  <p className="text-lg sm:text-2xl font-bold">{brandStats.totalBookings}</p>
                   <p className="text-xs text-gray-500">This period</p>
                 </div>
-                <Users className="h-8 w-8 text-green-600" />
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Earnings</p>
-                  <p className="text-2xl font-bold">₹{brandStats.totalEarnings.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Total Earnings</p>
+                  <p className="text-lg sm:text-2xl font-bold">₹{brandStats.totalEarnings.toLocaleString()}</p>
                   <p className="text-xs text-gray-500">All time</p>
                 </div>
-                <IndianRupee className="h-8 w-8 text-yellow-600" />
+                <IndianRupee className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Average Rating</p>
-                  <p className="text-2xl font-bold">{brandStats.averageRating.toFixed(1)}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Average Rating</p>
+                  <p className="text-lg sm:text-2xl font-bold">{brandStats.averageRating.toFixed(1)}</p>
                   <p className="text-xs text-gray-500">{brandStats.totalReviews} reviews</p>
                 </div>
-                <Star className="h-8 w-8 text-orange-600" />
+                <Star className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
@@ -398,92 +401,92 @@ export default function BrandDashboard() {
       )}
 
       <Tabs defaultValue="salons" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="salons">Branch Management</TabsTrigger>
-          <TabsTrigger value="connections">Salon Connections</TabsTrigger>
-          <TabsTrigger value="performance">Performance Analytics</TabsTrigger>
-          <TabsTrigger value="services">Service Reports</TabsTrigger>
-          <TabsTrigger value="reviews">Customer Feedback</TabsTrigger>
-          <TabsTrigger value="offers">Offers & Pricing</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto">
+          <TabsTrigger value="salons" className="text-xs sm:text-sm p-2 sm:p-3">Branch Management</TabsTrigger>
+          <TabsTrigger value="connections" className="text-xs sm:text-sm p-2 sm:p-3">Salon Connections</TabsTrigger>
+          <TabsTrigger value="performance" className="text-xs sm:text-sm p-2 sm:p-3">Performance Analytics</TabsTrigger>
+          <TabsTrigger value="services" className="text-xs sm:text-sm p-2 sm:p-3">Service Reports</TabsTrigger>
+          <TabsTrigger value="reviews" className="text-xs sm:text-sm p-2 sm:p-3">Customer Feedback</TabsTrigger>
+          <TabsTrigger value="offers" className="text-xs sm:text-sm p-2 sm:p-3">Offers & Pricing</TabsTrigger>
         </TabsList>
 
         {/* Branch Management Tab */}
         <TabsContent value="salons" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Your Salon Branches</h2>
-            <Button>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h2 className="text-lg sm:text-xl font-semibold">Your Salon Branches</h2>
+            <Button className="w-full sm:w-auto text-sm">
               <Plus className="h-4 w-4 mr-2" />
               Add New Branch
             </Button>
           </div>
 
           {salonsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
-                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                    <div className="h-8 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded mb-4"></div>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="h-3 sm:h-4 bg-gray-200 rounded mb-3 sm:mb-4"></div>
+                    <div className="h-6 sm:h-8 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-2 sm:h-3 bg-gray-200 rounded mb-3 sm:mb-4"></div>
                     <div className="flex gap-2">
-                      <div className="h-6 bg-gray-200 rounded w-16"></div>
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                      <div className="h-5 sm:h-6 bg-gray-200 rounded w-12 sm:w-16"></div>
+                      <div className="h-5 sm:h-6 bg-gray-200 rounded w-16 sm:w-20"></div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {brandSalons?.map((salon) => (
                 <Card key={salon.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-semibold text-lg">{salon.name}</h3>
-                        <p className="text-sm text-gray-600 flex items-center">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {salon.address}
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex justify-between items-start mb-3 sm:mb-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base sm:text-lg truncate">{salon.name}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600 flex items-center mt-1">
+                          <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{salon.address}</span>
                         </p>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <Badge variant={salon.isActive ? "default" : "secondary"}>
+                      <div className="flex flex-col gap-1 ml-2">
+                        <Badge variant={salon.isActive ? "default" : "secondary"} className="text-xs">
                           {salon.isActive ? "Active" : "Inactive"}
                         </Badge>
-                        {salon.isPremium && <Badge variant="outline">Premium</Badge>}
+                        {salon.isPremium && <Badge variant="outline" className="text-xs">Premium</Badge>}
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex justify-between text-xs sm:text-sm">
                         <span>Manager:</span>
-                        <span>{salon.owner.firstName} {salon.owner.lastName}</span>
+                        <span className="truncate ml-2">{salon.owner.firstName} {salon.owner.lastName}</span>
                       </div>
                       
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs sm:text-sm">
                         <span>Rating:</span>
                         <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                          <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 mr-1" />
                           {salon.averageRating} ({salon.totalReviews})
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 text-center text-sm">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center text-xs sm:text-sm">
                         <div>
-                          <p className="font-semibold">{salon._count.bookings}</p>
+                          <p className="font-semibold text-sm sm:text-base">{salon._count.bookings}</p>
                           <p className="text-gray-600">Bookings</p>
                         </div>
                         <div>
-                          <p className="font-semibold">{salon._count.staff}</p>
+                          <p className="font-semibold text-sm sm:text-base">{salon._count.staff}</p>
                           <p className="text-gray-600">Staff</p>
                         </div>
                         <div>
-                          <p className="font-semibold">{salon._count.services}</p>
+                          <p className="font-semibold text-sm sm:text-base">{salon._count.services}</p>
                           <p className="text-gray-600">Services</p>
                         </div>
                       </div>
 
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs sm:text-sm">
                         <span>Monthly Earnings:</span>
                         <span className="font-semibold text-green-600">
                           ₹{salon.monthlyEarnings.toLocaleString()}
@@ -491,20 +494,20 @@ export default function BrandDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-4">
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        className="flex-1"
+                        className="flex-1 text-xs sm:text-sm"
                         onClick={() => handleViewSalonDetails(salon.id)}
                       >
-                        <Eye className="h-4 w-4 mr-2" />
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         View Details
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            <Settings className="h-4 w-4 mr-2" />
+                          <Button size="sm" variant="outline" className="flex-1 text-xs sm:text-sm">
+                            <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                             Manage
                           </Button>
                         </DropdownMenuTrigger>
