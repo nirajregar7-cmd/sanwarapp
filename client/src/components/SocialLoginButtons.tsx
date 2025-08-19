@@ -9,14 +9,6 @@ interface SocialLoginButtonsProps {
 
 export function SocialLoginButtons({ userType, isLogin = true, showRoleSelection = false }: SocialLoginButtonsProps) {
   const handleSocialLogin = (provider: 'google' | 'facebook') => {
-    // For Google OAuth in Replit, use test page
-    if (provider === 'google') {
-      console.log('🔧 Opening OAuth test page...');
-      window.location.href = '/oauth-test';
-      return;
-    }
-    
-    // For other providers, use direct navigation
     const baseUrl = `/api/auth/${provider}`;
     const params = new URLSearchParams();
     
