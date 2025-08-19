@@ -10,7 +10,7 @@ import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
-import { setupSocialAuth } from "./socialAuth";
+
 import { sendWelcomeEmail } from "./welcomeEmail";
 
 declare global {
@@ -182,8 +182,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Setup social authentication strategies
-  setupSocialAuth(app);
+  // Social authentication removed - using email/password only
 
   // Register route
   app.post("/api/register", async (req, res, next) => {

@@ -13,7 +13,7 @@ import Layout from "@/components/Layout";
 // Pages
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth";
-import RoleSelection from "@/pages/auth/role-selection";
+
 import ForgotPasswordPage from "@/pages/forgot-password";
 import EmailVerification from "@/pages/email-verification";
 import UserTypeSelection from "@/pages/user-type-selection";
@@ -53,8 +53,7 @@ import ClerkSignInPage, { ClerkSignUpPage } from "@/pages/clerk-auth";
 // Brand Owner Pages
 import BrandDashboard from "@/pages/brand-owner/brand-dashboard";
 
-// OAuth Test Page
-import OAuthTestSimple from "@/pages/oauth-test-simple";
+
 
 // Payment Pages
 import PaymentCallback from "@/pages/PaymentCallback";
@@ -79,8 +78,7 @@ function Router() {
     <Switch>
       {/* Authentication pages */}
       <Route path="/auth" component={AuthPage} />
-      <Route path="/auth/role-selection" component={RoleSelection} />
-      <Route path="/oauth-test" component={OAuthTestSimple} />
+
 
 
       <Route path="/business-signup" component={AuthPage} />

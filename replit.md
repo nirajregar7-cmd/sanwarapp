@@ -20,12 +20,12 @@ The server is built using Express.js and TypeScript, adhering to a RESTful API d
 The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
 
 ## Recent Updates (August 19, 2025)
-- **Google OAuth Implementation**: Successfully implemented Google OAuth authentication with role selection system
-- **Enhanced Authentication UI**: Created modern login/signup page matching user's design requirements with role selection interface
-- **Social Login Integration**: Added Google authentication with proper credential management through Replit Secrets
-- **Role Selection Flow**: Implemented post-OAuth role selection allowing users to choose Customer, Salon Owner, or Brand Owner roles
-- **Authentication Backend**: Complete social authentication routes with user creation and session management
-- **Google Cloud Console Setup**: User configuring OAuth redirect URIs for proper Google authentication flow
+- **Authentication System Restoration**: Completely removed Google and Facebook OAuth authentication per user request
+- **Email/Password Authentication**: Restored original traditional email/password authentication system 
+- **Authentication UI Enhancement**: Maintained modern login/signup page design with email/password forms only
+- **Role Selection Integration**: Kept role selection system for new user registrations during signup process
+- **Social Login Removal**: Removed all social login buttons, OAuth routes, and related authentication components
+- **Authentication Backend Cleanup**: Cleaned up authentication system to use only traditional email/password flow
 
 ## Previous Updates (August 18, 2025)
 - **Multi-Domain Payment Setup**: Configured payment processing to support both original domain and sanwarhub.in for seamless payment acceptance across domains

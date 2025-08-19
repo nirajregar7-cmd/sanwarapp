@@ -10,12 +10,89 @@ import { Scissors, Users, Eye, EyeOff, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { SocialLoginButtons } from "@/components/SocialLoginButtons";
 
-// Enhanced AuthPage matching the provided design
+
+// Enhanced AuthPage with email/password authentication
 const AuthPageEnhanced = () => {
   const [activeTab, setActiveTab] = useState("signin");
   const [userType, setUserType] = useState<"customer" | "salon_owner" | "brand_owner">("customer");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    referralCode: ""
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      if (activeTab === "signin") {
+        // Login
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+
+        if (response.ok) {
+          toast({
+            title: "Login Successful",
+            description: "Welcome back!",
+          });
+          window.location.href = "/";
+        } else {
+          const data = await response.json();
+          setError(data.error || "Login failed");
+        }
+      } else {
+        // Register
+        if (!formData.firstName) {
+          setError("First name is required");
+          return;
+        }
+
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            userType: userType,
+            referralCode: formData.referralCode,
+          }),
+        });
+
+        if (response.ok) {
+          toast({
+            title: "Registration Successful",
+            description: "Please check your email for verification.",
+          });
+          navigate(`/email-verification/${userType}`);
+        } else {
+          const data = await response.json();
+          setError(data.error || "Registration failed");
+        }
+      }
+    } catch (error) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 px-4">
@@ -91,18 +168,18 @@ const AuthPageEnhanced = () => {
               </div>
             )}
 
-            {/* Social Login Buttons */}
-            <SocialLoginButtons 
-              userType={activeTab === "signup" ? userType : undefined}
-              isLogin={activeTab === "signin"}
-            />
 
-            <div className="text-center">
-              <div className="text-sm text-gray-500 mb-4">OR CONTINUE WITH EMAIL</div>
-            </div>
 
             {/* Email/Password Form */}
             <div className="space-y-4">
+              {error && (
+                <Alert className="border-red-200 bg-red-50">
+                  <AlertDescription className="text-red-700">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div>
                 <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                   Email
@@ -112,6 +189,9 @@ const AuthPageEnhanced = () => {
                   type="email" 
                   placeholder="Enter your email"
                   className="mt-1"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  data-testid="input-email"
                 />
               </div>
               
@@ -122,11 +202,22 @@ const AuthPageEnhanced = () => {
                 <div className="relative mt-1">
                   <Input 
                     id="password"
-                    type="password" 
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    data-testid="input-password"
                   />
-                  <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <Eye className="h-4 w-4 text-gray-400" />
+                  <button 
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -142,6 +233,9 @@ const AuthPageEnhanced = () => {
                         id="firstName"
                         placeholder="First name"
                         className="mt-1"
+                        value={formData.firstName}
+                        onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                        data-testid="input-firstName"
                       />
                     </div>
                     <div>
@@ -152,18 +246,53 @@ const AuthPageEnhanced = () => {
                         id="lastName"
                         placeholder="Last name"
                         className="mt-1"
+                        value={formData.lastName}
+                        onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                        data-testid="input-lastName"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="referralCode" className="text-sm font-medium text-gray-700">
+                      Referral Code (Optional)
+                    </Label>
+                    <Input 
+                      id="referralCode"
+                      placeholder="Enter referral code"
+                      className="mt-1"
+                      value={formData.referralCode}
+                      onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value }))}
+                      data-testid="input-referralCode"
+                    />
                   </div>
                 </>
               )}
 
               <Button 
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-200"
+                type="submit"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50"
                 data-testid={activeTab === "signin" ? "button-signin" : "button-signup"}
               >
-                {activeTab === "signin" ? "Sign In" : "Sign Up"}
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {activeTab === "signin" ? "Signing In..." : "Signing Up..."}
+                  </>
+                ) : (
+                  activeTab === "signin" ? "Sign In" : "Sign Up"
+                )}
               </Button>
+
+              {activeTab === "signin" && (
+                <div className="text-center">
+                  <Link href="/forgot-password" className="text-sm text-purple-600 hover:text-purple-700">
+                    Forgot your password?
+                  </Link>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
