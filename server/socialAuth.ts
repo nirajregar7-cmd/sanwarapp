@@ -5,8 +5,13 @@ import { storage } from "./storage";
 import type { Express } from "express";
 
 export function setupSocialAuth(app: Express) {
+  console.log('🔧 Setting up social auth...');
+  console.log('🔧 Google Client ID exists:', !!process.env.GOOGLE_CLIENT_ID);
+  console.log('🔧 Google Client Secret exists:', !!process.env.GOOGLE_CLIENT_SECRET);
+  
   // Google OAuth Strategy
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    console.log('✅ Registering Google OAuth strategy');
     passport.use(new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,

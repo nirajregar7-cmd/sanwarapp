@@ -158,7 +158,10 @@ const AuthPageEnhanced = () => {
                 </>
               )}
 
-              <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-200">
+              <Button 
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-200"
+                data-testid={activeTab === "signin" ? "button-signin" : "button-signup"}
+              >
                 {activeTab === "signin" ? "Sign In" : "Sign Up"}
               </Button>
             </div>
