@@ -52,13 +52,7 @@ export function setupSocialAuth(app: Express) {
           ...userData 
         });
 
-        // Send welcome email (async, don't block login)
-        import('./welcomeEmail').then(({ sendWelcomeEmail }) => {
-          sendWelcomeEmail(newUser.email, newUser.firstName, newUser.userType as 'customer' | 'salon_owner' | 'brand_owner')
-            .catch(error => console.error('Failed to send welcome email (Google OAuth):', error));
-        });
-        
-        return done(null, newUser);
+        // OAuth flow complete - user data prepared for role selection
       } catch (error) {
         console.error('Google auth error:', error);
         return done(error, undefined);
@@ -133,9 +127,12 @@ export function setupSocialAuth(app: Express) {
   app.get('/api/auth/google/callback', 
     passport.authenticate('google', { failureRedirect: '/auth?error=google_auth_failed' }),
     (req, res) => {
+      console.log('🔧 Google OAuth callback hit');
       const user = req.user as any;
+      console.log('🔧 User from Google OAuth:', user ? 'User received' : 'No user');
       
       if (user && user.needsRoleSelection) {
+        console.log('🔧 User needs role selection, storing in session');
         // Store user data in session for role selection
         (req.session as any).pendingGoogleUser = {
           email: user.email,
@@ -146,11 +143,16 @@ export function setupSocialAuth(app: Express) {
           socialId: user.socialId
         };
         
+        console.log('🔧 Redirecting to role selection page');
         // Redirect to role selection page
         res.redirect('/auth/role-selection?provider=google');
-      } else {
+      } else if (user) {
+        console.log('🔧 Existing user, redirecting to home');
         // Successful authentication, redirect to home
         res.redirect('/');
+      } else {
+        console.log('🔧 No user data, redirecting to auth with error');
+        res.redirect('/auth?error=google_auth_failed');
       }
     }
   );
