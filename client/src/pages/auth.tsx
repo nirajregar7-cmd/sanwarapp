@@ -317,13 +317,17 @@ const AuthPageEnhanced = () => {
                 type="submit"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full bg-black text-white font-semibold py-4 rounded-lg transition-all duration-200 disabled:opacity-50 hover:bg-gray-800"
+                className={`w-full font-semibold py-4 rounded-lg transition-all duration-200 disabled:opacity-50 ${
+                  activeTab === "signin" 
+                    ? "bg-gray-800 text-white hover:bg-gray-900" 
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
                 data-testid={activeTab === "signin" ? "button-signin" : "button-signup"}
               >
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {activeTab === "signin" ? "Signing In..." : activeTab === "signup" ? "Create Account" : "Signing Up..."}
+                    {activeTab === "signin" ? "Signing In..." : "Create Account"}
                   </>
                 ) : (
                   activeTab === "signin" ? "Sign In" : "Create Account"
