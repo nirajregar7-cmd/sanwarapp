@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanWar - Salon Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Poppins:wght@300;400&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
+    <style>
+        /* --- Base Styles & Resets --- */
+        :root {
+            --purple: #4c1d95; /* Deep purple */
+            --gold: #fde047;   /* Soft gold */
+            --text-light: #fefce8; /* Light cream/gold for text */
+            --orange-start: #f97316; /* Orange from your logo */
+            --orange-end: #facc15;   /* Yellow from your logo */
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden; /* Prevents scrollbars */
+            /* Using a background that complements both screens */
+            background: radial-gradient(circle at bottom, var(--orange-end) 0%, var(--purple) 80%);
+        }
+
+        /* --- Screen Containers --- */
+        .screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            box-sizing: border-box;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        /* --- Splash Screen Specific Styles --- */
+        #splash-screen {
+            color: var(--text-light);
+            opacity: 1; /* Start visible */
+        }
+
+        /* --- Logo Styling (Splash Screen) --- */
+        .splash-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 15px rgba(253, 224, 71, 0.5));
+        }
+
+        /* --- Typography (Splash Screen) --- */
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+        
+        h1 .char {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(-30px) scale(0.5);
+            animation: dropIn 0.6s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+        }
+
+        /* NEW: Updated styles for the animated tagline */
+        p.tagline {
+            font-family: 'Playfair Display', serif; /* New elegant font */
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-top: 1.5rem;
+            letter-spacing: 1px;
+            max-width: 90%;
+            text-align: center; /* Ensures text is centered */
+            color: var(--gold); /* New color */
+            text-shadow: 0 0 8px rgba(253, 224, 71, 0.6); /* Subtle glow */
+        }
+
+        p.tagline .word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInWord 0.6s ease-out forwards;
+        }
+        
+        /* Animation Delays for each character in H1 */
+        h1 .char:nth-child(1) { animation-delay: 0.2s; }
+        h1 .char:nth-child(2) { animation-delay: 0.3s; }
+        h1 .char:nth-child(3) { animation-delay: 0.4s; }
+        h1 .char:nth-child(4) { animation-delay: 0.5s; }
+        h1 .char:nth-child(5) { animation-delay: 0.6s; }
+        h1 .char:nth-child(6) { animation-delay: 0.7s; }
+
+        /* Animation delays for each word in the tagline */
+        p.tagline .word:nth-child(1) { animation-delay: 0.8s; }
+        p.tagline .word:nth-child(2) { animation-delay: 0.9s; }
+        p.tagline .word:nth-child(3) { animation-delay: 1.0s; }
+        p.tagline .word:nth-child(4) { animation-delay: 1.1s; }
+        p.tagline .word:nth-child(5) { animation-delay: 1.2s; }
+        p.tagline .word:nth-child(6) { animation-delay: 1.3s; }
+        p.tagline .word:nth-child(7) { animation-delay: 1.4s; }
+        p.tagline .word:nth-child(8) { animation-delay: 1.5s; }
+        p.tagline .word:nth-child(9) { animation-delay: 1.6s; }
+        p.tagline .word:nth-child(10) { animation-delay: 1.7s; }
+        p.tagline .word:nth-child(11) { animation-delay: 1.8s; }
+        p.tagline .word:nth-child(12) { animation-delay: 1.9s; }
+
+
+        /* --- Welcome Screen Specific Styles --- */
+        #welcome-screen {
+            opacity: 0; /* Start hidden */
+            pointer-events: none; /* Not interactive when hidden */
+        }
+
+        /* Set initial state for elements before animation */
+        .welcome-logo, .start-button {
+            opacity: 0;
+        }
+
+        /* Trigger animations when the 'is-visible' class is added */
+        #welcome-screen.is-visible .welcome-logo {
+            animation: scaleIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s forwards;
+        }
+
+        #welcome-screen.is-visible .welcome-message {
+            animation: 
+                typing 2s steps(17, end) 0.8s forwards,
+                blink-caret .75s step-end infinite 0.8s;
+        }
+
+        #welcome-screen.is-visible .start-button {
+            /* Delay this to start after the typing animation finishes */
+            animation: slideUpFadeIn 0.7s ease-out 3s forwards, pulse 2.5s infinite 3.5s;
+        }
+
+        .welcome-logo {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 2rem;
+        }
+
+        /* Styles for the typing effect */
+        .welcome-message {
+            color: var(--text-light);
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 2.5rem;
+            border-right: .15em solid var(--orange-start); /* The typewriter cursor */
+            white-space: nowrap; /* Keeps the content on a single line */
+            overflow: hidden; /* Hides the text before it's "typed" */
+            letter-spacing: .1em;
+            width: 0; /* Starts with zero width */
+        }
+
+        /* Style for the highlighted brand name */
+        .welcome-message .highlight {
+            font-weight: bold;
+            background: -webkit-linear-gradient(45deg, var(--orange-start), var(--orange-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .start-button {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--purple);
+            background: linear-gradient(45deg, var(--orange-end), var(--orange-start));
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+
+        /* --- Keyframe Animations --- */
+        @keyframes dropIn {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                text-shadow: 0 0 10px var(--text-light), 0 0 20px var(--text-light), 0 0 30px var(--gold);
+            }
+        }
+        
+        @keyframes fadeInWord {
+            to {
+                opacity: 1; /* Made it fully opaque for better visibility */
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideUpFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Keyframe for the typing effect */
+        @keyframes typing {
+            from { width: 0 }
+            /* Adjusted width to ensure the full text is revealed */
+            to { width: 19ch; } 
+        }
+
+        /* Keyframe for the blinking cursor */
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--orange-start); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 8px 25px rgba(253, 224, 71, 0.4); }
+            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 600px) {
+            h1 { font-size: 2.8rem; }
+            .splash-logo { width: 70px; height: 70px; }
+            p.tagline { font-size: 1.1rem; }
+            .welcome-logo { max-width: 160px; }
+            .welcome-message { font-size: 1.3rem; letter-spacing: .05em; }
+            .start-button { padding: 0.8rem 2rem; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Screen 1: Animated Splash Screen -->
+    <div id="splash-screen" class="screen">
+        <svg class="splash-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="logoGradient" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FEFCE8"/>
+                    <stop offset="1" stop-color="#FDE047"/>
+                </linearGradient>
+            </defs>
+            <path d="M68 20V80H78V20H68ZM32 20V80H42V20H32ZM50 20V80H60V20H50ZM23 20V80H87V70H23V20Z" fill="url(#logoGradient)"/>
+            <path d="M25 25C33.2843 25 40 31.7157 40 40C40 48.2843 33.2843 55 25 55C16.7157 55 10 48.2843 10 40C10 31.7157 16.7157 25 25 25ZM25 30C19.4772 30 15 34.4772 15 40C15 45.5228 19.4772 50 25 50C30.5228 50 35 45.5228 35 40C35 34.4772 30.5228 30 25 30Z" fill="url(#logoGradient)"/>
+            <path d="M25 58C33.2843 58 40 64.7157 40 73C40 81.2843 33.2843 88 25 88C16.7157 88 10 81.2843 10 73C10 64.7157 16.7157 58 25 58ZM25 63C19.4772 63 15 67.4772 15 73C15 78.5228 19.4772 83 25 83C30.5228 83 35 78.5228 35 73C35 67.4772 30.5228 63 25 63Z" fill="url(#logoGradient)"/>
+            <path d="M40 47.5L80 15" stroke="url(#logoGradient)" stroke-width="5" stroke-linecap="round"/>
+            <path d="M40 65.5L80 88" stroke="url(#logoGradient)" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <h1>
+            <span class="char">S</span><span class="char">a</span><span class="char">n</span><span class="char">W</span><span class="char">a</span><span class="char">r</span>
+        </h1>
+        <!-- Updated tagline with word-by-word animation -->
+        <p class="tagline">
+            <span class="word">Sanwar</span>
+            <span class="word">–</span>
+            <span class="word">Discover</span>
+            <span class="word">salons</span>
+            <span class="word">near</span>
+            <span class="word">you,</span>
+            <span class="word">book</span>
+            <span class="word">instantly,</span>
+            <span class="word">and</span>
+            <span class="word">shine</span>
+            <span class="word">with</span>
+            <span class="word">confidence.</span>
+        </p>
+    </div>
+
+    <!-- Screen 2: Welcome Screen with your Logo -->
+    <div id="welcome-screen" class="screen">
+        <!-- Your uploaded logo is embedded here -->
+        <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAEOARQDASIAAhEBAxEB/8QAGwABAAIDAQEAAAAAAAAAAAAAAAUGAwQHAgH/xABEEAABAwIDBAYGBgYIBwAAAAABAAIDBBEFEiEGMUETIlFhcYEHkRQyUpGhscEVIzNCU3KCkrLR8CRiY3ODoqPC0+Hx/8QAGgEBAAMBAQEAAAAAAAAAAAAAAAMEBQIBBv/EAC0RAAICAQIDBgYDAQAAAAAAAAABAgMRBCESMUEFE1FhInGBkaGxwdHh8BQi/9oADAMBAAIRAxEAPwD2pCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgBCEIAQhCAEIQgB-welcome-logo" alt="SanWar Official Logo">
+        <h2 class="welcome-message">Welcome to <span class="highlight">SanWar</span></h2>
+        <button class="start-button" id="startButton">Get Started</button>
+    </div>
+
+    <script>
+        // This script will handle the transition between the two screens
+        window.addEventListener('load', () => {
+            const splashScreen = document.getElementById('splash-screen');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const startButton = document.getElementById('startButton');
+
+            // Set a timer to switch screens after 4 seconds (to allow tagline animation to finish)
+            setTimeout(() => {
+                // Fade out splash screen
+                splashScreen.style.opacity = '0';
+                splashScreen.style.pointerEvents = 'none';
+
+                // Fade in welcome screen
+                welcomeScreen.style.opacity = '1';
+                welcomeScreen.style.pointerEvents = 'auto';
+                // Add a class to trigger the new animations
+                welcomeScreen.classList.add('is-visible');
+            }, 4000); 
+
+            // Add functionality to the Get Started button
+            startButton.addEventListener('click', () => {
+                // You can change this URL to your actual app's starting page
+                window.location.href = 'https://sanwarhub.in';
+            });
+        });
+    </script>
+
+</body>
+</html>

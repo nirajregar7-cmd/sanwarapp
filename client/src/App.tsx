@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { useSplashScreen } from "@/hooks/useSplashScreen";
+import { SplashScreen } from "@/components/SplashScreen";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { MobileInstallButton } from "@/components/MobileInstallButton";
 import { AppClerkProvider } from "@/lib/clerk-provider";
@@ -65,6 +67,12 @@ import Analytics from "@/pages/owner/analytics";
 
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { showSplash, hideSplash } = useSplashScreen();
+
+  // Show splash screen first
+  if (showSplash) {
+    return <SplashScreen onComplete={hideSplash} />;
+  }
 
   if (isLoading) {
     return (
