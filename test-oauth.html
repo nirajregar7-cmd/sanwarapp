@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OAuth Test - Sanwar</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .card { 
+            background: white; 
+            color: #333; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .btn { 
+            display: inline-block; 
+            padding: 12px 24px; 
+            background: #4285f4; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover { background: #3367d6; }
+        .url-box { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            word-break: break-all;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔐 Google OAuth Test - Sanwar</h1>
+        <p>Testing Google authentication for the Sanwar salon booking platform.</p>
+        
+        <h3>Method 1: Direct Link</h3>
+        <p>Click this button to test Google OAuth:</p>
+        <a href="/api/auth/google" class="btn">🔗 Sign in with Google</a>
+        
+        <h3>Method 2: Copy & Paste URL</h3>
+        <p>If the button doesn't work, copy this URL and open it in a new tab:</p>
+        <div class="url-box">
+            http://localhost:5000/api/auth/google
+        </div>
+        
+        <h3>Method 3: JavaScript Navigation</h3>
+        <button class="btn" onclick="window.location.assign('/api/auth/google')">
+            🚀 JavaScript Navigate
+        </button>
+        
+        <h3>What Should Happen:</h3>
+        <ol>
+            <li>You'll be redirected to Google's authentication page</li>
+            <li>Sign in with your Google account</li>
+            <li>Google will redirect you back to the app</li>
+            <li>You'll be taken to the role selection page</li>
+            <li>Choose your user type and complete registration</li>
+        </ol>
+        
+        <p><small>Note: This test page works around browser security restrictions in development environments.</small></p>
+        
+        <a href="/auth" style="color: #666; text-decoration: none;">← Back to main auth page</a>
+    </div>
+</body>
+</html>

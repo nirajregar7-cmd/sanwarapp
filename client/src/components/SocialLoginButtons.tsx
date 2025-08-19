@@ -9,7 +9,14 @@ interface SocialLoginButtonsProps {
 
 export function SocialLoginButtons({ userType, isLogin = true, showRoleSelection = false }: SocialLoginButtonsProps) {
   const handleSocialLogin = (provider: 'google' | 'facebook') => {
-    // Construct the social login URL with user type if specified
+    // Direct OAuth navigation - simple and effective
+    if (provider === 'google') {
+      console.log('🔧 Redirecting to Google OAuth...');
+      window.location.href = '/api/auth/google';
+      return;
+    }
+    
+    // For other providers, use direct navigation
     const baseUrl = `/api/auth/${provider}`;
     const params = new URLSearchParams();
     
@@ -20,13 +27,10 @@ export function SocialLoginButtons({ userType, isLogin = true, showRoleSelection
       params.set('action', 'register');
     }
     
-    // Direct navigation - works best in Replit environment
     const urlParams = params.toString();
     const authUrl = urlParams ? `${baseUrl}?${urlParams}` : baseUrl;
     
     console.log('🔧 Navigating to OAuth URL:', authUrl);
-    
-    // Use window.location.assign for better compatibility
     window.location.assign(authUrl);
   };
 
