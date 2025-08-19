@@ -182,10 +182,7 @@ const AuthPageEnhanced = () => {
 
 
 
-            {/* OR CONTINUE WITH EMAIL */}
-            <div className="text-center">
-              <div className="text-sm text-gray-500 font-medium">OR CONTINUE WITH EMAIL</div>
-            </div>
+
 
             {/* Email/Password Form */}
             <div className="space-y-4">
@@ -319,14 +316,16 @@ const AuthPageEnhanced = () => {
                 disabled={loading}
                 className={`w-full font-semibold py-4 rounded-lg transition-all duration-200 disabled:opacity-50 ${
                   activeTab === "signin" 
-                    ? "bg-gray-800 text-white hover:bg-gray-900" 
+                    ? "bg-gray-200 text-gray-900 hover:bg-gray-300" 
                     : "bg-blue-600 text-white hover:bg-blue-700"
                 }`}
                 data-testid={activeTab === "signin" ? "button-signin" : "button-signup"}
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className={`animate-spin rounded-full h-4 w-4 border-b-2 mr-2 ${
+                      activeTab === "signin" ? "border-gray-900" : "border-white"
+                    }`}></div>
                     {activeTab === "signin" ? "Signing In..." : "Create Account"}
                   </>
                 ) : (
