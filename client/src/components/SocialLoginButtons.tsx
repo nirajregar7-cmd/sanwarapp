@@ -20,9 +20,14 @@ export function SocialLoginButtons({ userType, isLogin = true, showRoleSelection
       params.set('action', 'register');
     }
     
-    // Redirect to social login endpoint
+    // Direct navigation - works best in Replit environment
     const urlParams = params.toString();
-    window.location.href = urlParams ? `${baseUrl}?${urlParams}` : baseUrl;
+    const authUrl = urlParams ? `${baseUrl}?${urlParams}` : baseUrl;
+    
+    console.log('🔧 Navigating to OAuth URL:', authUrl);
+    
+    // Use window.location.assign for better compatibility
+    window.location.assign(authUrl);
   };
 
   const actionText = isLogin ? "Sign in" : "Sign up";

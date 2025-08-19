@@ -125,7 +125,7 @@ export function setupSocialAuth(app: Express) {
     console.log('🔧 Initiating Google OAuth with scopes: profile, email');
     passport.authenticate('google', { 
       scope: ['profile', 'email'],
-      state: JSON.stringify({ userType || {} }),
+      state: JSON.stringify({ userType: userType || null }),
       accessType: 'offline'
     })(req, res, next);
   });
