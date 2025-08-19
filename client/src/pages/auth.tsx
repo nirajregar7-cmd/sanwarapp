@@ -329,7 +329,7 @@ export default function AuthPage() {
 
               {activeTab === "signin" && (
                 <div className="text-center">
-                  <Link href="/forgot-password" className="text-sm text-purple-600 hover:text-purple-700">
+                  <Link href="/forgot-password" className="text-sm text-black hover:text-gray-700">
                     Forgot your password?
                   </Link>
                 </div>
