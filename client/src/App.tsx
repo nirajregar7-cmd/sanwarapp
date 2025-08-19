@@ -53,6 +53,9 @@ import ClerkSignInPage, { ClerkSignUpPage } from "@/pages/clerk-auth";
 // Brand Owner Pages
 import BrandDashboard from "@/pages/brand-owner/brand-dashboard";
 
+// OAuth Test Page
+import OAuthTestSimple from "@/pages/oauth-test-simple";
+
 // Payment Pages
 import PaymentCallback from "@/pages/PaymentCallback";
 
@@ -77,6 +80,8 @@ function Router() {
       {/* Authentication pages */}
       <Route path="/auth" component={AuthPage} />
       <Route path="/auth/role-selection" component={RoleSelection} />
+      <Route path="/oauth-test" component={OAuthTestSimple} />
+
 
       <Route path="/business-signup" component={AuthPage} />
       <Route path="/clerk-signin" component={ClerkSignInPage} />
