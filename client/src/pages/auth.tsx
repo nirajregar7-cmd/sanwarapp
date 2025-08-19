@@ -12,7 +12,172 @@ import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { SocialLoginButtons } from "@/components/SocialLoginButtons";
 
+// Enhanced AuthPage matching the provided design
+const AuthPageEnhanced = () => {
+  const [activeTab, setActiveTab] = useState("signin");
+  const [userType, setUserType] = useState<"customer" | "salon_owner" | "brand_owner">("customer");
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 px-4">
+      <div className="max-w-md w-full">
+        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Get Started
+            </CardTitle>
+            <p className="text-gray-600 mt-2">
+              Sign in to your account or create a new one
+            </p>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            {/* Toggle between Sign In and Sign Up */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setActiveTab("signin")}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "signin"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => setActiveTab("signup")}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "signup"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
+
+            {/* Role Selection for Sign Up */}
+            {activeTab === "signup" && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">I am a:</h3>
+                <RadioGroup 
+                  value={userType} 
+                  onValueChange={(value) => setUserType(value as "customer" | "salon_owner" | "brand_owner")}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                    <RadioGroupItem value="customer" id="customer" />
+                    <Users className="h-5 w-5 text-gray-600" />
+                    <Label htmlFor="customer" className="flex-1 cursor-pointer font-medium">
+                      Customer
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                    <RadioGroupItem value="salon_owner" id="salon_owner" />
+                    <Scissors className="h-5 w-5 text-gray-600" />
+                    <Label htmlFor="salon_owner" className="flex-1 cursor-pointer font-medium">
+                      Salon Owner
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                    <RadioGroupItem value="brand_owner" id="brand_owner" />
+                    <Gift className="h-5 w-5 text-gray-600" />
+                    <Label htmlFor="brand_owner" className="flex-1 cursor-pointer font-medium">
+                      Brand Owner (Multiple Salons)
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+
+            {/* Social Login Buttons */}
+            <SocialLoginButtons 
+              userType={activeTab === "signup" ? userType : undefined}
+              isLogin={activeTab === "signin"}
+            />
+
+            <div className="text-center">
+              <div className="text-sm text-gray-500 mb-4">OR CONTINUE WITH EMAIL</div>
+            </div>
+
+            {/* Email/Password Form */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email
+                </Label>
+                <Input 
+                  id="email"
+                  type="email" 
+                  placeholder="Enter your email"
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </Label>
+                <div className="relative mt-1">
+                  <Input 
+                    id="password"
+                    type="password" 
+                    placeholder="Enter your password"
+                  />
+                  <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  </button>
+                </div>
+              </div>
+
+              {activeTab === "signup" && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                        First Name *
+                      </Label>
+                      <Input 
+                        id="firstName"
+                        placeholder="First name"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                        Last Name
+                      </Label>
+                      <Input 
+                        id="lastName"
+                        placeholder="Last name"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-200">
+                {activeTab === "signin" ? "Sign In" : "Sign Up"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
 export default function AuthPage() {
+  // Check if we should show the enhanced version or the legacy version
+  const urlParams = new URLSearchParams(window.location.search);
+  const enhanced = urlParams.get('enhanced') === 'true';
+  
+  if (enhanced || true) { // Always use enhanced for now
+    return <AuthPageEnhanced />;
+  }
+  
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user, isLoading, loginMutation, registerMutation } = useAuth();

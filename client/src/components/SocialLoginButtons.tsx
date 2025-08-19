@@ -2,21 +2,27 @@ import { Button } from "@/components/ui/button";
 import { FaGoogle, FaFacebook } from "react-icons/fa";
 
 interface SocialLoginButtonsProps {
-  userType: "customer" | "salon_owner";
+  userType?: "customer" | "salon_owner" | "brand_owner";
   isLogin?: boolean;
+  showRoleSelection?: boolean;
 }
 
-export function SocialLoginButtons({ userType, isLogin = true }: SocialLoginButtonsProps) {
+export function SocialLoginButtons({ userType, isLogin = true, showRoleSelection = false }: SocialLoginButtonsProps) {
   const handleSocialLogin = (provider: 'google' | 'facebook') => {
-    // Construct the social login URL with user type
+    // Construct the social login URL with user type if specified
     const baseUrl = `/api/auth/${provider}`;
-    const params = new URLSearchParams({
-      userType: userType,
-      action: isLogin ? 'login' : 'register'
-    });
+    const params = new URLSearchParams();
+    
+    if (userType) {
+      params.set('userType', userType);
+    }
+    if (!isLogin) {
+      params.set('action', 'register');
+    }
     
     // Redirect to social login endpoint
-    window.location.href = `${baseUrl}?${params.toString()}`;
+    const urlParams = params.toString();
+    window.location.href = urlParams ? `${baseUrl}?${urlParams}` : baseUrl;
   };
 
   const actionText = isLogin ? "Sign in" : "Sign up";

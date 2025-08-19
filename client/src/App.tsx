@@ -13,6 +13,7 @@ import Layout from "@/components/Layout";
 // Pages
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth";
+import RoleSelection from "@/pages/auth/role-selection";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import EmailVerification from "@/pages/email-verification";
 import UserTypeSelection from "@/pages/user-type-selection";
@@ -75,6 +76,7 @@ function Router() {
     <Switch>
       {/* Authentication pages */}
       <Route path="/auth" component={AuthPage} />
+      <Route path="/auth/role-selection" component={RoleSelection} />
       <Route path="/business-signup" component={AuthPage} />
       <Route path="/clerk-signin" component={ClerkSignInPage} />
       <Route path="/clerk-signup" component={ClerkSignUpPage} />
