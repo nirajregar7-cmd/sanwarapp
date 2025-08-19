@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './SplashScreen.css';
+import sanwarLogo from '@/assets/sanwar-new-logo.jpg';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -29,7 +30,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         data-testid="splash-screen"
       >
         <img 
-          src="/logo.jpg" 
+          src={sanwarLogo} 
           alt="SanWar Logo" 
           className="splash-logo"
         />
@@ -63,7 +64,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         data-testid="welcome-screen"
       >
         <img 
-          src="/logo.jpg" 
+          src={sanwarLogo} 
           alt="SanWar Official Logo" 
           className="welcome-logo"
           data-testid="img-welcome-logo"
@@ -77,10 +78,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             <span className="char">o</span>
             <span className="char">m</span>
             <span className="char">e</span>
-            <span className="char"> </span>
+            <span className="char">&nbsp;</span>
             <span className="char">t</span>
             <span className="char">o</span>
-            <span className="char"> </span>
+            <span className="char">&nbsp;</span>
             <span className="highlight-char">S</span>
             <span className="highlight-char">a</span>
             <span className="highlight-char">n</span>
