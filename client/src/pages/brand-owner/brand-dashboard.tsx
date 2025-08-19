@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -127,6 +129,7 @@ interface ServicePopularity {
 export default function BrandDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { shouldShowOnboarding, onboardingSteps, completeOnboarding, skipOnboarding } = useOnboarding('brand-owner');
   const [selectedDateRange, setSelectedDateRange] = useState<{
     from: Date;
     to: Date;

@@ -26,6 +26,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Salon, Service, Staff, BookingWithDetails, Review, SalonGallery } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
 import { apiRequest } from "@/lib/queryClient";
 
 const salonSchema = z.object({
@@ -71,6 +73,7 @@ type GalleryFormData = z.infer<typeof gallerySchema>;
 
 export default function OwnerDashboard() {
   const { user, isAuthenticated } = useAuth();
+  const { shouldShowOnboarding, onboardingSteps, completeOnboarding, skipOnboarding } = useOnboarding('salon-owner');
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [salonDialogOpen, setSalonDialogOpen] = useState(false);
@@ -615,14 +618,14 @@ export default function OwnerDashboard() {
               <div className="block sm:hidden">
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1">
                   <TabsTrigger value="overview" className="text-xs py-3">Overview</TabsTrigger>
-                  <TabsTrigger value="services" className="text-xs py-3">Services</TabsTrigger>
+                  <TabsTrigger value="services" className="text-xs py-3" data-testid="services-section">Services</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
-                  <TabsTrigger value="staff" className="text-xs py-3">Staff</TabsTrigger>
+                  <TabsTrigger value="staff" className="text-xs py-3" data-testid="staff-tab">Staff</TabsTrigger>
                   <TabsTrigger value="gallery" className="text-xs py-3">Gallery</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
-                  <TabsTrigger value="bookings" className="text-xs py-3">Bookings</TabsTrigger>
+                  <TabsTrigger value="bookings" className="text-xs py-3" data-testid="bookings-tab">Bookings</TabsTrigger>
                   <TabsTrigger value="offers" className="text-xs py-3">Offers</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
@@ -634,7 +637,7 @@ export default function OwnerDashboard() {
                       </span>
                     )}
                   </TabsTrigger>
-                  <TabsTrigger value="settings" className="text-xs py-3">Settings</TabsTrigger>
+                  <TabsTrigger value="settings" className="text-xs py-3" data-testid="settings-tab">Settings</TabsTrigger>
                 </TabsList>
               </div>
               
@@ -723,7 +726,7 @@ export default function OwnerDashboard() {
               </Card>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" data-testid="salon-stats">
                 <Card>
                   <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center">
@@ -2256,6 +2259,16 @@ export default function OwnerDashboard() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Onboarding Walkthrough */}
+      {shouldShowOnboarding && (
+        <OnboardingWalkthrough
+          steps={onboardingSteps}
+          userType="salon-owner"
+          onComplete={completeOnboarding}
+          onSkip={skipOnboarding}
+        />
+      )}
     </div>
   );
 }

@@ -8,11 +8,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Star, Clock, MapPin, Search, Heart, Percent, Gift } from "lucide-react";
 import type { Salon } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
 import SalonLikeButton from "@/components/SalonLikeButton";
 import OffersDisplayCard from "@/components/OffersDisplayCard";
 
 export default function CustomerHome() {
   const { user } = useAuth();
+  const { shouldShowOnboarding, onboardingSteps, completeOnboarding, skipOnboarding } = useOnboarding('customer');
   const { data: salons, isLoading } = useQuery<Salon[]>({
     queryKey: ["/api/salons/featured"],
   });
@@ -42,7 +45,7 @@ export default function CustomerHome() {
             </p>
             
             {/* Search Bar */}
-            <div className="max-w-2xl mx-auto bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2">
+            <div className="max-w-2xl mx-auto bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2" data-testid="search-input">
               <div className="flex-1 flex items-center px-3 sm:px-4 py-2 sm:py-0">
                 <MapPin className="text-gray-400 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
                 <Input 
@@ -139,7 +142,7 @@ export default function CustomerHome() {
                 const topOffer = salonOffers[0]; // Get the top priority offer
                 
                 return (
-                <Card key={salon.id} className="overflow-hidden hover:shadow-xl transition-shadow">
+                <Card key={salon.id} className="overflow-hidden hover:shadow-xl transition-shadow" data-testid="salon-card">
                   <div className="relative">
                     <img 
                       src={salon.imageUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"} 
@@ -194,37 +197,7 @@ export default function CustomerHome() {
                         </div>
                         <p className="text-xs text-gray-600 line-clamp-1 mb-2">{topOffer.description}</p>
                         
-                        {/* Show Individual Service Offers as requested: Haircut 10%, Haircolor 15%, Beard 5% */}
-                        {!topOffer.isApplicableToAllServices && topOffer.applicableServices && salon.services && (
-                          <div className="mb-2">
-                            <p className="text-xs text-purple-700 mb-1">Service Offers:</p>
-                            <div className="flex flex-wrap gap-1">
-                              {topOffer.applicableServices
-                                .slice(0, 4) // Show more services on salon card
-                                .map(serviceId => {
-                                  const service = salon.services?.find(s => s.id === serviceId);
-                                  if (!service) return null;
-                                  return (
-                                    <Badge 
-                                      key={serviceId} 
-                                      variant="secondary" 
-                                      className="bg-red-100 text-red-700 text-xs px-2 py-0.5 font-medium"
-                                    >
-                                      {service.name} {topOffer.discountType === "percentage" 
-                                        ? `${topOffer.discountValue}%` 
-                                        : `₹${topOffer.discountValue}`}
-                                    </Badge>
-                                  );
-                                })
-                                .filter(Boolean)}
-                              {topOffer.applicableServices && topOffer.applicableServices.length > 4 && (
-                                <Badge variant="outline" className="text-xs bg-white">
-                                  +{topOffer.applicableServices.length - 4} more
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        )}
+                        {/* Service offers will be shown on detailed salon page */}
                         
                         {topOffer.isApplicableToAllServices && (
                           <div className="mb-2">
@@ -273,6 +246,16 @@ export default function CustomerHome() {
           )}
         </div>
       </section>
+
+      {/* Onboarding Walkthrough */}
+      {shouldShowOnboarding && (
+        <OnboardingWalkthrough
+          steps={onboardingSteps}
+          userType="customer"
+          onComplete={completeOnboarding}
+          onSkip={skipOnboarding}
+        />
+      )}
     </div>
   );
 }
