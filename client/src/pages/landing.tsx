@@ -9,7 +9,7 @@ import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import SalonCard from "@/components/SalonCard";
-import sanwarLogo from "@assets/WhatsApp Image 2025-08-17 at 18.09.29_dd534b02_1755434431399.jpg";
+import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
 
 export default function Landing() {
   const { t } = useTranslation();

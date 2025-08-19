@@ -12,7 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useTranslation } from "react-i18next";
-import sanwarLogo from "@assets/WhatsApp Image 2025-08-17 at 18.09.29_dd534b02_1755434431399.jpg";
+import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
 
 interface LayoutProps {
   children: React.ReactNode;
