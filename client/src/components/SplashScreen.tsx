@@ -28,20 +28,11 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         className={`splash-screen ${showWelcome ? 'fade-out' : ''}`}
         data-testid="splash-screen"
       >
-        <svg className="splash-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="logoGradient" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#FEFCE8"/>
-              <stop offset="1" stopColor="#FDE047"/>
-            </linearGradient>
-          </defs>
-          <circle cx="50" cy="50" r="35" fill="url(#logoGradient)" opacity="0.2"/>
-          <path d="M30 30 L70 30 L70 35 L35 35 L35 70 L30 70 Z" fill="url(#logoGradient)"/>
-          <path d="M45 40 L65 40 L65 45 L50 45 L50 65 L45 65 Z" fill="url(#logoGradient)"/>
-          <circle cx="35" cy="55" r="3" fill="url(#logoGradient)"/>
-          <path d="M40 50 L60 35" stroke="url(#logoGradient)" strokeWidth="3" strokeLinecap="round"/>
-          <path d="M40 60 L60 70" stroke="url(#logoGradient)" strokeWidth="3" strokeLinecap="round"/>
-        </svg>
+        <img 
+          src="@assets/WhatsApp Image 2025-08-20 at 01.29.07_bb81326b_1755635226638.jpg" 
+          alt="SanWar Logo" 
+          className="splash-logo"
+        />
         
         <h1 className="splash-title">
           <span className="char">S</span>
@@ -72,7 +63,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         data-testid="welcome-screen"
       >
         <img 
-          src="/sanwar-logo.jpg" 
+          src="@assets/WhatsApp Image 2025-08-20 at 01.29.07_bb81326b_1755635226638.jpg" 
           alt="SanWar Official Logo" 
           className="welcome-logo"
           data-testid="img-welcome-logo"

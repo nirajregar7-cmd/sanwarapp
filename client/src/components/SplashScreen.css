@@ -49,10 +49,14 @@
 
 /* Logo Styling (Splash Screen) */
 .splash-logo {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: auto;
   margin-bottom: 1.5rem;
-  filter: drop-shadow(0 0 15px rgba(253, 224, 71, 0.5));
+  filter: drop-shadow(0 0 20px rgba(253, 224, 71, 0.3));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  backdrop-filter: blur(10px);
 }
 
 /* Typography (Splash Screen) */
@@ -114,10 +118,13 @@
 
 /* Welcome Screen Styles */
 .welcome-logo {
-  max-width: 200px;
+  max-width: 180px;
   height: auto;
   margin-bottom: 2rem;
-  border-radius: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   opacity: 0;
   animation: scaleIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s forwards;
