@@ -15,7 +15,7 @@ export function setupSocialAuth(app: Express) {
     passport.use(new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.NODE_ENV === 'production' ? 'https://sanwarhub.in' : 'http://localhost:5000'}/api/auth/google/callback`,
+      callbackURL: "https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/api/auth/google/callback",
       scope: ['profile', 'email']
     },
     async (accessToken, refreshToken, profile, done) => {
