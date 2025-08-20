@@ -19,7 +19,15 @@ The server is built using Express.js and TypeScript, adhering to a RESTful API d
 ### Database Design
 The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
 
-## Recent Updates (August 19, 2025)
+## Recent Updates (August 20, 2025)
+- **Referral Milestone System Update**: Reduced customer referral milestone from 10 customers to 5 customers for earning free booking credits
+- **Enhanced Free Booking Rewards**: Increased free booking credit amount to ₹200 for completing 5-customer referral milestone
+- **Database Schema Updates**: Updated customerReferralCampaigns table defaults and all related logic to use 5-customer targets
+- **Frontend Updates**: Updated all UI text and progress displays to reflect new 5-customer milestone requirements
+- **Welcome Email System Fix**: Resolved welcome email delivery issue for customer signups by fixing Gmail authentication configuration
+- **Email Service Enhancement**: Added fallback support for GMAIL_PASS environment variable alongside GMAIL_APP_PASSWORD for better compatibility
+
+## Previous Updates (August 19, 2025)
 - **Authentication System Restoration**: Completely removed Google and Facebook OAuth authentication per user request
 - **Email/Password Authentication**: Restored original traditional email/password authentication system 
 - **Authentication UI Enhancement**: Maintained modern login/signup page design with email/password forms only
