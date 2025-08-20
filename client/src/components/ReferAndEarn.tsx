@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Share2, Users, Gift, Target, Clock } from "lucide-react";
+import { Copy, Share2, Users, Gift, Target, Clock, BarChart3, User, Calendar, CheckCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ReferralCampaign {
@@ -51,6 +51,12 @@ export function ReferAndEarn() {
   // Fetch free booking credits
   const { data: credits = [], isLoading: creditsLoading } = useQuery<FreeBookingCredit[]>({
     queryKey: ["/api/free-credits"],
+  });
+
+  // Fetch referral usage statistics
+  const { data: referralStats, isLoading: statsLoading } = useQuery({
+    queryKey: ["/api/referral-stats"],
+    retry: false,
   });
 
   // Create referral code mutation
@@ -121,10 +127,11 @@ export function ReferAndEarn() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="create">Create Code</TabsTrigger>
           <TabsTrigger value="credits">My Credits</TabsTrigger>
+          <TabsTrigger value="stats">Usage Stats</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -394,6 +401,187 @@ export function ReferAndEarn() {
               </>
             )}
           </div>
+        </TabsContent>
+
+        {/* Usage Statistics Tab */}
+        <TabsContent value="stats" className="space-y-6">
+          {statsLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : referralStats ? (
+            <div className="space-y-6">
+              {/* Summary Statistics */}
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-2">
+                      <BarChart3 className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-2xl font-bold">{referralStats.summary.totalReferrals}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Total Referrals</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="text-2xl font-bold text-green-600">{referralStats.summary.completedReferrals}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-5 w-5 text-orange-600" />
+                      <div>
+                        <p className="text-2xl font-bold text-orange-600">{referralStats.summary.pendingReferrals}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Code Usage Breakdown */}
+              {referralStats.codeUsage && referralStats.codeUsage.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Referral Code Usage
+                    </CardTitle>
+                    <CardDescription>
+                      How many times each of your referral codes has been used
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {referralStats.codeUsage.map((codeData: any) => (
+                        <div key={codeData.code} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-lg font-semibold bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded">
+                                {codeData.code}
+                              </span>
+                              <Badge variant="outline">{codeData.totalUses} uses</Badge>
+                            </div>
+                            <div className="flex gap-2">
+                              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                {codeData.completedUses} completed
+                              </Badge>
+                              {codeData.pendingUses > 0 && (
+                                <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                  {codeData.pendingUses} pending
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Users who used this code */}
+                          {codeData.users && codeData.users.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                People who used this code:
+                              </p>
+                              <div className="space-y-2">
+                                {codeData.users.map((userData: any, index: number) => (
+                                  <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                    <div className="flex items-center gap-2">
+                                      <User className="h-4 w-4 text-gray-500" />
+                                      <span className="text-sm font-medium">{userData.name}</span>
+                                      <span className="text-xs text-gray-500">{userData.email}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant={userData.status === 'completed' ? 'default' : 'secondary'}>
+                                        {userData.status}
+                                      </Badge>
+                                      <span className="text-xs text-gray-500">
+                                        {new Date(userData.signedUpAt).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Recent Referral Activity */}
+              {referralStats.recentReferrals && referralStats.recentReferrals.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Recent Referral Activity
+                    </CardTitle>
+                    <CardDescription>
+                      Your latest 10 referrals and their status
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {referralStats.recentReferrals.map((referral: any) => (
+                        <div key={referral.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                                {referral.referralCode}
+                              </span>
+                              {referral.referredUserName && (
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  → {referral.referredUserName}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {new Date(referral.createdAt).toLocaleDateString()}
+                              {referral.completedAt && (
+                                <span className="ml-2">
+                                  • Completed: {new Date(referral.completedAt).toLocaleDateString()}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          <Badge variant={referral.status === 'completed' ? 'default' : 'secondary'}>
+                            {referral.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">No referral data available yet.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                  Create referral codes and share them to see usage statistics here.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

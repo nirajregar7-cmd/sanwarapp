@@ -942,6 +942,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's referral statistics (how many times their codes were used)
+  app.get('/api/referral-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      // Get all referrals where this user is the referrer
+      const myReferrals = await db.select({
+        id: referrals.id,
+        referralCode: referrals.referralCode,
+        status: referrals.status,
+        referrerId: referrals.referrerId,
+        referredId: referrals.referredId,
+        createdAt: referrals.createdAt,
+        completedAt: referrals.completedAt,
+        // Get referred user details
+        referredUserName: sql<string>`CONCAT(${users.firstName}, ' ', COALESCE(${users.lastName}, ''))`,
+        referredUserEmail: users.email
+      })
+        .from(referrals)
+        .leftJoin(users, eq(referrals.referredId, users.id))
+        .where(eq(referrals.referrerId, userId))
+        .orderBy(desc(referrals.createdAt));
+      
+      // Count completed referrals
+      const completedCount = myReferrals.filter(ref => ref.status === 'completed').length;
+      const pendingCount = myReferrals.filter(ref => ref.status === 'pending').length;
+      const totalCount = myReferrals.length;
+      
+      // Group by referral code to show usage per code
+      const codeUsageMap = new Map();
+      myReferrals.forEach(ref => {
+        if (!codeUsageMap.has(ref.referralCode)) {
+          codeUsageMap.set(ref.referralCode, {
+            code: ref.referralCode,
+            totalUses: 0,
+            completedUses: 0,
+            pendingUses: 0,
+            users: []
+          });
+        }
+        
+        const codeStats = codeUsageMap.get(ref.referralCode);
+        codeStats.totalUses++;
+        
+        if (ref.status === 'completed') {
+          codeStats.completedUses++;
+        } else if (ref.status === 'pending') {
+          codeStats.pendingUses++;
+        }
+        
+        if (ref.referredUserName && ref.referredUserEmail) {
+          codeStats.users.push({
+            name: ref.referredUserName.trim(),
+            email: ref.referredUserEmail,
+            status: ref.status,
+            signedUpAt: ref.createdAt,
+            completedAt: ref.completedAt
+          });
+        }
+      });
+      
+      const codeUsageStats = Array.from(codeUsageMap.values());
+      
+      res.json({
+        summary: {
+          totalReferrals: totalCount,
+          completedReferrals: completedCount,
+          pendingReferrals: pendingCount
+        },
+        codeUsage: codeUsageStats,
+        recentReferrals: myReferrals.slice(0, 10) // Last 10 referrals
+      });
+      
+    } catch (error) {
+      console.error("Error fetching referral stats:", error);
+      res.status(500).json({ error: "Failed to fetch referral statistics" });
+    }
+  });
+
   // Referral code validation endpoint (public - no auth required)
   app.post('/api/validate-referral', async (req, res) => {
     try {
