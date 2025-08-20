@@ -989,10 +989,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Get referrer details for displaying in success message
+      const referrer = await storage.getUser(referral.referrerId);
+      const referrerName = referrer ? `${referrer.firstName} ${referrer.lastName || ''}`.trim() : 'Unknown User';
+      
       // Valid referral code - return success with free booking offer
       res.json({
         valid: true,
         code: referral.referralCode,
+        referrerName: referrerName,
+        bonusAmount: 50, // Example bonus credits amount
         discountType: 'free',
         discountValue: 0,
         description: 'Get your first booking completely free!',

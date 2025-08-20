@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Eye, EyeOff, Users, Scissors, Gift } from "lucide-react";
+import { Eye, EyeOff, Users, Scissors, Gift, Check, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function AuthPage() {
@@ -23,6 +23,10 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [location, navigate] = useLocation();
+  const [referralCodeStatus, setReferralCodeStatus] = useState<{
+    status: 'idle' | 'validating' | 'valid' | 'invalid';
+    message: string;
+  }>({ status: 'idle', message: '' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +99,42 @@ export default function AuthPage() {
       setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleValidateReferralCode = async () => {
+    if (!formData.referralCode.trim()) {
+      setReferralCodeStatus({ status: 'invalid', message: 'Please enter a referral code' });
+      return;
+    }
+
+    setReferralCodeStatus({ status: 'validating', message: 'Checking referral code...' });
+
+    try {
+      const response = await fetch("/api/validate-referral", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: formData.referralCode.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.valid) {
+        setReferralCodeStatus({ 
+          status: 'valid', 
+          message: `✓ Valid code! Referred by ${data.referrerName}. You'll get ${data.bonusAmount} bonus credits!`
+        });
+      } else {
+        setReferralCodeStatus({ 
+          status: 'invalid', 
+          message: data.message || 'Invalid referral code'
+        });
+      }
+    } catch (error) {
+      setReferralCodeStatus({ 
+        status: 'invalid', 
+        message: 'Error validating referral code. Please try again.'
+      });
     }
   };
   
@@ -289,18 +329,56 @@ export default function AuthPage() {
                   <Label htmlFor="referralCode" className="text-sm font-medium text-gray-700">
                     Referral Code (Optional)
                   </Label>
-                  <div className="relative mt-1">
-                    <Input 
-                      id="referralCode"
-                      placeholder="Enter referral code (if you have one)"
-                      className="rounded-lg pr-10"
-                      value={formData.referralCode}
-                      onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value }))}
-                      data-testid="input-referralCode"
-                    />
-                    <Gift className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <div className="flex gap-2 mt-1">
+                    <div className="relative flex-1">
+                      <Input 
+                        id="referralCode"
+                        placeholder="Enter referral code (if you have one)"
+                        className={`rounded-lg pr-10 ${
+                          referralCodeStatus.status === 'valid' ? 'border-green-500 bg-green-50' :
+                          referralCodeStatus.status === 'invalid' ? 'border-red-500 bg-red-50' : ''
+                        }`}
+                        value={formData.referralCode}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, referralCode: e.target.value }));
+                          setReferralCodeStatus({ status: 'idle', message: '' });
+                        }}
+                        data-testid="input-referralCode"
+                      />
+                      {referralCodeStatus.status === 'validating' ? (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                        </div>
+                      ) : referralCodeStatus.status === 'valid' ? (
+                        <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
+                      ) : referralCodeStatus.status === 'invalid' ? (
+                        <X className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-red-600" />
+                      ) : (
+                        <Gift className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={handleValidateReferralCode}
+                      disabled={!formData.referralCode.trim() || referralCodeStatus.status === 'validating'}
+                      className="px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+                      data-testid="button-apply-referral"
+                    >
+                      {referralCodeStatus.status === 'validating' ? 'Checking...' : 'Apply Code'}
+                    </Button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Have a referral code? Enter it to get special benefits during registration!</p>
+                  {referralCodeStatus.message && (
+                    <p className={`text-xs mt-1 ${
+                      referralCodeStatus.status === 'valid' ? 'text-green-600' : 
+                      referralCodeStatus.status === 'invalid' ? 'text-red-600' : 
+                      'text-gray-500'
+                    }`}>
+                      {referralCodeStatus.message}
+                    </p>
+                  )}
+                  {!referralCodeStatus.message && (
+                    <p className="text-xs text-gray-500 mt-1">Have a referral code? Enter it to get special benefits during registration!</p>
+                  )}
                 </div>
               )}
 
