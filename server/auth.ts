@@ -75,31 +75,31 @@ async function processReferralRewards(referralRecord: any, newUser: any) {
               id: `milestone_${Date.now()}_${referrerId}`,
               customerId: referrerId,
               creditType: "customer_milestone",
-              maxAmount: "150", // Free booking up to ₹150 for milestone
+              maxAmount: "200", // Free booking up to ₹200 for milestone
               isUsed: false,
               referenceId: existingCampaign.id,
-              description: "Free booking for 10-customer milestone",
+              description: "Free booking for 5-customer milestone",
               expiresAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000), // 180 days
             });
 
-            console.log(`🎉 Milestone reward: ₹150 free booking credit for user ${referrerId} (10 customers completed)`);
+            console.log(`🎉 Milestone reward: ₹200 free booking credit for user ${referrerId} (5 customers completed)`);
           } else {
-            console.log(`📈 Customer referral progress: ${newCount}/10 for user ${referrerId}`);
+            console.log(`📈 Customer referral progress: ${newCount}/5 for user ${referrerId}`);
           }
         } else {
           // Create new campaign
           await db.insert(customerReferralCampaigns).values({
             id: `campaign_${Date.now()}_${referrerId}`,
             referrerId,
-            campaignType: "10_customer_milestone",
-            targetCount: 10,
+            campaignType: "5_customer_milestone",
+            targetCount: 5,
             currentCount: 1,
             isCompleted: false,
             freeBookingCredits: 1,
             creditsUsed: 0,
           });
 
-          console.log(`📈 New customer referral campaign started for user ${referrerId} (1/10)`);
+          console.log(`📈 New customer referral campaign started for user ${referrerId} (1/5)`);
         }
 
         // Update referral status to completed

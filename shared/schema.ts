@@ -514,8 +514,8 @@ export const referrals = pgTable("referrals", {
 export const customerReferralCampaigns = pgTable("customer_referral_campaigns", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   referrerId: varchar("referrer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  campaignType: varchar("campaign_type").notNull().default("10_customer_free_booking"),
-  targetCount: integer("target_count").notNull().default(10),
+  campaignType: varchar("campaign_type").notNull().default("5_customer_free_booking"),
+  targetCount: integer("target_count").notNull().default(5),
   currentCount: integer("current_count").notNull().default(0),
   isCompleted: boolean("is_completed").notNull().default(false),
   completedReferralIds: text("completed_referral_ids").array().default([]),

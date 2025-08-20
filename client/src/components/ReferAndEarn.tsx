@@ -37,6 +37,33 @@ interface FreeBookingCredit {
   usedAt?: string;
 }
 
+interface ReferralStats {
+  summary: {
+    totalReferrals: number;
+    completedReferrals: number;
+    pendingReferrals: number;
+    totalRewards: number;
+  };
+  codeUsage: Array<{
+    referralCode: string;
+    totalUsages: number;
+    completedUsages: number;
+    totalRewards: number;
+    createdAt: string;
+  }>;
+  recentReferrals: Array<{
+    id: string;
+    referredId: string | null;
+    referralCode: string;
+    status: string;
+    rewardAmount: string;
+    createdAt: string;
+    completedAt: string | null;
+    referredUserName?: string;
+    referredUserEmail?: string;
+  }>;
+}
+
 export function ReferAndEarn() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,7 +81,7 @@ export function ReferAndEarn() {
   });
 
   // Fetch referral usage statistics
-  const { data: referralStats, isLoading: statsLoading } = useQuery({
+  const { data: referralStats, isLoading: statsLoading } = useQuery<ReferralStats>({
     queryKey: ["/api/referral-stats"],
     retry: false,
   });
@@ -140,10 +167,10 @@ export function ReferAndEarn() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-blue-600" />
-                10-Customer Milestone
+                5-Customer Milestone
               </CardTitle>
               <CardDescription>
-                Refer 10 customers to earn 1 free booking credit
+                Refer 5 customers to earn 1 free booking credit
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -224,7 +251,7 @@ export function ReferAndEarn() {
                   Refer Customers
                 </CardTitle>
                 <CardDescription>
-                  Earn 1 free booking when 10 referred customers complete their first booking
+                  Earn 1 free booking when 5 referred customers complete their first booking
                 </CardDescription>
               </CardHeader>
               <CardContent>

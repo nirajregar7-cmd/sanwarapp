@@ -1112,7 +1112,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         eq(customerReferralCampaigns.referrerId, referrerId),
         eq(customerReferralCampaigns.isCompleted, false),
-        eq(customerReferralCampaigns.campaignType, "10_customer_free_booking")
+        eq(customerReferralCampaigns.campaignType, "5_customer_free_booking")
       ));
 
     if (existingCampaign) {
@@ -1122,8 +1122,8 @@ export class DatabaseStorage implements IStorage {
     // Create new campaign
     const [newCampaign] = await db.insert(customerReferralCampaigns).values({
       referrerId,
-      campaignType: "10_customer_free_booking",
-      targetCount: 10,
+      campaignType: "5_customer_free_booking",
+      targetCount: 5,
       currentCount: 0,
       completedReferralIds: [],
       freeBookingCredits: 0,
@@ -1164,7 +1164,7 @@ export class DatabaseStorage implements IStorage {
         creditType: "customer_milestone",
         maxAmount: avgServicePrice.toString(),
         referenceId: campaign.id,
-        description: `Free booking credit for referring 10 customers (up to ₹${avgServicePrice})`,
+        description: `Free booking credit for referring 5 customers (up to ₹${avgServicePrice})`,
         expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days expiry
       });
     }
