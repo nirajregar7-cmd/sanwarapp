@@ -622,7 +622,7 @@ export default function OwnerDashboard() {
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="staff" className="text-xs py-3" data-testid="staff-tab">Staff</TabsTrigger>
-                  <TabsTrigger value="gallery" className="text-xs py-3">Gallery</TabsTrigger>
+                  <TabsTrigger value="gallery" className="text-xs py-3">Media Gallery</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="bookings" className="text-xs py-3" data-testid="bookings-tab">Bookings</TabsTrigger>
@@ -647,7 +647,7 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
                   <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
                   <TabsTrigger value="staff" className="text-sm">Staff</TabsTrigger>
-                  <TabsTrigger value="gallery" className="text-sm">Gallery</TabsTrigger>
+                  <TabsTrigger value="gallery" className="text-sm">Media Gallery</TabsTrigger>
                   <TabsTrigger value="bookings" className="text-sm">Bookings</TabsTrigger>
                   <TabsTrigger value="offers" className="text-sm">Offers</TabsTrigger>
                   <TabsTrigger value="messages" className="text-sm relative">
@@ -1128,78 +1128,63 @@ export default function OwnerDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    Gallery Management
-                    <Button onClick={() => {
-                      setEditingItem(null);
-                      galleryForm.reset();
-                      setGalleryDialogOpen(true);
-                    }} disabled={gallery.length >= 10}>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Add Image ({gallery.length}/10)
+                    Media Gallery Management
+                    <Button asChild>
+                      <Link href="/shopkeeper/media-gallery">
+                        <Camera className="h-4 w-4 mr-2" />
+                        Open Media Gallery
+                      </Link>
                     </Button>
                   </CardTitle>
+                  <CardDescription>
+                    Manage your salon photos and videos (up to 50 files). Upload high-quality images to showcase your work.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {galleryLoading ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse"></div>
-                      ))}
+                  <div className="text-center py-12 space-y-6">
+                    <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                      <Camera className="h-10 w-10 text-white" />
                     </div>
-                  ) : gallery.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {gallery.map((image) => (
-                        <div key={image.id} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                          <img 
-                            src={image.imageUrl} 
-                            alt={image.title || "Gallery image"} 
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 flex space-x-2">
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => handleEditGallery(image)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleDeleteGallery(image.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          {image.title && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
-                              <p className="text-white text-sm font-medium">{image.title}</p>
-                              <p className="text-white text-xs capitalize">{image.category}</p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <Upload className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Images Yet</h3>
-                      <p className="text-gray-600 mb-6">
-                        Showcase your salon's best work by uploading high-quality images. 
-                        You can add up to 10 images to attract more customers.
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Enhanced Media Gallery</h3>
+                      <p className="text-gray-600 max-w-md mx-auto">
+                        Upload up to 50 photos and videos to showcase your salon's work. 
+                        Support for images and videos with advanced categorization and management.
                       </p>
-                      <Button onClick={() => {
-                        setEditingItem(null);
-                        galleryForm.reset();
-                        setGalleryDialogOpen(true);
-                      }}>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload First Image
-                      </Button>
                     </div>
-                  )}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-lg mx-auto text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                        50 files limit
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                        Photos & Videos
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                        Categories
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                        100MB per file
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                        Drag & Drop
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                        Cloud Storage
+                      </div>
+                    </div>
+                    <Button size="lg" asChild className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                      <Link href="/shopkeeper/media-gallery">
+                        <Camera className="h-5 w-5 mr-2" />
+                        Access Media Gallery
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
