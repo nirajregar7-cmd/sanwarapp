@@ -18,33 +18,54 @@ export function useOnboarding(userType: 'customer' | 'salon-owner' | 'brand-owne
     // Check if onboarding was already completed
     const onboardingStatus = localStorage.getItem(`sanwar_onboarding_${userType}`);
     
+    console.log(`[Onboarding] Checking status for ${userType}:`, onboardingStatus);
+    
     if (!onboardingStatus || onboardingStatus === 'pending') {
       // Set appropriate steps based on user type
       const steps = getOnboardingSteps(userType);
       setOnboardingSteps(steps);
       
+      console.log(`[Onboarding] Will show onboarding for ${userType} with ${steps.length} steps`);
+      
       // Small delay to ensure DOM is ready
       setTimeout(() => {
         setShouldShowOnboarding(true);
-      }, 1000);
+      }, 1500); // Increased delay for better reliability
+    } else {
+      console.log(`[Onboarding] Skipping onboarding for ${userType} - status: ${onboardingStatus}`);
     }
   }, [userType]);
 
   const completeOnboarding = () => {
+    console.log(`[Onboarding] Completing onboarding for ${userType}`);
     setShouldShowOnboarding(false);
     localStorage.setItem(`sanwar_onboarding_${userType}`, 'completed');
   };
 
   const skipOnboarding = () => {
+    console.log(`[Onboarding] Skipping onboarding for ${userType}`);
     setShouldShowOnboarding(false);
     localStorage.setItem(`sanwar_onboarding_${userType}`, 'skipped');
+  };
+
+  const resetOnboarding = () => {
+    console.log(`[Onboarding] Resetting onboarding for ${userType}`);
+    localStorage.removeItem(`sanwar_onboarding_${userType}`);
+    setShouldShowOnboarding(false);
+    // Trigger re-evaluation
+    setTimeout(() => {
+      const steps = getOnboardingSteps(userType);
+      setOnboardingSteps(steps);
+      setShouldShowOnboarding(true);
+    }, 100);
   };
 
   return {
     shouldShowOnboarding,
     onboardingSteps,
     completeOnboarding,
-    skipOnboarding
+    skipOnboarding,
+    resetOnboarding
   };
 }
 

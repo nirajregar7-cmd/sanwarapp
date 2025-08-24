@@ -177,7 +177,7 @@ export default function Layout({ children }: LayoutProps) {
                 {/* Profile Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center space-x-1 sm:space-x-2 text-gray-700 hover:text-gray-900 px-2 sm:px-3">
+                    <Button variant="ghost" className="flex items-center space-x-1 sm:space-x-2 text-gray-700 hover:text-gray-900 px-2 sm:px-3" data-testid="user-menu">
                       <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <User className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                       </div>
