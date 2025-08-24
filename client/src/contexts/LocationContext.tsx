@@ -58,25 +58,24 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, user]);
 
-  // Show location dialog for new customers who haven't been asked before
+  // Show location dialog for first-time visitors (not authenticated users)
   useEffect(() => {
     console.log('LocationContext: Checking if should show dialog', {
       isAuthenticated,
-      userType: user?.userType,
       hasAskedPermission,
       hasLocationPreference: !!locationPreference,
       showLocationDialog
     });
     
-    // Only show for authenticated customers who haven't been asked permission before
+    // Only show for first-time visitors who haven't been asked permission before
+    // This will appear on the main landing page, not after login
     if (
-      isAuthenticated && 
-      user?.userType === 'customer' && 
+      !isAuthenticated && // Show only for non-authenticated users
       !hasAskedPermission && 
       !locationPreference &&
       !showLocationDialog // Prevent showing multiple times
     ) {
-      console.log('LocationContext: Will show location dialog for new customer in 3 seconds');
+      console.log('LocationContext: Will show location dialog for first-time visitor in 3 seconds');
       const timer = setTimeout(() => {
         console.log('LocationContext: Actually showing location dialog now');
         setShowLocationDialog(true);
@@ -84,7 +83,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, user?.userType, hasAskedPermission, locationPreference, showLocationDialog]);
+  }, [isAuthenticated, hasAskedPermission, locationPreference, showLocationDialog]);
 
   const updateLocationPreference = (preference: LocationPreference) => {
     setLocationPreference(preference);

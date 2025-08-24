@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import LocationBasedSalonFilter from "@/components/LocationBasedSalonFilter";
+import { useLocation } from "@/contexts/LocationContext";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -21,61 +22,37 @@ export default function Landing() {
   const { toast } = useToast();
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [searchRadius, setSearchRadius] = useState(30);
-  const [showLocationDialog, setShowLocationDialog] = useState(false);
-  const [locationDialogShown, setLocationDialogShown] = useState(false);
+  
+  // Use the new LocationContext for unified location management
+  const { 
+    showLocationDialog, 
+    setShowLocationDialog, 
+    requestLocationOnce,
+    locationPreference 
+  } = useLocation();
 
-  // Show location dialog after a delay for better UX
+  // Use location preference from context if available
   useEffect(() => {
-    if (!locationDialogShown) {
-      const timer = setTimeout(() => {
-        setShowLocationDialog(true);
-        setLocationDialogShown(true);
-      }, 3000); // Show dialog after 3 seconds
-      return () => clearTimeout(timer);
+    if (locationPreference) {
+      setUserLocation({
+        lat: locationPreference.lat,
+        lng: locationPreference.lng
+      });
+      setSearchRadius(locationPreference.radius);
     }
-  }, [locationDialogShown]);
+  }, [locationPreference]);
 
   const handleLocationAllow = async () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Location Not Supported",
-        description: "Your browser doesn't support location services",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 300000 // 5 minutes
-        });
-      });
-
-      const location = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      };
-      
-      setUserLocation(location);
-      setShowLocationDialog(false);
-      toast({
-        title: "Location Found",
-        description: `Now showing salons within ${searchRadius}km of your location`,
-      });
-    } catch (error) {
-      console.error('Error getting location:', error);
-      toast({
-        title: "Location Access Failed",
-        description: "Please check your browser settings and try again",
-        variant: "destructive",
-      });
-    }
+    await requestLocationOnce();
+    toast({
+      title: "Location Found",
+      description: `Now showing salons within ${searchRadius}km of your location`,
+    });
   };
 
   const handleLocationDeny = () => {
+    localStorage.setItem('sanwar_permission_asked', 'true');
+    setShowLocationDialog(false);
     toast({
       title: "Location Disabled",
       description: "You can enable location access anytime to find nearby salons",

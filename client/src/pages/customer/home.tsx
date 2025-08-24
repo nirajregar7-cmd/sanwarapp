@@ -289,13 +289,7 @@ export default function CustomerHome() {
         </div>
       </section>
 
-      {/* Location Permission Dialog */}
-      <LocationPermissionDialog
-        isOpen={showLocationDialog}
-        onClose={() => setShowLocationDialog(false)}
-        onAllow={handleLocationAllow}
-        onDeny={handleLocationDeny}
-      />
+      {/* Location Permission Dialog is now handled on the main landing page */}
 
       {/* Onboarding Walkthrough */}
       {shouldShowOnboarding && (
