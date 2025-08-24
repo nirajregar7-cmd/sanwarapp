@@ -1,7 +1,7 @@
 # Sanwar - Smart Salon Booking Platform
 
 ## Overview
-Sanwar is a smart salon booking platform designed to digitize salon businesses and simplify customer bookings. It functions as a comprehensive marketplace, akin to a "Zomato for salons," offering real-time slot availability, clear pricing, and instant confirmations, inspired by robust booking systems like IRCTC. The platform caters to salon owners seeking digital presence and increased clientele, and customers desiring efficient online booking without queues. Key capabilities include comprehensive salon management for owners, intuitive booking and discovery for customers, and integrated payment solutions with automatic revenue sharing. The project aims to provide a seamless, end-to-end solution for the salon industry, enabling digital transformation and enhancing user experience.
+Sanwar is a smart salon booking platform that digitizes salon businesses and simplifies customer bookings. It functions as a comprehensive marketplace, offering real-time slot availability, clear pricing, and instant confirmations, inspired by robust booking systems like IRCTC. The platform aims to provide a seamless, end-to-end solution for the salon industry, enabling digital transformation and enhancing user experience for both salon owners and customers. Key capabilities include comprehensive salon management, intuitive booking and discovery, and integrated payment solutions with automatic revenue sharing.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -11,92 +11,25 @@ Individual staff-based slot generation: Implemented with real-time slot counts a
 ## System Architecture
 
 ### Frontend Architecture
-The client is built with React and TypeScript, following a component-based architecture. It utilizes shadcn/ui components (based on Radix UI) for a consistent design system, styled with Tailwind CSS for utility-first styling and custom theming. Wouter is used for lightweight client-side routing. State management relies on TanStack Query for server state and React's built-in hooks for local component state.
+The client is built with React and TypeScript, following a component-based architecture. It utilizes shadcn/ui components (based on Radix UI) for a consistent design system, styled with Tailwind CSS. Wouter is used for client-side routing, and TanStack Query for server state management.
 
 ### Backend Architecture
-The server is built using Express.js and TypeScript, adhering to a RESTful API design. It employs a service-oriented approach, separating concerns into route handlers, storage services for database operations, and middleware for authentication and logging. Business logic is encapsulated in service classes to promote reusability and maintainability.
+The server is built using Express.js and TypeScript, adhering to a RESTful API design. It employs a service-oriented approach, separating concerns into route handlers, storage services, and middleware. Business logic is encapsulated in service classes.
 
 ### Database Design
-The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, referral programs, and platform statistics. The design supports multi-tenancy with owner-based data isolation and includes session storage for authentication. Currently maintains 600+ booking slots across multiple dates, services, and staff members for comprehensive customer booking options.
-
-## Recent Updates (August 20, 2025)
-- **Referral Milestone System Update**: Reduced customer referral milestone from 10 customers to 5 customers for earning free booking credits
-- **Enhanced Free Booking Rewards**: Increased free booking credit amount to ₹200 for completing 5-customer referral milestone
-- **Database Schema Updates**: Updated customerReferralCampaigns table defaults and all related logic to use 5-customer targets
-- **Frontend Updates**: Updated all UI text and progress displays to reflect new 5-customer milestone requirements
-- **Welcome Email System Fix**: Resolved welcome email delivery issue for customer signups by fixing Gmail authentication configuration
-- **Email Service Enhancement**: Added fallback support for GMAIL_PASS environment variable alongside GMAIL_APP_PASSWORD for better compatibility
-- **Google Analytics Integration**: Implemented Google Analytics tracking (G-DBC4KWYHJJ) across all website pages for comprehensive visitor analytics and conversion tracking
-- **Comprehensive Sitemap Expansion**: Dramatically expanded sitemap.xml from 865 to 1,137+ URLs with 17 additional major Indian cities including Noida, Kochi, Panaji, Imphal, Tiruchirappalli, Mysuru, Puducherry, Tiruppur, Aligarh, Jalandhar, Salem, Warangal, Thiruvananthapuram, Guntur, Jamshedpur, Kozhikode, and Thrissur for comprehensive nationwide SEO coverage
-
-## Previous Updates (August 19, 2025)
-- **Authentication System Restoration**: Completely removed Google and Facebook OAuth authentication per user request
-- **Email/Password Authentication**: Restored original traditional email/password authentication system 
-- **Authentication UI Enhancement**: Maintained modern login/signup page design with email/password forms only
-- **Role Selection Integration**: Kept role selection system for new user registrations during signup process
-- **Social Login Removal**: Removed all social login buttons, OAuth routes, and related authentication components
-- **Authentication Backend Cleanup**: Cleaned up authentication system to use only traditional email/password flow
-- **Mobile Dashboard Optimization**: Enhanced brand owner dashboard with comprehensive mobile responsiveness including responsive grid layouts, mobile-friendly tabs, optimized card sizing, and improved touch interactions
-- **Customer Welcome Email Fix**: Fixed missing customer welcome email template - customers now receive personalized welcome emails after signup with platform introduction and features overview
-- **Authentication Link Styling Fix**: Updated "Forgot your password?" link to black color matching design specifications
-
-## Previous Updates (August 18, 2025)
-- **Multi-Domain Payment Setup**: Configured payment processing to support both original domain and sanwarhub.in for seamless payment acceptance across domains
-- **Dynamic Domain Detection**: Implemented intelligent domain detection that automatically configures payment callbacks based on the request domain
-- **SanwarHub.in Integration**: Added complete support for custom domain with proper payment URL routing and webhook handling
-- **Payment Gateway Enhancement**: Updated Cashfree integration to dynamically generate return URLs and webhook URLs based on the requesting domain
-- **Cross-Domain Compatibility**: Ensured payment flow works seamlessly whether customers access from Replit domain or sanwarhub.in
-- **Domain-Specific Configuration**: Created comprehensive setup guide for sanwarhub.in DNS configuration and payment testing
-- **Timezone Handling Fix**: Resolved critical timezone issue causing past time slots to appear available by implementing proper IST (Indian Standard Time) conversion
-- **Time Slot Filtering Enhancement**: Updated server-side filtering to use IST for accurate past/future slot determination regardless of server timezone
-
-## Previous Updates (August 17, 2025)
-- **Email Notification System Fixed**: Completely resolved email delivery issues for signup confirmations, booking confirmations, and reminders
-- **Gmail Integration**: Successfully configured Gmail SMTP service for reliable email delivery with automatic fallback system
-- **Default Notification Settings**: Implemented automatic creation of notification preferences for users to prevent delivery failures
-- **Email Testing System**: Added comprehensive email testing endpoints for debugging and verification of email functionality
-- **Booking Notification Enhancement**: Fixed dual email system - both notification-based and direct email delivery for booking confirmations
-- **SEO Optimization System**: Implemented extensive SEO optimization system generating 864 SEO-optimized pages across 54 Indian cities with 15 salon services each, including sitemap.xml and robots.txt for search engine visibility
-- **Admin Salon Rejection System**: Implemented comprehensive salon rejection tracking with database schema fields (rejectedAt, rejectedBy, rejectionReason)
-- **Public API Protection**: Updated featured salons, search, and individual salon APIs to exclude rejected salons from customer browsing
-- **Database Schema Enhancement**: Added rejection tracking columns and resolved migration issues for proper admin control
-- **Quality Control Implementation**: Rejected salons are immediately hidden from all customer-facing areas while remaining visible in admin panel
-- **Brand Logo Integration**: Added official Sanwar logo with orange gradient design to navigation header and homepage hero section
-- **Visual Brand Enhancement**: Replaced generic scissors icons with authentic brand identity across the platform
-- **Homepage Offers Display**: Fixed salon cards to properly show promotional offers with green discount badges and detailed savings information
-- **SalonCard Component Integration**: Updated homepage to use enhanced SalonCard component for consistent offer display across all salon listings
-
-## Previous Updates (August 16, 2025)
-- **Profile Visit Analytics System**: Implemented comprehensive salon profile visit tracking with database schema, API endpoints, and dashboard analytics
-- **Analytics Dashboard**: Built analytics page showing total visits (30 days), unique customers, today's visits, and 7-day trend charts for salon owners
-- **Visit Tracking Integration**: Added automatic visit tracking on salon detail pages with visitor ID, IP address, and timestamp logging
-- **Visit Tracking Bug Fix**: Resolved database column issue preventing profile visits from being recorded properly
-- **Navigation Reorganization**: Moved "Offers" from main navigation to lower navigation tabs alongside Overview, Services, Staff, Gallery, Bookings, Messages, and Settings
-- **Enhanced Dashboard Tabs**: Added "Offers" and "View Insights" tabs to salon owner dashboard for better organization
-- **Offers Visibility Enhancement**: Added offers display on homepage salon cards showing discount badges and promotional information for public visibility
-- **Homepage Offers Integration**: Salon cards now display active offers with attractive green badges and detailed offer information
-- **Comprehensive Offers Management System**: Implemented full promotional offers functionality allowing salon owners to create, manage, and track marketing campaigns
-- **Salon Offers Database Schema**: Added salon_offers and customer_offers tables with comprehensive tracking (usage counts, validity periods, discount types)
-- **Offers Creation Interface**: Built complete offers management page for salon owners with form validation and real-time preview
-- **Customer Offers Integration**: Added offers display on customer dashboard with attractive cards showing discount details and usage limits
-- **API Endpoints**: Implemented complete CRUD operations for offers management with proper authentication and validation
-
-## Previous Updates (August 15, 2025)
-- **Dynamic Confirmation Fees**: Implemented salon-specific confirmation fee system allowing each salon owner to set their own confirmation amount (₹1-₹500) instead of fixed ₹3
-- **Revenue Splitting Logic**: Added automatic 80/20 revenue split between shopkeeper and platform with proper database tracking  
-- **Confirmation Settings Page**: New dashboard section for salon owners to manage their confirmation fees
-- **Database Schema Updates**: Added confirmation_amount, admin_revenue_share, and shopkeeper_revenue_share columns to salons table
-- **Email System Enhancement**: Updated notification system to use dynamic confirmation amounts per salon
-- **Payment Bug Fix**: Resolved issue where payments showed ₹1 instead of salon's custom confirmation fee
+The application uses PostgreSQL as the primary database, with Drizzle ORM for type-safe operations. The schema supports core entities like users, salons, services, working hours, time slots, bookings, and reviews. Enhancements include tables for staff management, customer wallets, wallet transactions, and referral programs. The design supports multi-tenancy with owner-based data isolation.
 
 ### Authentication System
-The system uses traditional email/password authentication with bcrypt for secure password hashing and JWT tokens for session management. `express-session` with PostgreSQL storage maintains persistent login states. Users can register as either a customer or salon owner, with role-based access control implemented throughout the application. Social login integration with Google and Facebook OAuth is also supported. An automated welcome email system sends personalized onboarding messages to new users based on their role, integrated across all registration methods.
+The system uses traditional email/password authentication with bcrypt for password hashing and JWT tokens for session management. `express-session` with PostgreSQL storage maintains persistent login states. Role-based access control is implemented, and an automated welcome email system sends personalized onboarding messages to new users.
 
 ### File Storage and Media Management
-Media uploads are handled via Google Cloud Storage, leveraging Replit's sidecar authentication for secure access. Uppy.js provides a modern file upload interface. An Access Control List (ACL) mechanism ensures fine-grained permissions for uploaded files, allowing for private media access based on user relationships.
+Media uploads are handled via Google Cloud Storage, leveraging Replit's sidecar authentication. Uppy.js provides the file upload interface, and an Access Control List (ACL) ensures fine-grained permissions.
 
 ### Development and Build System
-Vite is used for fast development builds and hot module replacement. The build process compiles both client and server code, with esbuild handling server-side compilation for production. The development environment includes TypeScript checking, Tailwind CSS processing, and PostCSS. Path aliases are configured for improved code organization.
+Vite is used for fast development builds and hot module replacement. The build process compiles both client and server code, with esbuild handling server-side compilation for production.
+
+### Mobile App Development
+The platform supports mobile access via a Progressive Web App and is wrapped for native iOS and Android deployment using Capacitor. Push notifications are integrated via Firebase.
 
 ## External Dependencies
 
@@ -126,14 +59,12 @@ Vite is used for fast development builds and hot module replacement. The build p
 - **Replit Runtime**: Hosting and development platform.
 - **Vercel Deployment**: Production hosting.
 - **Twilio**: SMS OTP for password reset.
-- **Nodemailer with Gmail**: Automated welcome email system for new user registrations.
-- **Cashfree**: Payment gateway with live production credentials for ₹3 confirmation fee processing and real transaction handling.
+- **Nodemailer with Gmail**: Automated welcome email system.
+- **Cashfree**: Payment gateway.
 
 ### Mobile App Development
-- **Capacitor**: Native mobile app wrapper for iOS and Android deployment.
-- **Progressive Web App**: Mobile-optimized interface with native app capabilities.
-- **Push Notifications**: Firebase integration for booking confirmations and updates.
-- **Android Build System**: Complete Gradle configuration with all necessary build files for APK generation.
+- **Capacitor**: Native mobile app wrapper.
+- **Firebase**: Push notifications.
 
 ### Development Tools
 - **Vite**: Build tool and development server.
