@@ -12,36 +12,36 @@ import SalonCard from "@/components/SalonCard";
 import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import LocationPermissionDialog from "@/components/LocationPermissionDialog";
+import LocationBasedSalonFilter from "@/components/LocationBasedSalonFilter";
 
 export default function Landing() {
   const { t } = useTranslation();
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
-  const [locationPermissionAsked, setLocationPermissionAsked] = useState(false);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [searchRadius, setSearchRadius] = useState(30);
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [locationDialogShown, setLocationDialogShown] = useState(false);
 
-  // Request location permission on component mount with a small delay for better UX
+  // Show location dialog after a delay for better UX
   useEffect(() => {
-    if (!locationPermissionAsked) {
+    if (!locationDialogShown) {
       const timer = setTimeout(() => {
-        requestLocationPermission();
-      }, 2000); // Ask for location after 2 seconds for better user experience
+        setShowLocationDialog(true);
+        setLocationDialogShown(true);
+      }, 3000); // Show dialog after 3 seconds
       return () => clearTimeout(timer);
     }
-  }, [locationPermissionAsked]);
+  }, [locationDialogShown]);
 
-  const requestLocationPermission = async () => {
-    setLocationPermissionAsked(true);
-    setIsGettingLocation(true);
-
+  const handleLocationAllow = async () => {
     if (!navigator.geolocation) {
       toast({
         title: "Location Not Supported",
         description: "Your browser doesn't support location services",
         variant: "destructive",
       });
-      setIsGettingLocation(false);
       return;
     }
 
@@ -49,7 +49,7 @@ export default function Landing() {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 15000,
           maximumAge: 300000 // 5 minutes
         });
       });
@@ -60,19 +60,26 @@ export default function Landing() {
       };
       
       setUserLocation(location);
+      setShowLocationDialog(false);
       toast({
         title: "Location Found",
-        description: "Now showing salons near you within 30km",
+        description: `Now showing salons within ${searchRadius}km of your location`,
       });
     } catch (error) {
       console.error('Error getting location:', error);
       toast({
-        title: "Location Permission Denied",
-        description: "Please enable location access to find salons near you",
+        title: "Location Access Failed",
+        description: "Please check your browser settings and try again",
         variant: "destructive",
       });
     }
-    setIsGettingLocation(false);
+  };
+
+  const handleLocationDeny = () => {
+    toast({
+      title: "Location Disabled",
+      description: "You can enable location access anytime to find nearby salons",
+    });
   };
 
   // Handle refer & earn button clicks
@@ -97,11 +104,11 @@ export default function Landing() {
 
   // Fetch top-rated salons (filtered by location if available)
   const { data: topSalons, isLoading: salonsLoading } = useQuery<Salon[]>({
-    queryKey: ["/api/salons/featured", userLocation?.lat, userLocation?.lng],
+    queryKey: ["/api/salons/featured", userLocation?.lat, userLocation?.lng, searchRadius],
     queryFn: async () => {
       let url = "/api/salons/featured";
       if (userLocation) {
-        url += `?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=30`;
+        url += `?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=${searchRadius}`;
       }
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch salons");
@@ -163,22 +170,17 @@ export default function Landing() {
           <div className="max-w-2xl mx-auto space-y-4">
             {/* Location Status */}
             <div className="text-center">
-              {isGettingLocation ? (
-                <div className="flex items-center justify-center text-white/90">
-                  <Navigation className="h-4 w-4 mr-2 animate-spin" />
-                  <span className="text-sm">Getting your location...</span>
-                </div>
-              ) : userLocation ? (
+              {userLocation ? (
                 <div className="flex items-center justify-center text-white/90">
                   <MapPin className="h-4 w-4 mr-2 text-green-300" />
-                  <span className="text-sm">Showing salons within 30km of your location</span>
+                  <span className="text-sm">Showing salons within {searchRadius}km of your location</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center space-x-2">
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={requestLocationPermission}
+                    onClick={() => setShowLocationDialog(true)}
                     className="bg-white/20 border-white/40 hover:bg-white/30 text-white"
                   >
                     <Navigation className="h-4 w-4 mr-2" />
@@ -199,10 +201,15 @@ export default function Landing() {
                   className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-500"
                 />
               </div>
-              <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 hover:from-purple-700 hover:to-blue-700 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300">
-                <Search className="h-4 w-4 mr-2" />
-                <span className="hidden xs:inline">{t('nav.find_salons')}</span>
-                <span className="xs:hidden">{t('search.find')}</span>
+              <Button 
+                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 hover:from-purple-700 hover:to-blue-700 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300"
+                asChild
+              >
+                <Link href="/discover">
+                  <Search className="h-4 w-4 mr-2" />
+                  <span className="hidden xs:inline">{t('nav.find_salons')}</span>
+                  <span className="xs:hidden">{t('search.find')}</span>
+                </Link>
               </Button>
             </div>
           </div>
@@ -325,6 +332,27 @@ export default function Landing() {
             </div>
           </div>
         </div>
+
+        {/* Location Permission Dialog */}
+        <LocationPermissionDialog
+          isOpen={showLocationDialog}
+          onClose={() => setShowLocationDialog(false)}
+          onAllow={handleLocationAllow}
+          onDeny={handleLocationDeny}
+        />
+      </section>
+
+      {/* Location-Based Salon Filter */}
+      <section className="py-8 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <LocationBasedSalonFilter
+            onLocationChange={setUserLocation}
+            onRadiusChange={setSearchRadius}
+            currentRadius={searchRadius}
+            salonCount={topSalons?.length || 0}
+            isLoading={salonsLoading}
+          />
+        </div>
       </section>
 
       {/* Local SEO Near Me Section */}
@@ -361,9 +389,15 @@ export default function Landing() {
           </div>
 
           <div className="text-center">
-            <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
-              <MapPin className="h-5 w-5 mr-2" />
-              Find Salons Near Me
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              asChild
+            >
+              <Link href="/discover">
+                <MapPin className="h-5 w-5 mr-2" />
+                Find Salons Near Me
+              </Link>
             </Button>
           </div>
         </div>

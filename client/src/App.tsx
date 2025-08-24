@@ -14,6 +14,7 @@ import Layout from "@/components/Layout";
 
 // Pages
 import Landing from "@/pages/landing";
+import SalonDiscovery from "@/pages/SalonDiscovery";
 import AuthPage from "@/pages/auth";
 
 import ForgotPasswordPage from "@/pages/forgot-password";
@@ -119,6 +120,7 @@ function Router() {
         <>
           {/* Home page for non-authenticated users */}
           <Route path="/" component={Landing} />
+          <Route path="/discover" component={SalonDiscovery} />
         </>
       ) : (user as any)?.userType ? (
         // Authenticated users with user type set

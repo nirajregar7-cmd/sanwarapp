@@ -7,11 +7,19 @@ Sanwar is a smart salon booking platform that digitizes salon businesses and sim
 Preferred communication style: Simple, everyday language.
 Shopkeeper prefers: Single simple slot generation method to avoid confusion.
 Individual staff-based slot generation: Implemented with real-time slot counts and staff-specific booking system.
+Location-based discovery: Implemented comprehensive geolocation features with automatic permission requests and 30km radius filtering.
 
 ## System Architecture
 
 ### Frontend Architecture
 The client is built with React and TypeScript, following a component-based architecture. It utilizes shadcn/ui components (based on Radix UI) for a consistent design system, styled with Tailwind CSS. Wouter is used for client-side routing, and TanStack Query for server state management.
+
+#### Location-Based Discovery System
+- **useGeolocation Hook**: Custom React hook for managing geolocation state, permissions, and error handling
+- **LocationPermissionDialog**: Modal component for requesting location access with clear benefits explanation
+- **LocationBasedSalonFilter**: Advanced filtering component with radius selection and status indicators
+- **SalonDiscovery Page**: Dedicated page for location-based salon discovery with comprehensive search and filter options
+- **Automatic Location Requests**: Smart timing for location permission prompts to improve user experience
 
 ### Backend Architecture
 The server is built using Express.js and TypeScript, adhering to a RESTful API design. It employs a service-oriented approach, separating concerns into route handlers, storage services, and middleware. Business logic is encapsulated in service classes.
