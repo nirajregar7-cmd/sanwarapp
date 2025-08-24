@@ -149,7 +149,7 @@ export default function CustomerHome() {
           </p>
           
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto bg-white rounded-xl p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 shadow-2xl">
+          <div className="max-w-2xl mx-auto bg-white rounded-xl p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 shadow-2xl" data-testid="search-input">
             <div className="flex-1 flex items-center px-3 sm:px-4 py-2 sm:py-0">
               <MapPin className="text-gray-400 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
               <Input 
@@ -170,7 +170,7 @@ export default function CustomerHome() {
 
 
       {/* Featured Salons */}
-      <section className="py-8 sm:py-12 lg:py-16">
+      <section className="py-8 sm:py-12 lg:py-16" data-testid="featured-salons">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">Featured Salons Near You</h2>

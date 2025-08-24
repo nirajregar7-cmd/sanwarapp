@@ -8700,6 +8700,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reset onboarding endpoint (for debugging only)
+  app.post('/api/reset-onboarding', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { userType } = req.body;
+      
+      if (!userType || !['customer', 'salon-owner', 'brand-owner'].includes(userType)) {
+        return res.status(400).json({ message: "Valid userType required (customer, salon-owner, brand-owner)" });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Onboarding reset for ${userType}`,
+        instruction: `Clear localStorage item: sanwar_onboarding_${userType}`,
+        userId: userId
+      });
+    } catch (error) {
+      console.error('Reset onboarding error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error resetting onboarding',
+        error: error.message 
+      });
+    }
+  });
+
   // Test email endpoint (for debugging only)
   app.post('/api/test-email', isAuthenticated, async (req: any, res) => {
     try {
