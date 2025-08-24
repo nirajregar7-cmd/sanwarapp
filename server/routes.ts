@@ -447,15 +447,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { lat, lng, radius = '30' } = req.query;
       
-      // Fetch only approved salons for public browsing with their first available media
+      // Fetch only approved salons for public browsing with their primary media
       const allFeaturedSalons = await db.select({
         salon: salons,
-        firstMedia: salonMedia
+        primaryMedia: salonMedia
       })
         .from(salons)
         .leftJoin(salonMedia, and(
           eq(salonMedia.salonId, salons.id),
-          eq(salonMedia.isActive, true)
+          eq(salonMedia.isActive, true),
+          eq(salonMedia.isPrimary, true)
         ))
         .where(
           and(
@@ -468,17 +469,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
         .orderBy(desc(salons.averageRating), desc(salons.totalReviews));
 
-      // Transform and group by salon to get first media per salon
-      const salonMap = new Map();
-      allFeaturedSalons.forEach(row => {
-        if (!salonMap.has(row.salon.id)) {
-          salonMap.set(row.salon.id, {
-            ...row.salon,
-            primaryImageUrl: row.firstMedia?.fileUrl || null
-          });
-        }
-      });
-      const salonsWithMedia = Array.from(salonMap.values());
+      // Transform salons with their primary media
+      const salonsWithMedia = allFeaturedSalons.map(row => ({
+        ...row.salon,
+        primaryImageUrl: row.primaryMedia?.fileUrl || null
+      }));
       
       let featuredSalons = salonsWithMedia;
       
