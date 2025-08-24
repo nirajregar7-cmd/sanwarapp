@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Salon, SalonOffer } from "@shared/schema";
 
 interface SalonCardProps {
-  salon: Salon & { distance?: number };
+  salon: Salon & { distance?: number; primaryImageUrl?: string | null };
 }
 
 export default function SalonCard({ salon }: SalonCardProps) {
@@ -42,7 +42,7 @@ export default function SalonCard({ salon }: SalonCardProps) {
     <Card className="overflow-hidden hover:shadow-xl transition-shadow">
       <div className="relative">
         <img 
-          src={salon.imageUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"} 
+          src={salon.primaryImageUrl || salon.imageUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"} 
           alt={salon.name} 
           className="w-full h-48 object-cover"
         />

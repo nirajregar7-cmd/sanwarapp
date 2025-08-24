@@ -135,6 +135,28 @@ export default function MediaGallery() {
     },
   });
 
+  // Set primary media mutation
+  const setPrimaryMutation = useMutation({
+    mutationFn: async (mediaId: string) => {
+      return apiRequest("PATCH", `/api/salons/media/${mediaId}/set-primary`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/media`] });
+      toast({
+        title: "Primary Image Set",
+        description: "This image is now the primary image for your salon.",
+      });
+    },
+    onError: (error) => {
+      console.error("Set primary media error:", error);
+      toast({
+        title: "Failed to Set Primary",
+        description: "Failed to set primary image. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleFileUpload = async (files: FileList) => {
     if (!salonId) {
       toast({
@@ -246,6 +268,18 @@ export default function MediaGallery() {
               >
                 <Edit3 className="h-4 w-4" />
               </Button>
+              {!media.isPrimary && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setPrimaryMutation.mutate(media.id)}
+                  className="bg-yellow-500/80 hover:bg-yellow-500"
+                  data-testid={`button-set-primary-${media.id}`}
+                  title="Set as primary image"
+                >
+                  <Star className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="destructive"

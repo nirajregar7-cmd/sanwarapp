@@ -447,9 +447,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { lat, lng, radius = '30' } = req.query;
       
-      // Fetch only approved salons for public browsing
-      const allFeaturedSalons = await db.select()
+      // Fetch only approved salons for public browsing with their first available media
+      const allFeaturedSalons = await db.select({
+        salon: salons,
+        firstMedia: salonMedia
+      })
         .from(salons)
+        .leftJoin(salonMedia, and(
+          eq(salonMedia.salonId, salons.id),
+          eq(salonMedia.isActive, true)
+        ))
         .where(
           and(
             eq(salons.isActive, true),
@@ -460,8 +467,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         )
         .orderBy(desc(salons.averageRating), desc(salons.totalReviews));
+
+      // Transform and group by salon to get first media per salon
+      const salonMap = new Map();
+      allFeaturedSalons.forEach(row => {
+        if (!salonMap.has(row.salon.id)) {
+          salonMap.set(row.salon.id, {
+            ...row.salon,
+            primaryImageUrl: row.firstMedia?.fileUrl || null
+          });
+        }
+      });
+      const salonsWithMedia = Array.from(salonMap.values());
       
-      let featuredSalons = allFeaturedSalons;
+      let featuredSalons = salonsWithMedia;
       
       // If location is provided, filter by distance (30km default)
       if (lat && lng && typeof lat === 'string' && typeof lng === 'string') {
@@ -470,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const searchRadius = parseFloat(typeof radius === 'string' ? radius : '30');
         
         if (!isNaN(userLat) && !isNaN(userLng)) {
-          const salonsWithDistance = allFeaturedSalons
+          const salonsWithDistance = salonsWithMedia
             .filter(salon => salon.latitude && salon.longitude)
             .map(salon => {
               const salonLat = parseFloat(salon.latitude!);
@@ -5156,6 +5175,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting salon media:", error);
       res.status(500).json({ message: "Failed to delete media" });
+    }
+  });
+
+  // Set primary media endpoint
+  app.patch("/api/salons/media/:mediaId/set-primary", isAuthenticated, async (req: any, res) => {
+    try {
+      const { mediaId } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Get the media record to check ownership
+      const [media] = await db.select({
+        media: salonMedia,
+        salon: salons
+      })
+        .from(salonMedia)
+        .leftJoin(salons, eq(salonMedia.salonId, salons.id))
+        .where(eq(salonMedia.id, mediaId));
+
+      if (!media) {
+        return res.status(404).json({ message: "Media not found" });
+      }
+
+      // Check if user owns the salon
+      if (!media.salon || media.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to modify this media" });
+      }
+
+      // First, unset any existing primary media for this salon
+      await db.update(salonMedia)
+        .set({ isPrimary: false })
+        .where(eq(salonMedia.salonId, media.salon.id));
+
+      // Set this media as primary
+      await db.update(salonMedia)
+        .set({ isPrimary: true })
+        .where(eq(salonMedia.id, mediaId));
+
+      res.json({ message: "Primary media set successfully" });
+    } catch (error) {
+      console.error("Error setting primary media:", error);
+      res.status(500).json({ message: "Failed to set primary media" });
     }
   });
 
