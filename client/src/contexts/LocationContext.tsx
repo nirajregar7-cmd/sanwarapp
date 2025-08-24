@@ -35,10 +35,18 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     const savedPreference = localStorage.getItem('sanwar_location_preference');
     const savedPermissionAsked = localStorage.getItem('sanwar_permission_asked');
     
+    console.log('LocationContext: Loading from localStorage', {
+      savedPreference: !!savedPreference,
+      savedPermissionAsked,
+      isAuthenticated,
+      userType: user?.userType
+    });
+    
     if (savedPreference) {
       try {
         const preference = JSON.parse(savedPreference);
         setLocationPreference(preference);
+        console.log('LocationContext: Loaded location preference:', preference);
       } catch (error) {
         console.error('Failed to parse saved location preference:', error);
       }
@@ -46,20 +54,37 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     
     if (savedPermissionAsked === 'true') {
       setHasAskedPermission(true);
+      console.log('LocationContext: Permission already asked, not showing dialog');
     }
-  }, []);
+  }, [isAuthenticated, user]);
 
-  // Show location dialog for new users who haven't been asked before
+  // Show location dialog for new customers who haven't been asked before
   useEffect(() => {
-    if (isAuthenticated && user?.userType === 'customer' && !hasAskedPermission && !locationPreference) {
-      // Only show if we haven't asked before and user doesn't have saved location
+    console.log('LocationContext: Checking if should show dialog', {
+      isAuthenticated,
+      userType: user?.userType,
+      hasAskedPermission,
+      hasLocationPreference: !!locationPreference,
+      showLocationDialog
+    });
+    
+    // Only show for authenticated customers who haven't been asked permission before
+    if (
+      isAuthenticated && 
+      user?.userType === 'customer' && 
+      !hasAskedPermission && 
+      !locationPreference &&
+      !showLocationDialog // Prevent showing multiple times
+    ) {
+      console.log('LocationContext: Will show location dialog for new customer in 3 seconds');
       const timer = setTimeout(() => {
+        console.log('LocationContext: Actually showing location dialog now');
         setShowLocationDialog(true);
-      }, 2000); // Show after 2 seconds
+      }, 3000); // Show after 3 seconds
       
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, user, hasAskedPermission, locationPreference]);
+  }, [isAuthenticated, user?.userType, hasAskedPermission, locationPreference, showLocationDialog]);
 
   const updateLocationPreference = (preference: LocationPreference) => {
     setLocationPreference(preference);
@@ -73,23 +98,18 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   const requestLocationOnce = async () => {
     try {
+      console.log('Requesting location permission...');
       await requestLocation();
+      
+      // Mark as asked regardless of result
       setHasAskedPermission(true);
       localStorage.setItem('sanwar_permission_asked', 'true');
       setShowLocationDialog(false);
       
-      // If successful, save as preference
-      if (position) {
-        const preference: LocationPreference = {
-          lat: position.lat,
-          lng: position.lng,
-          radius: 30, // Default 30km radius
-          lastUpdated: new Date().toISOString()
-        };
-        updateLocationPreference(preference);
-      }
+      console.log('Location permission request completed');
     } catch (error) {
       console.error('Location request failed:', error);
+      // Still mark as asked to prevent repeated requests
       setHasAskedPermission(true);
       localStorage.setItem('sanwar_permission_asked', 'true');
       setShowLocationDialog(false);

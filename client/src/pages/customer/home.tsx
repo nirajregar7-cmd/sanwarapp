@@ -60,7 +60,17 @@ export default function CustomerHome() {
   };
 
   const handleLocationDeny = () => {
+    console.log('User denied location permission');
+    // Mark as asked and close dialog
+    localStorage.setItem('sanwar_permission_asked', 'true');
     setShowLocationDialog(false);
+  };
+
+  // Debug function to clear location preferences (remove in production)
+  const clearLocationData = () => {
+    localStorage.removeItem('sanwar_location_preference');
+    localStorage.removeItem('sanwar_permission_asked');
+    window.location.reload();
   };
 
   if (isLoading) {
