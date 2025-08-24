@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import path from "path";
 import express from "express";
 import { fileURLToPath } from 'url';
+import multer from "multer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,6 +31,26 @@ import { promisify } from "util";
 import { setupSEORoutes } from "./seoRoutes";
 
 const scryptAsync = promisify(scrypt);
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB
+    files: 50 // Maximum 50 files
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
+      'video/mp4', 'video/webm', 'video/mov'
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only images and videos are allowed.'));
+    }
+  }
+});
 
 // Helper function to get the correct base URL
 function getBaseUrl(requestHost?: string): string {
@@ -4936,7 +4957,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/salons/media/upload", isAuthenticated, async (req: any, res) => {
+  app.post("/api/salons/media/upload", isAuthenticated, upload.array('files', 50), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const { salonId } = req.body;
@@ -4966,11 +4987,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Maximum 50 media files allowed per salon" });
       }
       
-      // Handle multiple file uploads
-      const uploadedFiles = req.files || [];
-      const fileTypes = Array.isArray(req.body.fileTypes) ? req.body.fileTypes : [req.body.fileTypes];
+      // Handle multiple file uploads using multer
+      const uploadedFiles = req.files as Express.Multer.File[];
+      console.log("Uploaded files count:", uploadedFiles?.length || 0);
       
-      if (uploadedFiles.length === 0) {
+      if (!uploadedFiles || uploadedFiles.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
       }
       
@@ -4979,7 +5000,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (let i = 0; i < uploadedFiles.length; i++) {
         const file = uploadedFiles[i];
-        const fileType = fileTypes[i] || "image";
+        const fileType = file.mimetype.startsWith('video/') ? "video" : "image";
         
         if (currentCount + i >= 50) {
           break; // Stop if we've reached the limit
