@@ -603,6 +603,16 @@ export default function Landing() {
                     <p className="text-gray-600 text-sm">All salons are verified, secure payment processing, customer support available, easy rescheduling</p>
                   </div>
                 </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Navigation className="h-4 w-4 text-teal-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Email Notifications</h4>
+                    <p className="text-gray-600 text-sm">Receive instant booking confirmations, reminders, and updates via email for all your appointments</p>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-8 pt-6 border-t border-gray-200">
@@ -612,8 +622,9 @@ export default function Landing() {
                   <li><span className="font-medium text-blue-600">2.</span> Browse salon profiles, view photos, read reviews, compare prices</li>
                   <li><span className="font-medium text-blue-600">3.</span> Select salon, choose services, pick preferred staff and time slot</li>
                   <li><span className="font-medium text-blue-600">4.</span> Pay small confirmation amount online to secure your booking</li>
-                  <li><span className="font-medium text-blue-600">5.</span> Visit salon at booked time, enjoy service, pay remaining amount</li>
-                  <li><span className="font-medium text-blue-600">6.</span> Rate and review your experience, refer friends to earn rewards</li>
+                  <li><span className="font-medium text-blue-600">5.</span> Receive instant email confirmation and booking reminders</li>
+                  <li><span className="font-medium text-blue-600">6.</span> Visit salon at booked time, enjoy service, pay remaining amount</li>
+                  <li><span className="font-medium text-blue-600">7.</span> Rate and review your experience, refer friends to earn rewards</li>
                 </ol>
               </div>
             </div>
@@ -678,6 +689,16 @@ export default function Landing() {
                     <p className="text-gray-600 text-sm">Create service-specific offers, manage promotional campaigns, referral programs, customer retention tools</p>
                   </div>
                 </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Navigation className="h-4 w-4 text-teal-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Automated Notifications</h4>
+                    <p className="text-gray-600 text-sm">Automatic email alerts for new bookings, cancellations, and customer updates to keep you informed</p>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-8 pt-6 border-t border-gray-200">
@@ -686,9 +707,10 @@ export default function Landing() {
                   <li><span className="font-medium text-purple-600">1.</span> Register salon and create detailed business profile with photos</li>
                   <li><span className="font-medium text-purple-600">2.</span> Add services, pricing, staff members and set working hours</li>
                   <li><span className="font-medium text-purple-600">3.</span> Generate time slots automatically or manually for staff</li>
-                  <li><span className="font-medium text-purple-600">4.</span> Receive bookings instantly, manage appointments through dashboard</li>
-                  <li><span className="font-medium text-purple-600">5.</span> Provide services, collect remaining payment, build customer reviews</li>
-                  <li><span className="font-medium text-purple-600">6.</span> Track earnings, analyze business performance, grow customer base</li>
+                  <li><span className="font-medium text-purple-600">4.</span> Receive bookings instantly with email notifications, manage appointments through dashboard</li>
+                  <li><span className="font-medium text-purple-600">5.</span> Get automated booking confirmations and customer update emails</li>
+                  <li><span className="font-medium text-purple-600">6.</span> Provide services, collect remaining payment, build customer reviews</li>
+                  <li><span className="font-medium text-purple-600">7.</span> Track earnings, analyze business performance, grow customer base</li>
                 </ol>
               </div>
             </div>
@@ -734,51 +756,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Platform Features */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose Sanwar?
-            </h2>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                icon: Clock,
-                title: "Real-time Slots",
-                description: "Live availability like IRCTC booking system"
-              },
-              {
-                icon: Shield,
-                title: "Secure Payments",
-                description: "Safe and encrypted payment processing"
-              },
-              {
-                icon: Star,
-                title: "Verified Reviews",
-                description: "Authentic reviews from real customers"
-              },
-              {
-                icon: Smartphone,
-                title: "Mobile Friendly",
-                description: "Book anytime, anywhere from your mobile"
-              }
-            ].map((feature, index) => (
-              <Card key={index} className="text-center p-6 hover:shadow-lg transition-shadow">
-                <CardContent className="p-0">
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <feature.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-gray-700 text-sm">{feature.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Call to Action Section */}
       <section className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white py-16 relative overflow-hidden">
