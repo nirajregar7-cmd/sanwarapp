@@ -5028,17 +5028,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Set ACL policy for the uploaded file to make it publicly accessible
           try {
+            console.log('Setting ACL policy for uploaded file:', fileUrl);
             const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-              uploadURL,
+              fileUrl,
               {
                 owner: userId,
                 visibility: "public", // Media should be public for salon display
               }
             );
-            console.log('ACL policy set for media file:', objectPath);
+            console.log('ACL policy set successfully for media file:', objectPath);
           } catch (aclError) {
             console.error('Error setting ACL policy for media file:', aclError);
-            // Continue with upload even if ACL fails
+            console.error('Upload URL was:', uploadURL);
+            console.error('File URL was:', fileUrl);
+            // Continue with upload even if ACL fails - fallback to permissive access
           }
           
           // Save media record to database

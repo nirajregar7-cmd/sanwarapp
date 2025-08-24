@@ -149,9 +149,19 @@ export async function canAccessObject({
   objectFile: File;
   requestedPermission: ObjectPermission;
 }): Promise<boolean> {
-  // When this function is called, the acl policy is required.
+  // Get the ACL policy if it exists
   const aclPolicy = await getObjectAclPolicy(objectFile);
+  
+  // If no ACL policy exists, check if this is a salon media file that should be public
   if (!aclPolicy) {
+    // For salon media uploads, allow public read access even without explicit ACL
+    if (requestedPermission === ObjectPermission.READ) {
+      const objectPath = objectFile.name;
+      if (objectPath.startsWith('uploads/')) {
+        console.log('Allowing public access to salon media file:', objectPath);
+        return true;
+      }
+    }
     return false;
   }
 
