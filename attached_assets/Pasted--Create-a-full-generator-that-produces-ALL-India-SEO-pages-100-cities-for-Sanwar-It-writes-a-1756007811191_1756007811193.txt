@@ -1,0 +1,453 @@
+# Create a full generator that produces ALL-India SEO pages (100+ cities) for Sanwar.
+# It writes a reusable script `generate_india_pages.py`, a `cities.json` with 120+ cities,
+# and an example output (zipped).
+
+import os, json, textwrap, zipfile, datetime, re
+
+root = "/mnt/data/sanwar_india_generator"
+out_dir = os.path.join(root, "output")
+os.makedirs(out_dir, exist_ok=True)
+
+# 1) Prepare cities.json with 125+ India cities (name + slug; state optional).
+cities = [
+{"name":"Delhi","slug":"delhi","state":"Delhi"},
+{"name":"Mumbai","slug":"mumbai","state":"Maharashtra"},
+{"name":"Bengaluru","slug":"bengaluru","state":"Karnataka"},
+{"name":"Hyderabad","slug":"hyderabad","state":"Telangana"},
+{"name":"Ahmedabad","slug":"ahmedabad","state":"Gujarat"},
+{"name":"Chennai","slug":"chennai","state":"Tamil Nadu"},
+{"name":"Kolkata","slug":"kolkata","state":"West Bengal"},
+{"name":"Pune","slug":"pune","state":"Maharashtra"},
+{"name":"Jaipur","slug":"jaipur","state":"Rajasthan"},
+{"name":"Surat","slug":"surat","state":"Gujarat"},
+{"name":"Lucknow","slug":"lucknow","state":"Uttar Pradesh"},
+{"name":"Kanpur","slug":"kanpur","state":"Uttar Pradesh"},
+{"name":"Nagpur","slug":"nagpur","state":"Maharashtra"},
+{"name":"Indore","slug":"indore","state":"Madhya Pradesh"},
+{"name":"Thane","slug":"thane","state":"Maharashtra"},
+{"name":"Bhopal","slug":"bhopal","state":"Madhya Pradesh"},
+{"name":"Visakhapatnam","slug":"visakhapatnam","state":"Andhra Pradesh"},
+{"name":"Pimpri-Chinchwad","slug":"pimpri-chinchwad","state":"Maharashtra"},
+{"name":"Patna","slug":"patna","state":"Bihar"},
+{"name":"Vadodara","slug":"vadodara","state":"Gujarat"},
+{"name":"Ghaziabad","slug":"ghaziabad","state":"Uttar Pradesh"},
+{"name":"Ludhiana","slug":"ludhiana","state":"Punjab"},
+{"name":"Agra","slug":"agra","state":"Uttar Pradesh"},
+{"name":"Nashik","slug":"nashik","state":"Maharashtra"},
+{"name":"Faridabad","slug":"faridabad","state":"Haryana"},
+{"name":"Meerut","slug":"meerut","state":"Uttar Pradesh"},
+{"name":"Rajkot","slug":"rajkot","state":"Gujarat"},
+{"name":"Kalyan-Dombivli","slug":"kalyan-dombivli","state":"Maharashtra"},
+{"name":"Vasai-Virar","slug":"vasai-virar","state":"Maharashtra"},
+{"name":"Varanasi","slug":"varanasi","state":"Uttar Pradesh"},
+{"name":"Srinagar","slug":"srinagar","state":"Jammu and Kashmir"},
+{"name":"Aurangabad","slug":"aurangabad","state":"Maharashtra"},
+{"name":"Dhanbad","slug":"dhanbad","state":"Jharkhand"},
+{"name":"Amritsar","slug":"amritsar","state":"Punjab"},
+{"name":"Navi Mumbai","slug":"navi-mumbai","state":"Maharashtra"},
+{"name":"Prayagraj","slug":"prayagraj","state":"Uttar Pradesh"},
+{"name":"Howrah","slug":"howrah","state":"West Bengal"},
+{"name":"Ranchi","slug":"ranchi","state":"Jharkhand"},
+{"name":"Gwalior","slug":"gwalior","state":"Madhya Pradesh"},
+{"name":"Jabalpur","slug":"jabalpur","state":"Madhya Pradesh"},
+{"name":"Coimbatore","slug":"coimbatore","state":"Tamil Nadu"},
+{"name":"Vijayawada","slug":"vijayawada","state":"Andhra Pradesh"},
+{"name":"Jodhpur","slug":"jodhpur","state":"Rajasthan"},
+{"name":"Madurai","slug":"madurai","state":"Tamil Nadu"},
+{"name":"Raipur","slug":"raipur","state":"Chhattisgarh"},
+{"name":"Kota","slug":"kota","state":"Rajasthan"},
+{"name":"Guwahati","slug":"guwahati","state":"Assam"},
+{"name":"Chandigarh","slug":"chandigarh","state":"Chandigarh"},
+{"name":"Solapur","slug":"solapur","state":"Maharashtra"},
+{"name":"Hubli-Dharwad","slug":"hubli-dharwad","state":"Karnataka"},
+{"name":"Bareilly","slug":"bareilly","state":"Uttar Pradesh"},
+{"name":"Moradabad","slug":"moradabad","state":"Uttar Pradesh"},
+{"name":"Mysuru","slug":"mysuru","state":"Karnataka"},
+{"name":"Tiruchirappalli","slug":"tiruchirappalli","state":"Tamil Nadu"},
+{"name":"Tiruppur","slug":"tiruppur","state":"Tamil Nadu"},
+{"name":"Gurugram","slug":"gurugram","state":"Haryana"},
+{"name":"Aligarh","slug":"aligarh","state":"Uttar Pradesh"},
+{"name":"Jalandhar","slug":"jalandhar","state":"Punjab"},
+{"name":"Bhubaneswar","slug":"bhubaneswar","state":"Odisha"},
+{"name":"Salem","slug":"salem","state":"Tamil Nadu"},
+{"name":"Mira-Bhayandar","slug":"mira-bhayandar","state":"Maharashtra"},
+{"name":"Warangal","slug":"warangal","state":"Telangana"},
+{"name":"Thiruvananthapuram","slug":"thiruvananthapuram","state":"Kerala"},
+{"name":"Guntur","slug":"guntur","state":"Andhra Pradesh"},
+{"name":"Bhiwandi","slug":"bhiwandi","state":"Maharashtra"},
+{"name":"Saharanpur","slug":"saharanpur","state":"Uttar Pradesh"},
+{"name":"Gorakhpur","slug":"gorakhpur","state":"Uttar Pradesh"},
+{"name":"Bikaner","slug":"bikaner","state":"Rajasthan"},
+{"name":"Amravati","slug":"amravati","state":"Maharashtra"},
+{"name":"Noida","slug":"noida","state":"Uttar Pradesh"},
+{"name":"Jamshedpur","slug":"jamshedpur","state":"Jharkhand"},
+{"name":"Bhilai","slug":"bhilai","state":"Chhattisgarh"},
+{"name":"Cuttack","slug":"cuttack","state":"Odisha"},
+{"name":"Kochi","slug":"kochi","state":"Kerala"},
+{"name":"Nellore","slug":"nellore","state":"Andhra Pradesh"},
+{"name":"Bhavnagar","slug":"bhavnagar","state":"Gujarat"},
+{"name":"Dehradun","slug":"dehradun","state":"Uttarakhand"},
+{"name":"Durgapur","slug":"durgapur","state":"West Bengal"},
+{"name":"Asansol","slug":"asansol","state":"West Bengal"},
+{"name":"Rourkela","slug":"rourkela","state":"Odisha"},
+{"name":"Nanded","slug":"nanded","state":"Maharashtra"},
+{"name":"Kolhapur","slug":"kolhapur","state":"Maharashtra"},
+{"name":"Ajmer","slug":"ajmer","state":"Rajasthan"},
+{"name":"Akola","slug":"akola","state":"Maharashtra"},
+{"name":"Kalaburagi","slug":"kalaburagi","state":"Karnataka"},
+{"name":"Jamnagar","slug":"jamnagar","state":"Gujarat"},
+{"name":"Ujjain","slug":"ujjain","state":"Madhya Pradesh"},
+{"name":"Siliguri","slug":"siliguri","state":"West Bengal"},
+{"name":"Jhansi","slug":"jhansi","state":"Uttar Pradesh"},
+{"name":"Ulhasnagar","slug":"ulhasnagar","state":"Maharashtra"},
+{"name":"Jammu","slug":"jammu","state":"Jammu and Kashmir"},
+{"name":"Sangli-Miraj-Kupwad","slug":"sangli-miraj-kupwad","state":"Maharashtra"},
+{"name":"Mangaluru","slug":"mangaluru","state":"Karnataka"},
+{"name":"Erode","slug":"erode","state":"Tamil Nadu"},
+{"name":"Belagavi","slug":"belagavi","state":"Karnataka"},
+{"name":"Kurnool","slug":"kurnool","state":"Andhra Pradesh"},
+{"name":"Malegaon","slug":"malegaon","state":"Maharashtra"},
+{"name":"Gaya","slug":"gaya","state":"Bihar"},
+{"name":"Tirunelveli","slug":"tirunelveli","state":"Tamil Nadu"},
+{"name":"Udaipur","slug":"udaipur","state":"Rajasthan"},
+{"name":"Rohtak","slug":"rohtak","state":"Haryana"},
+{"name":"Korba","slug":"korba","state":"Chhattisgarh"},
+{"name":"Bokaro Steel City","slug":"bokaro-steel-city","state":"Jharkhand"},
+{"name":"Patiala","slug":"patiala","state":"Punjab"},
+{"name":"Bhagalpur","slug":"bhagalpur","state":"Bihar"},
+{"name":"Muzaffarnagar","slug":"muzaffarnagar","state":"Uttar Pradesh"},
+{"name":"Ahmednagar","slug":"ahmednagar","state":"Maharashtra"},
+{"name":"Mathura","slug":"mathura","state":"Uttar Pradesh"},
+{"name":"Jalgaon","slug":"jalgaon","state":"Maharashtra"},
+{"name":"Latur","slug":"latur","state":"Maharashtra"},
+{"name":"Dhule","slug":"dhule","state":"Maharashtra"},
+{"name":"Tirupati","slug":"tirupati","state":"Andhra Pradesh"},
+{"name":"Burhanpur","slug":"burhanpur","state":"Madhya Pradesh"},
+{"name":"Vellore","slug":"vellore","state":"Tamil Nadu"},
+{"name":"Thoothukudi","slug":"thoothukudi","state":"Tamil Nadu"},
+{"name":"Rewa","slug":"rewa","state":"Madhya Pradesh"},
+{"name":"Satna","slug":"satna","state":"Madhya Pradesh"},
+{"name":"Dindigul","slug":"dindigul","state":"Tamil Nadu"},
+{"name":"Nagercoil","slug":"nagercoil","state":"Tamil Nadu"},
+{"name":"Kakinada","slug":"kakinada","state":"Andhra Pradesh"},
+{"name":"Karimnagar","slug":"karimnagar","state":"Telangana"},
+{"name":"Hapur","slug":"hapur","state":"Uttar Pradesh"},
+{"name":"Imphal","slug":"imphal","state":"Manipur"},
+{"name":"Shillong","slug":"shillong","state":"Meghalaya"},
+{"name":"Aizawl","slug":"aizawl","state":"Mizoram"},
+{"name":"Itanagar","slug":"itanagar","state":"Arunachal Pradesh"},
+{"name":"Agartala","slug":"agartala","state":"Tripura"},
+{"name":"Panaji","slug":"panaji","state":"Goa"},
+{"name":"Puducherry","slug":"puducherry","state":"Puducherry"},
+{"name":"Sambalpur","slug":"sambalpur","state":"Odisha"},
+{"name":"Bilaspur","slug":"bilaspur","state":"Chhattisgarh"},
+{"name":"Gandhinagar","slug":"gandhinagar","state":"Gujarat"},
+{"name":"Bhuj","slug":"bhuj","state":"Gujarat"},
+{"name":"Anand","slug":"anand","state":"Gujarat"},
+{"name":"Tiruvannamalai","slug":"tiruvannamalai","state":"Tamil Nadu"},
+{"name":"Palakkad","slug":"palakkad","state":"Kerala"},
+{"name":"Thrissur","slug":"thrissur","state":"Kerala"},
+{"name":"Alappuzha","slug":"alappuzha","state":"Kerala"},
+{"name":"Kozhikode","slug":"kozhikode","state":"Kerala"},
+{"name":"Kannur","slug":"kannur","state":"Kerala"},
+{"name":"Gulbarga","slug":"gulbarga","state":"Karnataka"},
+{"name":"Rajahmundry","slug":"rajahmundry","state":"Andhra Pradesh"},
+{"name":"Eluru","slug":"eluru","state":"Andhra Pradesh"},
+{"name":"Vizianagaram","slug":"vizianagaram","state":"Andhra Pradesh"},
+{"name":"Silchar","slug":"silchar","state":"Assam"},
+{"name":"Muzaffarpur","slug":"muzaffarpur","state":"Bihar"},
+{"name":"Begusarai","slug":"begusarai","state":"Bihar"},
+{"name":"Ambala","slug":"ambala","state":"Haryana"},
+{"name":"Panipat","slug":"panipat","state":"Haryana"},
+{"name":"Hisar","slug":"hisar","state":"Haryana"},
+{"name":"Karnal","slug":"karnal","state":"Haryana"},
+{"name":"Jammu Cantonment","slug":"jammu-cantonment","state":"Jammu and Kashmir"},
+{"name":"Haldwani","slug":"haldwani","state":"Uttarakhand"},
+{"name":"Haridwar","slug":"haridwar","state":"Uttarakhand"},
+{"name":"Ujjain City","slug":"ujjain-city","state":"Madhya Pradesh"}
+]
+
+with open(os.path.join(root, "cities.json"), "w", encoding="utf-8") as f:
+    json.dump(cities, f, ensure_ascii=False, indent=2)
+
+# 2) Write the generator script
+generator_py = r'''
+#!/usr/bin/env python3
+"""
+Sanwar All-India SEO Page Generator
+- Generates national hub pages (/service-in-india)
+- Generates near-me pages (/service-near-me)
+- Generates city pages (/service-in-<city> for 100+ cities)
+- Produces a sitemap.xml
+Usage:
+    python generate_india_pages.py --domain https://sanwarhub.in --brand Sanwar --logo https://sanwarhub.in/logo.png --phone +91-0000000000
+"""
+import os, json, argparse, datetime, textwrap, re
+
+SERVICES = [
+    {"slug": "haircut", "name": "Haircut", "type": "HairSalon", "keywords": ["haircut near me","men's haircut","women's haircut","barbershop near me","layer cut","fade cut","salon near me"]},
+    {"slug": "salon", "name": "Salon", "type": "BeautySalon", "keywords": ["salon near me","best salon","unisex salon","beauty salon","hair spa","facial","bridal salon","makeup salon"]},
+    {"slug": "spa", "name": "Spa", "type": "DaySpa", "keywords": ["spa near me","body spa","massage spa","couple spa","foot spa","ayurvedic spa","salon and spa"]},
+    {"slug": "bridal-makeup", "name": "Bridal Makeup", "type": "BeautySalon", "keywords": ["bridal makeup near me","makeup artist near me","engagement makeup","party makeup","hd makeup","airbrush makeup"]},
+    {"slug": "waxing", "name": "Waxing", "type": "BeautySalon", "keywords": ["waxing near me","full body waxing","bikini waxing","chocolate wax","rica wax","underarm waxing"]},
+    {"slug": "manicure", "name": "Manicure", "type": "NailSalon", "keywords": ["manicure near me","nail salon near me","gel manicure","french manicure","nail art","pedicure"]},
+]
+
+STYLE = """:root{--p:#ff2e88;}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6;background:#fff}header{background:linear-gradient(135deg,var(--p),#ff7aa7);color:#fff;padding:32px 16px;text-align:center}h1{margin:0 0 6px 0}.container{max-width:1000px;margin:24px auto;padding:0 16px}.btn{display:inline-block;background:var(--p);color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none}.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}.card{border:1px solid #eee;border-radius:14px;padding:16px;background:#fafafa}.small{color:#666;font-size:14px}footer{padding:32px 16px;background:#111;color:#bbb;margin-top:24px}.tags a{display:inline-block;margin:6px 8px 0 0;padding:8px 12px;border:1px solid #eee;border-radius:999px;text-decoration:none;color:#333}"""
+
+def read_cities(path):
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    # Deduplicate by slug
+    seen = set()
+    cleaned = []
+    for c in data:
+        slug = c.get("slug") or slugify(c["name"])
+        if slug in seen: 
+            continue
+        seen.add(slug)
+        cleaned.append({"name": c["name"], "slug": slug, "state": c.get("state", "")})
+    return cleaned
+
+def slugify(text):
+    t = re.sub(r"[^a-zA-Z0-9]+", "-", text.lower()).strip("-")
+    return re.sub(r"-+", "-", t)
+
+def org_schema(brand):
+    data = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": brand["name"],
+      "url": brand["domain"],
+      "logo": brand["logo"],
+      "contactPoint": [{
+        "@type": "ContactPoint",
+        "telephone": brand["phone"],
+        "contactType": "customer support",
+        "areaServed": "IN",
+        "availableLanguage": ["en","hi"]
+      }]
+    }
+    return data
+
+def website_search_schema(brand):
+    return {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "url": brand["domain"],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": f"{brand['domain']}/search?q={{query}}",
+        "query-input": "required name=query"
+      }
+    }
+
+def local_business_schema(service, brand, city=None, near_me=False, india=False):
+    data = {
+      "@context": "https://schema.org",
+      "@type": service["type"],
+      "name": f"{brand['name']} – {service['name']}",
+      "image": brand["logo"],
+      "url": brand["domain"],
+      "priceRange": "₹₹",
+    }
+    if city:
+        data["areaServed"] = {"@type":"City", "name": city["name"], "addressCountry":"IN"}
+    elif india:
+        data["areaServed"] = {"@type":"Country","name":"India"}
+    elif near_me:
+        data["areaServed"] = {"@type":"Country","name":"India"}
+    return data
+
+def breadcrumb_schema(crumbs):
+    items = []
+    for i,(name,url) in enumerate(crumbs, start=1):
+        items.append({"@type":"ListItem","position":i,"name":name,"item":url})
+    return {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":items}
+
+def faq_schema(service_name, scope_label):
+    qas = [
+        (f"How do I book {service_name.lower()} on Sanwar?", f"Open Sanwar, choose {service_name}, pick a salon, select a slot and confirm. You get instant confirmation and reminders."),
+        (f"What are typical prices for {service_name.lower()} {scope_label}?", f"Prices vary by salon and locality. Sanwar shows transparent pricing so you can compare before booking."),
+        ("Can I reschedule or cancel a booking?", "Yes, you can reschedule or cancel from your bookings screen as per salon policy."),
+        ("Are reviews verified?", "Yes. Ratings and reviews are from customers who booked via Sanwar."),
+        ("Is there a confirmation fee?", "Some salons may charge a small fee to secure your slot. It’s shown upfront before payment.")
+    ]
+    return {
+        "@context":"https://schema.org",
+        "@type":"FAQPage",
+        "mainEntity":[{"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in qas]
+    }
+
+def write_html(path, html):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+def page_html(brand, service, title, description, canonical, breadcrumbs, jsonld_blocks, hero_h1, hero_p, cta_url, tags_html, cards_html):
+    jsonld = "\n".join([f'<script type="application/ld+json">{json.dumps(b, ensure_ascii=False)}</script>' for b in jsonld_blocks])
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{title}</title>
+<link rel="canonical" href="{canonical}">
+<meta name="description" content="{description}">
+<meta name="keywords" content="{", ".join(service["keywords"])}">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{description}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{canonical}">
+<meta property="og:image" content="{brand['logo']}">
+<style>{STYLE}</style>
+{jsonld}
+</head>
+<body>
+<header>
+  <h1>{hero_h1}</h1>
+  <p>{hero_p}</p>
+  <p><a class="btn" href="{cta_url}">Find {service['name']} & Book Now</a></p>
+</header>
+
+<div class="container">
+  <section>
+    <h2>Why {brand['name']}?</h2>
+    <ul>
+      <li>✅ Instant online booking with confirmation</li>
+      <li>✅ Compare prices, timings & ratings</li>
+      <li>✅ Verified reviews from real customers</li>
+      <li>✅ Pay online or at the salon</li>
+      <li>✅ Smart wait-time and reminders</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Popular {service['name']} Options</h2>
+    <div class="grid">{cards_html}</div>
+  </section>
+
+  <section class="tags">
+    <h2>Popular Searches</h2>
+    <div>{tags_html}</div>
+  </section>
+</div>
+
+<footer>
+  <div class="container">
+    <strong>{brand['name']}</strong> — Smart Salon Booking Platform • © {datetime.datetime.now().year}
+  </div>
+</footer>
+</body>
+</html>"""
+
+def cards_for(service_slug):
+    svc_cards = {
+        "haircut": [("Men’s Haircut","Trendy styles & classic cuts"),("Women’s Haircut","Layers, bobs & fringes"),("Kids Haircut","Quick & gentle for kids")],
+        "salon": [("Hair Spa","Deep nourishment & shine"),("Facial","Cleanup, glow & anti-tan"),("Cleanup","Basic to premium cleanup")],
+        "spa": [("Full Body Massage","Relaxation & pain relief"),("Foot Spa","Detox & refresh"),("Couple Spa","Rejuvenate together")],
+        "bridal-makeup":[("Bridal Makeup","HD/Airbrush options"),("Engagement Makeup","Natural to glam looks"),("Party Makeup","Look your best")],
+        "waxing":[("Full Body Waxing","Rica/Chocolate wax"),("Underarm Waxing","Quick & smooth"),("Bikini Waxing","Professional care")],
+        "manicure":[("Classic Manicure","Clean & polish"),("Gel Manicure","Long-lasting shine"),("Nail Art","Trendy designs")]
+    }
+    return "".join([f'<div class="card"><h3>{t}</h3><p class="small">{d}</p></div>' for t,d in svc_cards.get(service_slug, [])])
+
+def generate(domain, brand_name, logo, phone, cities_path, output_dir):
+    brand = {"domain": domain.rstrip("/"), "name": brand_name, "logo": logo, "phone": phone}
+    cities = read_cities(cities_path)
+
+    urls = []
+    # 1) Near-me pages
+    for svc in SERVICES:
+        slug = f"{svc['slug']}-near-me"
+        canonical = f"{brand['domain']}/{slug}"
+        title = f"Best {svc['name']} Near Me | Book Online | {brand['name']}"
+        desc = f"Find and book {svc['name'].lower()} services near you with {brand['name']}. Compare prices, read verified reviews, and get instant confirmation."
+        crumbs = [("Home", brand["domain"]), (svc["name"], f"{brand['domain']}/{svc['slug']}"), ("Near Me", canonical)]
+        jsonld = [org_schema(brand), website_search_schema(brand), local_business_schema(svc, brand, near_me=True), breadcrumb_schema(crumbs), faq_schema(svc["name"], "near you")]
+        hero_h1 = f"Best {svc['name']} Near Me"
+        hero_p = f"Instantly discover {svc['name'].lower()} options near you. Transparent pricing, verified reviews, and easy booking."
+        cta = f"{brand['domain']}/search?service={svc['slug']}&near=me"
+        tags = "".join([f'<a href="{brand["domain"]}/{svc["slug"]}-in-{c["slug"]}">{svc["name"]} in {c["name"]}</a>' for c in cities[:40]])
+        html = page_html(brand, svc, title, desc, canonical, crumbs, jsonld, hero_h1, hero_p, cta, tags, cards_for(svc["slug"]))
+        write_html(os.path.join(output_dir, f"{slug}.html"), html)
+        urls.append(canonical)
+
+    # 2) India hub pages
+    for svc in SERVICES:
+        slug = f"{svc['slug']}-in-india"
+        canonical = f"{brand['domain']}/{slug}"
+        title = f"{svc['name']} in India | Compare & Book Online | {brand['name']}"
+        desc = f"Explore {svc['name'].lower()} services across India on {brand['name']}. Browse top cities, compare prices and ratings, and book instantly."
+        crumbs = [("Home", brand["domain"]), (svc["name"], f"{brand['domain']}/{svc['slug']}"), ("India", canonical)]
+        jsonld = [org_schema(brand), website_search_schema(brand), local_business_schema(svc, brand, india=True), breadcrumb_schema(crumbs), faq_schema(svc["name"], "in India")]
+        hero_h1 = f"{svc['name']} in India"
+        hero_p = f"Your all-India guide to {svc['name'].lower()} services. Choose a city below to find nearby salons and book instantly."
+        cta = f"{brand['domain']}/search?service={svc['slug']}&country=IN"
+        city_links = "".join([f'<a href="{brand["domain"]}/{svc["slug"]}-in-{c["slug"]}">{c["name"]}</a>' for c in cities])
+        html = page_html(brand, svc, title, desc, canonical, crumbs, jsonld, hero_h1, hero_p, cta, city_links, cards_for(svc["slug"]))
+        write_html(os.path.join(output_dir, f"{slug}.html"), html)
+        urls.append(canonical)
+
+    # 3) City pages (100+ cities)
+    for c in cities:
+        for svc in SERVICES:
+            slug = f"{svc['slug']}-in-{c['slug']}"
+            canonical = f"{brand['domain']}/{slug}"
+            title = f"Best {svc['name']} in {c['name']} | Near Me | {brand['name']}"
+            desc = f"Discover and book {svc['name'].lower()} services in {c['name']}. Compare prices, read reviews, and get instant booking on {brand['name']}."
+            crumbs = [("Home", brand["domain"]), (svc["name"], f"{brand['domain']}/{svc['slug']}"), (c["name"], canonical)]
+            jsonld = [org_schema(brand), website_search_schema(brand), local_business_schema(svc, brand, city=c), breadcrumb_schema(crumbs), faq_schema(svc["name"], f"in {c['name']}")]
+            hero_h1 = f"Best {svc['name']} in {c['name']}"
+            hero_p = f"Find top-rated salons for {svc['name'].lower()} in {c['name']}. Transparent pricing, verified reviews, instant confirmation."
+            cta = f"{brand['domain']}/search?service={svc['slug']}&city={c['slug']}"
+            # Nearby tags (up to 8 random-ish links: pick next/prev few cities)
+            tags = []
+            # simple neighbors by index
+            # We'll compute neighbors later in a second pass if needed; for now, add Near Me + India links
+            tags.append(f'<a href="{brand["domain"]}/{svc["slug"]}-near-me">Near Me</a>')
+            tags.append(f'<a href="{brand["domain"]}/{svc["slug"]}-in-india">All India</a>')
+            tags_html = "".join(tags)
+            html = page_html(brand, svc, title, desc, canonical, crumbs, jsonld, hero_h1, hero_p, cta, tags_html, cards_for(svc["slug"]))
+            write_html(os.path.join(output_dir, f"{slug}.html"), html)
+            urls.append(canonical)
+
+    # 4) Sitemap
+    today = datetime.date.today().isoformat()
+    urlset = "".join([f"<url><loc>{u}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>" for u in urls])
+    sitemap = f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urlset}</urlset>'
+    with open(os.path.join(output_dir, "sitemap-sanwar-india.xml"), "w", encoding="utf-8") as f:
+        f.write(sitemap)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--domain", default="https://sanwarhub.in")
+    parser.add_argument("--brand", default="Sanwar")
+    parser.add_argument("--logo", default="https://sanwarhub.in/logo.png")
+    parser.add_argument("--phone", default="+91-0000000000")
+    parser.add_argument("--cities", default="cities.json")
+    parser.add_argument("--out", default="output")
+    args = parser.parse_args()
+
+    os.makedirs(args.out, exist_ok=True)
+    generate(args.domain, args.brand, args.logo, args.phone, args.cities, args.out)
+'''
+with open(os.path.join(root, "generate_india_pages.py"), "w", encoding="utf-8") as f:
+    f.write(generator_py)
+
+# 3) Create a README with run instructions
+readme = f"""
+# Sanwar All-India SEO Page Generator
+
+This kit generates **near-me**, **India hub**, and **100+ city** pages for services:
+- Haircut, Salon, Spa, Bridal Makeup, Waxing, Manicure
+
+## Files
+- `generate_india_pages.py` – main generator
+- `cities.json` – list of 120+ Indian cities (name, slug, state)
+- `output/` – generated HTML pages + `sitemap-sanwar-india.xml`
+
+## How to run
+```bash
+cd sanwar_india_generator
+python3 generate_india_pages.py --domain https://sanwarhub.in --brand Sanwar --logo https://sanwarhub.in/logo.png --phone +91-0000000000 --cities cities.json --out output
