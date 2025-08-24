@@ -567,6 +567,14 @@ export default function MediaGallery() {
       {/* Media Viewer Modal */}
       <Dialog open={!!viewingMedia} onOpenChange={() => setViewingMedia(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {viewingMedia?.title || viewingMedia?.fileName || "Media Viewer"}
+            </DialogTitle>
+            <DialogDescription>
+              View {viewingMedia?.fileType === "video" ? "video" : "image"} in full screen
+            </DialogDescription>
+          </DialogHeader>
           <div className="relative">
             <button
               onClick={() => setViewingMedia(null)}

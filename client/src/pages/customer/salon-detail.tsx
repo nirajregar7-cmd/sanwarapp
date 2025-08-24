@@ -1350,6 +1350,14 @@ export default function SalonDetail() {
       {/* Media Viewer Modal */}
       <Dialog open={!!viewingMedia} onOpenChange={() => setViewingMedia(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {viewingMedia?.title || viewingMedia?.fileName || "Salon Media Viewer"}
+            </DialogTitle>
+            <DialogDescription>
+              View {viewingMedia?.fileType === "video" ? "video" : "image"} from salon gallery
+            </DialogDescription>
+          </DialogHeader>
           <div className="relative">
             <button
               onClick={() => setViewingMedia(null)}

@@ -1,0 +1,27 @@
+LocationContext: Permission already asked, not showing dialog
+LocationContext: Checking if should show dialog 
+Object {isAuthenticated: false, hasAskedPermission: false, hasLocationPreference: false, showLocationDialog: false}
+LocationContext: Will show location dialog for first-time visitor in 3 seconds
+LocationContext: Checking if should show dialog 
+Object {isAuthenticated: false, hasAskedPermission: true, hasLocationPreference: true, showLocationDialog: false}
+LocationContext: Loading from localStorage 
+Object {savedPreference: true, savedPermissionAsked: "true", isAuthenticated: false, userType: undefined}
+LocationContext: Loaded location preference: 
+Object {lat: 10.76560385312815, lng: 78.81749214618772, radius: 30, lastUpdated: "2025-08-24T17:39:36.020Z"}
+LocationContext: Permission already asked, not showing dialog
+LocationContext: Checking if should show dialog 
+Object {isAuthenticated: false, hasAskedPermission: true, hasLocationPreference: true, showLocationDialog: false}
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+
+If you want to hide the &#x60;DialogTitle&#x60;, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+at t.value (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
