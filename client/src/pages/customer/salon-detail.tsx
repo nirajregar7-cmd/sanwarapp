@@ -12,7 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Clock, Users, Calendar as CalendarIcon,
-  Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera
+  Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -60,6 +60,7 @@ export default function SalonDetail() {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [appliedReferralCode, setAppliedReferralCode] = useState<any>(null);
+  const [viewingMedia, setViewingMedia] = useState<any>(null);
   
   // Check if this is a reschedule operation
   const searchParams = new URLSearchParams(window.location.search);
@@ -748,7 +749,12 @@ export default function SalonDetail() {
                 ) : gallery.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {gallery.map((media) => (
-                      <div key={media.id} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer">
+                      <div 
+                        key={media.id} 
+                        className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
+                        onClick={() => setViewingMedia(media)}
+                        data-testid={`media-item-${media.id}`}
+                      >
                         {media.fileType === "video" ? (
                           <video 
                             src={media.fileUrl} 
@@ -757,17 +763,19 @@ export default function SalonDetail() {
                             preload="metadata"
                             onMouseEnter={(e) => e.currentTarget.play()}
                             onMouseLeave={(e) => e.currentTarget.pause()}
+                            data-testid={`video-media-${media.id}`}
                           />
                         ) : (
                           <img 
                             src={media.fileUrl} 
                             alt={media.title || media.fileName || "Gallery image"} 
                             className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            data-testid={`img-media-${media.id}`}
                           />
                         )}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Camera className="h-8 w-8 text-white" />
+                            <Eye className="h-8 w-8 text-white" />
                           </div>
                         </div>
                         {media.isPrimary && (
@@ -1338,6 +1346,65 @@ export default function SalonDetail() {
           </div>
         </div>
       </div>
+
+      {/* Media Viewer Modal */}
+      <Dialog open={!!viewingMedia} onOpenChange={() => setViewingMedia(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <div className="relative">
+            <button
+              onClick={() => setViewingMedia(null)}
+              className="absolute top-4 right-4 z-50 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-colors"
+              data-testid="button-close-viewer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            
+            {viewingMedia && (
+              <div className="relative">
+                {viewingMedia.fileType === "video" ? (
+                  <video
+                    src={viewingMedia.fileUrl}
+                    className="w-full h-auto max-h-[80vh] object-contain"
+                    controls
+                    autoPlay
+                    data-testid={`video-viewer-${viewingMedia.id}`}
+                  />
+                ) : (
+                  <img
+                    src={viewingMedia.fileUrl}
+                    alt={viewingMedia.title || "Salon media"}
+                    className="w-full h-auto max-h-[80vh] object-contain"
+                    data-testid={`img-viewer-${viewingMedia.id}`}
+                  />
+                )}
+                
+                {/* Media info overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+                  <div className="text-white">
+                    <h3 className="text-lg font-semibold" data-testid="text-viewer-title">
+                      {viewingMedia.title || viewingMedia.fileName || "Salon Image"}
+                    </h3>
+                    {viewingMedia.category && (
+                      <p className="text-sm opacity-80 capitalize" data-testid="text-viewer-category">
+                        {viewingMedia.category.replace("_", " ")}
+                      </p>
+                    )}
+                    <div className="flex items-center space-x-4 text-sm opacity-80 mt-2">
+                      <span>{viewingMedia.fileType === "video" ? "Video" : "Photo"}</span>
+                      {viewingMedia.fileSize && (
+                        <span>{(viewingMedia.fileSize / (1024 * 1024)).toFixed(1)} MB</span>
+                      )}
+                      {viewingMedia.isPrimary && (
+                        <span className="bg-yellow-500 px-2 py-1 rounded text-xs">Primary</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
