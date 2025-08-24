@@ -671,6 +671,16 @@ export default function Landing() {
                 </div>
 
                 <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Users className="h-4 w-4 text-cyan-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Daily Visitor Analytics</h4>
+                    <p className="text-gray-600 text-sm">See exactly how many customers visited your salon profile today, track daily trends and customer interest levels</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                     <IndianRupee className="h-4 w-4 text-purple-600" />
                   </div>
@@ -709,8 +719,9 @@ export default function Landing() {
                   <li><span className="font-medium text-purple-600">3.</span> Generate time slots automatically or manually for staff</li>
                   <li><span className="font-medium text-purple-600">4.</span> Receive bookings instantly with email notifications, manage appointments through dashboard</li>
                   <li><span className="font-medium text-purple-600">5.</span> Get automated booking confirmations and customer update emails</li>
-                  <li><span className="font-medium text-purple-600">6.</span> Provide services, collect remaining payment, build customer reviews</li>
-                  <li><span className="font-medium text-purple-600">7.</span> Track earnings, analyze business performance, grow customer base</li>
+                  <li><span className="font-medium text-purple-600">6.</span> Monitor daily visitor analytics to see how many customers viewed your profile</li>
+                  <li><span className="font-medium text-purple-600">7.</span> Provide services, collect remaining payment, build customer reviews</li>
+                  <li><span className="font-medium text-purple-600">8.</span> Track earnings, analyze business performance, grow customer base</li>
                 </ol>
               </div>
             </div>
