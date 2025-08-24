@@ -424,8 +424,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Featured salons endpoint (real data only)
   app.get('/api/salons/featured', async (req, res) => {
     try {
+      const { lat, lng, radius = '30' } = req.query;
+      
       // Fetch only approved salons for public browsing
-      const featuredSalons = await db.select()
+      const allFeaturedSalons = await db.select()
         .from(salons)
         .where(
           and(
@@ -436,10 +438,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
             )
           )
         )
-        .orderBy(desc(salons.averageRating), desc(salons.totalReviews))
-        .limit(6);
+        .orderBy(desc(salons.averageRating), desc(salons.totalReviews));
       
-      res.json(featuredSalons);
+      let featuredSalons = allFeaturedSalons;
+      
+      // If location is provided, filter by distance (30km default)
+      if (lat && lng && typeof lat === 'string' && typeof lng === 'string') {
+        const userLat = parseFloat(lat);
+        const userLng = parseFloat(lng);
+        const searchRadius = parseFloat(typeof radius === 'string' ? radius : '30');
+        
+        if (!isNaN(userLat) && !isNaN(userLng)) {
+          const salonsWithDistance = allFeaturedSalons
+            .filter(salon => salon.latitude && salon.longitude)
+            .map(salon => {
+              const salonLat = parseFloat(salon.latitude!);
+              const salonLng = parseFloat(salon.longitude!);
+              
+              // Calculate distance using Haversine formula
+              const R = 6371; // Earth's radius in kilometers
+              const dLat = (salonLat - userLat) * Math.PI / 180;
+              const dLng = (salonLng - userLng) * Math.PI / 180;
+              const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(userLat * Math.PI / 180) * Math.cos(salonLat * Math.PI / 180) * 
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              const distance = R * c;
+              
+              return { ...salon, distance };
+            })
+            .filter(salon => salon.distance <= searchRadius)
+            .sort((a, b) => a.distance - b.distance); // Sort by distance first
+          
+          featuredSalons = salonsWithDistance;
+        }
+      }
+      
+      // Limit to 6 salons
+      const limitedSalons = featuredSalons.slice(0, 6);
+      
+      res.json(limitedSalons);
     } catch (error) {
       console.error("Error fetching featured salons:", error);
       res.status(500).json({ message: "Failed to fetch featured salons" });

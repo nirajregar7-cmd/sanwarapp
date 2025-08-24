@@ -3,17 +3,77 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee, Gift } from "lucide-react";
+import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee, Gift, Navigation } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import SalonCard from "@/components/SalonCard";
 import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
   const { t } = useTranslation();
   const { isAuthenticated, user } = useAuth();
+  const { toast } = useToast();
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [locationPermissionAsked, setLocationPermissionAsked] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+
+  // Request location permission on component mount with a small delay for better UX
+  useEffect(() => {
+    if (!locationPermissionAsked) {
+      const timer = setTimeout(() => {
+        requestLocationPermission();
+      }, 2000); // Ask for location after 2 seconds for better user experience
+      return () => clearTimeout(timer);
+    }
+  }, [locationPermissionAsked]);
+
+  const requestLocationPermission = async () => {
+    setLocationPermissionAsked(true);
+    setIsGettingLocation(true);
+
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location Not Supported",
+        description: "Your browser doesn't support location services",
+        variant: "destructive",
+      });
+      setIsGettingLocation(false);
+      return;
+    }
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        });
+      });
+
+      const location = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+      
+      setUserLocation(location);
+      toast({
+        title: "Location Found",
+        description: "Now showing salons near you within 30km",
+      });
+    } catch (error) {
+      console.error('Error getting location:', error);
+      toast({
+        title: "Location Permission Denied",
+        description: "Please enable location access to find salons near you",
+        variant: "destructive",
+      });
+    }
+    setIsGettingLocation(false);
+  };
 
   // Handle refer & earn button clicks
   const handleReferEarnClick = (userType: string) => {
@@ -35,11 +95,15 @@ export default function Landing() {
     },
   });
 
-  // Fetch top-rated salons (real data only)
+  // Fetch top-rated salons (filtered by location if available)
   const { data: topSalons, isLoading: salonsLoading } = useQuery<Salon[]>({
-    queryKey: ["/api/salons/featured"],
+    queryKey: ["/api/salons/featured", userLocation?.lat, userLocation?.lng],
     queryFn: async () => {
-      const response = await fetch("/api/salons/featured");
+      let url = "/api/salons/featured";
+      if (userLocation) {
+        url += `?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=30`;
+      }
+      const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch salons");
       return response.json();
     },
@@ -95,21 +159,52 @@ export default function Landing() {
             </div>
           )}
           
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto bg-white/95 backdrop-blur-sm rounded-2xl p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 shadow-2xl border border-white/20">
-            <div className="flex-1 flex items-center px-3 sm:px-4 py-2 sm:py-0">
-              <MapPin className="text-gray-500 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
-              <Input 
-                type="text" 
-                placeholder="Find salon near me..." 
-                className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-500"
-              />
+          {/* Location Status & Search Bar */}
+          <div className="max-w-2xl mx-auto space-y-4">
+            {/* Location Status */}
+            <div className="text-center">
+              {isGettingLocation ? (
+                <div className="flex items-center justify-center text-white/90">
+                  <Navigation className="h-4 w-4 mr-2 animate-spin" />
+                  <span className="text-sm">Getting your location...</span>
+                </div>
+              ) : userLocation ? (
+                <div className="flex items-center justify-center text-white/90">
+                  <MapPin className="h-4 w-4 mr-2 text-green-300" />
+                  <span className="text-sm">Showing salons within 30km of your location</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={requestLocationPermission}
+                    className="bg-white/20 border-white/40 hover:bg-white/30 text-white"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Enable Location
+                  </Button>
+                  <span className="text-white/80 text-sm">to find salons near you</span>
+                </div>
+              )}
             </div>
-            <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 hover:from-purple-700 hover:to-blue-700 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300">
-              <Search className="h-4 w-4 mr-2" />
-              <span className="hidden xs:inline">{t('nav.find_salons')}</span>
-              <span className="xs:hidden">{t('search.find')}</span>
-            </Button>
+
+            {/* Search Bar */}
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 shadow-2xl border border-white/20">
+              <div className="flex-1 flex items-center px-3 sm:px-4 py-2 sm:py-0">
+                <MapPin className="text-gray-500 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
+                <Input 
+                  type="text" 
+                  placeholder={userLocation ? "Search salons near you..." : "Find salon near me..."} 
+                  className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-500"
+                />
+              </div>
+              <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 hover:from-purple-700 hover:to-blue-700 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300">
+                <Search className="h-4 w-4 mr-2" />
+                <span className="hidden xs:inline">{t('nav.find_salons')}</span>
+                <span className="xs:hidden">{t('search.find')}</span>
+              </Button>
+            </div>
           </div>
 
           {/* User Type Selection */}
@@ -311,10 +406,13 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              Top Rated Salons Near You
+              {userLocation ? "Top Rated Salons Near You" : "Top Rated Salons"}
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
-              Book instantly with verified partner salons offering premium beauty services near your location
+              {userLocation 
+                ? "Book instantly with verified partner salons within 30km of your location"
+                : "Book instantly with verified partner salons offering premium beauty services"
+              }
             </p>
           </div>
 
@@ -333,20 +431,37 @@ export default function Landing() {
               ))
             ) : topSalons && topSalons.length > 0 ? (
               topSalons.map((salon) => (
-                <SalonCard key={salon.id} salon={salon} />
+                <SalonCard key={salon.id} salon={salon as any} />
               ))
             ) : (
               // No salons found state
               <div className="col-span-full text-center py-12">
-                <Scissors className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Salons Yet</h3>
-                <p className="text-gray-700 mb-6">Be the first salon owner to join our platform!</p>
-                <Button asChild className="bg-primary hover:bg-primary/90">
-                  <Link href="/owner">
-                    <Scissors className="h-4 w-4 mr-2" />
-                    Register Your Salon
-                  </Link>
-                </Button>
+                <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {userLocation ? "No Salons Found Nearby" : "No Salons Yet"}
+                </h3>
+                <p className="text-gray-700 mb-6">
+                  {userLocation 
+                    ? "No salons found within 30km of your location. Try expanding your search or check back later."
+                    : "Be the first salon owner to join our platform!"
+                  }
+                </p>
+                {userLocation ? (
+                  <Button 
+                    onClick={() => setUserLocation(null)}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    View All Salons
+                  </Button>
+                ) : (
+                  <Button asChild className="bg-primary hover:bg-primary/90">
+                    <Link href="/owner">
+                      <Scissors className="h-4 w-4 mr-2" />
+                      Register Your Salon
+                    </Link>
+                  </Button>
+                )}
               </div>
             )}
           </div>

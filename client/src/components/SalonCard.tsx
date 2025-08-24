@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Salon, SalonOffer } from "@shared/schema";
 
 interface SalonCardProps {
-  salon: Salon;
+  salon: Salon & { distance?: number };
 }
 
 export default function SalonCard({ salon }: SalonCardProps) {
@@ -70,6 +70,11 @@ export default function SalonCard({ salon }: SalonCardProps) {
         <p className="text-gray-600 mb-3 line-clamp-2">
           <MapPin className="h-4 w-4 inline mr-1" />
           {salon.address}
+          {salon.distance && (
+            <span className="ml-2 text-sm text-blue-600 font-medium">
+              {salon.distance < 1 ? `${(salon.distance * 1000).toFixed(0)}m` : `${salon.distance.toFixed(1)}km`} away
+            </span>
+          )}
         </p>
         
         <div className="flex items-center mb-4">
