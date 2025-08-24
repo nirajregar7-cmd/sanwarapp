@@ -474,7 +474,7 @@ export default function MediaGallery() {
                   type="checkbox"
                   id="isPrimary"
                   name="isPrimary"
-                  defaultChecked={editingMedia.isPrimary}
+                  defaultChecked={editingMedia.isPrimary || false}
                   className="rounded"
                   data-testid="input-is-primary"
                 />

@@ -5026,6 +5026,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Get the file URL (normalize from upload URL)
           const fileUrl = objectStorageService.normalizeObjectEntityPath(uploadURL);
           
+          // Set ACL policy for the uploaded file to make it publicly accessible
+          try {
+            const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+              uploadURL,
+              {
+                owner: userId,
+                visibility: "public", // Media should be public for salon display
+              }
+            );
+            console.log('ACL policy set for media file:', objectPath);
+          } catch (aclError) {
+            console.error('Error setting ACL policy for media file:', aclError);
+            // Continue with upload even if ACL fails
+          }
+          
           // Save media record to database
           const [savedMedia] = await db.insert(salonMedia).values({
             salonId,
