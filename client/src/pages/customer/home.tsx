@@ -12,12 +12,35 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
 import SalonLikeButton from "@/components/SalonLikeButton";
 import OffersDisplayCard from "@/components/OffersDisplayCard";
+import LocationPermissionDialog from "@/components/LocationPermissionDialog";
+import { useLocation } from "@/contexts/LocationContext";
 
 export default function CustomerHome() {
   const { user } = useAuth();
   const { shouldShowOnboarding, onboardingSteps, completeOnboarding, skipOnboarding } = useOnboarding('customer');
+  const { 
+    locationPreference, 
+    showLocationDialog, 
+    setShowLocationDialog, 
+    requestLocationOnce 
+  } = useLocation();
+
+  // Fetch salons based on user's location preference
   const { data: salons, isLoading } = useQuery<Salon[]>({
-    queryKey: ["/api/salons/featured"],
+    queryKey: [
+      "/api/salons/featured",
+      locationPreference?.lat,
+      locationPreference?.lng,
+      locationPreference?.radius
+    ],
+    queryFn: async () => {
+      let url = "/api/salons/featured";
+      if (locationPreference) {
+        url += `?lat=${locationPreference.lat}&lng=${locationPreference.lng}&radius=${locationPreference.radius}`;
+      }
+      const response = await fetch(url);
+      return response.json();
+    }
   });
 
   const { data: offers, isLoading: isLoadingOffers } = useQuery({
@@ -29,6 +52,15 @@ export default function CustomerHome() {
     if (!offers || !Array.isArray(offers)) return [];
     const salonOffers = offers.filter((offer: any) => offer.salonId === salonId);
     return salonOffers;
+  };
+
+  // Handle location permission
+  const handleLocationAllow = async () => {
+    await requestLocationOnce();
+  };
+
+  const handleLocationDeny = () => {
+    setShowLocationDialog(false);
   };
 
   if (isLoading) {
@@ -246,6 +278,14 @@ export default function CustomerHome() {
           )}
         </div>
       </section>
+
+      {/* Location Permission Dialog */}
+      <LocationPermissionDialog
+        isOpen={showLocationDialog}
+        onClose={() => setShowLocationDialog(false)}
+        onAllow={handleLocationAllow}
+        onDeny={handleLocationDeny}
+      />
 
       {/* Onboarding Walkthrough */}
       {shouldShowOnboarding && (

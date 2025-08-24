@@ -9,6 +9,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { MobileInstallButton } from "@/components/MobileInstallButton";
 import { AppClerkProvider } from "@/lib/clerk-provider";
+import { LocationProvider } from "@/contexts/LocationContext";
 
 import Layout from "@/components/Layout";
 
@@ -441,12 +442,14 @@ function App() {
   return (
     <AppClerkProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Router />
-          <Toaster />
-          <InstallPrompt />
-          <MobileInstallButton />
-        </TooltipProvider>
+        <LocationProvider>
+          <TooltipProvider>
+            <Router />
+            <Toaster />
+            <InstallPrompt />
+            <MobileInstallButton />
+          </TooltipProvider>
+        </LocationProvider>
       </QueryClientProvider>
     </AppClerkProvider>
   );
