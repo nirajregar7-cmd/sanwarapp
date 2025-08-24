@@ -119,9 +119,9 @@ export default function SalonDetail() {
     enabled: !!salonId,
   });
 
-  // Fetch salon gallery
+  // Fetch salon media gallery
   const { data: gallery = [], isLoading: galleryLoading } = useQuery<any[]>({
-    queryKey: [`/api/salons/${salonId}/gallery`],
+    queryKey: [`/api/salons/${salonId}/media`],
     enabled: !!salonId,
   });
 
@@ -747,22 +747,38 @@ export default function SalonDetail() {
                   </div>
                 ) : gallery.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {gallery.map((image) => (
-                      <div key={image.id} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer">
-                        <img 
-                          src={image.imageUrl} 
-                          alt={image.title || "Gallery image"} 
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                        />
+                    {gallery.map((media) => (
+                      <div key={media.id} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer">
+                        {media.fileType === "video" ? (
+                          <video 
+                            src={media.fileUrl} 
+                            className="w-full h-full object-cover"
+                            controls={false}
+                            preload="metadata"
+                            onMouseEnter={(e) => e.currentTarget.play()}
+                            onMouseLeave={(e) => e.currentTarget.pause()}
+                          />
+                        ) : (
+                          <img 
+                            src={media.fileUrl} 
+                            alt={media.title || media.fileName || "Gallery image"} 
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          />
+                        )}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                             <Camera className="h-8 w-8 text-white" />
                           </div>
                         </div>
-                        {image.title && (
+                        {media.isPrimary && (
+                          <div className="absolute top-2 right-2">
+                            <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded">Primary</span>
+                          </div>
+                        )}
+                        {(media.title || media.category) && (
                           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
-                            <p className="text-white text-sm font-medium">{image.title}</p>
-                            <p className="text-white text-xs capitalize">{image.category}</p>
+                            {media.title && <p className="text-white text-sm font-medium">{media.title}</p>}
+                            {media.category && <p className="text-white text-xs capitalize">{media.category}</p>}
                           </div>
                         )}
                       </div>
