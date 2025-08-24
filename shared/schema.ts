@@ -283,6 +283,26 @@ export const salonGallery = pgTable("salon_gallery", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Salon media table for storing salon photos and videos (up to 50 files)
+export const salonMedia = pgTable("salon_media", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  fileUrl: varchar("file_url").notNull(),
+  fileName: varchar("file_name", { length: 255 }),
+  fileType: varchar("file_type", { enum: ["image", "video"] }).notNull(),
+  mimeType: varchar("mime_type", { length: 100 }), // e.g., "image/jpeg", "video/mp4"
+  fileSize: integer("file_size"), // in bytes
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  category: varchar("category", { length: 100 }), // e.g., "work", "staff", "interior", "services", "before_after"
+  tags: text("tags").array(), // searchable tags
+  order: integer("order").default(0), // for ordering media
+  isActive: boolean("is_active").default(true),
+  isPrimary: boolean("is_primary").default(false), // primary image for salon card
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Salon facilities table for storing salon amenities
 export const salonFacilities = pgTable("salon_facilities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1346,6 +1366,8 @@ export type SalonOwnerAccount = typeof salonOwnerAccounts.$inferSelect;
 export type InsertSalonOwnerAccount = typeof salonOwnerAccounts.$inferInsert;
 export type RevenueShare = typeof revenueShares.$inferSelect;
 export type SalonGallery = typeof salonGallery.$inferSelect;
+export type SalonMedia = typeof salonMedia.$inferSelect;
+export type InsertSalonMedia = typeof salonMedia.$inferInsert;
 export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;
 export type SalonFacility = typeof salonFacilities.$inferSelect;
 export type InsertSalonFacility = z.infer<typeof insertSalonFacilitySchema>;

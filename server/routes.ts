@@ -16,7 +16,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -4914,6 +4914,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting gallery image:", error);
       res.status(500).json({ message: "Failed to delete gallery image" });
+    }
+  });
+
+  // Salon Media Routes (Photos & Videos up to 50 files)
+  app.get("/api/salons/:salonId/media", async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const mediaList = await db.select()
+        .from(salonMedia)
+        .where(and(
+          eq(salonMedia.salonId, salonId),
+          eq(salonMedia.isActive, true)
+        ))
+        .orderBy(asc(salonMedia.order), desc(salonMedia.createdAt));
+      
+      res.json(mediaList);
+    } catch (error) {
+      console.error("Error fetching salon media:", error);
+      res.status(500).json({ message: "Failed to fetch salon media" });
+    }
+  });
+
+  app.post("/api/salons/media/upload", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.body;
+      
+      if (!salonId) {
+        return res.status(400).json({ message: "Salon ID is required" });
+      }
+      
+      // Verify salon ownership
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to upload media for this salon" });
+      }
+      
+      // Check current media count
+      const [{ count: currentCount }] = await db.select({ count: count() })
+        .from(salonMedia)
+        .where(and(
+          eq(salonMedia.salonId, salonId),
+          eq(salonMedia.isActive, true)
+        ));
+      
+      if (currentCount >= 50) {
+        return res.status(400).json({ message: "Maximum 50 media files allowed per salon" });
+      }
+      
+      // Handle multiple file uploads
+      const uploadedFiles = req.files || [];
+      const fileTypes = Array.isArray(req.body.fileTypes) ? req.body.fileTypes : [req.body.fileTypes];
+      
+      if (uploadedFiles.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+      
+      const objectStorageService = new ObjectStorageService();
+      const uploadResults = [];
+      
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const file = uploadedFiles[i];
+        const fileType = fileTypes[i] || "image";
+        
+        if (currentCount + i >= 50) {
+          break; // Stop if we've reached the limit
+        }
+        
+        try {
+          // Upload to object storage
+          const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+          
+          // Upload file to the presigned URL
+          const uploadResponse = await fetch(uploadURL, {
+            method: "PUT",
+            body: file.buffer,
+            headers: {
+              "Content-Type": file.mimetype
+            }
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error("Failed to upload file to storage");
+          }
+          
+          // Get the file URL (normalize from upload URL)
+          const fileUrl = objectStorageService.normalizeObjectEntityPath(uploadURL);
+          
+          // Save media record to database
+          const [savedMedia] = await db.insert(salonMedia).values({
+            salonId,
+            fileUrl,
+            fileName: file.originalname,
+            fileType,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+            order: currentCount + i
+          }).returning();
+          
+          uploadResults.push(savedMedia);
+        } catch (error) {
+          console.error(`Error uploading file ${file.originalname}:`, error);
+        }
+      }
+      
+      res.json({ 
+        message: `Successfully uploaded ${uploadResults.length} files`,
+        uploadedFiles: uploadResults
+      });
+    } catch (error) {
+      console.error("Error uploading salon media:", error);
+      res.status(500).json({ message: "Failed to upload media" });
+    }
+  });
+
+  app.put("/api/salons/media/:mediaId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { mediaId } = req.params;
+      const { title, description, category, isPrimary } = req.body;
+      
+      // Get media with salon info
+      const [media] = await db.select({
+        media: salonMedia,
+        salon: salons
+      })
+        .from(salonMedia)
+        .leftJoin(salons, eq(salonMedia.salonId, salons.id))
+        .where(eq(salonMedia.id, mediaId));
+      
+      if (!media) {
+        return res.status(404).json({ message: "Media not found" });
+      }
+      
+      if (!media.salon || media.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to edit this media" });
+      }
+      
+      // If setting as primary, remove primary from other media
+      if (isPrimary) {
+        await db.update(salonMedia)
+          .set({ isPrimary: false })
+          .where(and(
+            eq(salonMedia.salonId, media.media.salonId),
+            not(eq(salonMedia.id, mediaId))
+          ));
+      }
+      
+      const [updatedMedia] = await db.update(salonMedia)
+        .set({
+          title,
+          description,
+          category,
+          isPrimary,
+          updatedAt: new Date()
+        })
+        .where(eq(salonMedia.id, mediaId))
+        .returning();
+      
+      res.json(updatedMedia);
+    } catch (error) {
+      console.error("Error updating salon media:", error);
+      res.status(500).json({ message: "Failed to update media" });
+    }
+  });
+
+  app.delete("/api/salons/media/:mediaId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { mediaId } = req.params;
+      
+      // Get media with salon info
+      const [media] = await db.select({
+        media: salonMedia,
+        salon: salons
+      })
+        .from(salonMedia)
+        .leftJoin(salons, eq(salonMedia.salonId, salons.id))
+        .where(eq(salonMedia.id, mediaId));
+      
+      if (!media) {
+        return res.status(404).json({ message: "Media not found" });
+      }
+      
+      if (!media.salon || media.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this media" });
+      }
+      
+      // Soft delete the media
+      await db.update(salonMedia)
+        .set({ 
+          isActive: false,
+          updatedAt: new Date()
+        })
+        .where(eq(salonMedia.id, mediaId));
+      
+      res.json({ message: "Media deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting salon media:", error);
+      res.status(500).json({ message: "Failed to delete media" });
     }
   });
 

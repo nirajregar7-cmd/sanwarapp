@@ -40,6 +40,7 @@ import ReferEarn from "@/pages/owner/refer-earn";
 import WalkInBookings from "@/pages/salon-owner/walk-in-bookings";
 import ProductsFacilities from "@/pages/salon-owner/products-facilities";
 import EmergencyBookings from "@/pages/salon-owner/emergency-bookings";
+import MediaGallery from "@/pages/salon-owner/media-gallery";
 import NotFound from "@/pages/not-found";
 
 // Admin Pages
@@ -333,6 +334,11 @@ function Router() {
                   <Analytics />
                 </Layout>
               </Route>
+              <Route path="/shopkeeper/media-gallery">
+                <Layout>
+                  <MediaGallery />
+                </Layout>
+              </Route>
               
               {/* Legacy owner routes for backward compatibility */}
               <Route path="/owner/time-slots">
@@ -391,6 +397,11 @@ function Router() {
               <Route path="/owner/analytics">
                 <Layout>
                   <Analytics />
+                </Layout>
+              </Route>
+              <Route path="/owner/media-gallery">
+                <Layout>
+                  <MediaGallery />
                 </Layout>
               </Route>
             </>
