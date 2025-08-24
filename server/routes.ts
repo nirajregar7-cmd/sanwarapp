@@ -8700,6 +8700,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test email endpoint (for debugging only)
+  app.post('/api/test-email', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email address required" });
+      }
+      
+      const { sendEmail } = await import('./emailService');
+      
+      const testHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+                .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                .header { text-align: center; margin-bottom: 30px; }
+                .logo { color: #667eea; font-size: 24px; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="logo">✅ Sanwar Email Test</div>
+                </div>
+                <h2>Email System Working!</h2>
+                <p>This is a test email from the Sanwar platform to verify that email notifications are working correctly.</p>
+                <p><strong>Test Details:</strong></p>
+                <ul>
+                    <li>User ID: ${userId}</li>
+                    <li>Timestamp: ${new Date().toLocaleString()}</li>
+                    <li>Service: ${process.env.GMAIL_USER ? 'Gmail' : 'SendGrid'}</li>
+                </ul>
+                <p>If you received this email, the notification system is functioning properly!</p>
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 14px; text-align: center;">
+                    This is a test email from Sanwar Platform<br>
+                    Email service status: Active ✅
+                </p>
+            </div>
+        </body>
+        </html>
+      `;
+      
+      const emailSent = await sendEmail({
+        to: email,
+        subject: '✅ Sanwar Email Test - System Working',
+        html: testHtml,
+        from: 'noreply@sanwarhub.in'
+      });
+      
+      if (emailSent) {
+        res.json({ 
+          success: true, 
+          message: 'Test email sent successfully!',
+          service: process.env.GMAIL_USER ? 'Gmail' : 'SendGrid',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: 'Failed to send test email',
+          service: process.env.GMAIL_USER ? 'Gmail' : 'SendGrid'
+        });
+      }
+    } catch (error) {
+      console.error('Test email error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error sending test email',
+        error: error.message 
+      });
+    }
+  });
+
   // Register smart scheduling routes
   const { registerSmartSchedulingRoutes } = await import('./smart-scheduling-routes');
   registerSmartSchedulingRoutes(app);
