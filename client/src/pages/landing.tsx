@@ -529,6 +529,211 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Comprehensive Features Explanation Section */}
+      <section className="py-16 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Complete Platform Features
+            </h2>
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+              Everything you need to know about how Sanwar works for customers and salon owners
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            
+            {/* Customer Features */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">For Customers</h3>
+                <p className="text-gray-600">Everything you need for the perfect salon experience</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Search className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Discover Nearby Salons</h4>
+                    <p className="text-gray-600 text-sm">Find salons within 30km using GPS location, view detailed profiles, photos, and real customer reviews</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Calendar className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Real-Time Booking</h4>
+                    <p className="text-gray-600 text-sm">Book available time slots instantly, choose specific staff members, select services with clear pricing</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <IndianRupee className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Flexible Payments</h4>
+                    <p className="text-gray-600 text-sm">Pay small confirmation amount (₹50-100) to secure booking, pay remaining amount at salon after service</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Gift className="h-4 w-4 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Rewards & Referrals</h4>
+                    <p className="text-gray-600 text-sm">Earn money by referring friends, get exclusive offers, track your booking history and reviews</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Shield className="h-4 w-4 text-red-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Safe & Secure</h4>
+                    <p className="text-gray-600 text-sm">All salons are verified, secure payment processing, customer support available, easy rescheduling</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h5 className="font-semibold text-gray-900 mb-3">How Customers Use Sanwar:</h5>
+                <ol className="text-sm text-gray-600 space-y-2">
+                  <li><span className="font-medium text-blue-600">1.</span> Open app and allow location access to find nearby salons</li>
+                  <li><span className="font-medium text-blue-600">2.</span> Browse salon profiles, view photos, read reviews, compare prices</li>
+                  <li><span className="font-medium text-blue-600">3.</span> Select salon, choose services, pick preferred staff and time slot</li>
+                  <li><span className="font-medium text-blue-600">4.</span> Pay small confirmation amount online to secure your booking</li>
+                  <li><span className="font-medium text-blue-600">5.</span> Visit salon at booked time, enjoy service, pay remaining amount</li>
+                  <li><span className="font-medium text-blue-600">6.</span> Rate and review your experience, refer friends to earn rewards</li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Salon Owner Features */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Scissors className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">For Salon Owners</h3>
+                <p className="text-gray-600">Complete business management and growth tools</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Smartphone className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Digital Salon Profile</h4>
+                    <p className="text-gray-600 text-sm">Create attractive salon profile with photos/videos, service menu, pricing, staff details, working hours</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Clock className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Smart Slot Management</h4>
+                    <p className="text-gray-600 text-sm">Auto-generate time slots based on working hours, manage staff schedules, handle walk-in bookings</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Business Analytics</h4>
+                    <p className="text-gray-600 text-sm">Track bookings, earnings, customer analytics, staff performance, popular services and growth trends</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <IndianRupee className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Revenue Management</h4>
+                    <p className="text-gray-600 text-sm">Receive 80% of earnings (platform keeps 20%), automatic payment processing, detailed financial reports</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Gift className="h-4 w-4 text-orange-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Marketing Tools</h4>
+                    <p className="text-gray-600 text-sm">Create service-specific offers, manage promotional campaigns, referral programs, customer retention tools</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h5 className="font-semibold text-gray-900 mb-3">How Salon Owners Use Sanwar:</h5>
+                <ol className="text-sm text-gray-600 space-y-2">
+                  <li><span className="font-medium text-purple-600">1.</span> Register salon and create detailed business profile with photos</li>
+                  <li><span className="font-medium text-purple-600">2.</span> Add services, pricing, staff members and set working hours</li>
+                  <li><span className="font-medium text-purple-600">3.</span> Generate time slots automatically or manually for staff</li>
+                  <li><span className="font-medium text-purple-600">4.</span> Receive bookings instantly, manage appointments through dashboard</li>
+                  <li><span className="font-medium text-purple-600">5.</span> Provide services, collect remaining payment, build customer reviews</li>
+                  <li><span className="font-medium text-purple-600">6.</span> Track earnings, analyze business performance, grow customer base</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          {/* Key Benefits Section */}
+          <div className="mt-16 text-center">
+            <h3 className="text-2xl font-bold text-gray-900 mb-8">Why Choose Sanwar?</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-md">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="h-6 w-6 text-blue-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Instant Booking</h4>
+                <p className="text-gray-600 text-sm">Book appointments in seconds with real-time availability</p>
+              </div>
+              
+              <div className="bg-white rounded-xl p-6 shadow-md">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-6 w-6 text-green-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Verified Salons</h4>
+                <p className="text-gray-600 text-sm">All partner salons are verified for quality and safety</p>
+              </div>
+              
+              <div className="bg-white rounded-xl p-6 shadow-md">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <IndianRupee className="h-6 w-6 text-purple-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Fair Pricing</h4>
+                <p className="text-gray-600 text-sm">Transparent pricing with no hidden charges</p>
+              </div>
+              
+              <div className="bg-white rounded-xl p-6 shadow-md">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Smartphone className="h-6 w-6 text-orange-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Mobile First</h4>
+                <p className="text-gray-600 text-sm">Seamless experience on mobile and desktop</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Platform Features */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
