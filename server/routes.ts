@@ -1794,7 +1794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Create fund account if not exists (or use existing)
           let fundAccountId = bankDetails.fundAccountId;
           if (!fundAccountId) {
-            const fundAccountResult = await createSalonFundAccount(salonId, {
+            const fundAccountResult = await storage.createSalonFundAccount(salonId, {
               accountNumber: bankDetails.accountNumber,
               ifscCode: bankDetails.ifscCode,
               accountHolderName: bankDetails.accountHolderName
@@ -1812,11 +1812,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (fundAccountId) {
             // Process payout
-            const payoutResult = await processSalonPayout(
+            const payoutResult = await storage.processSalonPayout(
               fundAccountId,
               revenueShare.salonShare,
-              booking.id,
-              salon.name
+              booking.id
             );
             
             if (payoutResult.success) {
@@ -2488,7 +2487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Create fund account if not exists
           let fundAccountId = share.fundAccountId;
           if (!fundAccountId) {
-            const fundAccountResult = await createSalonFundAccount(share.salonId, {
+            const fundAccountResult = await storage.createSalonFundAccount(share.salonId, {
               accountNumber: share.accountNumber || "",
               ifscCode: share.ifscCode || "",
               accountHolderName: share.accountHolderName || ""
@@ -2506,11 +2505,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           if (fundAccountId) {
             // Process payout
-            const payoutResult = await processSalonPayout(
+            const payoutResult = await storage.processSalonPayout(
               fundAccountId,
               parseFloat(share.salonShare),
-              share.bookingId,
-              share.salonName
+              share.bookingId
             );
             
             if (payoutResult.success) {
@@ -2990,7 +2988,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send cancellation notification
       try {
-        const { sendBookingCancellationNotification } = await import('./email-notifications');
+        const { sendBookingCancellationNotification } = await import('./notifications');
         const notificationSent = await sendBookingCancellationNotification(bookingId);
         if (notificationSent) {
           console.log(`Booking cancellation email sent successfully for booking ${bookingId}`);

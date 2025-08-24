@@ -89,6 +89,7 @@ import { eq, and, gte, desc, asc, or, isNull, sql } from "drizzle-orm";
 export interface IStorage {
   // User operations (required for email/password and social auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserBySocialId(socialProvider: string, socialId: string): Promise<User | undefined>;
   getUserByClerkId(clerkId: string): Promise<User | undefined>;
@@ -150,6 +151,7 @@ export interface IStorage {
 
   // Referral operations
   getReferralByCode(referralCode: string): Promise<Referral | undefined>;
+  getReferralById(referralId: string): Promise<Referral | undefined>;
   createReferral(referral: InsertReferral): Promise<Referral>;
   completeReferral(referralId: string, bookingId: string): Promise<void>;
   generateUniqueReferralCode(): Promise<string>;
@@ -171,6 +173,7 @@ export interface IStorage {
   // Wallet operations
   getOrCreateWallet(customerId: string): Promise<Wallet>;
   addWalletCredit(customerId: string, amount: number, description: string, referenceId: string, referenceType: string): Promise<void>;
+  addWalletTransaction(customerId: string, amount: number, description: string, referenceId: string, referenceType: string): Promise<void>;
   
   // Salon likes operations
   toggleSalonLike(customerId: string, salonId: string): Promise<{ isLiked: boolean; likesCount: number }>;
@@ -259,6 +262,11 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -1075,6 +1083,11 @@ export class DatabaseStorage implements IStorage {
     return referral;
   }
 
+  async getReferralById(referralId: string): Promise<Referral | undefined> {
+    const [referral] = await db.select().from(referrals).where(eq(referrals.id, referralId));
+    return referral;
+  }
+
   async createReferral(referral: InsertReferral): Promise<Referral> {
     const [newReferral] = await db.insert(referrals).values(referral).returning();
     return newReferral;
@@ -1306,6 +1319,11 @@ export class DatabaseStorage implements IStorage {
       referenceId,
       referenceType: referenceType as any,
     });
+  }
+
+  async addWalletTransaction(customerId: string, amount: number, description: string, referenceId: string, referenceType: string): Promise<void> {
+    // This is an alias for addWalletCredit for backward compatibility
+    await this.addWalletCredit(customerId, amount, description, referenceId, referenceType);
   }
 
   // Salon likes operations
@@ -2213,6 +2231,19 @@ export class DatabaseStorage implements IStorage {
       staffName,
       message: `Generated ${slots.length} service-based slots with custom working hours and break time`
     };
+  }
+
+  // Payment processing functions (stubs for future implementation)
+  async createSalonFundAccount(salonId: string, bankDetails: any): Promise<any> {
+    // Placeholder implementation - would integrate with payment gateway
+    console.log(`Creating fund account for salon ${salonId}`, bankDetails);
+    return { success: true, fundAccountId: `fa_${Date.now()}` };
+  }
+
+  async processSalonPayout(salonId: string, amount: number, transferReference?: string): Promise<any> {
+    // Placeholder implementation - would integrate with payment gateway
+    console.log(`Processing payout for salon ${salonId}, amount: ${amount}, reference: ${transferReference}`);
+    return { success: true, transferId: `tr_${Date.now()}`, status: 'completed' };
   }
 
   // Access to db for the smart scheduling service
