@@ -396,7 +396,7 @@ export default function Landing() {
             >
               <Link href="/discover">
                 <MapPin className="h-5 w-5 mr-2" />
-                Find Salons Near Me
+                Discover Local Salons
               </Link>
             </Button>
           </div>

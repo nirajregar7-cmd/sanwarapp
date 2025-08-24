@@ -36,6 +36,7 @@ export default function LocationBasedSalonFilter({
     isSupported
   } = useGeolocation();
   const [hasRequestedOnce, setHasRequestedOnce] = useState(false);
+  const [tempRadius, setTempRadius] = useState(currentRadius);
 
   const handleLocationRequest = async () => {
     if (!hasRequestedOnce) {
@@ -50,6 +51,11 @@ export default function LocationBasedSalonFilter({
       onLocationChange(position);
     }
   }, [position, onLocationChange]);
+
+  // Update tempRadius when currentRadius changes
+  useEffect(() => {
+    setTempRadius(currentRadius);
+  }, [currentRadius]);
 
   const radiusOptions = [
     { value: 5, label: "5 km" },
@@ -155,26 +161,42 @@ export default function LocationBasedSalonFilter({
 
         {/* Radius Selector */}
         {position && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center space-x-2">
               <Filter className="h-4 w-4 text-gray-600" />
               <label className="text-sm font-medium text-gray-700">Search Radius</label>
             </div>
-            <Select
-              value={currentRadius.toString()}
-              onValueChange={(value) => onRadiusChange(parseInt(value))}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {radiusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value.toString()}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex space-x-2">
+              <Select
+                value={tempRadius.toString()}
+                onValueChange={(value) => setTempRadius(parseInt(value))}
+                data-testid="select-radius"
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {radiusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value.toString()}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={() => onRadiusChange(tempRadius)}
+                disabled={tempRadius === currentRadius}
+                className="bg-blue-600 hover:bg-blue-700"
+                data-testid="button-apply-radius"
+              >
+                Apply
+              </Button>
+            </div>
+            {tempRadius !== currentRadius && (
+              <p className="text-xs text-gray-500">
+                Click Apply to search within {tempRadius}km radius
+              </p>
+            )}
           </div>
         )}
 
