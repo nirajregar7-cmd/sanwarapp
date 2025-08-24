@@ -101,7 +101,7 @@ export default function Landing() {
               <MapPin className="text-gray-500 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
               <Input 
                 type="text" 
-                placeholder={t('search.placeholder')} 
+                placeholder="Find salon near me..." 
                 className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-500"
               />
             </div>
@@ -232,6 +232,48 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Local SEO Near Me Section */}
+      <section className="py-12 sm:py-16 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+              Best Salon Near Me
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
+              Find top-rated beauty salons near you. Instant booking, verified reviews, professional services.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {[
+              { title: "Salon Near Me", desc: "Discover verified salons in your neighborhood", icon: MapPin },
+              { title: "Haircut Near Me", desc: "Professional haircuts for men, women & kids", icon: Scissors },
+              { title: "Spa Near Me", desc: "Relaxing spa treatments and wellness services", icon: Star },
+              { title: "Bridal Makeup Near Me", desc: "Professional bridal makeup artists", icon: Users },
+              { title: "Facial Near Me", desc: "Professional skin care and facial treatments", icon: Shield },
+              { title: "Beauty Salon Near Me", desc: "Complete beauty services and treatments", icon: CheckCircle }
+            ].map((service, index) => (
+              <div key={index} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                    <service.icon className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">{service.title}</h3>
+                </div>
+                <p className="text-gray-600 text-sm">{service.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+              <MapPin className="h-5 w-5 mr-2" />
+              Find Salons Near Me
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Available Services Section */}
       <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -272,7 +314,7 @@ export default function Landing() {
               Top Rated Salons Near You
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
-              Book instantly with our partner salons offering premium services
+              Book instantly with verified partner salons offering premium beauty services near your location
             </p>
           </div>
 

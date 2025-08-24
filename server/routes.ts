@@ -27,6 +27,7 @@ import { calculateRevenueShare } from "@shared/revenue";
 import { sendPasswordResetOTP, generateOTP } from "./whatsapp";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import { setupSEORoutes } from "./seoRoutes";
 
 const scryptAsync = promisify(scrypt);
 
@@ -91,6 +92,9 @@ function generateTimeSlotsForDate(date: string, openingTime: string, closingTime
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+  
+  // Setup SEO routes for "near me" searches
+  setupSEORoutes(app);
   
   // Add Clerk middleware
   app.use(withClerkAuth);

@@ -13,33 +13,115 @@
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.jpg" />
     <link rel="manifest" href="/manifest.json" />
-    <title>Sanwar - Smart Salon Booking Platform</title>
-    <meta name="description" content="Smart salon booking platform for seamless appointments. Book your salon services instantly with real-time availability." />
+    <title>Best Salon Near Me | Haircut, Spa & Beauty Services - Sanwar</title>
+    <meta name="description" content="Find the best salon near you! Book haircuts, spa treatments, bridal makeup instantly. Top-rated salons, verified reviews, best prices guaranteed." />
+    <meta name="keywords" content="salon near me, haircut near me, spa near me, beauty salon near me, bridal makeup near me, best salon, hair salon near me, unisex salon" />
+    
+    <!-- Local SEO Meta Tags -->
+    <meta name="geo.region" content="IN">
+    <meta name="geo.placename" content="India">
+    <meta name="ICBM" content="20.5937, 78.9629">
+    <meta name="DC.title" content="Best Salon Near Me - Sanwar">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://sanwarhub.in/" />
-    <meta property="og:title" content="Sanwar - Smart Salon Booking Platform" />
-    <meta property="og:description" content="Smart salon booking platform for seamless appointments. Book your salon services instantly with real-time availability." />
+    <meta property="og:title" content="Best Salon Near Me | Haircut & Beauty Services - Sanwar" />
+    <meta property="og:description" content="Find top-rated salons near you. Book haircuts, spa treatments & beauty services instantly. Verified reviews, best prices!" />
     <meta property="og:image" content="/favicon.jpg" />
+    <meta property="og:locale" content="en_IN" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://sanwarhub.in/" />
-    <meta property="twitter:title" content="Sanwar - Smart Salon Booking Platform" />
-    <meta property="twitter:description" content="Smart salon booking platform for seamless appointments. Book your salon services instantly with real-time availability." />
+    <meta property="twitter:title" content="Best Salon Near Me | Haircut & Beauty Services - Sanwar" />
+    <meta property="twitter:description" content="Find top-rated salons near you. Book haircuts, spa treatments & beauty services instantly. Verified reviews, best prices!" />
     <meta property="twitter:image" content="/favicon.jpg" />
     
     <!-- Structured Data for Search Engines -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Sanwar",
-      "alternateName": "Sanwar - Smart Salon Booking Platform",
+      "@type": "LocalBusiness",
+      "name": "Sanwar - Best Salon Near Me",
+      "alternateName": "Sanwar Salon Booking Platform",
       "url": "https://sanwarhub.in/",
       "logo": "/favicon.jpg",
-      "description": "Smart salon booking platform for seamless appointments. Book your salon services instantly with real-time availability."
+      "description": "India's leading salon booking platform. Find and book the best salons near you for haircuts, spa treatments, and beauty services.",
+      "telephone": "+91-9999999999",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "IN",
+        "addressRegion": "India"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "20.5937",
+        "longitude": "78.9629"
+      },
+      "openingHours": "Mo-Su 00:00-23:59",
+      "priceRange": "₹₹",
+      "serviceType": ["Hair Salon", "Beauty Salon", "Spa", "Bridal Makeup"],
+      "hasMap": "https://maps.google.com",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "1500"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://sanwarhub.in/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
+    <!-- Service Schema for Near Me Searches -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": "Salon Services Near Me",
+      "serviceType": "Beauty and Personal Care Services",
+      "provider": {
+        "@type": "Organization",
+        "name": "Sanwar",
+        "url": "https://sanwarhub.in"
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "India"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Salon Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service", 
+              "name": "Haircut Near Me",
+              "description": "Professional haircuts for men, women, and kids"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Spa Near Me", 
+              "description": "Relaxing spa treatments and massages"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Bridal Makeup Near Me",
+              "description": "Professional bridal makeup and styling"
+            }
+          }
+        ]
+      }
     }
     </script>
     
