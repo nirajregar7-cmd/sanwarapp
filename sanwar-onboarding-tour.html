@@ -376,7 +376,15 @@
     <div class="demo-content">
         <h1>Welcome to Sanwar</h1>
         <p>Your smart salon booking platform</p>
-        <button class="start-tour-btn" onclick="startOnboardingTour()">Start Tour</button>
+        <button class="start-tour-btn" onclick="startOnboardingTour()">Start Tour (Demo)</button>
+        <br><br>
+        <button class="start-tour-btn" onclick="simulateSignup()" style="background: linear-gradient(135deg, #10b981, #059669);">
+            Simulate New User Signup
+        </button>
+        <br><br>
+        <button class="start-tour-btn" onclick="resetOnboardingStatus()" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+            Reset Onboarding Status
+        </button>
     </div>
 
     <!-- Onboarding Tour -->
@@ -615,9 +623,12 @@
 
         // Complete the onboarding tour
         function completeOnboarding() {
-            // Save completion status
-            localStorage.setItem('sanwar_onboarding_completed', 'true');
+            // Save completion status - this prevents it from showing again
+            localStorage.setItem('sanwar_onboarding_completed', 'completed');
             localStorage.setItem('sanwar_onboarding_completed_at', new Date().toISOString());
+            
+            // Clean up any signup flags
+            localStorage.removeItem('sanwar_just_signed_up');
             
             closeTour();
             
@@ -630,9 +641,12 @@
         // Skip the onboarding tour
         function skipOnboarding() {
             if (confirm('Are you sure you want to skip the tour? You can always restart it later.')) {
-                // Save skip status
+                // Save skip status - this also prevents it from showing again
                 localStorage.setItem('sanwar_onboarding_completed', 'skipped');
                 localStorage.setItem('sanwar_onboarding_skipped_at', new Date().toISOString());
+                
+                // Clean up any signup flags
+                localStorage.removeItem('sanwar_just_signed_up');
                 
                 closeTour();
             }
@@ -680,16 +694,54 @@
             }
         });
 
-        // Auto-start tour for new users (optional)
-        // Uncomment the lines below to automatically show tour for first-time visitors
-        /*
-        window.addEventListener('load', function() {
-            const hasSeenTour = localStorage.getItem('sanwar_onboarding_completed');
-            if (!hasSeenTour) {
-                setTimeout(startOnboardingTour, 2000); // Start tour after 2 seconds
+        // Auto-start tour for users who just signed up
+        function checkAndStartOnboarding() {
+            const hasCompletedOnboarding = localStorage.getItem('sanwar_onboarding_completed');
+            const justSignedUp = localStorage.getItem('sanwar_just_signed_up');
+            
+            // Only show if user just signed up AND hasn't completed onboarding
+            if (justSignedUp === 'true' && !hasCompletedOnboarding) {
+                // Remove the "just signed up" flag to prevent showing again
+                localStorage.removeItem('sanwar_just_signed_up');
+                
+                // Start tour after a brief delay
+                setTimeout(startOnboardingTour, 1500);
             }
-        });
-        */
+        }
+
+        // Call this function when the page loads
+        window.addEventListener('load', checkAndStartOnboarding);
+
+        // Function to call after user signup (integrate this into your signup flow)
+        function triggerOnboardingForNewUser() {
+            // Set flag that user just signed up
+            localStorage.setItem('sanwar_just_signed_up', 'true');
+            
+            // Start onboarding immediately or redirect to dashboard where it will auto-start
+            checkAndStartOnboarding();
+        }
+
+        // Demo functions for testing
+        function simulateSignup() {
+            // Simulate what happens after a user signs up
+            localStorage.setItem('sanwar_just_signed_up', 'true');
+            alert('✅ Signup simulated! The onboarding tour will now start automatically.');
+            
+            // Small delay to show the alert first
+            setTimeout(() => {
+                checkAndStartOnboarding();
+            }, 1000);
+        }
+
+        function resetOnboardingStatus() {
+            // Reset all onboarding related localStorage items
+            localStorage.removeItem('sanwar_onboarding_completed');
+            localStorage.removeItem('sanwar_onboarding_completed_at');
+            localStorage.removeItem('sanwar_onboarding_skipped_at');
+            localStorage.removeItem('sanwar_just_signed_up');
+            
+            alert('🔄 Onboarding status reset! You can now test the signup flow again.');
+        }
     </script>
 </body>
 </html>
