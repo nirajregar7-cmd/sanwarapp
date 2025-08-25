@@ -87,6 +87,15 @@ export default function AuthPage() {
         if (response.ok) {
           const data = await response.json();
           console.log("Registration successful:", data);
+          
+          // Clear any existing onboarding status for new users
+          localStorage.removeItem(`sanwar_onboarding_${userType}`);
+          localStorage.removeItem(`sanwar_onboarding_${userType}_completed_at`);
+          localStorage.removeItem(`sanwar_onboarding_${userType}_skipped_at`);
+          
+          // Mark that this is a fresh signup to trigger onboarding
+          localStorage.setItem(`sanwar_onboarding_${userType}_fresh_signup`, 'true');
+          
           navigate("/");
           window.location.reload();
         } else {

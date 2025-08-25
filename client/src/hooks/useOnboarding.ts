@@ -17,10 +17,18 @@ export function useOnboarding(userType: 'customer' | 'salon-owner' | 'brand-owne
   useEffect(() => {
     // Check if onboarding was already completed
     const onboardingStatus = localStorage.getItem(`sanwar_onboarding_${userType}`);
+    const freshSignup = localStorage.getItem(`sanwar_onboarding_${userType}_fresh_signup`);
     
-    console.log(`[Onboarding] Checking status for ${userType}:`, onboardingStatus);
+    console.log(`[Onboarding] Checking status for ${userType}:`, onboardingStatus, 'Fresh signup:', freshSignup);
     
-    if (!onboardingStatus || onboardingStatus === 'pending') {
+    // Show onboarding if: no status, pending status, OR fresh signup (new user)
+    if (!onboardingStatus || onboardingStatus === 'pending' || freshSignup === 'true') {
+      // Remove the fresh signup flag so it only triggers once
+      if (freshSignup === 'true') {
+        localStorage.removeItem(`sanwar_onboarding_${userType}_fresh_signup`);
+        console.log(`[Onboarding] Fresh signup detected, triggering onboarding for ${userType}`);
+      }
+      
       // Set appropriate steps based on user type
       const steps = getOnboardingSteps(userType);
       setOnboardingSteps(steps);
