@@ -54,6 +54,20 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// OTP table for salon owner authentication
+export const salonOwnerOtps = pgTable("salon_owner_otps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  otp: varchar("otp", { length: 6 }).notNull(),
+  type: varchar("type", { enum: ["registration", "login"] }).notNull(),
+  firstName: varchar("first_name"), // For registration flow
+  lastName: varchar("last_name"), // For registration flow
+  email: varchar("email"), // For registration flow
+  isVerified: boolean("is_verified").default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Salons table
 export const salons = pgTable("salons", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1550,3 +1564,13 @@ export const insertProfileVisitSchema = createInsertSchema(profileVisits).omit({
 
 export type ProfileVisit = typeof profileVisits.$inferSelect;
 export type InsertProfileVisit = z.infer<typeof insertProfileVisitSchema>;
+
+// Salon owner OTP schema and types
+export const insertSalonOwnerOtpSchema = createInsertSchema(salonOwnerOtps).omit({
+  id: true,
+  createdAt: true,
+  isVerified: true,
+});
+
+export type SalonOwnerOtp = typeof salonOwnerOtps.$inferSelect;
+export type InsertSalonOwnerOtp = z.infer<typeof insertSalonOwnerOtpSchema>;

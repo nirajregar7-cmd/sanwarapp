@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Eye, EyeOff, Users, Scissors, Gift, Check, X } from "lucide-react";
+import { Eye, EyeOff, Users, Scissors, Gift, Check, X, Smartphone } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import SalonOwnerOtpAuth from "@/components/SalonOwnerOtpAuth";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("signin");
   const [userType, setUserType] = useState<"customer" | "salon_owner" | "brand_owner">("customer");
+  const [showOtpAuth, setShowOtpAuth] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -147,6 +149,31 @@ export default function AuthPage() {
     }
   };
   
+  // Handle OTP auth success
+  const handleOtpAuthSuccess = () => {
+    navigate("/");
+    window.location.reload();
+  };
+
+  // Show OTP authentication for salon owners
+  if (showOtpAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 px-4">
+        <div className="max-w-md w-full">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">Welcome to Sanwar</h1>
+            <p className="text-white/90 text-lg">Your smart salon booking platform</p>
+          </div>
+          <SalonOwnerOtpAuth
+            onBack={() => setShowOtpAuth(false)}
+            onSuccess={handleOtpAuthSuccess}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 px-4">
       <div className="max-w-md w-full">
@@ -224,6 +251,38 @@ export default function AuthPage() {
                     </Label>
                   </div>
                 </RadioGroup>
+              </div>
+            )}
+
+            {/* OTP Option for Salon Owners */}
+            {((activeTab === "signup" && userType === "salon_owner") || activeTab === "signin") && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {activeTab === "signup" ? "Salon Owner Registration" : "Salon Owner Login"}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Quick & secure OTP verification
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => setShowOtpAuth(true)}
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/80 border-purple-300 text-purple-700 hover:bg-purple-50"
+                    data-testid="button-otp-auth"
+                  >
+                    Use OTP
+                  </Button>
+                </div>
+                <p className="text-xs text-purple-600 mt-2 bg-white/60 p-2 rounded text-center">
+                  ✨ Recommended for salon owners - No password needed!
+                </p>
               </div>
             )}
 

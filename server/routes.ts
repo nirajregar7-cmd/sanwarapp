@@ -17,7 +17,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -25,7 +25,7 @@ import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArr
 // All payment processing now handled by Cashfree
 import { createCashfreeOrder, verifyCashfreePayment, verifyCashfreeWebhookSignature } from "./cashfree-payment";
 import { calculateRevenueShare } from "@shared/revenue";
-import { sendPasswordResetOTP, generateOTP } from "./whatsapp";
+import { sendPasswordResetOTP, generateOTP, sendWhatsAppMessage } from "./whatsapp";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { setupSEORoutes } from "./seoRoutes";
@@ -8799,6 +8799,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Error sending test email',
         error: error.message 
       });
+    }
+  });
+
+  // Salon Owner OTP Authentication Endpoints
+  
+  // Send OTP for salon owner registration or login
+  app.post('/api/salon-owner/send-otp', async (req, res) => {
+    try {
+      const { phone, type, firstName, lastName, email } = req.body;
+      
+      // Validate required fields
+      if (!phone || !type) {
+        return res.status(400).json({ error: "Phone and type are required" });
+      }
+      
+      if (!['registration', 'login'].includes(type)) {
+        return res.status(400).json({ error: "Type must be 'registration' or 'login'" });
+      }
+      
+      // For registration, validate additional fields
+      if (type === 'registration') {
+        if (!firstName || !email) {
+          return res.status(400).json({ error: "First name and email are required for registration" });
+        }
+        
+        // Check if email already exists
+        const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+        if (existingUser.length > 0) {
+          return res.status(400).json({ error: "Email already registered" });
+        }
+      }
+      
+      // For login, check if user exists
+      if (type === 'login') {
+        const existingUser = await db.select().from(users)
+          .where(and(eq(users.phone, phone), eq(users.userType, 'salon_owner')))
+          .limit(1);
+        if (existingUser.length === 0) {
+          return res.status(400).json({ error: "No salon owner account found with this phone number" });
+        }
+      }
+      
+      // Generate OTP
+      const otp = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+      
+      // Save OTP to database
+      await db.insert(salonOwnerOtps).values({
+        phone,
+        otp,
+        type,
+        firstName: type === 'registration' ? firstName : undefined,
+        lastName: type === 'registration' ? lastName : undefined,
+        email: type === 'registration' ? email : undefined,
+        expiresAt,
+      });
+      
+      // Send OTP via SMS
+      const message = `Sanwar ${type === 'registration' ? 'Registration' : 'Login'} OTP: ${otp}. Valid for 10 minutes. Do not share this code. - Sanwar Team`;
+      const smsSent = await sendWhatsAppMessage({
+        to: phone,
+        body: message
+      });
+      
+      if (!smsSent) {
+        return res.status(500).json({ error: "Failed to send OTP. Please try again." });
+      }
+      
+      res.json({
+        message: `OTP sent successfully to ${phone}`,
+        expiresAt: expiresAt.toISOString()
+      });
+      
+    } catch (error) {
+      console.error("Error sending salon owner OTP:", error);
+      res.status(500).json({ error: "Failed to send OTP" });
+    }
+  });
+  
+  // Verify OTP and complete registration or login
+  app.post('/api/salon-owner/verify-otp', async (req: any, res) => {
+    try {
+      const { phone, otp, type } = req.body;
+      
+      // Validate required fields
+      if (!phone || !otp || !type) {
+        return res.status(400).json({ error: "Phone, OTP, and type are required" });
+      }
+      
+      // Find the OTP record
+      const [otpRecord] = await db.select().from(salonOwnerOtps)
+        .where(and(
+          eq(salonOwnerOtps.phone, phone),
+          eq(salonOwnerOtps.otp, otp),
+          eq(salonOwnerOtps.type, type),
+          eq(salonOwnerOtps.isVerified, false)
+        ))
+        .orderBy(desc(salonOwnerOtps.createdAt))
+        .limit(1);
+      
+      if (!otpRecord) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+      }
+      
+      // Check if OTP is expired
+      if (new Date() > otpRecord.expiresAt) {
+        return res.status(400).json({ error: "OTP has expired. Please request a new one." });
+      }
+      
+      // Mark OTP as verified
+      await db.update(salonOwnerOtps)
+        .set({ isVerified: true })
+        .where(eq(salonOwnerOtps.id, otpRecord.id));
+      
+      let user;
+      
+      if (type === 'registration') {
+        // Create new salon owner account
+        const [newUser] = await db.insert(users).values({
+          email: otpRecord.email!,
+          firstName: otpRecord.firstName!,
+          lastName: otpRecord.lastName || '',
+          phone: phone,
+          userType: 'salon_owner',
+          password: null, // OTP-based auth, no password
+        }).returning();
+        
+        user = newUser;
+        
+        // Send welcome email
+        sendWelcomeEmail(user.email!, user.firstName, 'salon_owner')
+          .then(success => {
+            if (success) {
+              console.log(`Welcome email sent successfully to ${user.email}`);
+            }
+          })
+          .catch(err => {
+            console.log(`Welcome email failed for ${user.email}:`, err);
+          });
+        
+      } else {
+        // Login existing user
+        const [existingUser] = await db.select().from(users)
+          .where(and(eq(users.phone, phone), eq(users.userType, 'salon_owner')))
+          .limit(1);
+        
+        user = existingUser;
+      }
+      
+      // Log the user in (set session)
+      req.login(user, (err: any) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ error: "Failed to log in user" });
+        }
+        
+        res.json({
+          message: type === 'registration' ? 'Registration successful!' : 'Login successful!',
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            userType: user.userType,
+            profileImageUrl: user.profileImageUrl,
+          }
+        });
+      });
+      
+    } catch (error) {
+      console.error("Error verifying salon owner OTP:", error);
+      res.status(500).json({ error: "Failed to verify OTP" });
     }
   });
 
