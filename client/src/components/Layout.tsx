@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus, MessageSquare, Package, Crown, Percent, Eye, Camera } from "lucide-react";
+import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus, MessageSquare, Package, Crown, Percent, Eye, Camera, Globe } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -391,6 +391,16 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                     </>
                   )}
+                  
+                  {/* Country Settings link - available for all authenticated users */}
+                  <Link 
+                    href="/country-settings" 
+                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Globe className="h-4 w-4 mr-3" />
+                    Regional Settings
+                  </Link>
                   
                   {/* Feedback link - available for all authenticated users */}
                   <Link 

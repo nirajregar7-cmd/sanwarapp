@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { useCountryConfig } from "@/hooks/useCountryConfig";
 
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { MobileInstallButton } from "@/components/MobileInstallButton";
@@ -29,6 +30,8 @@ import CustomerProfile from "@/pages/customer/customer-profile";
 import ReferEarnPage from "@/pages/customer/refer-earn";
 import SalonSearchPage from "@/pages/customer/salon-search";
 import FeedbackHelp from "@/pages/feedback-help";
+import CountryOnboarding from "@/pages/CountryOnboarding";
+import CountrySettings from "@/pages/CountrySettings";
 import OwnerDashboard from "@/pages/owner/dashboard";
 import TimeSlots from "@/pages/owner/time-slots";
 import TimeSlotManagement from "@/pages/owner/time-slot-management";
@@ -69,6 +72,7 @@ import Analytics from "@/pages/owner/analytics";
 
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { isConfigured } = useCountryConfig();
 
   if (isLoading) {
     return (
@@ -76,6 +80,11 @@ function Router() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Show country onboarding if not configured
+  if (!isConfigured) {
+    return <CountryOnboarding />;
   }
 
   return (
@@ -405,6 +414,13 @@ function Router() {
           <Route path="/notifications">
             <Layout>
               <NotificationSettingsPage />
+            </Layout>
+          </Route>
+
+          {/* Country settings route - available for all authenticated users */}
+          <Route path="/country-settings">
+            <Layout>
+              <CountrySettings />
             </Layout>
           </Route>
           

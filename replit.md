@@ -3,6 +3,15 @@
 ## Overview
 Sanwar is a smart salon booking platform that digitizes salon businesses and simplifies customer bookings. It functions as a comprehensive marketplace, offering real-time slot availability, clear pricing, and instant confirmations, inspired by robust booking systems like IRCTC. The platform aims to provide a seamless, end-to-end solution for the salon industry, enabling digital transformation and enhancing user experience for both salon owners and customers. Key capabilities include comprehensive salon management, intuitive booking and discovery, and integrated payment solutions with automatic revenue sharing.
 
+## Global Platform Features
+The platform now supports multiple countries with automatic regional configuration:
+- **Country Onboarding**: First-time users select their country for automatic setup
+- **Regional Configuration**: Automatic timezone, currency, payment gateway, and language setup based on country selection
+- **Supported Countries**: India, USA, UK, Germany, France, UAE, Canada, Australia, Spain, Singapore
+- **Payment Gateway Integration**: Cashfree for India, Stripe for international markets
+- **Multi-currency Support**: INR, USD, GBP, EUR, AED, CAD, AUD, SGD with proper symbols and formatting
+- **Localization**: Support for multiple languages including Hindi, English, German, French, Spanish, Arabic
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Shopkeeper prefers: Single simple slot generation method to avoid confusion.
