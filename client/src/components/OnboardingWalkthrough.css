@@ -95,7 +95,7 @@
 
 .onboarding-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #f97316, #facc15);
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
   border-radius: 2px;
   transition: width 0.3s ease;
   animation: shimmer 2s infinite;
@@ -152,14 +152,14 @@
 }
 
 .onboarding-primary-btn {
-  background: linear-gradient(135deg, #f97316, #facc15);
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: white;
   border: none;
 }
 
 .onboarding-primary-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
 }
 
 /* Dots Navigation */
@@ -179,7 +179,7 @@
 }
 
 .onboarding-dot.active {
-  background: #f97316;
+  background: #4f46e5;
   transform: scale(1.2);
 }
 
@@ -206,7 +206,7 @@
   left: -4px;
   right: -4px;
   bottom: -4px;
-  border: 2px solid #f97316;
+  border: 2px solid #4f46e5;
   border-radius: 12px;
   animation: highlight-border 2s infinite;
   pointer-events: none;
@@ -236,10 +236,10 @@
 
 @keyframes pulse-highlight {
   0%, 100% { 
-    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); 
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); 
   }
   50% { 
-    box-shadow: 0 0 0 10px rgba(249, 115, 22, 0.1); 
+    box-shadow: 0 0 0 10px rgba(79, 70, 229, 0.1); 
   }
 }
 
