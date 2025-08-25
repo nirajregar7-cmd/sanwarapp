@@ -68,6 +68,8 @@ export const salons = pgTable("salons", {
   // Location fields for map integration
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  // Country field for global filtering
+  country: varchar("country", { length: 2 }).default("IN"), // ISO country code (IN, US, GB, etc.)
   // Rating fields
   averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0"),
   totalReviews: integer("total_reviews").default(0),

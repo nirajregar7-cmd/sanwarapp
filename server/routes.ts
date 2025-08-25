@@ -445,7 +445,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Featured salons endpoint (real data only)
   app.get('/api/salons/featured', async (req, res) => {
     try {
-      const { lat, lng, radius = '30' } = req.query;
+      const { lat, lng, radius = '30', country = 'IN' } = req.query;
+      
+      // Build conditions array for query
+      let conditions = [
+        eq(salons.isActive, true),
+        or(
+          eq(salons.verificationStatus, 'approved'),
+          eq(salons.verificationStatus, 'pending') // Allow pending salons to show for now
+        )
+      ];
+
+      // Apply country filter
+      if (country && typeof country === 'string') {
+        conditions.push(eq(salons.country, country));
+      }
       
       // Fetch only approved salons for public browsing with their primary media
       const allFeaturedSalons = await db.select({
@@ -458,15 +472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eq(salonMedia.isActive, true),
           eq(salonMedia.isPrimary, true)
         ))
-        .where(
-          and(
-            eq(salons.isActive, true),
-            or(
-              eq(salons.verificationStatus, 'approved'),
-              eq(salons.verificationStatus, 'pending') // Allow pending salons to show for now
-            )
-          )
-        )
+        .where(and(...conditions))
         .orderBy(desc(salons.averageRating), desc(salons.totalReviews));
 
       // Transform salons with their primary media
@@ -559,7 +565,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         radius = '50', // Default 50km radius
         name,
         minRating = '0',
-        maxPrice = '10000'
+        maxPrice = '10000',
+        country = 'IN'
       } = req.query;
 
       let conditions = [
@@ -569,6 +576,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eq(salons.verificationStatus, 'pending') // Allow pending salons to show for now
         )
       ];
+      
+      // Apply country filter
+      if (country && typeof country === 'string') {
+        conditions.push(eq(salons.country, country));
+      }
       
       // Apply name filter
       if (name && typeof name === 'string') {

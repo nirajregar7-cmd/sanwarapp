@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { useCountryConfig } from "@/hooks/useCountryConfig";
 import SalonCard from "@/components/SalonCard";
 import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
 import { useState, useEffect } from "react";
@@ -20,6 +21,7 @@ export default function Landing() {
   const { t } = useTranslation();
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
+  const { countryConfig } = useCountryConfig();
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [searchRadius, setSearchRadius] = useState(30);
   
@@ -79,14 +81,19 @@ export default function Landing() {
     },
   });
 
-  // Fetch top-rated salons (filtered by location if available)
+  // Fetch top-rated salons (filtered by location and country if available)
   const { data: topSalons, isLoading: salonsLoading } = useQuery<Salon[]>({
-    queryKey: ["/api/salons/featured", userLocation?.lat, userLocation?.lng, searchRadius],
+    queryKey: ["/api/salons/featured", userLocation?.lat, userLocation?.lng, searchRadius, countryConfig.code],
     queryFn: async () => {
       let url = "/api/salons/featured";
+      const params = new URLSearchParams();
+      params.append('country', countryConfig.code);
       if (userLocation) {
-        url += `?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=${searchRadius}`;
+        params.append('lat', userLocation.lat.toString());
+        params.append('lng', userLocation.lng.toString());
+        params.append('radius', searchRadius.toString());
       }
+      url += `?${params.toString()}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch salons");
       return response.json();
