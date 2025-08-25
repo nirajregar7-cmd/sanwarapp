@@ -254,37 +254,6 @@ export default function AuthPage() {
               </div>
             )}
 
-            {/* OTP Option for Salon Owners */}
-            {((activeTab === "signup" && userType === "salon_owner") || activeTab === "signin") && (
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Smartphone className="h-5 w-5 text-purple-600" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {activeTab === "signup" ? "Salon Owner Registration" : "Salon Owner Login"}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        Quick & secure OTP verification
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    onClick={() => setShowOtpAuth(true)}
-                    variant="outline"
-                    size="sm"
-                    className="bg-white/80 border-purple-300 text-purple-700 hover:bg-purple-50"
-                    data-testid="button-otp-auth"
-                  >
-                    Use OTP
-                  </Button>
-                </div>
-                <p className="text-xs text-purple-600 mt-2 bg-white/60 p-2 rounded text-center">
-                  ✨ Recommended for salon owners - No password needed!
-                </p>
-              </div>
-            )}
 
             {/* Email/Password Form */}
             <div className="space-y-4">
