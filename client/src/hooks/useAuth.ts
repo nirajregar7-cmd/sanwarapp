@@ -37,12 +37,12 @@ export function useAuth() {
       return await res.json();
     },
     retry: false,
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 5 * 60 * 1000, // 5 minutes - increased caching
     refetchInterval: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    refetchOnReconnect: false,
-    gcTime: 5 * 60 * 1000, // 5 minutes cache time
+    refetchOnMount: false, // Don't refetch on mount, use cache first
+    refetchOnReconnect: true, // Only refetch on reconnect
+    gcTime: 15 * 60 * 1000, // 15 minutes cache time
     enabled: true,
   });
 

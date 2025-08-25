@@ -86,68 +86,78 @@ export default function SalonDetail() {
     }
   }, [salonId]);
 
-  // Fetch salon details
+  // Fetch salon details with optimized settings
   const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
     queryKey: [`/api/salons/${salonId}`],
     enabled: !!salonId,
     retry: 1,
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
+    refetchOnMount: false, // Use cache first
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
-  // Fetch salon services
+  // Fetch salon services - parallel loading
   const { data: services = [], isLoading: servicesLoading } = useQuery<Service[]>({
     queryKey: [`/api/salons/${salonId}/services`],
     enabled: !!salonId,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
-  // Fetch salon staff
+  // Fetch salon staff - parallel loading
   const { data: staff = [], isLoading: staffLoading } = useQuery<Staff[]>({
     queryKey: [`/api/salons/${salonId}/staff`],
     enabled: !!salonId,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
-  // Fetch staff slot counts (visible to all users, not just salon owners)
+  // Fetch staff slot counts - optimized refresh
   const { data: staffSlotCounts = {} } = useQuery<Record<string, number>>({
     queryKey: [`/api/salons/${salonId}/public-staff-slot-counts`],
     enabled: !!salonId,
-    refetchInterval: 30000, // Refresh every 30 seconds for live slot availability
+    refetchInterval: 60000, // Reduced to 60 seconds to improve performance
+    staleTime: 30 * 1000, // 30 seconds cache
   });
 
-  // Fetch salon reviews
+  // Fetch salon reviews - parallel loading
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
     queryKey: [`/api/salons/${salonId}/reviews`],
     enabled: !!salonId,
+    staleTime: 15 * 60 * 1000, // 15 minutes cache - reviews don't change often
   });
 
-  // Fetch salon media gallery
+  // Fetch salon media gallery - parallel loading
   const { data: gallery = [], isLoading: galleryLoading } = useQuery<any[]>({
     queryKey: [`/api/salons/${salonId}/media`],
     enabled: !!salonId,
+    staleTime: 30 * 60 * 1000, // 30 minutes cache - media doesn't change often
   });
 
-  // Fetch working hours
+  // Fetch working hours - parallel loading
   const { data: workingHours = [], isLoading: hoursLoading } = useQuery<WorkingHours[]>({
     queryKey: [`/api/salons/${salonId}/working-hours`],
     enabled: !!salonId,
+    staleTime: 60 * 60 * 1000, // 1 hour cache - working hours rarely change
   });
 
-  // Fetch salon facilities
+  // Fetch salon facilities - parallel loading
   const { data: facilities = [], isLoading: facilitiesLoading } = useQuery({
     queryKey: [`/api/salons/${salonId}/facilities`],
     enabled: !!salonId,
+    staleTime: 30 * 60 * 1000, // 30 minutes cache - facilities don't change often
   });
 
-  // Fetch salon products
+  // Fetch salon products - parallel loading
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: [`/api/salons/${salonId}/products`],
     enabled: !!salonId,
+    staleTime: 30 * 60 * 1000, // 30 minutes cache - products don't change often
   });
 
-  // Fetch salon offers
+  // Fetch salon offers - parallel loading
   const { data: offers = [], isLoading: offersLoading } = useQuery({
     queryKey: [`/api/salons/${salonId}/offers`],
     enabled: !!salonId,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache - offers change more frequently
   });
 
   // Fetch available time slots for selected date and staff (ignore service filter since slots are service-agnostic)
@@ -167,7 +177,7 @@ export default function SalonDetail() {
     },
   });
 
-  // Fetch salon like status for authenticated customers
+  // Fetch salon like status for authenticated customers - optimized
   const { data: likeStatus } = useQuery({
     queryKey: [`/api/salons/${salonId}/like-status`],
     enabled: !!salonId && !!isAuthenticated && user?.userType === 'customer',
@@ -176,6 +186,7 @@ export default function SalonDetail() {
       return await response.json();
     },
     retry: false,
+    staleTime: 2 * 60 * 1000, // 2 minutes cache - like status can change
   });
 
   // Update local state when like status is fetched

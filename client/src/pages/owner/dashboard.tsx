@@ -84,52 +84,60 @@ export default function OwnerDashboard() {
   const [salonLocation, setSalonLocation] = useState<{lat: number, lng: number} | null>(null);
   const [editMode, setEditMode] = useState(false);
 
-  // Fetch user's salon
+  // Fetch user's salon - optimized caching
   const { data: salon, isLoading: salonLoading } = useQuery<Salon>({
     queryKey: ['/api/owner/salon'],
     enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
-  // Fetch salon services
+  // Fetch salon services - parallel loading with caching
   const { data: services = [], isLoading: servicesLoading } = useQuery<Service[]>({
     queryKey: [`/api/salons/${salon?.id}/services`],
     enabled: !!salon?.id,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
-  // Fetch salon staff
+  // Fetch salon staff - parallel loading with caching
   const { data: staff = [], isLoading: staffLoading } = useQuery<Staff[]>({
     queryKey: [`/api/salons/${salon?.id}/staff`],
     enabled: !!salon?.id,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
-  // Fetch salon bookings
+  // Fetch salon bookings - optimized refresh
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery<BookingWithDetails[]>({
     queryKey: [`/api/owner/bookings`],
     enabled: !!salon?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes cache - bookings change more frequently
   });
 
-  // Fetch salon reviews
+  // Fetch salon reviews - long cache
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
     queryKey: [`/api/salons/${salon?.id}/reviews`],
     enabled: !!salon?.id,
+    staleTime: 15 * 60 * 1000, // 15 minutes cache - reviews don't change often
   });
 
-  // Fetch salon gallery
+  // Fetch salon gallery - long cache
   const { data: gallery = [], isLoading: galleryLoading } = useQuery<SalonGallery[]>({
     queryKey: [`/api/salons/${salon?.id}/gallery`],
     enabled: !!salon?.id,
+    staleTime: 30 * 60 * 1000, // 30 minutes cache - gallery doesn't change often
   });
 
-  // Fetch brand invitations
+  // Fetch brand invitations - optimized caching
   const { data: brandInvitationsData, isLoading: invitationsLoading } = useQuery<{sent: any[], received: any[]}>({
     queryKey: [`/api/brand-invitations/${user?.id}`],
     enabled: isAuthenticated && !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
-  // Fetch brand messages
+  // Fetch brand messages - optimized caching
   const { data: brandMessages = [], isLoading: messagesLoading } = useQuery<any[]>({
     queryKey: ['/api/owner/messages'],
     enabled: isAuthenticated && !!salon?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes cache - messages change more frequently
   });
 
   const brandInvitations = brandInvitationsData?.received || [];

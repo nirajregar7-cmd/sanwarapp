@@ -25,7 +25,7 @@ export default function CustomerHome() {
     requestLocationOnce 
   } = useLocation();
 
-  // Fetch salons based on user's location preference
+  // Fetch salons based on user's location preference - optimized
   const { data: salons, isLoading } = useQuery<Salon[]>({
     queryKey: [
       "/api/salons/featured",
@@ -40,11 +40,13 @@ export default function CustomerHome() {
       }
       const response = await fetch(url);
       return response.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
   const { data: offers, isLoading: isLoadingOffers } = useQuery({
     queryKey: ["/api/public/offers"],
+    staleTime: 10 * 60 * 1000, // 10 minutes cache - offers don't change frequently
   });
 
   // Create a function to get offers for a specific salon
