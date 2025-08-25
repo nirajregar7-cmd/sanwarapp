@@ -8913,7 +8913,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .set({ isVerified: true })
         .where(eq(salonOwnerOtps.id, otpRecord.id));
       
-      let user;
+      let user: any;
       
       if (type === 'registration') {
         // Create new salon owner account

@@ -85,10 +85,18 @@ export default function OwnerDashboard() {
   const [editMode, setEditMode] = useState(false);
 
   // Fetch user's salon - optimized caching
-  const { data: salon, isLoading: salonLoading } = useQuery<Salon>({
+  const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
     queryKey: ['/api/owner/salon'],
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes cache
+    retry: (failureCount, error: any) => {
+      // Don't retry on 404 (salon not found) - this is expected for new salon owners
+      if (error?.status === 404) {
+        return false;
+      }
+      // Retry up to 3 times for other errors
+      return failureCount < 3;
+    },
   });
 
   // Fetch salon services - parallel loading with caching
@@ -232,12 +240,15 @@ export default function OwnerDashboard() {
         // Keep confirmationAmount as is - server expects rupees, not paisa
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: salon ? "Salon Updated!" : "Salon Created!",
         description: salon ? "Your salon details have been updated." : "Your salon has been created successfully.",
       });
       setSalonDialogOpen(false);
+      // Clear the cache and immediately set the new salon data
+      queryClient.setQueryData(['/api/owner/salon'], data);
+      // Also invalidate to trigger a fresh fetch
       queryClient.invalidateQueries({ queryKey: ['/api/owner/salon'] });
     },
     onError: (error: Error) => {
