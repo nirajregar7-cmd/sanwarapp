@@ -11,7 +11,6 @@ import { Link } from 'wouter';
 import Map from '@/components/Map';
 import LocationSearch from '@/components/LocationSearch';
 import { useAuth } from '@/hooks/useAuth';
-import { useCountryConfig } from '@/hooks/useCountryConfig';
 import type { Salon } from '@shared/schema';
 
 interface SalonWithDistance extends Salon {
@@ -20,7 +19,6 @@ interface SalonWithDistance extends Salon {
 
 export default function SalonSearchPage() {
   const { user } = useAuth();
-  const { countryConfig } = useCountryConfig();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null);
   const [searchRadius, setSearchRadius] = useState([5]); // km
   const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'price'>('distance');
@@ -37,14 +35,11 @@ export default function SalonSearchPage() {
     enabled: !!user && user.userType === 'salon_owner',
   });
 
-  // Fetch salons based on location and country
+  // Fetch salons based on location
   const { data: salons, isLoading, refetch } = useQuery<SalonWithDistance[]>({
-    queryKey: ['/api/salons/search', userLocation, searchRadius[0], countryConfig.code],
+    queryKey: ['/api/salons/search', userLocation, searchRadius[0]],
     queryFn: async () => {
       const params = new URLSearchParams();
-      
-      // Always add country filter
-      params.append('country', countryConfig.code);
       
       if (userLocation) {
         params.append('lat', userLocation.lat.toString());
