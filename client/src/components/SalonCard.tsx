@@ -30,9 +30,14 @@ export default function SalonCard({ salon }: SalonCardProps) {
   });
 
   const getSalonStatus = () => {
+    // Get current time in IST (Indian Standard Time)
     const now = new Date();
-    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const currentTime = now.getHours() * 60 + now.getMinutes(); // minutes since midnight
+    const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const currentDay = istTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const currentTime = istTime.getHours() * 60 + istTime.getMinutes(); // minutes since midnight
+    
+    // Debug: log current IST time
+    console.log(`Current IST time: ${istTime.getHours()}:${istTime.getMinutes().toString().padStart(2, '0')} (${currentTime} minutes), Day: ${currentDay}`);
     
     // If no working hours data available, fall back to basic logic
     if (!workingHours || workingHours.length === 0) {
