@@ -23,30 +23,71 @@ export default function SalonCard({ salon }: SalonCardProps) {
     enabled: !!salon.id,
   });
 
-  const getSalonStatus = () => {
-    // For now, assume availability based on staff count and basic time logic
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    
-    // Basic salon hours (9 AM to 9 PM)
-    const isBusinessHours = currentHour >= 9 && currentHour < 21;
-    const isWeekend = currentDay === 0 || currentDay === 6;
-    
-    // Simple availability check - if salon has staff and it's business hours
-    const hasStaff = staff && staff.length > 0;
-    const isOpen = isBusinessHours && !isWeekend;
-    const hasAvailability = hasStaff && isOpen;
+  // Fetch salon working hours
+  const { data: workingHours = [] } = useQuery<any[]>({
+    queryKey: [`/api/salons/${salon.id}/working-hours`],
+    enabled: !!salon.id,
+  });
 
-    if (isOpen && hasAvailability) {
-      return { status: "Open now", isOpen: true, hasAvailability: true };
-    } else if (isOpen && !hasAvailability) {
-      return { status: "Open now", isOpen: true, hasAvailability: false };
-    } else if (!isBusinessHours) {
-      return { status: "Closed now", isOpen: false, hasAvailability: false };
-    } else {
-      return { status: "Closed now", isOpen: false, hasAvailability: false };
+  const getSalonStatus = () => {
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // minutes since midnight
+    
+    // If no working hours data available, fall back to basic logic
+    if (!workingHours || workingHours.length === 0) {
+      const isBusinessHours = currentTime >= 9 * 60 && currentTime < 21 * 60; // 9 AM to 9 PM
+      const hasStaff = staff && staff.length > 0;
+      const isOpen = isBusinessHours;
+      const hasAvailability = hasStaff && isOpen;
+      
+      return {
+        status: isOpen ? "Open now" : "Closed now",
+        isOpen,
+        hasAvailability
+      };
     }
+    
+    // Find working hours for current day
+    const todayWorkingHours = workingHours.find((wh: any) => wh.dayOfWeek === currentDay);
+    
+    if (!todayWorkingHours || !todayWorkingHours.isOpen) {
+      return { status: "Closed today", isOpen: false, hasAvailability: false };
+    }
+    
+    // Check if current time is within working hours
+    let isWithinHours = false;
+    
+    if (todayWorkingHours.openTime && todayWorkingHours.closeTime) {
+      const openTime = parseTimeToMinutes(todayWorkingHours.openTime);
+      const closeTime = parseTimeToMinutes(todayWorkingHours.closeTime);
+      
+      isWithinHours = currentTime >= openTime && currentTime <= closeTime;
+      
+      // Check if currently in break time
+      if (isWithinHours && todayWorkingHours.breakStartTime && todayWorkingHours.breakEndTime) {
+        const breakStart = parseTimeToMinutes(todayWorkingHours.breakStartTime);
+        const breakEnd = parseTimeToMinutes(todayWorkingHours.breakEndTime);
+        if (currentTime >= breakStart && currentTime <= breakEnd) {
+          isWithinHours = false; // Currently on break
+        }
+      }
+    }
+    
+    const hasStaff = staff && staff.length > 0;
+    const hasAvailability = hasStaff && isWithinHours;
+    
+    return {
+      status: isWithinHours ? "Open now" : "Closed now",
+      isOpen: isWithinHours,
+      hasAvailability
+    };
+  };
+  
+  // Helper function to parse time string (HH:MM) to minutes since midnight
+  const parseTimeToMinutes = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
   };
 
   const { status, isOpen, hasAvailability } = getSalonStatus();
