@@ -2275,8 +2275,8 @@ export default function OwnerDashboard() {
         />
       )}
 
-      {/* Promotional Popup - Shows after 4 seconds for salon owners */}
-      <PromoPopup userType="owner" />
+      {/* Promotional Popup - Shows both offers after 10 seconds */}
+      <PromoPopup />
     </div>
   );
 }

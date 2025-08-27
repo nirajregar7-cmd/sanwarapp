@@ -228,8 +228,8 @@ export default function CustomerHome() {
         />
       )}
 
-      {/* Promotional Popup - Shows after 4 seconds for customers */}
-      <PromoPopup userType="customer" />
+      {/* Promotional Popup - Shows both offers after 10 seconds */}
+      <PromoPopup />
     </div>
   );
 }

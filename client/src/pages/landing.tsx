@@ -853,8 +853,8 @@ export default function Landing() {
         </div>
       </footer>
 
-      {/* Promotional Popup - Shows after 4 seconds for visitors */}
-      <PromoPopup userType={isAuthenticated && user?.userType === 'owner' ? 'owner' : 'customer'} />
+      {/* Promotional Popup - Shows both offers after 10 seconds */}
+      <PromoPopup />
     </div>
   );
 }

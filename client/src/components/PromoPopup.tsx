@@ -5,11 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/hooks/useAuth";
 
 interface PromoPopupProps {
-  userType?: 'customer' | 'owner';
   onClose?: () => void;
 }
 
-export function PromoPopup({ userType, onClose }: PromoPopupProps) {
+export function PromoPopup({ onClose }: PromoPopupProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasShown, setHasShown] = useState(false);
   const { isAuthenticated } = useAuth();
@@ -23,7 +22,7 @@ export function PromoPopup({ userType, onClose }: PromoPopupProps) {
         setIsOpen(true);
         setHasShown(true);
         sessionStorage.setItem('sanwar_promo_shown', 'true');
-      }, 4000); // Show after 4 seconds
+      }, 10000); // Show after 10 seconds
 
       return () => clearTimeout(timer);
     }
@@ -161,11 +160,123 @@ export function PromoPopup({ userType, onClose }: PromoPopupProps) {
     </div>
   );
 
+  const CombinedOffer = () => (
+    <div className="text-center space-y-6">
+      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-green-600 bg-clip-text text-transparent">
+        🔥 Sanwar Special Offers 🔥
+      </DialogTitle>
+      
+      {/* Shopkeeper Offer - Top Priority */}
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border-2 border-purple-200">
+        <div className="flex justify-center mb-3">
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-full">
+            <Star className="h-6 w-6 text-white" />
+          </div>
+        </div>
+        
+        <h3 className="text-xl font-bold text-purple-800 mb-3">
+          ✨ For Salon Owners - Join Sanwar Today! ✨
+        </h3>
+        
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center gap-2 justify-center">
+            <Gift className="h-4 w-4 text-green-600" />
+            <span className="font-semibold text-green-800">🆓 Free to Join – No subscription, no setup cost</span>
+          </div>
+          
+          <div className="flex items-center gap-2 justify-center">
+            <Zap className="h-4 w-4 text-blue-600" />
+            <span className="font-semibold text-blue-800">💇 Keep 100% of your service fee</span>
+          </div>
+          
+          <div className="flex items-center gap-2 justify-center">
+            <Star className="h-4 w-4 text-orange-600" />
+            <span className="font-semibold text-orange-800">💰 Set your own Confirmation Fee (₹0–30)</span>
+          </div>
+          
+          <div className="flex items-center gap-2 justify-center">
+            <Users className="h-4 w-4 text-purple-600" />
+            <span className="font-semibold text-purple-800">⭐ Get 7 Days Free Featured Listing</span>
+          </div>
+        </div>
+        
+        <div className="mt-3 bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-lg text-white">
+          <p className="font-bold">👉 More Customers. More Control. More Profit.</p>
+        </div>
+        
+        <Button 
+          className="w-full mt-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold"
+          onClick={() => window.open('/auth/register?type=owner', '_blank')}
+          data-testid="button-join-shopkeeper"
+        >
+          Join as Salon Owner
+        </Button>
+      </div>
+
+      {/* Customer Offer - Secondary */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-xl border-2 border-green-200">
+        <div className="flex justify-center mb-3">
+          <div className="bg-gradient-to-r from-green-600 to-blue-600 p-2 rounded-full">
+            <Gift className="h-6 w-6 text-white" />
+          </div>
+        </div>
+        
+        <h3 className="text-xl font-bold text-green-800 mb-3">
+          🎉 For Customers - Special Rewards! 🎉
+        </h3>
+        
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center gap-2 justify-center">
+            <Users className="h-4 w-4 text-green-600" />
+            <span className="font-bold text-green-800">👥 Invite 5 friends → Your first booking is FREE</span>
+          </div>
+          
+          <div className="flex items-center gap-2 justify-center">
+            <Star className="h-4 w-4 text-orange-600" />
+            <span className="font-bold text-orange-800">🏪 Add 1 Salon → Earn ₹99 reward instantly</span>
+          </div>
+          
+          <div className="flex items-center gap-2 justify-center">
+            <Zap className="h-4 w-4 text-purple-600" />
+            <span className="font-bold text-purple-800">✨ More Referrals = More Rewards</span>
+          </div>
+        </div>
+        
+        <div className="mt-3 bg-gradient-to-r from-green-600 to-blue-600 p-3 rounded-lg text-white">
+          <p className="font-bold">👉 Book smarter. Save bigger. Only with SanwarHub 🚀</p>
+        </div>
+        
+        <Button 
+          className="w-full mt-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold"
+          onClick={() => {
+            if (isAuthenticated) {
+              window.location.href = '/customer/dashboard';
+            } else {
+              window.location.href = '/auth/register?type=customer';
+            }
+          }}
+          data-testid="button-claim-customer-offer"
+        >
+          {isAuthenticated ? 'Claim Customer Offers' : 'Join & Claim Offers'}
+        </Button>
+      </div>
+      
+      <Button 
+        variant="outline" 
+        onClick={handleClose}
+        className="w-full"
+        data-testid="button-close-promo"
+      >
+        Maybe Later
+      </Button>
+    </div>
+  );
+
   if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <Button
             variant="ghost"
@@ -178,7 +289,7 @@ export function PromoPopup({ userType, onClose }: PromoPopupProps) {
           </Button>
         </DialogHeader>
         
-        {userType === 'owner' ? <ShopkeeperOffer /> : <CustomerOffer />}
+        <CombinedOffer />
       </DialogContent>
     </Dialog>
   );
