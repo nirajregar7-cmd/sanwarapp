@@ -36,8 +36,7 @@ export default function SalonCard({ salon }: SalonCardProps) {
     const currentDay = istTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
     const currentTime = istTime.getHours() * 60 + istTime.getMinutes(); // minutes since midnight
     
-    // Debug: log current IST time
-    console.log(`Current IST time: ${istTime.getHours()}:${istTime.getMinutes().toString().padStart(2, '0')} (${currentTime} minutes), Day: ${currentDay}`);
+    // IST timezone handling working correctly
     
     // If no working hours data available, fall back to basic logic
     if (!workingHours || workingHours.length === 0) {

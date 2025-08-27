@@ -14,6 +14,7 @@ import SalonLikeButton from "@/components/SalonLikeButton";
 import OffersDisplayCard from "@/components/OffersDisplayCard";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import { useLocation } from "@/contexts/LocationContext";
+import SalonCard from "@/components/SalonCard";
 
 export default function CustomerHome() {
   const { user } = useAuth();
@@ -49,12 +50,7 @@ export default function CustomerHome() {
     staleTime: 10 * 60 * 1000, // 10 minutes cache - offers don't change frequently
   });
 
-  // Create a function to get offers for a specific salon
-  const getSalonOffers = (salonId: string) => {
-    if (!offers || !Array.isArray(offers)) return [];
-    const salonOffers = offers.filter((offer: any) => offer.salonId === salonId);
-    return salonOffers;
-  };
+
 
   // Handle location permission
   const handleLocationAllow = async () => {
@@ -181,98 +177,9 @@ export default function CustomerHome() {
 
           {salons && salons.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-              {salons.map((salon) => {
-                const salonOffers = getSalonOffers(salon.id);
-                const topOffer = salonOffers[0]; // Get the top priority offer
-                
-                return (
-                <Card key={salon.id} className="overflow-hidden hover:shadow-xl transition-shadow" data-testid="salon-card">
-                  <div className="relative">
-                    <img 
-                      src={salon.imageUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"} 
-                      alt={salon.name} 
-                      className="w-full h-48 object-cover"
-                    />
-                    
-                    {/* Offer Badge */}
-                    {topOffer && (
-                      <div className="absolute top-3 left-3 z-10">
-                        <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-                          {topOffer.discountType === "percentage" 
-                            ? `${topOffer.discountValue}% OFF` 
-                            : `₹${topOffer.discountValue} OFF`}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xl font-semibold text-gray-900">{salon.name}</h3>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center text-yellow-500">
-                          <Star className="h-4 w-4 fill-current" />
-                          <span className="ml-1 text-gray-600">
-                            {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
-                          </span>
-                        </div>
-                        {user?.userType === 'customer' && (
-                          <SalonLikeButton salonId={salon.id} />
-                        )}
-                      </div>
-                    </div>
-                    
-                    <p className="text-gray-600 mb-3 line-clamp-2">{salon.address}</p>
-                    
-                    <div className="flex items-center mb-4">
-                      <Clock className="h-4 w-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-600">Open now</span>
-                      <Badge variant="secondary" className="ml-auto bg-green-100 text-green-700">
-                        Available
-                      </Badge>
-                    </div>
-
-                    {/* Enhanced Offer Preview with Individual Service Discounts */}
-                    {topOffer && (
-                      <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Gift className="h-4 w-4 text-purple-600" />
-                          <span className="text-sm font-semibold text-purple-800">{topOffer.title}</span>
-                        </div>
-                        <p className="text-xs text-gray-600 line-clamp-1 mb-2">{topOffer.description}</p>
-                        
-                        {/* Service offers will be shown on detailed salon page */}
-                        
-                        {topOffer.isApplicableToAllServices && (
-                          <div className="mb-2">
-                            <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm">
-                              All Services {topOffer.discountType === "percentage" 
-                                ? `${topOffer.discountValue}% OFF` 
-                                : `₹${topOffer.discountValue} OFF`}
-                            </Badge>
-                          </div>
-                        )}
-                        
-                        {topOffer.promoCode && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-500">Code:</span>
-                            <Badge variant="outline" className="text-xs font-mono bg-white">
-                              {topOffer.promoCode}
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    <Link href={`/salon/${salon.id}`}>
-                      <Button className="w-full bg-primary hover:bg-primary/90">
-                        View Details & Book
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-                );
-              })}
+              {salons.map((salon) => (
+                <SalonCard key={salon.id} salon={salon} />
+              ))}
             </div>
           ) : (
             <div className="text-center py-12">
