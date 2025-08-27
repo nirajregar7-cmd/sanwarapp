@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import LocationBasedSalonFilter from "@/components/LocationBasedSalonFilter";
 import { useLocation } from "@/contexts/LocationContext";
+import { PromoPopup } from "@/components/PromoPopup";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -851,6 +852,9 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      {/* Promotional Popup - Shows after 4 seconds for visitors */}
+      <PromoPopup userType={isAuthenticated && user?.userType === 'owner' ? 'owner' : 'customer'} />
     </div>
   );
 }

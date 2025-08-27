@@ -29,6 +29,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
 import { apiRequest } from "@/lib/queryClient";
+import { PromoPopup } from "@/components/PromoPopup";
 
 const salonSchema = z.object({
   name: z.string().min(1, "Salon name is required"),
@@ -2273,6 +2274,9 @@ export default function OwnerDashboard() {
           onSkip={skipOnboarding}
         />
       )}
+
+      {/* Promotional Popup - Shows after 4 seconds for salon owners */}
+      <PromoPopup userType="owner" />
     </div>
   );
 }
