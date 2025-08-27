@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Clock, MapPin, Percent } from "lucide-react";
+import { Star, Clock, MapPin, Percent, CheckCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Salon, SalonOffer } from "@shared/schema";
 
@@ -17,15 +17,61 @@ export default function SalonCard({ salon }: SalonCardProps) {
     enabled: !!salon.id,
   });
 
-  const getAvailabilityStatus = () => {
-    // In a real app, you'd check actual availability
-    const isOpen = true; // Simplified for now
-    return isOpen ? "Available Now" : "Busy";
+  // Fetch salon staff to determine availability
+  const { data: staff = [] } = useQuery<any[]>({
+    queryKey: [`/api/salons/${salon.id}/staff`],
+    enabled: !!salon.id,
+  });
+
+  const getSalonStatus = () => {
+    // For now, assume availability based on staff count and basic time logic
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    // Basic salon hours (9 AM to 9 PM)
+    const isBusinessHours = currentHour >= 9 && currentHour < 21;
+    const isWeekend = currentDay === 0 || currentDay === 6;
+    
+    // Simple availability check - if salon has staff and it's business hours
+    const hasStaff = staff && staff.length > 0;
+    const isOpen = isBusinessHours && !isWeekend;
+    const hasAvailability = hasStaff && isOpen;
+
+    if (isOpen && hasAvailability) {
+      return { status: "Open now", isOpen: true, hasAvailability: true };
+    } else if (isOpen && !hasAvailability) {
+      return { status: "Open now", isOpen: true, hasAvailability: false };
+    } else if (!isBusinessHours) {
+      return { status: "Closed now", isOpen: false, hasAvailability: false };
+    } else {
+      return { status: "Closed now", isOpen: false, hasAvailability: false };
+    }
   };
 
-  const getAvailabilityColor = () => {
-    const status = getAvailabilityStatus();
-    return status === "Available Now" ? "bg-accent text-white" : "bg-orange-500 text-white";
+  const { status, isOpen, hasAvailability } = getSalonStatus();
+
+  const getStatusColor = () => {
+    if (isOpen && hasAvailability) {
+      return "text-green-600";
+    } else if (isOpen) {
+      return "text-orange-600";
+    } else {
+      return "text-red-600";
+    }
+  };
+
+  const getAvailabilityBadgeColor = () => {
+    if (hasAvailability) {
+      return "bg-green-500 text-white";
+    } else {
+      return "bg-red-500 text-white";
+    }
+  };
+
+  // Format confirmation amount from paise to rupees
+  const formatConfirmationFee = (amountInPaise: number) => {
+    return `₹${(amountInPaise / 100).toFixed(0)}`;
   };
 
   // Get the best offer to display
@@ -77,12 +123,25 @@ export default function SalonCard({ salon }: SalonCardProps) {
           )}
         </p>
         
-        <div className="flex items-center mb-4">
-          <Clock className="h-4 w-4 text-gray-400 mr-2" />
-          <span className="text-sm text-gray-600">Open now</span>
-          <Badge className={`ml-auto ${getAvailabilityColor()}`}>
-            {getAvailabilityStatus()}
-          </Badge>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 text-gray-400 mr-2" />
+            <span className={`text-sm font-medium ${getStatusColor()}`}>{status}</span>
+          </div>
+          {hasAvailability && (
+            <Badge className={getAvailabilityBadgeColor()}>
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Available now
+            </Badge>
+          )}
+        </div>
+
+        {/* Confirmation Fee Display */}
+        <div className="flex items-center justify-between mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-sm font-medium text-blue-900">Confirmation Fee:</span>
+          <span className="text-sm font-bold text-blue-700">
+            {formatConfirmationFee(salon.confirmationAmount || 300)}
+          </span>
         </div>
         
         {/* Services Preview - would need to fetch services for each salon */}
