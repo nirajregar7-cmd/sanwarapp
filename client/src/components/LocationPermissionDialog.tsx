@@ -107,12 +107,12 @@ export default function LocationPermissionDialog({
               disabled={isRequesting}
               className="flex-1"
             >
-              Not Now
+              Show All India Salons
             </Button>
           </div>
 
           <p className="text-xs text-gray-500 text-center">
-            You can change this setting anytime in your browser preferences.
+            Choosing "Show All India Salons" will display salons across the country. You can change location settings anytime.
           </p>
         </div>
       </DialogContent>

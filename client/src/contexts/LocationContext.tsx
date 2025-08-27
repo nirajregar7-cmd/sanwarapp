@@ -34,10 +34,12 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const savedPreference = localStorage.getItem('sanwar_location_preference');
     const savedPermissionAsked = localStorage.getItem('sanwar_permission_asked');
+    const savedPermissionDenied = localStorage.getItem('sanwar_permission_denied');
     
     console.log('LocationContext: Loading from localStorage', {
       savedPreference: !!savedPreference,
       savedPermissionAsked,
+      savedPermissionDenied,
       isAuthenticated,
       userType: user?.userType
     });
@@ -52,9 +54,10 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       }
     }
     
-    if (savedPermissionAsked === 'true') {
+    // If permission was asked (either granted or denied), don't ask again
+    if (savedPermissionAsked === 'true' || savedPermissionDenied === 'true') {
       setHasAskedPermission(true);
-      console.log('LocationContext: Permission already asked, not showing dialog');
+      console.log('LocationContext: Permission already asked/denied, not showing dialog');
     }
   }, [isAuthenticated, user]);
 

@@ -36,9 +36,17 @@ export default function CustomerHome() {
     ],
     queryFn: async () => {
       let url = "/api/salons/featured";
-      if (locationPreference) {
+      const permissionDenied = localStorage.getItem('sanwar_permission_denied') === 'true';
+      
+      // If user denied location permission, show all salons across India
+      // If user has location preference, use it for radius filtering
+      if (locationPreference && !permissionDenied) {
         url += `?lat=${locationPreference.lat}&lng=${locationPreference.lng}&radius=${locationPreference.radius}`;
+      } else if (permissionDenied) {
+        // Show all salons across India without location filter
+        console.log('Showing all salons across India (location permission denied)');
       }
+      
       const response = await fetch(url);
       return response.json();
     },
@@ -58,10 +66,14 @@ export default function CustomerHome() {
   };
 
   const handleLocationDeny = () => {
-    console.log('User denied location permission');
-    // Mark as asked and close dialog
+    console.log('User denied location permission - will show all India salons');
+    // Mark as asked and close dialog permanently
     localStorage.setItem('sanwar_permission_asked', 'true');
+    localStorage.setItem('sanwar_permission_denied', 'true');
     setShowLocationDialog(false);
+    
+    // Force re-fetch to show all salons across India
+    window.location.reload();
   };
 
   // Debug function to clear location preferences (remove in production)
@@ -171,8 +183,17 @@ export default function CustomerHome() {
       <section className="py-8 sm:py-12 lg:py-16" data-testid="featured-salons">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">Featured Salons Near You</h2>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 px-2">Discover the best salon services in your area</p>
+            {locationPreference && localStorage.getItem('sanwar_permission_denied') !== 'true' ? (
+              <>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">Featured Salons Near You</h2>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 px-2">Discover the best salon services in your area</p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">Featured Salons Across India</h2>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 px-2">Discover the best salon services across India</p>
+              </>
+            )}
           </div>
 
           {salons && salons.length > 0 ? (
