@@ -206,7 +206,7 @@ export function PromoPopup({ onClose }: PromoPopupProps) {
         
         <Button 
           className="w-full mt-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold"
-          onClick={() => window.open('/auth/register?type=owner', '_blank')}
+          onClick={() => window.location.href = '/auth'}
           data-testid="button-join-shopkeeper"
         >
           Join as Salon Owner
@@ -250,9 +250,9 @@ export function PromoPopup({ onClose }: PromoPopupProps) {
           className="w-full mt-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold"
           onClick={() => {
             if (isAuthenticated) {
-              window.location.href = '/customer/dashboard';
+              window.location.href = '/customer/home';
             } else {
-              window.location.href = '/auth/register?type=customer';
+              window.location.href = '/auth';
             }
           }}
           data-testid="button-claim-customer-offer"
