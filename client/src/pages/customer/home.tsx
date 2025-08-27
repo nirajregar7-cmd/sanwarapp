@@ -23,7 +23,8 @@ export default function CustomerHome() {
     locationPreference, 
     showLocationDialog, 
     setShowLocationDialog, 
-    requestLocationOnce 
+    requestLocationOnce,
+    denyLocationPermission
   } = useLocation();
 
   // Fetch salons based on user's location preference - optimized
@@ -66,12 +67,7 @@ export default function CustomerHome() {
   };
 
   const handleLocationDeny = () => {
-    console.log('User denied location permission - will show all India salons');
-    // Mark as asked and close dialog permanently
-    localStorage.setItem('sanwar_permission_asked', 'true');
-    localStorage.setItem('sanwar_permission_denied', 'true');
-    setShowLocationDialog(false);
-    
+    denyLocationPermission();
     // Force re-fetch to show all salons across India
     window.location.reload();
   };
