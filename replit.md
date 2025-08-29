@@ -16,8 +16,8 @@ The platform now supports multiple countries with automatic regional configurati
 Preferred communication style: Simple, everyday language.
 Shopkeeper prefers: Single simple slot generation method to avoid confusion.
 Individual staff-based slot generation: Implemented with real-time slot counts and staff-specific booking system.
-Location-based discovery: Implemented comprehensive geolocation features with automatic permission requests and 30km radius filtering.
-Promotional offers: Combined popup showing both shopkeeper (top) and customer offers together, appears after 10 seconds, once per session.
+Location-based discovery: Implemented comprehensive geolocation features with automatic permission requests and 30km radius filtering. Fixed location denial handling - when users deny permission, the app respects this choice permanently and shows all India salons without repeated requests.
+Promotional offers: Combined popup showing both shopkeeper (top) and customer offers together, appears after 10 seconds, once per session. Fixed button redirects to use correct `/auth` page.
 
 ## System Architecture
 
