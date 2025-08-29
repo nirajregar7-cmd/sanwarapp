@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee, Gift, Navigation } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,7 @@ export default function Landing() {
   const { t } = useTranslation();
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [searchRadius, setSearchRadius] = useState(30);
   
@@ -54,6 +55,10 @@ export default function Landing() {
 
   const handleLocationDeny = () => {
     denyLocationPermission();
+    // Clear any existing location data to force showing all salons
+    setUserLocation(null);
+    // Invalidate and refetch salons query to show all India salons
+    queryClient.invalidateQueries({ queryKey: ["/api/salons/featured"] });
     toast({
       title: "Location Disabled",
       description: "Showing all salons across India. You can enable location access anytime.",
@@ -80,14 +85,32 @@ export default function Landing() {
     },
   });
 
-  // Fetch top-rated salons (filtered by location if available)
+  // Fetch top-rated salons (filtered by location if available, all India if denied)
   const { data: topSalons, isLoading: salonsLoading } = useQuery<Salon[]>({
-    queryKey: ["/api/salons/featured", userLocation?.lat, userLocation?.lng, searchRadius],
+    queryKey: [
+      "/api/salons/featured", 
+      userLocation?.lat, 
+      userLocation?.lng, 
+      searchRadius,
+      localStorage.getItem('sanwar_permission_denied')
+    ],
     queryFn: async () => {
       let url = "/api/salons/featured";
-      if (userLocation) {
+      const permissionDenied = localStorage.getItem('sanwar_permission_denied') === 'true';
+      
+      // If user denied location permission, show all salons across India
+      // If user has location, use it for radius filtering
+      if (userLocation && !permissionDenied) {
         url += `?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=${searchRadius}`;
+        console.log('Fetching salons within radius:', searchRadius);
+      } else if (permissionDenied) {
+        // Show all salons across India without location filter
+        console.log('Location permission denied - showing all salons across India');
+      } else {
+        // No location and no denial - show all salons (default)
+        console.log('No location available - showing all salons');
       }
+      
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch salons");
       return response.json();
@@ -418,13 +441,20 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              {userLocation ? "Top Rated Salons Near You" : "Top Rated Salons"}
+              {(() => {
+                const permissionDenied = localStorage.getItem('sanwar_permission_denied') === 'true';
+                if (permissionDenied) return "Top Rated Salons Across India";
+                return userLocation ? "Top Rated Salons Near You" : "Top Rated Salons";
+              })()}
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
-              {userLocation 
-                ? "Book instantly with verified partner salons within 30km of your location"
-                : "Book instantly with verified partner salons offering premium beauty services"
-              }
+              {(() => {
+                const permissionDenied = localStorage.getItem('sanwar_permission_denied') === 'true';
+                if (permissionDenied) return "Discover the best salon services from verified partners across India";
+                return userLocation 
+                  ? "Book instantly with verified partner salons within 30km of your location"
+                  : "Book instantly with verified partner salons offering premium beauty services";
+              })()}
             </p>
           </div>
 
