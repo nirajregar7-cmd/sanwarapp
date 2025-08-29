@@ -29,6 +29,7 @@ export default function Landing() {
     showLocationDialog, 
     setShowLocationDialog, 
     requestLocationOnce,
+    denyLocationPermission,
     locationPreference 
   } = useLocation();
 
@@ -52,11 +53,10 @@ export default function Landing() {
   };
 
   const handleLocationDeny = () => {
-    localStorage.setItem('sanwar_permission_asked', 'true');
-    setShowLocationDialog(false);
+    denyLocationPermission();
     toast({
       title: "Location Disabled",
-      description: "You can enable location access anytime to find nearby salons",
+      description: "Showing all salons across India. You can enable location access anytime.",
     });
   };
 

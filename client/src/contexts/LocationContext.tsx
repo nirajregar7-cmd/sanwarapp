@@ -65,13 +65,15 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   // Show location dialog for first-time visitors (not authenticated users)
   useEffect(() => {
     const permissionDenied = localStorage.getItem('sanwar_permission_denied') === 'true';
+    const permissionAsked = localStorage.getItem('sanwar_permission_asked') === 'true';
     
     console.log('LocationContext: Checking if should show dialog', {
       isAuthenticated,
       hasAskedPermission,
       hasLocationPreference: !!locationPreference,
       showLocationDialog,
-      permissionDenied
+      permissionDenied,
+      permissionAsked
     });
     
     // Only show for first-time visitors who haven't been asked permission before
@@ -81,21 +83,25 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       !hasAskedPermission && 
       !locationPreference &&
       !showLocationDialog && // Prevent showing multiple times
-      !permissionDenied // Don't show if user previously denied
+      !permissionDenied && // Don't show if user previously denied
+      !permissionAsked // Don't show if permission was already asked
     ) {
       console.log('LocationContext: Will show location dialog for first-time visitor in 3 seconds');
       const timer = setTimeout(() => {
-        // Double-check permission denied status before showing
+        // Triple-check permission status before showing
         const stillDenied = localStorage.getItem('sanwar_permission_denied') === 'true';
-        if (!stillDenied) {
+        const stillAsked = localStorage.getItem('sanwar_permission_asked') === 'true';
+        if (!stillDenied && !stillAsked) {
           console.log('LocationContext: Actually showing location dialog now');
           setShowLocationDialog(true);
         } else {
-          console.log('LocationContext: Not showing dialog - permission was denied');
+          console.log('LocationContext: Not showing dialog - permission was denied or already asked');
         }
       }, 3000); // Show after 3 seconds
       
       return () => clearTimeout(timer);
+    } else {
+      console.log('LocationContext: Not showing dialog - conditions not met');
     }
   }, [isAuthenticated, hasAskedPermission, locationPreference, showLocationDialog]);
 
@@ -130,11 +136,12 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   };
 
   const denyLocationPermission = () => {
-    console.log('User denied location permission - will show all India salons');
+    console.log('LocationContext: User denied location permission - will show all India salons');
     setHasAskedPermission(true);
     localStorage.setItem('sanwar_permission_asked', 'true');
     localStorage.setItem('sanwar_permission_denied', 'true');
     setShowLocationDialog(false);
+    console.log('LocationContext: Permission denial saved to localStorage');
   };
 
   // Update preference when position changes
