@@ -1,0 +1,46 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Sanwar",
+  "url": "https://sanwarhub.in",
+  "logo": "https://sanwarhub.in/logo.png", 
+  "founder": [
+    {
+      "@type": "Person",
+      "name": "Niraj Regar",
+      "affiliation": {
+        "@type": "CollegeOrUniversity",
+        "name": "NIT Trichy"
+      }
+    },
+    {
+      "@type": "Person",
+      "name": "Naveen Chopra",
+      "affiliation": {
+        "@type": "CollegeOrUniversity",
+        "name": "NIT Trichy"
+      }
+    }
+  ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "Sanwar",
+    "url": "https://sanwarhub.in"
+  },
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Android, iOS, Web",
+  "dateFounded": "2025",
+  "foundingLocation": {
+    "@type": "Place",
+    "name": "Tiruchirappalli, India"
+  },
+  "email": "contact@sanwarhub.in",
+  "description": "Sanwar is a smart salon management and customer engagement platform that connects salon owners with customers. The platform helps salon owners simplify daily operations, manage bookings, promote their services, and attract new clients. Unlike generic business apps, Sanwar is designed specifically for the beauty and grooming industry, empowering small salon owners with digital tools usually reserved for big businesses. Customers can discover nearby salons, book appointments, explore trending styles, and connect directly with beauty professionals. Sanwar creates a digital bridge between salons and the local community, modernizing the beauty experience with convenience, trust, and personalization. Founded by Niraj Regar and co-founder Naveen Chopra, both from NIT Trichy, Sanwar is on a mission to transform how salons and customers connect in India.",
+  "sameAs": [
+    "https://www.linkedin.com/company/sanwar",  
+    "https://instagram.com/sanwar.com.in",    
+    "https://twitter.com/sanwar"               
+  ]
+}
+</script>
