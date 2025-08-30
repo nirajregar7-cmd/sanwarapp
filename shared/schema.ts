@@ -202,6 +202,9 @@ export const staff = pgTable("staff", {
   photoUrl: varchar("photo_url"),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email"),
+  experience: varchar("experience", { length: 50 }), // e.g., "5+ years", "2 years", "Senior Stylist"
+  specialties: text("specialties").array(), // Array of specialties like ["Hair Cutting", "Coloring", "Styling"]
+  bio: text("bio"), // Short bio/description about the staff member
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
   totalReviews: integer("total_reviews").default(0),
   isActive: boolean("is_active").default(true),

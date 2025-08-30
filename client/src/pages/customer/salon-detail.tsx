@@ -692,7 +692,7 @@ export default function SalonDetail() {
               </CardContent>
             </Card>
 
-            {/* Staff */}
+            {/* Our Team */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -702,42 +702,100 @@ export default function SalonDetail() {
               </CardHeader>
               <CardContent>
                 {staffLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
-                        <div className="space-y-1">
-                          <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
-                          <div className="h-3 bg-gray-200 rounded w-16 animate-pulse"></div>
+                      <div key={i} className="border rounded-lg p-4 animate-pulse">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-5 bg-gray-200 rounded w-32"></div>
+                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                            <div className="h-3 bg-gray-200 rounded w-20"></div>
+                            <div className="h-3 bg-gray-200 rounded w-40"></div>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : staff.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {staff.map((member) => (
-                      <div key={member.id} className="flex items-center space-x-3">
-                        <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
-                          <AvatarImage src={member.photoUrl || ""} alt={member.name} />
-                          <AvatarFallback>
-                            <User className="h-5 w-5 sm:h-6 sm:w-6" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{member.name}</h4>
-                          <p className="text-xs sm:text-sm text-gray-600 truncate">{member.role}</p>
-                          <div className="flex items-center mt-1">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs text-gray-500 ml-1">
-                              {member.rating ? Number(member.rating).toFixed(1) : "New"}
-                            </span>
+                      <div key={member.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start space-x-4">
+                          <Avatar className="h-16 w-16 flex-shrink-0">
+                            <AvatarImage src={member.photoUrl || ""} alt={member.name} className="object-cover" />
+                            <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                              {member.name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-900 text-lg">{member.name}</h4>
+                            <p className="text-blue-600 font-medium text-sm mb-2">{member.role}</p>
+                            
+                            {/* Experience */}
+                            {member.experience && (
+                              <p className="text-gray-600 text-sm mb-2">
+                                <strong>Experience:</strong> {member.experience}
+                              </p>
+                            )}
+                            
+                            {/* Bio */}
+                            {member.bio && (
+                              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{member.bio}</p>
+                            )}
+                            
+                            {/* Specialties */}
+                            {member.specialties && member.specialties.length > 0 && (
+                              <div className="mb-3">
+                                <p className="text-xs font-medium text-gray-700 mb-1">Specialties:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {member.specialties.slice(0, 3).map((specialty, index) => (
+                                    <Badge key={index} variant="secondary" className="text-xs px-2 py-0.5">
+                                      {specialty}
+                                    </Badge>
+                                  ))}
+                                  {member.specialties.length > 3 && (
+                                    <Badge variant="outline" className="text-xs px-2 py-0.5">
+                                      +{member.specialties.length - 3} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Rating and Reviews */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                                <span className="text-sm font-medium text-gray-700">
+                                  {member.rating ? Number(member.rating).toFixed(1) : "New"}
+                                </span>
+                                {member.totalReviews && member.totalReviews > 0 && (
+                                  <span className="text-xs text-gray-500 ml-1">
+                                    ({member.totalReviews} reviews)
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {/* Contact Info */}
+                              {member.phone && (
+                                <div className="flex items-center text-gray-500">
+                                  <Phone className="h-3 w-3 mr-1" />
+                                  <span className="text-xs">{member.phone.slice(-4)}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-center py-8">Staff information coming soon</p>
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 text-lg font-medium">Our Team Information Coming Soon</p>
+                    <p className="text-gray-500 text-sm mt-2">We're updating our staff profiles to show you detailed information about our talented team.</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
