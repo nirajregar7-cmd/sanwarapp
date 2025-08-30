@@ -715,6 +715,21 @@ export default function OwnerDashboard() {
                         </div>
                       </Button>
                     </Link>
+                  </div>
+                  
+                  <div>
+                    <Link href="/owner/staff-management">
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
+                      >
+                        <Users className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mb-2 flex-shrink-0" />
+                        <div className="text-center w-full px-2">
+                          <p className="font-medium text-sm sm:text-base mb-1">Staff Management</p>
+                          <p className="text-xs text-gray-600 leading-tight break-words">Manage staff schedules and service assignments</p>
+                        </div>
+                      </Button>
+                    </Link>
 
                     <Link href="/owner/account-details">
                       <Button 
