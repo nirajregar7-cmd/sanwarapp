@@ -730,59 +730,31 @@ export default function SalonDetail() {
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-gray-900 text-lg">{member.name}</h4>
-                            <p className="text-blue-600 font-medium text-sm mb-2">{member.role}</p>
+                            
+                            {/* Services as subtitle */}
+                            {member.specialties && member.specialties.length > 0 ? (
+                              <p className="text-blue-600 text-sm mb-2">
+                                {member.specialties.join(', ')}
+                              </p>
+                            ) : (
+                              <p className="text-blue-600 font-medium text-sm mb-2">{member.role}</p>
+                            )}
                             
                             {/* Experience */}
                             {member.experience && (
-                              <p className="text-gray-600 text-sm mb-2">
-                                <strong>Experience:</strong> {member.experience}
-                              </p>
+                              <p className="text-gray-600 text-sm mb-2">{member.experience}</p>
                             )}
                             
-                            {/* Bio */}
-                            {member.bio && (
-                              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{member.bio}</p>
-                            )}
-                            
-                            {/* Specialties */}
-                            {member.specialties && member.specialties.length > 0 && (
-                              <div className="mb-3">
-                                <p className="text-xs font-medium text-gray-700 mb-1">Specialties:</p>
-                                <div className="flex flex-wrap gap-1">
-                                  {member.specialties.slice(0, 3).map((specialty, index) => (
-                                    <Badge key={index} variant="secondary" className="text-xs px-2 py-0.5">
-                                      {specialty}
-                                    </Badge>
-                                  ))}
-                                  {member.specialties.length > 3 && (
-                                    <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                      +{member.specialties.length - 3} more
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Rating and Reviews */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center">
-                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                                <span className="text-sm font-medium text-gray-700">
-                                  {member.rating ? Number(member.rating).toFixed(1) : "New"}
+                            {/* Rating */}
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                              <span className="text-sm font-medium text-gray-700">
+                                {member.rating ? Number(member.rating).toFixed(1) : "0.0"}
+                              </span>
+                              {member.totalReviews && member.totalReviews > 0 && (
+                                <span className="text-xs text-gray-500 ml-1">
+                                  ({member.totalReviews})
                                 </span>
-                                {member.totalReviews && member.totalReviews > 0 && (
-                                  <span className="text-xs text-gray-500 ml-1">
-                                    ({member.totalReviews} reviews)
-                                  </span>
-                                )}
-                              </div>
-                              
-                              {/* Contact Info */}
-                              {member.phone && (
-                                <div className="flex items-center text-gray-500">
-                                  <Phone className="h-3 w-3 mr-1" />
-                                  <span className="text-xs">{member.phone.slice(-4)}</span>
-                                </div>
                               )}
                             </div>
                           </div>
