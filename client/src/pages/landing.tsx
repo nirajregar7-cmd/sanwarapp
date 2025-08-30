@@ -148,20 +148,20 @@ export default function Landing() {
           {/* Platform Statistics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12 max-w-4xl mx-auto">
             <div className="bg-gradient-to-br from-white/25 to-white/15 backdrop-blur-md border border-white/40 rounded-xl p-4 sm:p-5 hover:from-white/30 hover:to-white/20 transition-all duration-300 group">
-              <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white group-hover:scale-110 transition-transform duration-300">Dozens</div>
-              <div className="text-xs sm:text-sm text-white/95 font-medium">Happy Customers</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-white group-hover:scale-110 transition-transform duration-300">Dozens</div>
+              <div className="text-xs sm:text-xs text-white/95 font-medium">Happy Customers</div>
             </div>
             <div className="bg-gradient-to-br from-purple-400/25 to-purple-600/15 backdrop-blur-md border border-purple-300/40 rounded-xl p-4 sm:p-5 hover:from-purple-400/30 hover:to-purple-600/20 transition-all duration-300 group">
-              <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white group-hover:scale-110 transition-transform duration-300">Multiple</div>
-              <div className="text-xs sm:text-sm text-white/95 font-medium">Partner Salons & Parlours</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-white group-hover:scale-110 transition-transform duration-300">Multiple</div>
+              <div className="text-xs sm:text-xs text-white/95 font-medium">Partner Salons & Parlours</div>
             </div>
             <div className="bg-gradient-to-br from-blue-400/25 to-blue-600/15 backdrop-blur-md border border-blue-300/40 rounded-xl p-4 sm:p-5 hover:from-blue-400/30 hover:to-blue-600/20 transition-all duration-300 group">
-              <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white group-hover:scale-110 transition-transform duration-300">Dozens</div>
-              <div className="text-xs sm:text-sm text-white/95 font-medium">Bookings Already</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-white group-hover:scale-110 transition-transform duration-300">Dozens</div>
+              <div className="text-xs sm:text-xs text-white/95 font-medium">Bookings Already</div>
             </div>
             <div className="bg-gradient-to-br from-indigo-400/25 to-indigo-600/15 backdrop-blur-md border border-indigo-300/40 rounded-xl p-4 sm:p-5 hover:from-indigo-400/30 hover:to-indigo-600/20 transition-all duration-300 group">
-              <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white group-hover:scale-110 transition-transform duration-300">Wide Range</div>
-              <div className="text-xs sm:text-sm text-white/95 font-medium">of Services</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-white group-hover:scale-110 transition-transform duration-300">Wide Range</div>
+              <div className="text-xs sm:text-xs text-white/95 font-medium">of Services</div>
             </div>
           </div>
           
