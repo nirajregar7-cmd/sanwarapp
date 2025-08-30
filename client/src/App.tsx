@@ -60,6 +60,10 @@ import ClerkSignInPage, { ClerkSignUpPage } from "@/pages/clerk-auth";
 // Brand Owner Pages
 import BrandDashboard from "@/pages/brand-owner/brand-dashboard";
 
+// USA SEO Pages
+import USAHub from "@/pages/usa/usa-hub";
+import USCityDetail from "@/pages/usa/city-detail";
+
 
 
 // Payment Pages
@@ -118,6 +122,10 @@ function Router() {
           <SalonDetail />
         </Layout>
       </Route>
+      
+      {/* USA SEO pages - accessible to all users */}
+      <Route path="/usa" component={USAHub} />
+      <Route path="/usa/:slug" component={USCityDetail} />
 
       {/* Main routes based on authentication */}
       {!user || !isAuthenticated ? (
