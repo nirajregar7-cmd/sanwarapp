@@ -13,6 +13,7 @@ import { withClerkAuth, isAuthenticated as clerkIsAuthenticated } from "./clerk"
 import {
   ObjectStorageService,
   ObjectNotFoundError,
+  objectStorageClient,
 } from "./objectStorage";
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
@@ -3053,20 +3054,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { randomUUID } = await import('crypto');
       const fileExtension = req.file.originalname.split('.').pop() || 'jpg';
       const filename = `${randomUUID()}.${fileExtension}`;
-      const objectPath = `/objects/uploads/${filename}`;
       
-      console.log("Storing file as:", objectPath);
+      // Get the private object directory
+      const privateDir = objectStorageService.getPrivateObjectDir();
+      const fullPath = `${privateDir}/uploads/${filename}`;
       
-      // Store the file in object storage
-      await objectStorageService.uploadObjectEntityFile({
-        objectPath,
-        data: req.file.buffer,
-        contentType: req.file.mimetype,
-        userId: req.user.id,
-        visibility: 'public' // Staff photos should be publicly accessible
+      // Parse the object path manually
+      let path = fullPath.startsWith("/") ? fullPath : `/${fullPath}`;
+      const pathParts = path.split("/");
+      if (pathParts.length < 3) {
+        throw new Error("Invalid path: must contain at least a bucket name");
+      }
+      const bucketName = pathParts[1];
+      const objectName = pathParts.slice(2).join("/");
+      
+      console.log("Storing file as:", `${bucketName}/${objectName}`);
+      
+      // Upload directly to Google Cloud Storage
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+      
+      // Upload the file
+      await file.save(req.file.buffer, {
+        metadata: {
+          contentType: req.file.mimetype,
+        },
+        public: true, // Make the file publicly accessible
+        validation: false,
       });
       
-      console.log("File uploaded successfully:", objectPath);
+      console.log("File uploaded successfully");
+      
+      // Return the object path in the expected format
+      const objectPath = `/objects/uploads/${filename}`;
       
       res.json({ 
         url: objectPath,
