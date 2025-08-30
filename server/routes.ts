@@ -3079,11 +3079,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           contentType: req.file.mimetype,
         },
-        public: true, // Make the file publicly accessible
         validation: false,
       });
       
       console.log("File uploaded successfully");
+      
+      // Set ACL policy for the uploaded file to make it accessible
+      try {
+        await objectStorageService.trySetObjectEntityAclPolicy(
+          `/objects/uploads/${filename}`,
+          {
+            owner: req.user.id,
+            visibility: "public", // Staff photos should be publicly accessible
+          }
+        );
+        console.log("ACL policy set successfully for uploaded file");
+      } catch (aclError) {
+        console.error("Error setting ACL policy:", aclError);
+        // Don't fail the upload if ACL setting fails
+      }
       
       // Return the object path in the expected format
       const objectPath = `/objects/uploads/${filename}`;
