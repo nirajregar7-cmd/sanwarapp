@@ -1864,9 +1864,17 @@ export class DatabaseStorage implements IStorage {
 
   // Smart scheduling operations implementation
   async getSalonStaff(salonId: string): Promise<any[]> {
-    return await db.select().from(staff)
+    const staffMembers = await db.select().from(staff)
       .where(and(eq(staff.salonId, salonId), eq(staff.isActive, true)))
       .orderBy(staff.name);
+    
+    // Format photo URLs for display
+    return staffMembers.map(member => ({
+      ...member,
+      photoUrl: member.photoUrl ? 
+        (member.photoUrl.startsWith('/objects/') ? member.photoUrl : `/objects/uploads/${member.photoUrl}`) 
+        : null
+    }));
   }
 
   async createStaffMember(staffData: any): Promise<any> {
