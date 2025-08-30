@@ -577,7 +577,24 @@ function EditStaffDialog({
       }
 
       const result = await response.json();
-      const imageUrl = result.url;
+      console.log('Upload result:', result);
+      
+      // Handle different possible response formats
+      let imageUrl = result.url || result.path || result.filename;
+      
+      // Convert to proper /objects/ path format if needed
+      if (imageUrl && !imageUrl.startsWith('/objects/')) {
+        // If it's just a filename, add the full path
+        if (!imageUrl.includes('/')) {
+          imageUrl = `/objects/uploads/${imageUrl}`;
+        } else if (imageUrl.startsWith('uploads/')) {
+          imageUrl = `/objects/${imageUrl}`;
+        } else if (!imageUrl.startsWith('http')) {
+          imageUrl = `/objects/uploads/${imageUrl}`;
+        }
+      }
+      
+      console.log('Final image URL:', imageUrl);
       
       setFormData(prev => ({ ...prev, photoUrl: imageUrl }));
       setPreviewPhoto(imageUrl);
@@ -587,6 +604,7 @@ function EditStaffDialog({
         description: "Staff photo has been uploaded successfully.",
       });
     } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Upload Failed", 
         description: "Failed to upload photo. Please try again.",

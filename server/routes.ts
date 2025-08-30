@@ -3036,6 +3036,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Direct file upload endpoint for staff photos
+  app.post("/api/upload", isAuthenticated, upload.single('file'), async (req: any, res) => {
+    try {
+      console.log("Direct file upload request from user:", req.user?.id);
+      
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      
+      console.log("Uploaded file:", req.file.originalname, req.file.size, "bytes");
+      
+      const objectStorageService = new ObjectStorageService();
+      
+      // Generate unique filename
+      const { randomUUID } = await import('crypto');
+      const fileExtension = req.file.originalname.split('.').pop() || 'jpg';
+      const filename = `${randomUUID()}.${fileExtension}`;
+      const objectPath = `/objects/uploads/${filename}`;
+      
+      console.log("Storing file as:", objectPath);
+      
+      // Store the file in object storage
+      await objectStorageService.uploadObjectEntityFile({
+        objectPath,
+        data: req.file.buffer,
+        contentType: req.file.mimetype,
+        userId: req.user.id,
+        visibility: 'public' // Staff photos should be publicly accessible
+      });
+      
+      console.log("File uploaded successfully:", objectPath);
+      
+      res.json({ 
+        url: objectPath,
+        path: objectPath,
+        filename: filename
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ error: "Failed to upload file", details: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
   app.post("/api/objects/upload", isAuthenticated, async (req: any, res) => {
     try {
       console.log("Getting upload URL for user:", req.user?.id);
