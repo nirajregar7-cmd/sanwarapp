@@ -733,16 +733,11 @@ export default function SalonDetail() {
                             
                             {/* Services as subtitle */}
                             {member.specialties && member.specialties.length > 0 ? (
-                              <p className="text-blue-600 text-sm mb-2">
+                              <p className="text-blue-600 text-sm mb-1">
                                 {member.specialties.join(', ')}
                               </p>
                             ) : (
-                              <p className="text-blue-600 font-medium text-sm mb-2">{member.role}</p>
-                            )}
-                            
-                            {/* Experience */}
-                            {member.experience && (
-                              <p className="text-gray-600 text-sm mb-2">{member.experience}</p>
+                              <p className="text-blue-600 font-medium text-sm mb-1">{member.role}</p>
                             )}
                             
                             {/* Rating */}
