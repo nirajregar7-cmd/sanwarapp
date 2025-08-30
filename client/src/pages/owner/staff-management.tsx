@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 import { useToast } from "@/hooks/use-toast";
-import { Users, UserPlus, Calendar, Clock, Plus, Sparkles, Edit, Upload } from "lucide-react";
+import { Users, UserPlus, Calendar, Clock, Plus, Sparkles, Edit, Upload, Camera, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Staff {
@@ -528,6 +528,7 @@ function EditStaffDialog({
   onUpdate,
   isLoading,
 }: EditStaffDialogProps) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     role: "",
@@ -538,6 +539,8 @@ function EditStaffDialog({
     specialties: "",
     bio: "",
   });
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
   // Update form data when staff changes
   React.useEffect(() => {
@@ -552,8 +555,54 @@ function EditStaffDialog({
         specialties: staff.specialties ? staff.specialties.join(", ") : "",
         bio: staff.bio || "",
       });
+      setPreviewPhoto(staff.photoUrl || null);
     }
   }, [staff]);
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploadingPhoto(true);
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      const imageUrl = result.url;
+      
+      setFormData(prev => ({ ...prev, photoUrl: imageUrl }));
+      setPreviewPhoto(imageUrl);
+      
+      toast({
+        title: "Photo Uploaded",
+        description: "Staff photo has been uploaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Failed", 
+        description: "Failed to upload photo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handlePhotoUpload(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -654,13 +703,61 @@ function EditStaffDialog({
           </div>
 
           <div>
-            <Label htmlFor="photoUrl">Profile Picture URL</Label>
-            <Input
-              id="photoUrl"
-              value={formData.photoUrl}
-              onChange={(e) => handleInputChange("photoUrl", e.target.value)}
-              placeholder="Upload a profile picture for this staff member (max 5MB)"
-            />
+            <Label>Profile Picture</Label>
+            <div className="space-y-4">
+              {/* Current Photo Preview */}
+              {previewPhoto && (
+                <div className="flex items-center space-x-4">
+                  <img 
+                    src={previewPhoto} 
+                    alt="Staff preview" 
+                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setPreviewPhoto(null);
+                      setFormData(prev => ({ ...prev, photoUrl: "" }));
+                    }}
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Remove Photo
+                  </Button>
+                </div>
+              )}
+              
+              {/* Upload Button */}
+              <div className="flex items-center justify-center w-full">
+                <label 
+                  htmlFor="photo-upload" 
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    {uploadingPhoto ? (
+                      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                    ) : (
+                      <>
+                        <Camera className="w-8 h-8 mb-2 text-gray-500" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                      </>
+                    )}
+                  </div>
+                  <input 
+                    id="photo-upload" 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    disabled={uploadingPhoto}
+                  />
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-4">
