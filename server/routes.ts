@@ -743,9 +743,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/salons/:salonId/staff', async (req, res) => {
     try {
       const { salonId } = req.params;
-      const salonStaff = await db.select()
-        .from(staff)
-        .where(eq(staff.salonId, salonId));
+      const salonStaff = await storage.getSalonStaff(salonId);
       
       res.json(salonStaff);
     } catch (error) {
