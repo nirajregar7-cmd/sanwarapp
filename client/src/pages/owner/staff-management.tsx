@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format, addDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 import { useToast } from "@/hooks/use-toast";
-import { Users, UserPlus, Calendar, Clock, Plus, Sparkles } from "lucide-react";
+import { Users, UserPlus, Calendar, Clock, Plus, Sparkles, Edit, Upload } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Staff {
@@ -18,6 +18,11 @@ interface Staff {
   name: string;
   role: string;
   photoUrl?: string;
+  phone?: string;
+  email?: string;
+  experience?: string;
+  specialties?: string[];
+  bio?: string;
   rating: number;
   isActive: boolean;
   services: StaffService[];
@@ -49,6 +54,8 @@ export default function StaffManagement() {
   const [isAssigningService, setIsAssigningService] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [selectedStaffForSlots, setSelectedStaffForSlots] = useState<string>("");
+  const [isEditingStaff, setIsEditingStaff] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
 
 
   // Get current salon
@@ -177,6 +184,34 @@ export default function StaffManagement() {
     setSelectedStaff(staff);
     setIsAssigningService(true);
   };
+
+  const handleEditStaff = (staff: Staff) => {
+    setEditingStaff(staff);
+    setIsEditingStaff(true);
+  };
+
+  // Edit staff mutation
+  const editStaffMutation = useMutation({
+    mutationFn: async (data: { staffId: string; updates: any }) => {
+      return apiRequest("PUT", `/api/staff/${data.staffId}`, data.updates);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Staff Updated",
+        description: "Staff member information has been successfully updated.",
+      });
+      refetchStaff();
+      setIsEditingStaff(false);
+      setEditingStaff(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update staff member.",
+        variant: "destructive",
+      });
+    },
+  });
 
 
 
@@ -312,6 +347,15 @@ export default function StaffManagement() {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <Button
+                    onClick={() => handleEditStaff(staff)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
                     onClick={() => handleAssignService(staff)}
                     variant="outline"
                     size="sm"
@@ -335,6 +379,15 @@ export default function StaffManagement() {
         onClose={() => setIsAssigningService(false)}
         onAssign={assignServiceMutation.mutate}
         isLoading={assignServiceMutation.isPending}
+      />
+
+      {/* Edit Staff Dialog */}
+      <EditStaffDialog
+        staff={editingStaff}
+        isOpen={isEditingStaff}
+        onClose={() => setIsEditingStaff(false)}
+        onUpdate={(updates) => editStaffMutation.mutate({ staffId: editingStaff!.id, updates })}
+        isLoading={editStaffMutation.isPending}
       />
     </div>
   );
@@ -452,6 +505,179 @@ function ServiceAssignmentDialog({
               className="flex-1"
             >
               {isLoading ? "Assigning..." : "Assign Service"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface EditStaffDialogProps {
+  staff: Staff | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onUpdate: (updates: any) => void;
+  isLoading: boolean;
+}
+
+function EditStaffDialog({
+  staff,
+  isOpen,
+  onClose,
+  onUpdate,
+  isLoading,
+}: EditStaffDialogProps) {
+  const [formData, setFormData] = useState({
+    name: "",
+    role: "",
+    phone: "",
+    email: "",
+    photoUrl: "",
+    experience: "",
+    specialties: "",
+    bio: "",
+  });
+
+  // Update form data when staff changes
+  React.useEffect(() => {
+    if (staff) {
+      setFormData({
+        name: staff.name || "",
+        role: staff.role || "",
+        phone: staff.phone || "",
+        email: staff.email || "",
+        photoUrl: staff.photoUrl || "",
+        experience: staff.experience || "",
+        specialties: staff.specialties ? staff.specialties.join(", ") : "",
+        bio: staff.bio || "",
+      });
+    }
+  }, [staff]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!staff) return;
+
+    const updates = {
+      ...formData,
+      specialties: formData.specialties.split(",").map(s => s.trim()).filter(s => s.length > 0),
+    };
+
+    onUpdate(updates);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Staff Member</DialogTitle>
+          <p className="text-sm text-gray-600">Update staff member information</p>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="name">Full Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="role">Role *</Label>
+              <Input
+                id="role"
+                value={formData.role}
+                onChange={(e) => handleInputChange("role", e.target.value)}
+                placeholder="Hair Stylist, Moustache and Beard, Facial"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="experience">Experience</Label>
+            <Input
+              id="experience"
+              value={formData.experience}
+              onChange={(e) => handleInputChange("experience", e.target.value)}
+              placeholder="e.g., 5+ years, Senior Stylist"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="specialties">Specialties</Label>
+            <Input
+              id="specialties"
+              value={formData.specialties}
+              onChange={(e) => handleInputChange("specialties", e.target.value)}
+              placeholder="Hair Stylist, Moustache and Beard, Facial (comma-separated)"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="bio">Bio</Label>
+            <textarea
+              id="bio"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
+              rows={3}
+              value={formData.bio}
+              onChange={(e) => handleInputChange("bio", e.target.value)}
+              placeholder="Short description about the staff member"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="photoUrl">Profile Picture URL</Label>
+            <Input
+              id="photoUrl"
+              value={formData.photoUrl}
+              onChange={(e) => handleInputChange("photoUrl", e.target.value)}
+              placeholder="Upload a profile picture for this staff member (max 5MB)"
+            />
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1"
+            >
+              {isLoading ? "Updating..." : "Update Staff"}
             </Button>
           </div>
         </form>
