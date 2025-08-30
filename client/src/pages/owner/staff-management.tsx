@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { format, addDays } from "date-fns";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,12 +48,8 @@ interface Service {
 
 export default function StaffManagement() {
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [endDate, setEndDate] = useState(format(addDays(new Date(), 7), 'yyyy-MM-dd'));
   const [isAssigningService, setIsAssigningService] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
-  const [selectedStaffForSlots, setSelectedStaffForSlots] = useState<string>("");
   const [isEditingStaff, setIsEditingStaff] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
 
@@ -107,45 +103,7 @@ export default function StaffManagement() {
     },
   });
 
-  // Generate staff-based slots mutation
-  const generateSlotsMutation = useMutation({
-    mutationFn: async (date: string) => {
-      return apiRequest("POST", `/api/salons/${salon?.id}/generate-staff-slots`, { date });
-    },
-    onSuccess: (result: any) => {
-      toast({
-        title: "Slots Generated",
-        description: `${result.generated} staff-service slots created for ${selectedDate}`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Generation Failed",
-        description: error.message || "Failed to generate slots.",
-        variant: "destructive",
-      });
-    },
-  });
 
-  // Bulk slot generation mutation
-  const generateBulkSlotsMutation = useMutation({
-    mutationFn: async ({ startDate, endDate }: { startDate: string; endDate: string }) => {
-      return apiRequest("POST", `/api/salons/${salon?.id}/generate-bulk-slots`, { startDate, endDate });
-    },
-    onSuccess: (result: any) => {
-      toast({
-        title: "Bulk Slots Generated",
-        description: `${result.totalGenerated} slots created from ${startDate} to ${endDate}`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Bulk Generation Failed",
-        description: error.message || "Failed to generate bulk slots.",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Individual staff slot generation mutation
   const generateStaffSlotsMutation = useMutation({
@@ -236,56 +194,7 @@ export default function StaffManagement() {
       </div>
 
       {/* Simple Slot Generation Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Generate Booking Slots
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p className="text-gray-600 dark:text-gray-400">
-              Generate booking slots for all your staff members and services automatically.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  min={format(new Date(), 'yyyy-MM-dd')}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate || format(new Date(), 'yyyy-MM-dd')}
-                />
-              </div>
-              <div className="flex items-end">
-                <Button 
-                  onClick={() => generateBulkSlotsMutation.mutate({ startDate, endDate })} 
-                  disabled={!startDate || !endDate || generateBulkSlotsMutation.isPending}
-                  className="w-full bg-gradient-to-r from-green-600 to-blue-600"
-                >
-                  {generateBulkSlotsMutation.isPending ? (
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                  ) : null}
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Generate Slots
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
 
       {/* Staff Grid */}
       <div className="space-y-6">
