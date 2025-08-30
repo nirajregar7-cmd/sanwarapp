@@ -103,9 +103,9 @@ export default function SalonDetail() {
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
-  // Fetch salon staff - parallel loading
+  // Fetch salon staff with their assigned services - parallel loading
   const { data: staff = [], isLoading: staffLoading } = useQuery<Staff[]>({
-    queryKey: [`/api/salons/${salonId}/staff`],
+    queryKey: [`/api/salons/${salonId}/staff-with-services`],
     enabled: !!salonId,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
@@ -731,8 +731,12 @@ export default function SalonDetail() {
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-gray-900 text-lg">{member.name}</h4>
                             
-                            {/* Services as subtitle */}
-                            {member.specialties && member.specialties.length > 0 ? (
+                            {/* Assigned Services as subtitle */}
+                            {member.services && member.services.length > 0 ? (
+                              <p className="text-blue-600 text-sm mb-1">
+                                {member.services.map(service => service.serviceName).join(', ')}
+                              </p>
+                            ) : member.specialties && member.specialties.length > 0 ? (
                               <p className="text-blue-600 text-sm mb-1">
                                 {member.specialties.join(', ')}
                               </p>
