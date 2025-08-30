@@ -92,6 +92,67 @@ const nearMePages = {
     description: "Find professional hair coloring services near you! Hair dye, highlights, balayage, ombre. Expert colorists, quality products, latest trends.",
     h1: "Hair Color Near Me",
     content: "Transform your look with professional hair coloring services near you. Expert colorists using premium products for stunning, long-lasting results."
+  },
+  // Popular Salon Brands in India
+  "lakme-salon-near-me": {
+    title: "Lakme Salon Near Me | Professional Beauty Services - Sanwar",
+    description: "Find Lakme Salon near you! Premium beauty services, professional makeup, hair styling. Book appointments at India's leading beauty salon chain.",
+    h1: "Lakme Salon Near Me",
+    content: "Experience premium beauty services at Lakme Salon near you. India's leading beauty salon chain offering professional makeup, hair styling, and skincare treatments."
+  },
+  "vlcc-near-me": {
+    title: "VLCC Near Me | Weight Loss & Beauty Treatments - Sanwar",
+    description: "Find VLCC centers near you! Weight loss programs, beauty treatments, wellness services. Book appointments at India's trusted wellness brand.",
+    h1: "VLCC Near Me",
+    content: "Transform your health and beauty at VLCC centers near you. Leading wellness brand offering weight loss programs, beauty treatments, and holistic wellness services."
+  },
+  "naturals-salon-near-me": {
+    title: "Naturals Salon Near Me | Family Beauty & Wellness - Sanwar",
+    description: "Find Naturals Salon near you! Family beauty salon, hair care, beauty treatments. Natural products, affordable services, trusted brand.",
+    h1: "Naturals Salon Near Me",
+    content: "Enjoy family-friendly beauty services at Naturals Salon near you. Trusted salon chain offering natural beauty treatments, hair care, and wellness services."
+  },
+  "juice-salon-near-me": {
+    title: "Juice Salon Near Me | Premium Hair & Beauty - Sanwar",
+    description: "Find Juice Salon near you! Premium hair styling, beauty treatments, modern facilities. Professional stylists, quality products, luxury experience.",
+    h1: "Juice Salon Near Me",
+    content: "Experience luxury beauty services at Juice Salon near you. Premium salon chain offering professional hair styling, beauty treatments in modern facilities."
+  },
+  "jcb-salon-near-me": {
+    title: "Jawed Habib Salon Near Me | Celebrity Hair Styling - Sanwar",
+    description: "Find Jawed Habib Salon near you! Celebrity hair stylist salon, professional cuts, styling. Expert hair care, premium products, modern techniques.",
+    h1: "Jawed Habib Salon Near Me",
+    content: "Get celebrity-style haircuts at Jawed Habib Salon near you. India's renowned celebrity hair stylist salon offering professional cuts and styling."
+  },
+  "toni-guy-near-me": {
+    title: "Toni & Guy Near Me | International Hair Styling - Sanwar",
+    description: "Find Toni & Guy salon near you! International hair styling brand, professional cuts, color. Expert stylists, premium products, latest trends.",
+    h1: "Toni & Guy Near Me",
+    content: "Experience international hair styling at Toni & Guy near you. World-renowned salon brand offering professional cuts, color, and styling services."
+  },
+  "looks-salon-near-me": {
+    title: "Looks Salon Near Me | Affordable Beauty Services - Sanwar",
+    description: "Find Looks Salon near you! Affordable beauty services, hair care, grooming. Budget-friendly salon, quality services, convenient locations.",
+    h1: "Looks Salon Near Me",
+    content: "Enjoy affordable beauty services at Looks Salon near you. Budget-friendly salon chain offering quality hair care, beauty treatments, and grooming services."
+  },
+  "green-trends-near-me": {
+    title: "Green Trends Near Me | Eco-Friendly Beauty Salon - Sanwar",
+    description: "Find Green Trends salon near you! Eco-friendly beauty services, natural products, sustainable practices. Professional care with environmental consciousness.",
+    h1: "Green Trends Near Me",
+    content: "Experience eco-friendly beauty services at Green Trends near you. Sustainable salon chain using natural products and environmentally conscious practices."
+  },
+  "headturners-salon-near-me": {
+    title: "Headturners Salon Near Me | Trendy Hair & Beauty - Sanwar",
+    description: "Find Headturners Salon near you! Trendy hair styling, modern beauty treatments, fashion-forward services. Contemporary salon experience.",
+    h1: "Headturners Salon Near Me",
+    content: "Get trendy hair and beauty services at Headturners Salon near you. Contemporary salon offering fashion-forward styling and modern beauty treatments."
+  },
+  "bounce-salon-near-me": {
+    title: "Bounce Salon Near Me | Premium Blow Dry & Styling - Sanwar",
+    description: "Find Bounce Salon near you! Premium blow dry services, hair styling, quick makeovers. Professional stylists, quality products, express services.",
+    h1: "Bounce Salon Near Me",
+    content: "Experience premium blow dry services at Bounce Salon near you. Specialized salon offering professional hair styling, quick makeovers, and express beauty services."
   }
 };
 
@@ -203,17 +264,65 @@ function generateNearMePage(service: string, data: any) {
             </div>
         </div>
         
+        <h2>Popular Salon Brands on Sanwar</h2>
+        <div class="features">
+            <div class="feature">
+                <h3>🏆 Lakme Salon</h3>
+                <p>India's leading beauty salon chain offering premium services, professional makeup, and hair styling.</p>
+            </div>
+            <div class="feature">
+                <h3>🌿 Naturals</h3>
+                <p>Family beauty salon with natural products, affordable services, and trusted brand reputation.</p>
+            </div>
+            <div class="feature">
+                <h3>✨ VLCC</h3>
+                <p>Weight loss programs, beauty treatments, and holistic wellness services from India's trusted brand.</p>
+            </div>
+            <div class="feature">
+                <h3>💫 Juice Salon</h3>
+                <p>Premium hair styling and beauty treatments in modern facilities with luxury experience.</p>
+            </div>
+        </div>
+        
         <h2>How It Works</h2>
         <ol style="font-size: 18px; line-height: 1.8;">
             <li><strong>Search:</strong> Find ${service.replace(/-/g, ' ')} services near your location</li>
-            <li><strong>Compare:</strong> View ratings, reviews, and prices</li>
-            <li><strong>Book:</strong> Select your preferred time and confirm instantly</li>
-            <li><strong>Enjoy:</strong> Get professional service at your chosen location</li>
+            <li><strong>Compare:</strong> View ratings, reviews, and prices from top salon brands</li>
+            <li><strong>Book:</strong> Select your preferred salon brand, time and confirm instantly</li>
+            <li><strong>Enjoy:</strong> Get professional service at premium salon chains</li>
         </ol>
+        
+        <h2>More Popular Salon Brands</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                <strong>Jawed Habib</strong><br>
+                <small>Celebrity Hair Styling</small>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                <strong>Toni & Guy</strong><br>
+                <small>International Hair Brand</small>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                <strong>Looks Salon</strong><br>
+                <small>Affordable Beauty Services</small>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                <strong>Green Trends</strong><br>
+                <small>Eco-Friendly Salon</small>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                <strong>Headturners</strong><br>
+                <small>Trendy Hair & Beauty</small>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                <strong>Bounce Salon</strong><br>
+                <small>Premium Blow Dry</small>
+            </div>
+        </div>
         
         <div style="background: #667eea; color: white; padding: 30px; border-radius: 12px; text-align: center; margin: 40px 0;">
             <h2 style="color: white; border: none;">Ready to Book ${data.h1}?</h2>
-            <p style="font-size: 18px;">Join thousands of satisfied customers who trust Sanwar for their beauty needs.</p>
+            <p style="font-size: 18px;">Join thousands of satisfied customers who trust Sanwar for beauty services at top salon brands.</p>
             <a href="https://sanwarhub.in" style="background: white; color: #667eea; padding: 15px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 18px;">Book Now</a>
         </div>
         

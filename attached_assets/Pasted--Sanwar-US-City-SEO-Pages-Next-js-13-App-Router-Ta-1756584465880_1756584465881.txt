@@ -1,0 +1,193 @@
+// ================================
+// Sanwar – US City SEO Pages
+// Next.js 13+ (App Router) + Tailwind + shadcn/ui
+// Single-file drop-in: Copy each section to your project files.
+// ================================
+
+// ---------- app/usa/[slug]/page.tsx ----------
+"use client";
+import React from "react";
+import { notFound } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { MapPin, Scissors, Star } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import type { Metadata } from "next";
+
+// --- data (inline for single-file demo). In a real app, move to @/data/cities.ts
+export type CityInfo = {
+  slug: string; // e.g., "new-york"
+  city: string; // "New York City"
+  state: string; // "New York"
+  metroAreas: string[]; // neighborhoods/areas
+};
+
+export const CITIES: CityInfo[] = [
+  { slug: "new-york", city: "New York City", state: "New York", metroAreas: ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] },
+  { slug: "los-angeles", city: "Los Angeles", state: "California", metroAreas: ["Hollywood", "Beverly Hills", "Santa Monica", "Downtown LA", "Venice"] },
+  { slug: "chicago", city: "Chicago", state: "Illinois", metroAreas: ["The Loop", "Lincoln Park", "Hyde Park", "River North"] },
+  { slug: "houston", city: "Houston", state: "Texas", metroAreas: ["Downtown", "Midtown", "Sugar Land", "Katy", "The Heights"] },
+  { slug: "phoenix", city: "Phoenix", state: "Arizona", metroAreas: ["Downtown Phoenix", "Scottsdale", "Tempe", "Glendale", "Mesa"] },
+  { slug: "philadelphia", city: "Philadelphia", state: "Pennsylvania", metroAreas: ["Center City", "South Philly", "University City", "Old City"] },
+  { slug: "san-antonio", city: "San Antonio", state: "Texas", metroAreas: ["Downtown", "Stone Oak", "Alamo Heights", "The Pearl"] },
+  { slug: "san-diego", city: "San Diego", state: "California", metroAreas: ["Gaslamp Quarter", "La Jolla", "Pacific Beach", "Little Italy"] },
+  { slug: "dallas", city: "Dallas", state: "Texas", metroAreas: ["Downtown Dallas", "Uptown", "Deep Ellum", "Plano", "Frisco"] },
+  { slug: "san-jose", city: "San Jose", state: "California", metroAreas: ["Downtown", "Santana Row", "Willow Glen", "Alum Rock"] },
+  { slug: "austin", city: "Austin", state: "Texas", metroAreas: ["Downtown", "South Congress", "Domain", "East Austin"] },
+  { slug: "jacksonville", city: "Jacksonville", state: "Florida", metroAreas: ["Downtown", "Riverside", "Southside", "Beaches"] },
+  { slug: "fort-worth", city: "Fort Worth", state: "Texas", metroAreas: ["Downtown", "Stockyards", "Cultural District", "Arlington"] },
+  { slug: "columbus", city: "Columbus", state: "Ohio", metroAreas: ["Downtown", "Short North", "German Village", "Dublin"] },
+  { slug: "charlotte", city: "Charlotte", state: "North Carolina", metroAreas: ["Uptown", "South End", "NoDa", "Ballantyne"] },
+  { slug: "san-francisco", city: "San Francisco", state: "California", metroAreas: ["SoMa", "Mission", "Sunset", "Nob Hill"] },
+  { slug: "indianapolis", city: "Indianapolis", state: "Indiana", metroAreas: ["Downtown", "Broad Ripple", "Fountain Square", "Carmel"] },
+  { slug: "seattle", city: "Seattle", state: "Washington", metroAreas: ["Downtown", "Capitol Hill", "Ballard", "Queen Anne"] },
+  { slug: "denver", city: "Denver", state: "Colorado", metroAreas: ["Downtown", "LoDo", "Capitol Hill", "Cherry Creek"] },
+  { slug: "washington-dc", city: "Washington, D.C.", state: "District of Columbia", metroAreas: ["Downtown", "Georgetown", "Capitol Hill", "Dupont Circle"] },
+  { slug: "boston", city: "Boston", state: "Massachusetts", metroAreas: ["Back Bay", "Seaport", "Cambridge", "Somerville"] },
+  { slug: "nashville", city: "Nashville", state: "Tennessee", metroAreas: ["Downtown", "The Gulch", "East Nashville", "Green Hills"] },
+  { slug: "detroit", city: "Detroit", state: "Michigan", metroAreas: ["Downtown", "Midtown", "Corktown", "Royal Oak"] },
+  { slug: "portland", city: "Portland", state: "Oregon", metroAreas: ["Downtown", "Pearl District", "Hawthorne", "Beaverton"] },
+  { slug: "las-vegas", city: "Las Vegas", state: "Nevada", metroAreas: ["The Strip", "Downtown", "Summerlin", "Henderson"] },
+];
+
+function findCity(slug: string): CityInfo | undefined {
+  return CITIES.find((c) => c.slug === slug);
+}
+
+// --- SEO helpers
+const BASE_URL = "https://sanwarhub.in"; // change if needed
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const city = findCity(params.slug);
+  if (!city) return { title: "City not found | Sanwar" };
+  const title = `Book Salons & Barbers in ${city.city} | Sanwar`;
+  const description = `Find top salons & barbers in ${city.city}. Book haircuts, grooming, spa and beauty services online with Sanwar – fast, easy and reliable.`;
+  const url = `${BASE_URL}/usa/${city.slug}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "Sanwar",
+      type: "website",
+      locale: "en_US",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+    other: {
+      // hreflang examples – expand with real alternates when you add locales
+      "hreflang-en-us": url,
+      "hreflang-en-in": `${BASE_URL}/in/${city.slug}`,
+    },
+  };
+}
+
+// --- Page Component
+export default function CityPage({ params }: { params: { slug: string } }) {
+  const city = findCity(params.slug);
+  if (!city) return notFound();
+
+  const h1 = `Book Salons & Barbers in ${city.city}`;
+  const intro = `Looking for the best salons and barbers in ${city.city}? Sanwar makes it simple to book salon appointments online for haircuts, grooming, spa, and beauty services. Whether you're in ${city.metroAreas.join(", ")}, Sanwar connects you with trusted professionals near you.`;
+
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-10">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">{h1}</h1>
+        <p className="mt-3 text-base md:text-lg text-gray-600">{intro}</p>
+
+        <section className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[{
+            icon: <Scissors className="w-5 h-5" />, title: "Top-rated Pros",
+            text: `Discover salons and barbers with real reviews and ratings across ${city.city}.`,
+          }, {
+            icon: <Star className="w-5 h-5" />, title: "Easy Booking",
+            text: "Pick a service, choose staff, and confirm your appointment in minutes.",
+          }, {
+            icon: <MapPin className="w-5 h-5" />, title: "Near You",
+            text: `Popular areas: ${city.metroAreas.slice(0, 3).join(", ")}…`,
+          }].map((f, i) => (
+            <Card key={i} className="rounded-2xl shadow-sm">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2">{f.icon}<h3 className="font-medium">{f.title}</h3></div>
+                <p className="mt-2 text-sm text-gray-600">{f.text}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-xl md:text-2xl font-semibold">Popular Services in {city.city}</h2>
+          <ul className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-700 list-disc pl-5">
+            <li>Men’s & Women’s Haircuts</li>
+            <li>Beard Grooming & Styling</li>
+            <li>Makeup & Beauty Parlors</li>
+            <li>Spa & Relaxation Treatments</li>
+          </ul>
+        </section>
+
+        <section className="mt-10">
+          <Card className="rounded-2xl shadow-sm">
+            <CardContent className="p-6 md:p-8">
+              <h3 className="text-lg md:text-xl font-semibold">Why choose Sanwar in {city.city}?</h3>
+              <p className="mt-2 text-gray-600">Avoid waiting lines – browse salons, choose staff by rating, and confirm instantly. Pay securely in USD or INR. Manage bookings, reviews, and reminders in one place.</p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link href="/signup/shop">
+                  <Button className="rounded-2xl">Add Your Salon</Button>
+                </Link>
+                <Link href="/app">
+                  <Button variant="outline" className="rounded-2xl">Find Salons Near Me</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="mt-12">
+          <h2 className="text-xl md:text-2xl font-semibold">Explore more US cities</h2>
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+            {CITIES.filter(c => c.slug !== city.slug).slice(0, 12).map((c) => (
+              <Link key={c.slug} href={`/usa/${c.slug}`} className="text-sm text-blue-600 hover:underline">
+                {c.city}, {c.state}
+              </Link>
+            ))}
+          </div>
+        </section>
+      </motion.div>
+    </main>
+  );
+}
+
+// ---------- Optional: app/usa/page.tsx (Hub page) ----------
+// Create a hub index at /usa listing all city pages for internal linking (SEO boost)
+export function USAHub() {
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-10">
+      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Book Salons & Barbers Across the USA</h1>
+      <p className="mt-3 text-base md:text-lg text-gray-600">Choose your city to find top-rated salons and barbers. Book haircuts, grooming, spa and beauty services online with Sanwar.</p>
+      <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
+        {CITIES.map((c) => (
+          <Link key={c.slug} href={`/usa/${c.slug}`} className="block rounded-xl border p-3 hover:shadow-sm">
+            <div className="font-medium">{c.city}</div>
+            <div className="text-xs text-gray-500">{c.state}</div>
+          </Link>
+        ))}
+      </div>
+    </main>
+  );
+}
+
+// ---------- Notes ----------
+// • Add routes: create file app/usa/[slug]/page.tsx with the default export CityPage and the generateMetadata.
+// • Create app/usa/page.tsx and export default USAHub to expose the hub page.
+// • Ensure Tailwind and shadcn/ui are set up in your project. Buttons/Cards rely on shadcn.
+// • Update BASE_URL to your production domain. Add real hreflang alternates when you localize.
+// • To expand neighborhoods/keywords per city, edit the CITIES array.
+// • Internal linking: the hub + city cross-links improve crawl & rankings.
