@@ -5,12 +5,22 @@ import { storage } from "./storage";
 export function registerSmartSchedulingRoutes(app: Express) {
   const smartScheduling = new SmartSchedulingService(storage);
 
-  // Staff management routes
+  // Staff management routes - public endpoint for customer access
   app.get('/api/salons/:salonId/staff', async (req, res) => {
     try {
       const { salonId } = req.params;
       const staff = await storage.getSalonStaff(salonId);
-      res.json(staff);
+      
+      // Add services for each staff member for customer display
+      const staffWithServices = await Promise.all(staff.map(async (member) => {
+        const services = await storage.getStaffServices(member.id);
+        return {
+          ...member,
+          services: services || []
+        };
+      }));
+      
+      res.json(staffWithServices);
     } catch (error) {
       console.error('Error fetching salon staff:', error);
       res.status(500).json({ error: 'Failed to fetch salon staff' });

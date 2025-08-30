@@ -105,7 +105,7 @@ export default function SalonDetail() {
 
   // Fetch salon staff with their assigned services - parallel loading
   const { data: staff = [], isLoading: staffLoading } = useQuery<Staff[]>({
-    queryKey: [`/api/salons/${salonId}/staff-with-services`],
+    queryKey: [`/api/salons/${salonId}/staff`],
     enabled: !!salonId,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
