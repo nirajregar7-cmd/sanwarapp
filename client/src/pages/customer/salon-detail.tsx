@@ -740,6 +740,13 @@ export default function SalonDetail() {
                               <p className="text-blue-600 font-medium text-sm mb-1">{member.role}</p>
                             )}
                             
+                            {/* Experience below services */}
+                            {member.experience && member.experience.trim() !== '' && (
+                              <p className="text-gray-600 text-sm mb-2">
+                                {member.experience}
+                              </p>
+                            )}
+                            
                             {/* Rating */}
                             <div className="flex items-center">
                               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
