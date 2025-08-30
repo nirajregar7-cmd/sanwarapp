@@ -17,6 +17,28 @@ export function registerSmartSchedulingRoutes(app: Express) {
     }
   });
 
+  // Get staff with their service assignments for management
+  app.get('/api/salons/:salonId/staff-with-services', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const staff = await storage.getSalonStaff(salonId);
+      
+      // Get services for each staff member
+      const staffWithServices = await Promise.all(staff.map(async (member) => {
+        const services = await storage.getStaffServices(member.id);
+        return {
+          ...member,
+          services: services || []
+        };
+      }));
+      
+      res.json(staffWithServices);
+    } catch (error) {
+      console.error('Error fetching staff with services:', error);
+      res.status(500).json({ error: 'Failed to fetch staff with services' });
+    }
+  });
+
   app.post('/api/salons/:salonId/staff', async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
