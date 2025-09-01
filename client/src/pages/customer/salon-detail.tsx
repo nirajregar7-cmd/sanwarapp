@@ -176,7 +176,7 @@ export default function SalonDetail() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [viewingMedia, currentMediaIndex, gallery]);
 
-  // Fetch working hours - parallel loading
+  // Fetch working hours from staff schedule data - parallel loading
   const { data: workingHours = [], isLoading: hoursLoading } = useQuery<any[]>({
     queryKey: [`/api/salons/${salonId}/working-hours`],
     enabled: !!salonId,
@@ -190,7 +190,7 @@ export default function SalonDetail() {
     return dayNames.map((dayName, index) => {
       const daySchedule = workingHours.find(wh => wh.dayOfWeek === index);
       
-      if (!daySchedule || !daySchedule.isAvailable) {
+      if (!daySchedule || !daySchedule.isOpen) {
         return {
           day: dayName,
           hours: 'Closed',
@@ -208,13 +208,8 @@ export default function SalonDetail() {
       };
       
       let hoursText = '';
-      if (daySchedule.shift1Start && daySchedule.shift1End) {
-        hoursText = `${formatTime(daySchedule.shift1Start)} - ${formatTime(daySchedule.shift1End)}`;
-        
-        // Add second shift if available
-        if (daySchedule.shift2Start && daySchedule.shift2End) {
-          hoursText += `, ${formatTime(daySchedule.shift2Start)} - ${formatTime(daySchedule.shift2End)}`;
-        }
+      if (daySchedule.openTime && daySchedule.closeTime) {
+        hoursText = `${formatTime(daySchedule.openTime)} - ${formatTime(daySchedule.closeTime)}`;
       }
       
       return {
