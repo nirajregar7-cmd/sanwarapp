@@ -395,20 +395,42 @@ export default function Blog() {
               )}
             </motion.div>
           </AnimatePresence>
-        </motion.section>}
-          </div>
-        </section>
+        </motion.section>
 
         {/* Categories Section */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+        <motion.section 
+          className="mb-16"
+          variants={itemVariants}
+        >
+          <motion.h2 
+            className="text-3xl font-bold text-center mb-12 text-gray-800"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
             Explore Beauty Categories
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          </motion.h2>
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial="hidden"
+            whileInView="visible"
+            variants={containerVariants}
+            viewport={{ once: true }}
+          >
             {categories.map((category, index) => (
-              <div 
+              <motion.div 
                 key={index}
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center"
+                className="bg-white p-6 rounded-lg shadow-md cursor-pointer text-center"
+                variants={itemVariants}
+                whileHover={{ 
+                  y: -5, 
+                  scale: 1.02,
+                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+                }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedCategory(category.name)}
+                transition={{ duration: 0.3 }}
               >
                 <h3 className="text-xl font-semibold text-purple-600 mb-2">
                   {category.name}
@@ -419,26 +441,59 @@ export default function Blog() {
                 <span className="text-sm text-gray-500">
                   {category.count} articles
                 </span>
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
         {/* CTA Section */}
-        <section className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 md:p-12 text-center text-white">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <motion.section 
+          className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 md:p-12 text-center text-white"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+        >
+          <motion.h2 
+            className="text-3xl md:text-4xl font-bold mb-4"
+            initial={{ scale: 0.9 }}
+            whileInView={{ scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
             Ready to Book Your Beauty Appointment?
-          </h2>
-          <p className="text-xl mb-8 opacity-90">
+          </motion.h2>
+          <motion.p 
+            className="text-xl mb-8 opacity-90"
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+          >
             Find and book the best salons in your area with SanwarHub
-          </p>
-          <Link href="/">
-            <button className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-300 text-lg">
-              Book Now
-            </button>
-          </Link>
-        </section>
-      </div>
-    </div>
+          </motion.p>
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <Link href="/">
+              <motion.button 
+                className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-300"
+                whileHover={{ 
+                  scale: 1.05,
+                  boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
+                }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+                Book Now
+              </motion.button>
+            </Link>
+          </motion.div>
+        </motion.section>
+      </motion.div>
+    </motion.div>
   );
 }
