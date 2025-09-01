@@ -177,11 +177,53 @@ export default function SalonDetail() {
   }, [viewingMedia, currentMediaIndex, gallery]);
 
   // Fetch working hours - parallel loading
-  const { data: workingHours = [], isLoading: hoursLoading } = useQuery<WorkingHours[]>({
+  const { data: workingHours = [], isLoading: hoursLoading } = useQuery<any[]>({
     queryKey: [`/api/salons/${salonId}/working-hours`],
     enabled: !!salonId,
     staleTime: 60 * 60 * 1000, // 1 hour cache - working hours rarely change
   });
+
+  // Helper function to format working hours display for customer view
+  const formatWorkingHoursForDisplay = () => {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    return dayNames.map((dayName, index) => {
+      const daySchedule = workingHours.find(wh => wh.dayOfWeek === index);
+      
+      if (!daySchedule || !daySchedule.isAvailable) {
+        return {
+          day: dayName,
+          hours: 'Closed',
+          isOpen: false
+        };
+      }
+      
+      const formatTime = (time: string) => {
+        if (!time) return '';
+        const [hours, minutes] = time.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        return `${displayHour}:${minutes} ${ampm}`;
+      };
+      
+      let hoursText = '';
+      if (daySchedule.shift1Start && daySchedule.shift1End) {
+        hoursText = `${formatTime(daySchedule.shift1Start)} - ${formatTime(daySchedule.shift1End)}`;
+        
+        // Add second shift if available
+        if (daySchedule.shift2Start && daySchedule.shift2End) {
+          hoursText += `, ${formatTime(daySchedule.shift2Start)} - ${formatTime(daySchedule.shift2End)}`;
+        }
+      }
+      
+      return {
+        day: dayName,
+        hours: hoursText || '9:00 AM - 8:00 PM', // fallback to default
+        isOpen: true
+      };
+    });
+  };
 
   // Fetch salon facilities - parallel loading
   const { data: facilities = [], isLoading: facilitiesLoading } = useQuery({
@@ -1303,13 +1345,11 @@ export default function SalonDetail() {
                   </div>
                 ) : workingHours.length > 0 ? (
                   <div className="space-y-2 text-sm">
-                    {workingHours.map((hours) => (
-                      <div key={hours.id} className="flex justify-between">
-                        <span className="capitalize">{hours.dayOfWeek}</span>
-                        <span>
-                          {hours.isOpen 
-                            ? `${hours.openTime} - ${hours.closeTime}` 
-                            : "Closed"}
+                    {formatWorkingHoursForDisplay().map((dayInfo, index) => (
+                      <div key={index} className="flex justify-between">
+                        <span>{dayInfo.day}</span>
+                        <span className={dayInfo.isOpen ? 'text-gray-600' : 'text-red-500'}>
+                          {dayInfo.hours}
                         </span>
                       </div>
                     ))}
