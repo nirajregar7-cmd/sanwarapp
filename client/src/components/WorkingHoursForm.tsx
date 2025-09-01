@@ -62,14 +62,14 @@ export function WorkingHoursForm({ workingHours, onSave, onCancel, isLoading }: 
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {DAYS.map((day, index) => {
         const dayData = hoursData[index];
         if (!dayData) return null;
 
         return (
           <Card key={day.value} className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 pt-3">
               <CardTitle className="flex items-center justify-between text-base">
                 <span className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
@@ -84,7 +84,7 @@ export function WorkingHoursForm({ workingHours, onSave, onCancel, isLoading }: 
             </CardHeader>
             <CardContent className="pt-0">
               {dayData.isOpen ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <Label htmlFor={`open-${day.value}`} className="text-sm font-medium">
                       Opening Time
@@ -120,12 +120,13 @@ export function WorkingHoursForm({ workingHours, onSave, onCancel, isLoading }: 
         );
       })}
 
-      <div className="flex justify-end space-x-2 pt-6 border-t">
+      <div className="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-2 pt-6 border-t">
         <Button 
           type="button" 
           variant="outline" 
           onClick={onCancel}
           disabled={isLoading}
+          className="w-full sm:w-auto"
           data-testid="button-cancel-working-hours"
         >
           Cancel
@@ -133,6 +134,7 @@ export function WorkingHoursForm({ workingHours, onSave, onCancel, isLoading }: 
         <Button 
           onClick={handleSave}
           disabled={isLoading}
+          className="w-full sm:w-auto"
           data-testid="button-save-working-hours"
         >
           {isLoading ? "Saving..." : "Save Working Hours"}
