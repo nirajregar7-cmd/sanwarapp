@@ -30,6 +30,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
 import { apiRequest } from "@/lib/queryClient";
 import { PromoPopup } from "@/components/PromoPopup";
+import { WorkingHoursForm } from "@/components/WorkingHoursForm";
 
 const salonSchema = z.object({
   name: z.string().min(1, "Salon name is required"),
@@ -84,6 +85,7 @@ export default function OwnerDashboard() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [salonLocation, setSalonLocation] = useState<{lat: number, lng: number} | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [editingWorkingHours, setEditingWorkingHours] = useState(false);
 
   // Fetch user's salon - optimized caching
   const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
@@ -154,6 +156,30 @@ export default function OwnerDashboard() {
     queryKey: [`/api/salons/${salon?.id}/working-hours`],
     enabled: !!salon?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+
+  // Working hours update mutation
+  const updateWorkingHoursMutation = useMutation({
+    mutationFn: async (hoursData: any[]) => {
+      return await apiRequest("POST", `/api/salons/${salon?.id}/working-hours`, {
+        workingHours: hoursData
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries([`/api/salons/${salon?.id}/working-hours`]);
+      setEditingWorkingHours(false);
+      toast({
+        title: "Success",
+        description: "Salon working hours updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update working hours",
+        variant: "destructive",
+      });
+    },
   });
 
   // Helper function to format working hours display
@@ -1699,11 +1725,20 @@ export default function OwnerDashboard() {
                         );
                       })
                     )}
-                    <div className="pt-4 border-t">
+                    <div className="pt-4 border-t space-y-2">
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        onClick={() => setEditingWorkingHours(true)}
+                        data-testid="button-configure-salon-hours"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Configure Salon Hours
+                      </Button>
                       <Link href="/owner/staff-schedule">
-                        <Button variant="outline" className="w-full" data-testid="button-configure-working-hours">
-                          <Settings className="h-4 w-4 mr-2" />
-                          Configure Working Hours
+                        <Button variant="ghost" className="w-full text-sm" data-testid="button-configure-staff-schedule">
+                          <Users className="h-4 w-4 mr-2" />
+                          Manage Staff Schedules
                         </Button>
                       </Link>
                     </div>
@@ -2340,6 +2375,24 @@ export default function OwnerDashboard() {
               )}
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Working Hours Management Dialog */}
+      <Dialog open={editingWorkingHours} onOpenChange={setEditingWorkingHours}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Configure Salon Working Hours</DialogTitle>
+            <DialogDescription>
+              Set your salon's opening and closing times for each day of the week
+            </DialogDescription>
+          </DialogHeader>
+          <WorkingHoursForm 
+            workingHours={workingHours}
+            onSave={(hoursData) => updateWorkingHoursMutation.mutate(hoursData)}
+            onCancel={() => setEditingWorkingHours(false)}
+            isLoading={updateWorkingHoursMutation.isPending}
+          />
         </DialogContent>
       </Dialog>
 

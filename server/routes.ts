@@ -784,6 +784,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update salon working hours endpoint
+  app.post('/api/salons/:salonId/working-hours', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { salonId } = req.params;
+      const { workingHours: hoursData } = req.body;
+
+      // Verify salon ownership
+      const userSalons = await storage.getSalonsByOwner(req.user!.id);
+      const salon = userSalons.find(s => s.id === salonId);
+      if (!salon) {
+        return res.status(403).json({ error: 'Unauthorized to modify this salon' });
+      }
+
+      // Delete existing working hours for this salon
+      await db.delete(workingHours).where(eq(workingHours.salonId, salonId));
+
+      // Insert new working hours
+      const updatedHours = [];
+      for (const dayData of hoursData) {
+        if (dayData.isOpen) {
+          const [newHour] = await db.insert(workingHours).values({
+            salonId,
+            dayOfWeek: dayData.dayOfWeek,
+            isOpen: true,
+            openTime: dayData.openTime,
+            closeTime: dayData.closeTime,
+            breakStartTime: dayData.breakStartTime || null,
+            breakEndTime: dayData.breakEndTime || null,
+          }).returning();
+          updatedHours.push(newHour);
+        } else {
+          // Insert closed day
+          const [newHour] = await db.insert(workingHours).values({
+            salonId,
+            dayOfWeek: dayData.dayOfWeek,
+            isOpen: false,
+            openTime: null,
+            closeTime: null,
+            breakStartTime: null,
+            breakEndTime: null,
+          }).returning();
+          updatedHours.push(newHour);
+        }
+      }
+
+      res.json(updatedHours);
+    } catch (error) {
+      console.error("Error updating salon working hours:", error);
+      res.status(500).json({ message: "Failed to update working hours" });
+    }
+  });
+
   // Profile visit tracking endpoints
   // Track a profile visit (when someone views a salon profile)
   app.post('/api/salons/:salonId/profile-visit', async (req, res) => {
