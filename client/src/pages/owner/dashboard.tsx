@@ -149,6 +149,52 @@ export default function OwnerDashboard() {
     staleTime: 2 * 60 * 1000, // 2 minutes cache - messages change more frequently
   });
 
+  // Fetch working hours data
+  const { data: workingHours = [], isLoading: workingHoursLoading } = useQuery<any[]>({
+    queryKey: [`/api/salons/${salon?.id}/working-hours`],
+    enabled: !!salon?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+
+  // Helper function to format working hours display
+  const getWorkingHoursForDay = (dayName: string) => {
+    const dayMap: { [key: string]: number } = {
+      'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 
+      'Friday': 5, 'Saturday': 6, 'Sunday': 0
+    };
+    
+    const dayOfWeek = dayMap[dayName];
+    const daySchedule = workingHours.find(wh => wh.dayOfWeek === dayOfWeek);
+    
+    if (!daySchedule || !daySchedule.isAvailable) {
+      return { isOpen: false, hours: 'Closed' };
+    }
+    
+    const formatTime = (time: string) => {
+      if (!time) return '';
+      const [hours, minutes] = time.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+      return `${displayHour}:${minutes} ${ampm}`;
+    };
+    
+    let hoursText = '';
+    if (daySchedule.shift1Start && daySchedule.shift1End) {
+      hoursText = `${formatTime(daySchedule.shift1Start)} - ${formatTime(daySchedule.shift1End)}`;
+      
+      // Add second shift if available
+      if (daySchedule.shift2Start && daySchedule.shift2End) {
+        hoursText += `, ${formatTime(daySchedule.shift2Start)} - ${formatTime(daySchedule.shift2End)}`;
+      }
+    }
+    
+    return { 
+      isOpen: true, 
+      hours: hoursText || '9:00 AM - 8:00 PM' // fallback to default
+    };
+  };
+
   const brandInvitations = brandInvitationsData?.received || [];
 
   const salonForm = useForm<SalonFormData>({
@@ -1626,18 +1672,33 @@ export default function OwnerDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                      <div key={day} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="font-medium">{day}</div>
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2">
-                            <Clock className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">9:00 AM - 8:00 PM</span>
-                          </div>
-                          <Switch defaultChecked />
+                    {workingHoursLoading ? (
+                      // Loading state
+                      ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                        <div key={day} className="flex items-center justify-between p-4 border rounded-lg animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded w-20"></div>
+                          <div className="h-4 bg-gray-200 rounded w-32"></div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
+                        const dayHours = getWorkingHoursForDay(day);
+                        return (
+                          <div key={day} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="font-medium">{day}</div>
+                            <div className="flex items-center space-x-4">
+                              <div className="flex items-center space-x-2">
+                                <Clock className="h-4 w-4 text-gray-400" />
+                                <span className={`text-sm ${dayHours.isOpen ? 'text-gray-600' : 'text-red-500'}`}>
+                                  {dayHours.hours}
+                                </span>
+                              </div>
+                              <Switch checked={dayHours.isOpen} disabled />
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                     <div className="pt-4 border-t">
                       <Link href="/owner/staff-schedule">
                         <Button variant="outline" className="w-full" data-testid="button-configure-working-hours">
