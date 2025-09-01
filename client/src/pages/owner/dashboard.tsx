@@ -1639,10 +1639,12 @@ export default function OwnerDashboard() {
                       </div>
                     ))}
                     <div className="pt-4 border-t">
-                      <Button variant="outline" className="w-full">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Configure Working Hours
-                      </Button>
+                      <Link href="/owner/staff-schedule">
+                        <Button variant="outline" className="w-full" data-testid="button-configure-working-hours">
+                          <Settings className="h-4 w-4 mr-2" />
+                          Configure Working Hours
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </CardContent>
