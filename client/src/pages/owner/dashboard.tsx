@@ -166,7 +166,7 @@ export default function OwnerDashboard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries([`/api/salons/${salon?.id}/working-hours`]);
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/working-hours`] });
       setEditingWorkingHours(false);
       toast({
         title: "Success",
@@ -192,7 +192,7 @@ export default function OwnerDashboard() {
     const dayOfWeek = dayMap[dayName];
     const daySchedule = workingHours.find(wh => wh.dayOfWeek === dayOfWeek);
     
-    if (!daySchedule || !daySchedule.isAvailable) {
+    if (!daySchedule || !daySchedule.isOpen) {
       return { isOpen: false, hours: 'Closed' };
     }
     
@@ -206,12 +206,12 @@ export default function OwnerDashboard() {
     };
     
     let hoursText = '';
-    if (daySchedule.shift1Start && daySchedule.shift1End) {
-      hoursText = `${formatTime(daySchedule.shift1Start)} - ${formatTime(daySchedule.shift1End)}`;
+    if (daySchedule.openTime && daySchedule.closeTime) {
+      hoursText = `${formatTime(daySchedule.openTime)} - ${formatTime(daySchedule.closeTime)}`;
       
-      // Add second shift if available
-      if (daySchedule.shift2Start && daySchedule.shift2End) {
-        hoursText += `, ${formatTime(daySchedule.shift2Start)} - ${formatTime(daySchedule.shift2End)}`;
+      // Add break time if available
+      if (daySchedule.breakStartTime && daySchedule.breakEndTime) {
+        hoursText += ` (Break: ${formatTime(daySchedule.breakStartTime)} - ${formatTime(daySchedule.breakEndTime)})`;
       }
     }
     
