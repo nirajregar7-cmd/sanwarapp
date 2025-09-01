@@ -12,7 +12,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Clock, Users, Calendar as CalendarIcon,
-  Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye
+  Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -61,6 +62,7 @@ export default function SalonDetail() {
   const [likesCount, setLikesCount] = useState(0);
   const [appliedReferralCode, setAppliedReferralCode] = useState<any>(null);
   const [viewingMedia, setViewingMedia] = useState<any>(null);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   
   // Check if this is a reschedule operation
   const searchParams = new URLSearchParams(window.location.search);
@@ -85,6 +87,8 @@ export default function SalonDetail() {
       trackVisitMutation.mutate();
     }
   }, [salonId]);
+
+
 
   // Fetch salon details with optimized settings
   const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
@@ -131,6 +135,46 @@ export default function SalonDetail() {
     enabled: !!salonId,
     staleTime: 30 * 60 * 1000, // 30 minutes cache - media doesn't change often
   });
+
+  // Gallery navigation functions
+  const openMediaViewer = (media: any, index: number) => {
+    setViewingMedia(media);
+    setCurrentMediaIndex(index);
+  };
+
+  const navigateToPrevious = () => {
+    if (gallery && gallery.length > 0) {
+      const newIndex = currentMediaIndex > 0 ? currentMediaIndex - 1 : gallery.length - 1;
+      setCurrentMediaIndex(newIndex);
+      setViewingMedia(gallery[newIndex]);
+    }
+  };
+
+  const navigateToNext = () => {
+    if (gallery && gallery.length > 0) {
+      const newIndex = currentMediaIndex < gallery.length - 1 ? currentMediaIndex + 1 : 0;
+      setCurrentMediaIndex(newIndex);
+      setViewingMedia(gallery[newIndex]);
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (viewingMedia) {
+        if (e.key === 'ArrowLeft') {
+          navigateToPrevious();
+        } else if (e.key === 'ArrowRight') {
+          navigateToNext();
+        } else if (e.key === 'Escape') {
+          setViewingMedia(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [viewingMedia, currentMediaIndex, gallery]);
 
   // Fetch working hours - parallel loading
   const { data: workingHours = [], isLoading: hoursLoading } = useQuery<WorkingHours[]>({
@@ -732,9 +776,9 @@ export default function SalonDetail() {
                             <h4 className="font-semibold text-gray-900 text-lg">{member.name}</h4>
                             
                             {/* Assigned Services as subtitle */}
-                            {member.services && member.services.length > 0 ? (
+                            {(member as any).services && (member as any).services.length > 0 ? (
                               <p className="text-blue-600 text-sm mb-1">
-                                {member.services.map(service => service.serviceName).join(', ')}
+                                {(member as any).services.map((service: any) => service.serviceName).join(', ')}
                               </p>
                             ) : member.specialties && member.specialties.length > 0 ? (
                               <p className="text-blue-600 text-sm mb-1">
@@ -795,11 +839,11 @@ export default function SalonDetail() {
                   </div>
                 ) : gallery.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {gallery.map((media) => (
+                    {gallery.map((media, index) => (
                       <div 
                         key={media.id} 
                         className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
-                        onClick={() => setViewingMedia(media)}
+                        onClick={() => openMediaViewer(media, index)}
                         data-testid={`media-item-${media.id}`}
                       >
                         {media.fileType === "video" ? (
@@ -1394,7 +1438,7 @@ export default function SalonDetail() {
         </div>
       </div>
 
-      {/* Media Viewer Modal */}
+      {/* Enhanced Media Viewer Modal with Navigation */}
       <Dialog open={!!viewingMedia} onOpenChange={() => setViewingMedia(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] p-0">
           <DialogHeader className="sr-only">
@@ -1406,6 +1450,7 @@ export default function SalonDetail() {
             </DialogDescription>
           </DialogHeader>
           <div className="relative">
+            {/* Close button */}
             <button
               onClick={() => setViewingMedia(null)}
               className="absolute top-4 right-4 z-50 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-colors"
@@ -1413,6 +1458,28 @@ export default function SalonDetail() {
             >
               <X className="h-5 w-5" />
             </button>
+
+            {/* Previous navigation button */}
+            {gallery.length > 1 && (
+              <button
+                onClick={navigateToPrevious}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 bg-black bg-opacity-50 text-white rounded-full p-3 hover:bg-opacity-70 transition-colors"
+                data-testid="button-prev-image"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            )}
+
+            {/* Next navigation button */}
+            {gallery.length > 1 && (
+              <button
+                onClick={navigateToNext}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 bg-black bg-opacity-50 text-white rounded-full p-3 hover:bg-opacity-70 transition-colors"
+                data-testid="button-next-image"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
             
             {viewingMedia && (
               <div className="relative">
@@ -1436,21 +1503,31 @@ export default function SalonDetail() {
                 {/* Media info overlay */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
                   <div className="text-white">
-                    <h3 className="text-lg font-semibold" data-testid="text-viewer-title">
-                      {viewingMedia.title || viewingMedia.fileName || "Salon Image"}
-                    </h3>
-                    {viewingMedia.category && (
-                      <p className="text-sm opacity-80 capitalize" data-testid="text-viewer-category">
-                        {viewingMedia.category.replace("_", " ")}
-                      </p>
-                    )}
-                    <div className="flex items-center space-x-4 text-sm opacity-80 mt-2">
-                      <span>{viewingMedia.fileType === "video" ? "Video" : "Photo"}</span>
-                      {viewingMedia.fileSize && (
-                        <span>{(viewingMedia.fileSize / (1024 * 1024)).toFixed(1)} MB</span>
-                      )}
-                      {viewingMedia.isPrimary && (
-                        <span className="bg-yellow-500 px-2 py-1 rounded text-xs">Primary</span>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold" data-testid="text-viewer-title">
+                          {viewingMedia.title || viewingMedia.fileName || "Salon Image"}
+                        </h3>
+                        {viewingMedia.category && (
+                          <p className="text-sm opacity-80 capitalize" data-testid="text-viewer-category">
+                            {viewingMedia.category.replace("_", " ")}
+                          </p>
+                        )}
+                        <div className="flex items-center space-x-4 text-sm opacity-80 mt-2">
+                          <span>{viewingMedia.fileType === "video" ? "Video" : "Photo"}</span>
+                          {viewingMedia.fileSize && (
+                            <span>{(viewingMedia.fileSize / (1024 * 1024)).toFixed(1)} MB</span>
+                          )}
+                          {viewingMedia.isPrimary && (
+                            <span className="bg-yellow-500 px-2 py-1 rounded text-xs">Primary</span>
+                          )}
+                        </div>
+                      </div>
+                      {/* Image counter */}
+                      {gallery.length > 1 && (
+                        <div className="text-sm opacity-80 bg-black bg-opacity-30 px-3 py-1 rounded">
+                          {currentMediaIndex + 1} / {gallery.length}
+                        </div>
                       )}
                     </div>
                   </div>
