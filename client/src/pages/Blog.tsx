@@ -1,8 +1,52 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-import { Clock, User, ArrowRight } from 'lucide-react';
+import { Clock, User, ArrowRight, Search, Filter } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Blog() {
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
+  const cardHoverVariants = {
+    hover: {
+      y: -8,
+      scale: 1.02,
+      transition: { duration: 0.3, ease: "easeOut" }
+    }
+  };
+
+  useEffect(() => {
+    // Simulate loading time for smooth animation
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     // Set SEO meta tags
     document.title = "Beauty & Salon Tips Blog - SanwarHub | Expert Beauty Advice & Trends";
@@ -152,75 +196,206 @@ export default function Blog() {
     { name: "Bridal Beauty", description: "Wedding preparation & special occasions", count: 6 }
   ];
 
+  // Filter blog posts based on category and search query
+  const filteredPosts = blogPosts.filter(post => {
+    const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  if (isLoading) {
+    return (
+      <motion.div 
+        className="min-h-screen bg-gray-50 flex items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full"
+        />
+      </motion.div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <motion.div 
+      className="min-h-screen bg-gray-50"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white">
+      <motion.div 
+        className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white overflow-hidden"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
         <div className="container mx-auto px-4 py-16">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+          <motion.div 
+            className="text-center max-w-4xl mx-auto"
+            variants={itemVariants}
+          >
+            <motion.h1 
+              className="text-4xl md:text-5xl font-bold mb-6"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               SanwarHub Beauty Blog
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 opacity-90">
+            </motion.h1>
+            <motion.p 
+              className="text-xl md:text-2xl mb-8 opacity-90"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               Expert Beauty Tips, Trends & Professional Advice
-            </p>
-            <div className="text-sm opacity-75">
-              <Link href="/" className="hover:underline">Home</Link> 
+            </motion.p>
+            <motion.div 
+              className="text-sm opacity-75"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <Link href="/" className="hover:underline transition-all duration-200">Home</Link> 
               <span className="mx-2">›</span> 
               <span>Blog</span>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
-        {/* Blog Posts Grid */}
-        <section className="mb-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.map((post) => (
-              <article 
-                key={post.id} 
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+      <motion.div 
+        className="container mx-auto px-4 py-12"
+        variants={containerVariants}
+      >
+        {/* Search and Filter Section */}
+        <motion.section 
+          className="mb-12"
+          variants={itemVariants}
+        >
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row gap-4 mb-8">
+              {/* Search Input */}
+              <motion.div 
+                className="relative flex-1"
+                whileFocus={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
               >
-                <img 
-                  src={post.image} 
-                  alt={post.title}
-                  className="w-full h-48 object-cover"
-                  loading="lazy"
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search beauty tips, trends, and advice..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300"
                 />
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4 text-sm text-gray-500">
-                    <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium">
-                      {post.category}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{post.readTime}</span>
+              </motion.div>
+              
+              {/* Category Filter */}
+              <motion.div 
+                className="flex items-center gap-2"
+                whileHover={{ scale: 1.02 }}
+              >
+                <Filter className="text-gray-400 w-5 h-5" />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category.name} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </motion.div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Blog Posts Grid */}
+        <motion.section className="mb-16">
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={`${selectedCategory}-${searchQuery}`}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, staggerChildren: 0.1 }}
+            >
+              {filteredPosts.length === 0 ? (
+                <motion.div 
+                  className="col-span-full text-center py-12"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <div className="text-6xl mb-4">🔍</div>
+                  <h3 className="text-2xl font-semibold text-gray-700 mb-2">No posts found</h3>
+                  <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+                </motion.div>
+              ) : (
+                filteredPosts.map((post, index) => (
+                  <motion.article 
+                    key={post.id} 
+                    className="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer"
+                    variants={cardHoverVariants}
+                    whileHover="hover"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <img 
+                      src={post.image} 
+                      alt={post.title}
+                      className="w-full h-48 object-cover"
+                      loading="lazy"
+                    />
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-4 text-sm text-gray-500">
+                        <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium">
+                          {post.category}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{post.readTime}</span>
+                        </div>
+                      </div>
+                      
+                      <h3 className="text-xl font-bold mb-3 text-gray-800 line-clamp-2">
+                        {post.title}
+                      </h3>
+                      
+                      <p className="text-gray-600 mb-4 line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <User className="w-4 h-4" />
+                          <span>{post.author}</span>
+                        </div>
+                        <button className="flex items-center gap-1 text-purple-600 hover:text-purple-700 font-medium">
+                          Read More
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold mb-3 text-gray-800 line-clamp-2">
-                    {post.title}
-                  </h3>
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {post.excerpt}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <User className="w-4 h-4" />
-                      <span>{post.author}</span>
-                    </div>
-                    <button className="flex items-center gap-1 text-purple-600 hover:text-purple-700 font-medium">
-                      Read More
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
+                  </motion.article>
+                ))
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </motion.section>}
           </div>
         </section>
 
