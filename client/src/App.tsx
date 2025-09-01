@@ -64,6 +64,9 @@ import BrandDashboard from "@/pages/brand-owner/brand-dashboard";
 import USAHub from "@/pages/usa/usa-hub";
 import USCityDetail from "@/pages/usa/city-detail";
 
+// Blog Page
+import Blog from "@/pages/Blog";
+
 
 
 // Payment Pages
@@ -126,6 +129,13 @@ function Router() {
       {/* USA SEO pages - accessible to all users */}
       <Route path="/usa" component={USAHub} />
       <Route path="/usa/:slug" component={USCityDetail} />
+      
+      {/* Blog page - accessible to all users */}
+      <Route path="/blog">
+        <Layout>
+          <Blog />
+        </Layout>
+      </Route>
 
       {/* Main routes based on authentication */}
       {!user || !isAuthenticated ? (
