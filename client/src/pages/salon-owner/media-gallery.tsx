@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +33,9 @@ import {
   Film,
   Tag,
   FileText,
-  ArrowLeft
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -61,6 +63,7 @@ export default function MediaGallery() {
   const [editingMedia, setEditingMedia] = useState<SalonMedia | null>(null);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [viewingMedia, setViewingMedia] = useState<SalonMedia | null>(null);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   // Get salon info first
   const { data: salon } = useQuery({
@@ -74,6 +77,46 @@ export default function MediaGallery() {
     queryKey: [`/api/salons/${salonId}/media`],
     enabled: !!salonId,
   });
+
+  // Gallery navigation functions
+  const openMediaViewer = (media: SalonMedia, index: number) => {
+    setViewingMedia(media);
+    setCurrentMediaIndex(index);
+  };
+
+  const navigateToPrevious = () => {
+    if (mediaList && mediaList.length > 0) {
+      const newIndex = currentMediaIndex > 0 ? currentMediaIndex - 1 : mediaList.length - 1;
+      setCurrentMediaIndex(newIndex);
+      setViewingMedia(mediaList[newIndex]);
+    }
+  };
+
+  const navigateToNext = () => {
+    if (mediaList && mediaList.length > 0) {
+      const newIndex = currentMediaIndex < mediaList.length - 1 ? currentMediaIndex + 1 : 0;
+      setCurrentMediaIndex(newIndex);
+      setViewingMedia(mediaList[newIndex]);
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (viewingMedia) {
+        if (e.key === 'ArrowLeft') {
+          navigateToPrevious();
+        } else if (e.key === 'ArrowRight') {
+          navigateToNext();
+        } else if (e.key === 'Escape') {
+          setViewingMedia(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [viewingMedia, currentMediaIndex, mediaList]);
 
   // Upload media mutation
   const uploadMutation = useMutation({
@@ -234,7 +277,7 @@ export default function MediaGallery() {
     e.preventDefault();
   };
 
-  const renderMediaItem = (media: SalonMedia) => {
+  const renderMediaItem = (media: SalonMedia, index: number) => {
     const isVideo = media.fileType === "video";
     const IconComponent = isVideo ? Film : Camera;
 
@@ -247,7 +290,7 @@ export default function MediaGallery() {
                 src={media.fileUrl}
                 className="w-full h-full object-cover cursor-pointer"
                 preload="metadata"
-                onClick={() => setViewingMedia(media)}
+                onClick={() => openMediaViewer(media, index)}
                 data-testid={`video-media-${media.id}`}
               />
             ) : (
@@ -255,7 +298,7 @@ export default function MediaGallery() {
                 src={media.fileUrl}
                 alt={media.title || "Salon media"}
                 className="w-full h-full object-cover cursor-pointer"
-                onClick={() => setViewingMedia(media)}
+                onClick={() => openMediaViewer(media, index)}
                 data-testid={`img-media-${media.id}`}
               />
             )}
@@ -267,7 +310,7 @@ export default function MediaGallery() {
                 variant="secondary"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setViewingMedia(media);
+                  openMediaViewer(media, index);
                 }}
                 className="bg-blue-500/80 hover:bg-blue-500"
                 data-testid={`button-view-${media.id}`}
@@ -451,7 +494,7 @@ export default function MediaGallery() {
         </div>
       ) : mediaList.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="media-grid">
-          {mediaList.map(renderMediaItem)}
+          {mediaList.map((media, index) => renderMediaItem(media, index))}
         </div>
       ) : (
         <div className="text-center py-12" data-testid="empty-state">
@@ -601,6 +644,35 @@ export default function MediaGallery() {
                     className="w-full h-auto max-h-[80vh] object-contain"
                     data-testid={`img-viewer-${viewingMedia.id}`}
                   />
+                )}
+
+                {/* Navigation arrows - only show if there are multiple images */}
+                {mediaList && mediaList.length > 1 && (
+                  <>
+                    <button
+                      onClick={navigateToPrevious}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-3 hover:bg-opacity-70 transition-colors z-40"
+                      data-testid="button-nav-previous"
+                      title="Previous image (←)"
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </button>
+                    <button
+                      onClick={navigateToNext}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-3 hover:bg-opacity-70 transition-colors z-40"
+                      data-testid="button-nav-next"
+                      title="Next image (→)"
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </button>
+                  </>
+                )}
+
+                {/* Image counter */}
+                {mediaList && mediaList.length > 1 && (
+                  <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm z-40" data-testid="text-image-counter">
+                    {currentMediaIndex + 1} / {mediaList.length}
+                  </div>
                 )}
                 
                 {/* Media info overlay */}
