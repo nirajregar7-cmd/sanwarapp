@@ -1,30 +1,26 @@
 User-agent: *
 Allow: /
 
-# High-priority near me pages
-Allow: /salon-near-me/
-Allow: /haircut-near-me/
-Allow: /spa-near-me/
-Allow: /beauty-salon-near-me/
-Allow: /bridal-makeup-near-me/
-Allow: /facial-near-me/
-Allow: /best-salon-near-me/
-Allow: /hair-salon-near-me/
-Allow: /unisex-salon-near-me/
-Allow: /mens-salon-near-me/
-Allow: /womens-salon-near-me/
-Allow: /manicure-pedicure-near-me/
-Allow: /waxing-near-me/
-Allow: /threading-near-me/
-Allow: /hair-color-near-me/
+# Allow all search engines to crawl the site
+Allow: /blog.html
+Allow: /sitemap.xml
+Allow: /india/
+Allow: /usa/
+Allow: /brands/
+Allow: /salons/
 
-# SEO pages
-Allow: /seo/
-
-# Disallow admin and private areas
+# Block admin areas and API endpoints from crawling
 Disallow: /admin/
 Disallow: /api/
-Disallow: /private/
+Disallow: /owner/
+Disallow: /auth/
+Disallow: /_next/
+Disallow: /node_modules/
+Disallow: /.env
+Disallow: /server/
 
 # Sitemap location
-Sitemap: https://sanwarhub.in/seo/sitemap.xml
+Sitemap: https://sanwarhub.in/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1

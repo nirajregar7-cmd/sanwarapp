@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title>Beauty & Salon Tips Blog - SanwarHub | Expert Beauty Advice & Trends</title>
+    <meta name="description" content="Discover expert beauty tips, salon trends, hair care advice, and skincare routines on SanwarHub blog. Get professional beauty insights from top salons across India.">
+    <meta name="keywords" content="beauty blog, salon tips, hair care, skincare, beauty trends, salon booking, beauty advice, makeup tips, hair styling, spa treatments, beauty parlour, salon services">
+    <meta name="author" content="SanwarHub">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags for Social Media -->
+    <meta property="og:title" content="Beauty & Salon Tips Blog - SanwarHub">
+    <meta property="og:description" content="Expert beauty tips, salon trends, and professional advice from India's leading salon booking platform.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sanwarhub.in/blog.html">
+    <meta property="og:image" content="https://sanwarhub.in/images/blog-banner.jpg">
+    <meta property="og:site_name" content="SanwarHub">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Beauty & Salon Tips Blog - SanwarHub">
+    <meta name="twitter:description" content="Expert beauty tips and salon advice from India's top beauty professionals.">
+    <meta name="twitter:image" content="https://sanwarhub.in/images/blog-banner.jpg">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://sanwarhub.in/blog.html">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- CSS Styles -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #fafafa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .header-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .header-content p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .nav-breadcrumb {
+            background: white;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .breadcrumb {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        main {
+            padding: 3rem 0;
+        }
+        
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .blog-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .blog-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .blog-card-content {
+            padding: 1.5rem;
+        }
+        
+        .blog-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .blog-card p {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        .blog-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 1rem;
+        }
+        
+        .read-more {
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+        
+        .read-more:hover {
+            background: #5a67d8;
+        }
+        
+        .categories {
+            margin-bottom: 3rem;
+        }
+        
+        .categories h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+            font-size: 2rem;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .category-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .category-card h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin: 3rem 0;
+        }
+        
+        .cta-button {
+            background: white;
+            color: #667eea;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .header-content h1 {
+                font-size: 2rem;
+            }
+            
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+        }
+    </style>
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "SanwarHub Beauty Blog",
+        "description": "Expert beauty tips, salon trends, and professional advice from India's leading salon booking platform",
+        "url": "https://sanwarhub.in/blog.html",
+        "publisher": {
+            "@type": "Organization",
+            "name": "SanwarHub",
+            "url": "https://sanwarhub.in",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://sanwarhub.in/logo.png"
+            }
+        },
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https://sanwarhub.in/blog.html"
+        }
+    }
+    </script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1>SanwarHub Beauty Blog</h1>
+                <p>Expert Beauty Tips, Trends & Professional Advice</p>
+            </div>
+        </div>
+    </header>
+    
+    <div class="nav-breadcrumb">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="/">Home</a> > <span>Blog</span>
+            </div>
+        </div>
+    </div>
+    
+    <main>
+        <div class="container">
+            <section class="blog-section">
+                <div class="blog-grid">
+                    <!-- Blog Post 1 -->
+                    <article class="blog-card">
+                        <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=200&fit=crop" alt="Hair Care Tips" loading="lazy">
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span>Hair Care</span>
+                                <span>5 min read</span>
+                            </div>
+                            <h3>10 Essential Hair Care Tips for Healthy, Shiny Hair</h3>
+                            <p>Discover professional hair care secrets that salon experts use to keep your hair healthy, strong, and beautiful all year round.</p>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </article>
+                    
+                    <!-- Blog Post 2 -->
+                    <article class="blog-card">
+                        <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=200&fit=crop" alt="Skincare Routine" loading="lazy">
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span>Skincare</span>
+                                <span>7 min read</span>
+                            </div>
+                            <h3>The Ultimate Skincare Routine for Indian Skin</h3>
+                            <p>Learn about the best skincare practices tailored specifically for Indian skin types and climate conditions.</p>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </article>
+                    
+                    <!-- Blog Post 3 -->
+                    <article class="blog-card">
+                        <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=200&fit=crop" alt="Makeup Trends" loading="lazy">
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span>Makeup</span>
+                                <span>6 min read</span>
+                            </div>
+                            <h3>Latest Makeup Trends for 2024: What's Hot This Season</h3>
+                            <p>Stay updated with the latest makeup trends and techniques that are dominating the beauty industry this year.</p>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </article>
+                    
+                    <!-- Blog Post 4 -->
+                    <article class="blog-card">
+                        <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=200&fit=crop" alt="Salon Services" loading="lazy">
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span>Salon Tips</span>
+                                <span>4 min read</span>
+                            </div>
+                            <h3>How to Choose the Right Salon for Your Beauty Needs</h3>
+                            <p>A comprehensive guide to selecting the perfect salon that matches your requirements, budget, and expectations.</p>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </article>
+                    
+                    <!-- Blog Post 5 -->
+                    <article class="blog-card">
+                        <img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&h=200&fit=crop" alt="Spa Treatments" loading="lazy">
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span>Spa & Wellness</span>
+                                <span>8 min read</span>
+                            </div>
+                            <h3>Top 5 Spa Treatments for Stress Relief and Relaxation</h3>
+                            <p>Explore the most effective spa treatments that help you unwind, destress, and rejuvenate your mind and body.</p>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </article>
+                    
+                    <!-- Blog Post 6 -->
+                    <article class="blog-card">
+                        <img src="https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?w=400&h=200&fit=crop" alt="Bridal Beauty" loading="lazy">
+                        <div class="blog-card-content">
+                            <div class="blog-meta">
+                                <span>Bridal Beauty</span>
+                                <span>10 min read</span>
+                            </div>
+                            <h3>Complete Bridal Beauty Guide: From Skincare to Makeup</h3>
+                            <p>Everything you need to know about bridal beauty preparations, timelines, and tips for your special day.</p>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </article>
+                </div>
+            </section>
+            
+            <section class="categories">
+                <h2>Explore Beauty Categories</h2>
+                <div class="category-grid">
+                    <div class="category-card">
+                        <h3>Hair Care</h3>
+                        <p>Tips, treatments & styling advice</p>
+                    </div>
+                    <div class="category-card">
+                        <h3>Skincare</h3>
+                        <p>Routines, products & expert advice</p>
+                    </div>
+                    <div class="category-card">
+                        <h3>Makeup</h3>
+                        <p>Trends, tutorials & product reviews</p>
+                    </div>
+                    <div class="category-card">
+                        <h3>Spa & Wellness</h3>
+                        <p>Relaxation & therapeutic treatments</p>
+                    </div>
+                    <div class="category-card">
+                        <h3>Salon Tips</h3>
+                        <p>Choosing services & salon etiquette</p>
+                    </div>
+                    <div class="category-card">
+                        <h3>Bridal Beauty</h3>
+                        <p>Wedding preparation & special occasions</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <section class="cta-section">
+            <div class="container">
+                <h2>Ready to Book Your Beauty Appointment?</h2>
+                <p>Find and book the best salons in your area with SanwarHub</p>
+                <a href="/" class="cta-button">Book Now</a>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 SanwarHub.in - India's Premier Salon Booking Platform</p>
+            <p>Expert beauty advice and professional salon services at your fingertips</p>
+        </div>
+    </footer>
+</body>
+</html>
