@@ -21,6 +21,7 @@ Promotional offers: Combined popup showing both shopkeeper (top) and customer of
 SEO Enhancement: Added comprehensive JSON-LD structured data schema for Sanwar, including founder information (Niraj Regar & Naveen Chopra from NIT Trichy), company details, and social media links to improve search engine visibility and rich snippets.
 Statistics wording: User wants flexible language instead of exact numbers. Final chosen format: "Many Happy Customers", "Multiple Partner Salons & Parlours", "Many Bookings Already", "Wide Range of Services".
 USA & India SEO Expansion: Implemented comprehensive SEO pages for both USA (25 major cities) and India (with popular salon brands). Added dedicated brand pages for Lakme Salon, VLCC, Naturals, Juice Salon, Jawed Habib, Toni & Guy, Looks Salon, Green Trends, Headturners, and Bounce Salon for improved local search visibility.
+Enhanced Image Gallery Navigation: Implemented seamless navigation for both customer salon detail pages and owner media gallery. Users can now click one image and browse through the entire gallery using navigation arrows, keyboard controls (arrow keys, Escape), with image counter display and wraparound navigation for better UX.
 
 ## System Architecture
 

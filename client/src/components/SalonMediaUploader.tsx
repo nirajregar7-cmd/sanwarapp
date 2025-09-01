@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,9 @@ import {
   Camera,
   Film,
   Tag,
-  FileText
+  FileText,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -63,12 +65,54 @@ export default function SalonMediaUploader({ salonId, maxFiles = 50 }: SalonMedi
   const [uploading, setUploading] = useState(false);
   const [editingMedia, setEditingMedia] = useState<SalonMedia | null>(null);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [viewingMedia, setViewingMedia] = useState<SalonMedia | null>(null);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   // Fetch existing media
   const { data: mediaList = [], isLoading } = useQuery<SalonMedia[]>({
     queryKey: [`/api/salons/${salonId}/media`],
     enabled: !!salonId,
   });
+
+  // Gallery navigation functions
+  const openMediaViewer = (media: SalonMedia, index: number) => {
+    setViewingMedia(media);
+    setCurrentMediaIndex(index);
+  };
+
+  const navigateToPrevious = () => {
+    if (mediaList && mediaList.length > 0) {
+      const newIndex = currentMediaIndex > 0 ? currentMediaIndex - 1 : mediaList.length - 1;
+      setCurrentMediaIndex(newIndex);
+      setViewingMedia(mediaList[newIndex]);
+    }
+  };
+
+  const navigateToNext = () => {
+    if (mediaList && mediaList.length > 0) {
+      const newIndex = currentMediaIndex < mediaList.length - 1 ? currentMediaIndex + 1 : 0;
+      setCurrentMediaIndex(newIndex);
+      setViewingMedia(mediaList[newIndex]);
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (viewingMedia) {
+        if (e.key === 'ArrowLeft') {
+          navigateToPrevious();
+        } else if (e.key === 'ArrowRight') {
+          navigateToNext();
+        } else if (e.key === 'Escape') {
+          setViewingMedia(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [viewingMedia, currentMediaIndex, mediaList]);
 
   // Upload media mutation
   const uploadMutation = useMutation({
@@ -193,19 +237,21 @@ export default function SalonMediaUploader({ salonId, maxFiles = 50 }: SalonMedi
     e.preventDefault();
   }, []);
 
-  const renderMediaItem = (media: SalonMedia) => {
+  const renderMediaItem = (media: SalonMedia, index: number) => {
     const isVideo = media.fileType === "video";
     const IconComponent = isVideo ? Film : Camera;
 
     return (
       <div key={media.id} className="relative group">
         <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-          <div className="relative aspect-square">
+          <div 
+            className="relative aspect-square cursor-pointer"
+            onClick={() => openMediaViewer(media, index)}
+          >
             {isVideo ? (
               <video
                 src={media.fileUrl}
                 className="w-full h-full object-cover"
-                controls
                 preload="metadata"
               />
             ) : (
@@ -221,7 +267,21 @@ export default function SalonMediaUploader({ salonId, maxFiles = 50 }: SalonMedi
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => setEditingMedia(media)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openMediaViewer(media, index);
+                }}
+                className="bg-white/20 hover:bg-white/30"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingMedia(media);
+                }}
                 className="bg-white/20 hover:bg-white/30"
               >
                 <Edit3 className="h-4 w-4" />
@@ -229,7 +289,10 @@ export default function SalonMediaUploader({ salonId, maxFiles = 50 }: SalonMedi
               <Button
                 size="sm"
                 variant="destructive"
-                onClick={() => deleteMutation.mutate(media.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteMutation.mutate(media.id);
+                }}
                 className="bg-red-500/80 hover:bg-red-500"
               >
                 <Trash2 className="h-4 w-4" />
@@ -352,7 +415,7 @@ export default function SalonMediaUploader({ salonId, maxFiles = 50 }: SalonMedi
         </div>
       ) : mediaList.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {mediaList.map(renderMediaItem)}
+          {mediaList.map((media, index) => renderMediaItem(media, index))}
         </div>
       ) : (
         <div className="text-center py-12">
@@ -456,6 +519,111 @@ export default function SalonMediaUploader({ salonId, maxFiles = 50 }: SalonMedi
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Enhanced Media Viewer Modal with Navigation */}
+      <Dialog open={!!viewingMedia} onOpenChange={() => setViewingMedia(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {viewingMedia?.title || viewingMedia?.fileName || "Salon Media Viewer"}
+            </DialogTitle>
+            <DialogDescription>
+              View {viewingMedia?.fileType === "video" ? "video" : "image"} from salon gallery
+            </DialogDescription>
+          </DialogHeader>
+          <div className="relative">
+            {/* Close button */}
+            <button
+              onClick={() => setViewingMedia(null)}
+              className="absolute top-4 right-4 z-50 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-colors"
+              data-testid="button-close-viewer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Previous navigation button */}
+            {mediaList.length > 1 && (
+              <button
+                onClick={navigateToPrevious}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 bg-black bg-opacity-50 text-white rounded-full p-3 hover:bg-opacity-70 transition-colors"
+                data-testid="button-prev-image"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            )}
+
+            {/* Next navigation button */}
+            {mediaList.length > 1 && (
+              <button
+                onClick={navigateToNext}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 bg-black bg-opacity-50 text-white rounded-full p-3 hover:bg-opacity-70 transition-colors"
+                data-testid="button-next-image"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
+            
+            {viewingMedia && (
+              <div className="relative">
+                {viewingMedia.fileType === "video" ? (
+                  <video
+                    src={viewingMedia.fileUrl}
+                    className="w-full h-auto max-h-[80vh] object-contain"
+                    controls
+                    autoPlay
+                    data-testid={`video-viewer-${viewingMedia.id}`}
+                  />
+                ) : (
+                  <img
+                    src={viewingMedia.fileUrl}
+                    alt={viewingMedia.title || "Salon media"}
+                    className="w-full h-auto max-h-[80vh] object-contain"
+                    data-testid={`img-viewer-${viewingMedia.id}`}
+                  />
+                )}
+                
+                {/* Media info overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+                  <div className="text-white">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold" data-testid="text-viewer-title">
+                          {viewingMedia.title || viewingMedia.fileName || "Salon Image"}
+                        </h3>
+                        {viewingMedia.category && (
+                          <p className="text-sm opacity-80 capitalize" data-testid="text-viewer-category">
+                            {viewingMedia.category.replace("_", " ")}
+                          </p>
+                        )}
+                        {viewingMedia.description && (
+                          <p className="text-sm opacity-80 mt-1" data-testid="text-viewer-description">
+                            {viewingMedia.description}
+                          </p>
+                        )}
+                        <div className="flex items-center space-x-4 text-sm opacity-80 mt-2">
+                          <span>{viewingMedia.fileType === "video" ? "Video" : "Photo"}</span>
+                          {viewingMedia.fileSize && (
+                            <span>{(viewingMedia.fileSize / (1024 * 1024)).toFixed(1)} MB</span>
+                          )}
+                          {viewingMedia.isPrimary && (
+                            <span className="bg-yellow-500 px-2 py-1 rounded text-xs">Primary</span>
+                          )}
+                        </div>
+                      </div>
+                      {/* Image counter */}
+                      {mediaList.length > 1 && (
+                        <div className="text-sm opacity-80 bg-black bg-opacity-30 px-3 py-1 rounded">
+                          {currentMediaIndex + 1} / {mediaList.length}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
