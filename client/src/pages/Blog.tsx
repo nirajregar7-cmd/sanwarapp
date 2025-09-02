@@ -105,7 +105,13 @@ export default function Blog() {
         "logo": {
           "@type": "ImageObject",
           "url": "https://sanwarhub.in/logo.png"
-        }
+        },
+        "sameAs": [
+          "https://www.instagram.com/vishal14104",
+          "https://facebook.com/sanwarhub",
+          "https://twitter.com/sanwarhub",
+          "https://linkedin.com/company/sanwarhub"
+        ]
       },
       "mainEntityOfPage": {
         "@type": "WebPage",

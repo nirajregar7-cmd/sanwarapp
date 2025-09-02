@@ -45,6 +45,77 @@ export default function Landing() {
     }
   }, [locationPreference]);
 
+  // Add comprehensive SEO structured data for homepage
+  useEffect(() => {
+    // Set comprehensive SEO meta tags
+    document.title = "SanwarHub - Smart Salon Booking Platform | Book Beauty Appointments Online";
+    
+    // Add/update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Book beauty appointments online with SanwarHub. Find top salons, spas & parlours near you. Real-time booking, verified reviews, instant confirmation. India\'s leading salon booking platform.');
+    } else {
+      const meta = document.createElement('meta');
+      meta.name = 'description';
+      meta.content = 'Book beauty appointments online with SanwarHub. Find top salons, spas & parlours near you. Real-time booking, verified reviews, instant confirmation. India\'s leading salon booking platform.';
+      document.head.appendChild(meta);
+    }
+
+    // Add structured data for organization
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "SanwarHub",
+      "description": "India's leading smart salon booking platform connecting customers with top beauty salons and spas",
+      "url": "https://sanwarhub.in",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://sanwarhub.in/logo.png"
+      },
+      "foundingDate": "2024",
+      "founder": [
+        {
+          "@type": "Person",
+          "name": "Niraj Regar"
+        },
+        {
+          "@type": "Person", 
+          "name": "Naveen Chopra"
+        }
+      ],
+      "sameAs": [
+        "https://www.instagram.com/vishal14104",
+        "https://facebook.com/sanwarhub",
+        "https://twitter.com/sanwarhub",
+        "https://linkedin.com/company/sanwarhub"
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "IN"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": ["Hindi", "English"]
+      }
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup structured data on unmount
+      const scripts = document.head.querySelectorAll('script[type="application/ld+json"]');
+      scripts.forEach(script => {
+        if (script.textContent?.includes('SanwarHub')) {
+          script.remove();
+        }
+      });
+    };
+  }, []);
+
   const handleLocationAllow = async () => {
     await requestLocationOnce();
     toast({
