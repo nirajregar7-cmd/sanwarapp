@@ -49,16 +49,16 @@ export default function Blog() {
 
   useEffect(() => {
     // Set SEO meta tags
-    document.title = "Beauty & Salon Tips Blog - SanwarHub | Expert Beauty Advice & Trends";
+    document.title = "Beauty & Salon Tips Blog - Sanwar | Expert Beauty Advice & Trends";
     
     // Update meta description
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', 'Discover expert beauty tips, salon trends, hair care advice, and skincare routines on SanwarHub blog. Get professional beauty insights from top salons across India.');
+      metaDescription.setAttribute('content', 'Discover expert beauty tips, salon trends, hair care advice, and skincare routines on Sanwar blog. Get professional beauty insights from top salons across India.');
     } else {
       const meta = document.createElement('meta');
       meta.name = 'description';
-      meta.content = 'Discover expert beauty tips, salon trends, hair care advice, and skincare routines on SanwarHub blog. Get professional beauty insights from top salons across India.';
+      meta.content = 'Discover expert beauty tips, salon trends, hair care advice, and skincare routines on Sanwar blog. Get professional beauty insights from top salons across India.';
       document.head.appendChild(meta);
     }
 
@@ -86,7 +86,7 @@ export default function Blog() {
       }
     };
 
-    setOGMeta('og:title', 'Beauty & Salon Tips Blog - SanwarHub');
+    setOGMeta('og:title', 'Beauty & Salon Tips Blog - Sanwar');
     setOGMeta('og:description', 'Expert beauty tips, salon trends, and professional advice from India\'s leading salon booking platform.');
     setOGMeta('og:type', 'website');
     setOGMeta('og:url', window.location.href);
@@ -95,12 +95,12 @@ export default function Blog() {
     const structuredData = {
       "@context": "https://schema.org",
       "@type": "Blog",
-      "name": "SanwarHub Beauty Blog",
+      "name": "Sanwar Beauty Blog",
       "description": "Expert beauty tips, salon trends, and professional advice from India's leading salon booking platform",
       "url": window.location.href,
       "publisher": {
         "@type": "Organization",
-        "name": "SanwarHub",
+        "name": "Sanwar",
         "url": "https://sanwarhub.in",
         "logo": {
           "@type": "ImageObject",
@@ -252,7 +252,7 @@ export default function Blog() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              SanwarHub Beauty Blog
+              Sanwar Beauty Blog
             </motion.h1>
             <motion.p 
               className="text-xl md:text-2xl mb-8 opacity-90"
@@ -476,7 +476,7 @@ export default function Blog() {
             transition={{ duration: 0.6, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            Find and book the best salons in your area with SanwarHub
+            Find and book the best salons in your area with Sanwar
           </motion.p>
           <motion.div
             initial={{ y: 20, opacity: 0 }}

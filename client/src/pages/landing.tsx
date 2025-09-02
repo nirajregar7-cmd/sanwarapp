@@ -48,16 +48,16 @@ export default function Landing() {
   // Add comprehensive SEO structured data for homepage
   useEffect(() => {
     // Set comprehensive SEO meta tags
-    document.title = "SanwarHub - Smart Salon Booking Platform | Book Beauty Appointments Online";
+    document.title = "Sanwar - Smart Salon Booking Platform | Book Beauty Appointments Online";
     
     // Add/update meta description
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', 'Book beauty appointments online with SanwarHub. Find top salons, spas & parlours near you. Real-time booking, verified reviews, instant confirmation. India\'s leading salon booking platform.');
+      metaDescription.setAttribute('content', 'Book beauty appointments online with Sanwar. Find top salons, spas & parlours near you. Real-time booking, verified reviews, instant confirmation. India\'s leading salon booking platform.');
     } else {
       const meta = document.createElement('meta');
       meta.name = 'description';
-      meta.content = 'Book beauty appointments online with SanwarHub. Find top salons, spas & parlours near you. Real-time booking, verified reviews, instant confirmation. India\'s leading salon booking platform.';
+      meta.content = 'Book beauty appointments online with Sanwar. Find top salons, spas & parlours near you. Real-time booking, verified reviews, instant confirmation. India\'s leading salon booking platform.';
       document.head.appendChild(meta);
     }
 
@@ -65,7 +65,7 @@ export default function Landing() {
     const structuredData = {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "SanwarHub",
+      "name": "Sanwar",
       "description": "India's leading smart salon booking platform connecting customers with top beauty salons and spas",
       "url": "https://sanwarhub.in",
       "logo": {
