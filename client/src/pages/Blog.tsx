@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function Blog() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Animation variants
   const containerVariants = {
@@ -39,10 +39,10 @@ export default function Blog() {
   };
 
   useEffect(() => {
-    // Simulate loading time for smooth animation
+    // Reduce loading time for faster content display
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 800);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, []);
