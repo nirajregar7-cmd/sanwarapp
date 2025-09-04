@@ -459,20 +459,51 @@ export default function AuthPage() {
               </Button>
 
               {activeTab === "signin" && (
-                <div className="text-center">
-                  <Link href="/forgot-password" className="text-sm text-black hover:text-gray-700">
-                    Forgot your password?
-                  </Link>
+                <div className="space-y-4">
+                  {/* Forgot Password */}
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-2">Having trouble signing in?</p>
+                    <Link href="/forgot-password" className="text-sm font-medium text-purple-600 hover:text-purple-700" data-testid="link-forgot-password">
+                      Forgot your password?
+                    </Link>
+                  </div>
+                  
+                  {/* Register Prompt */}
+                  <div className="text-center p-3 border border-purple-200 bg-purple-50 rounded-lg">
+                    <p className="text-sm text-gray-700 mb-2">Don't have an account yet?</p>
+                    <button
+                      onClick={() => setActiveTab("signup")}
+                      className="text-sm font-medium text-purple-600 hover:text-purple-700 underline"
+                      data-testid="button-switch-to-signup"
+                    >
+                      Register now
+                    </button>
+                  </div>
                 </div>
               )}
 
               {activeTab === "signup" && (
-                <div className="text-center">
-                  <p className="text-xs text-gray-500">
-                    By continuing, you agree to our{" "}
-                    <span className="text-purple-600">Terms of Service</span> and{" "}
-                    <span className="text-purple-600">Privacy Policy</span>
-                  </p>
+                <div className="space-y-4">
+                  {/* Terms */}
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500">
+                      By continuing, you agree to our{" "}
+                      <span className="text-purple-600">Terms of Service</span> and{" "}
+                      <span className="text-purple-600">Privacy Policy</span>
+                    </p>
+                  </div>
+                  
+                  {/* Sign In Prompt */}
+                  <div className="text-center p-3 border border-gray-200 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-700 mb-2">Already have an account?</p>
+                    <button
+                      onClick={() => setActiveTab("signin")}
+                      className="text-sm font-medium text-purple-600 hover:text-purple-700 underline"
+                      data-testid="button-switch-to-signin"
+                    >
+                      Sign in now
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
