@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Eye, EyeOff, Users, Scissors, Gift, Check, X, Smartphone } from "lucide-react";
+import { Eye, EyeOff, Users, Scissors, Gift, Check, X, Smartphone, ArrowLeft, Home } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import SalonOwnerOtpAuth from "@/components/SalonOwnerOtpAuth";
 
@@ -160,6 +160,14 @@ export default function AuthPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 px-4">
         <div className="max-w-md w-full">
+          {/* Back to Home Button */}
+          <div className="mb-6">
+            <Link href="/" className="inline-flex items-center text-white hover:text-white/80 transition-colors">
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              <span className="text-sm font-medium">Back to Home</span>
+            </Link>
+          </div>
+          
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-white mb-2">Welcome to Sanwar</h1>
@@ -177,6 +185,14 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 px-4">
       <div className="max-w-md w-full">
+        {/* Back to Home Button */}
+        <div className="mb-6">
+          <Link href="/" className="inline-flex items-center text-white hover:text-white/80 transition-colors" data-testid="link-back-home">
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            <span className="text-sm font-medium">Back to Home</span>
+          </Link>
+        </div>
+        
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Welcome to Sanwar</h1>
