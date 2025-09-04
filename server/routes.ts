@@ -4094,6 +4094,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete all time slots for individual staff member
+  app.delete("/api/salons/:salonId/staff/:staffId/delete-slots", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId, staffId } = req.params;
+      
+      // Verify salon ownership
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete slots for this salon" });
+      }
+
+      // Verify staff member belongs to this salon
+      const [staffMember] = await db.select()
+        .from(staff)
+        .where(and(eq(staff.id, staffId), eq(staff.salonId, salonId)))
+        .limit(1);
+
+      if (!staffMember) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
+
+      console.log(`[SLOT DELETION] Owner ${userId} deleting all slots for staff ${staffMember.name} (${staffId})`);
+
+      // Delete all unbooked time slots for this staff member
+      const deleteResult = await db
+        .delete(timeSlots)
+        .where(
+          and(
+            eq(timeSlots.salonId, salonId),
+            eq(timeSlots.staffId, staffId),
+            eq(timeSlots.isAvailable, true) // Only delete available slots, not booked ones
+          )
+        );
+
+      res.json({ 
+        message: `Deleted all available slots for ${staffMember.name}`,
+        staffName: staffMember.name
+      });
+    } catch (error) {
+      console.error("Error deleting staff slots:", error);
+      res.status(500).json({ message: "Failed to delete slots" });
+    }
+  });
+
   // Get slot counts for each staff member
   app.get("/api/salons/:salonId/staff-slot-counts", isAuthenticated, async (req: any, res) => {
     try {

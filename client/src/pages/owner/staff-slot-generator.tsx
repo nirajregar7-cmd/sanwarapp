@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Calendar, Clock, User, Plus, Settings, AlertCircle, Eye } from "lucide-react";
+import { Calendar, Clock, User, Plus, Settings, AlertCircle, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { format, addDays } from "date-fns";
 import type { Salon, Staff, TimeSlot } from "@shared/schema";
@@ -100,6 +100,39 @@ export default function StaffSlotGenerator() {
     },
   });
 
+  // Delete slots for individual staff member
+  const deleteSlotsMutation = useMutation({
+    mutationFn: async (staffId: string) => {
+      const response = await fetch(`/api/salons/${salon?.id}/staff/${staffId}/delete-slots`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to delete slots');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data, staffId) => {
+      const staffMember = staff.find(s => s.id === staffId);
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/time-slots`] });
+      refetchSlotCounts(); // Refresh slot counts
+      toast({
+        title: "Time slots deleted successfully!",
+        description: `Deleted all slots for ${staffMember?.name}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error deleting time slots",
+        description: error.message || "Failed to delete time slots",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleOpenSlotConfig = (staffId: string) => {
     setSelectedStaffId(staffId);
     // Initialize staff config with default values if not exists
@@ -126,6 +159,21 @@ export default function StaffSlotGenerator() {
       config
     });
 
+    // Close the dialog
+    setIsSlotConfigOpen(false);
+  };
+
+  const handleDeleteSlots = (staffId: string) => {
+    if (!staffId) {
+      toast({
+        title: "Please select a staff member",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    deleteSlotsMutation.mutate(staffId);
+    
     // Close the dialog
     setIsSlotConfigOpen(false);
   };
@@ -608,16 +656,40 @@ export default function StaffSlotGenerator() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end space-x-3 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsSlotConfigOpen(false)}
-                  >
-                    Cancel
-                  </Button>
+                <div className="flex justify-between pt-4 border-t">
+                  <div className="flex space-x-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsSlotConfigOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    {/* Show Delete button only if staff has existing slots */}
+                    {slotCounts[selectedStaffId] > 0 && (
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteSlots(selectedStaffId)}
+                        disabled={deleteSlotsMutation.isPending}
+                        data-testid="button-delete-slots"
+                      >
+                        {deleteSlotsMutation.isPending ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Slots
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                   <Button
                     onClick={() => handleGenerateSlots(selectedStaffId, getCurrentStaffConfig(selectedStaffId))}
                     disabled={generateSlotsMutation.isPending}
+                    data-testid="button-generate-slots"
                   >
                     {generateSlotsMutation.isPending ? (
                       <>
