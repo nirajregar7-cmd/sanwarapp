@@ -201,6 +201,14 @@ export default function AuthPage() {
 
         <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl rounded-3xl">
           <CardHeader className="text-center pb-6">
+            {/* Back to Home Link */}
+            <div className="mb-4">
+              <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-800 text-sm transition-colors" data-testid="link-back-home-card">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                <span>Back to Home</span>
+              </Link>
+            </div>
+            
             <CardTitle className="text-2xl font-bold text-gray-900">
               Get Started
             </CardTitle>
