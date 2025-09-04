@@ -10,12 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapPin, Navigation, Filter, Search, Star, Clock, Compass } from "lucide-react";
+import { MapPin, Navigation, Filter, Search, Star, Clock, Compass, ArrowLeft, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useToast } from "@/hooks/use-toast";
 import SalonCard from "@/components/SalonCard";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
+import { Link } from "wouter";
 import type { Salon } from "@shared/schema";
 
 export default function SalonDiscovery() {
@@ -129,6 +130,14 @@ export default function SalonDiscovery() {
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Back to Home Button */}
+          <div className="mb-6">
+            <Link href="/" className="inline-flex items-center text-white hover:text-white/80 transition-colors" data-testid="link-back-home">
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              <span className="text-sm font-medium">Back to Home</span>
+            </Link>
+          </div>
+          
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
               <Compass className="h-8 w-8 inline mr-3" />
