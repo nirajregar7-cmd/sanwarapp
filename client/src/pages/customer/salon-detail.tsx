@@ -15,6 +15,7 @@ import {
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
   ChevronLeft, ChevronRight
 } from "lucide-react";
+import { Instagram } from "react-icons/si";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1323,6 +1324,20 @@ export default function SalonDetail() {
                   <MapPin className="h-4 w-4 mr-3 text-gray-400" />
                   <span className="text-sm">{salon.address}</span>
                 </div>
+                {salon.instagramId && (
+                  <div className="flex items-center">
+                    <Instagram className="h-4 w-4 mr-3 text-gray-400" />
+                    <a 
+                      href={`https://www.instagram.com/${salon.instagramId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-600 hover:text-purple-800 transition-colors text-sm flex items-center"
+                      data-testid="link-instagram"
+                    >
+                      @{salon.instagramId}
+                    </a>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
