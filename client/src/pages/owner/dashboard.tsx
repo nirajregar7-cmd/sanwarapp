@@ -44,6 +44,7 @@ const salonSchema = z.object({
     required_error: "Please mark your shop location on the map",
   }),
   imageUrl: z.string().optional(),
+  instagramId: z.string().optional(),
   confirmationAmount: z.number().min(0),
 });
 
@@ -1653,7 +1654,10 @@ export default function OwnerDashboard() {
                         description: salon?.description || "",
                         phone: salon?.phone || "",
                         address: salon?.address || "",
+                        latitude: parseFloat(salon?.latitude as string) || 0,
+                        longitude: parseFloat(salon?.longitude as string) || 0,
                         imageUrl: salon?.imageUrl || "",
+                        instagramId: salon?.instagramId || "",
                         confirmationAmount: salon?.confirmationAmount || 0,
                       });
                       setSalonDialogOpen(true);
@@ -1857,6 +1861,20 @@ export default function OwnerDashboard() {
                   )}
                 />
               </div>
+              
+              <FormField
+                control={salonForm.control}
+                name="instagramId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instagram ID (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="yourhandle (without @)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <FormField
                 control={salonForm.control}
