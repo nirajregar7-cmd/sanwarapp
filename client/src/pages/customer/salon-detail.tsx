@@ -15,7 +15,7 @@ import {
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
   ChevronLeft, ChevronRight
 } from "lucide-react";
-import { Instagram } from "react-icons/si";
+import { SiInstagram } from "react-icons/si";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1326,7 +1326,7 @@ export default function SalonDetail() {
                 </div>
                 {salon.instagramId && (
                   <div className="flex items-center">
-                    <Instagram className="h-4 w-4 mr-3 text-gray-400" />
+                    <SiInstagram className="h-4 w-4 mr-3 text-gray-400" />
                     <a 
                       href={`https://www.instagram.com/${salon.instagramId}`}
                       target="_blank"
