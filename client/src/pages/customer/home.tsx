@@ -129,14 +129,14 @@ export default function CustomerHome() {
                 <Input
                   type="text"
                   placeholder="Enter your location"
-                  value={searchQuery}
+                  value={searchQuery || ""}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
                 />
               </div>
               <Button 
-                className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 text-sm sm:text-base"
+                className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 text-sm sm:text-base flex items-center"
                 onClick={handleSearch}
               >
                 <Search className="h-4 w-4 mr-2" />
@@ -204,18 +204,19 @@ export default function CustomerHome() {
               <Input
                 type="text"
                 placeholder="Enter your location"
-                value={searchQuery}
+                value={searchQuery || ""}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
               />
             </div>
             <Button 
-              className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 rounded-lg font-semibold text-sm sm:text-base"
+              className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 rounded-lg font-semibold text-sm sm:text-base flex items-center"
               onClick={handleSearch}
             >
               <Search className="h-4 w-4 mr-2" />
-              <span>Find Salons</span>
+              <span className="hidden sm:inline">Find Salons</span>
+              <span className="sm:hidden">Find</span>
             </Button>
           </div>
         </div>
