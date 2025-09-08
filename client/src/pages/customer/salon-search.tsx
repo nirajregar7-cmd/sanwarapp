@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import Map from '@/components/Map';
 import LocationSearch from '@/components/LocationSearch';
+import SalonCard from '@/components/SalonCard';
 import { useAuth } from '@/hooks/useAuth';
 import type { Salon } from '@shared/schema';
 
@@ -297,7 +298,7 @@ export default function SalonSearchPage() {
             // Loading skeleton
             Array.from({ length: 6 }).map((_, index) => (
               <Card key={index} className="animate-pulse h-full flex flex-col">
-                <div className="aspect-video bg-gray-300 rounded-t-lg"></div>
+                <div className="h-48 bg-gray-300 rounded-t-lg"></div>
                 <CardContent className="p-4 flex-1 flex flex-col">
                   <div className="h-6 bg-gray-300 rounded mb-2"></div>
                   <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
@@ -308,72 +309,14 @@ export default function SalonSearchPage() {
             ))
           ) : sortedSalons && sortedSalons.length > 0 ? (
             sortedSalons.map((salon) => (
-              <Link key={salon.id} href={`/salon/${salon.id}`}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer group h-full flex flex-col">
-                  <div className="aspect-video bg-gray-200 overflow-hidden rounded-t-lg">
-                    {salon.imageUrl ? (
-                      <img
-                        src={salon.imageUrl}
-                        alt={salon.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <MapPin className="h-12 w-12 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  <CardContent className="p-4 flex-1 flex flex-col">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-lg text-gray-900 group-hover:text-primary transition-colors">
-                        {salon.name}
-                      </h3>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-sm">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">
-                            {salon.averageRating ? Number(salon.averageRating).toFixed(1) : 'New'}
-                          </span>
-                        </div>
-                        {(salon as any).likesCount > 0 && (
-                          <div className="flex items-center gap-1 text-sm text-red-500">
-                            <Heart className="h-4 w-4 fill-current" />
-                            <span className="font-medium">
-                              {(salon as any).likesCount}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span className="truncate">{salon.address}</span>
-                    </div>
-
-                    {/* Distance section with consistent height */}
-                    <div className="h-8 flex items-center mb-4">
-                      {salon.distance ? (
-                        <Badge variant="secondary" className="text-xs">
-                          {salon.distance.toFixed(1)} km away
-                        </Badge>
-                      ) : (
-                        <div></div>
-                      )}
-                    </div>
-
-                    {/* Button section at bottom */}
-                    <div className="mt-auto flex justify-between items-center">
-                      <span className="text-sm font-medium text-green-600">
-                        Book with ₹{salon.confirmationAmount || 0}
-                      </span>
-                      <Button size="sm" className="bg-primary hover:bg-primary/90">
-                        Book Now
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <SalonCard
+                key={salon.id}
+                salon={{
+                  ...salon,
+                  distance: salon.distance,
+                  primaryImageUrl: salon.imageUrl
+                }}
+              />
             ))
           ) : (
             <div className="col-span-full text-center py-12">
