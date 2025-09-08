@@ -36,23 +36,12 @@ export default function SalonCard({ salon }: SalonCardProps) {
     const currentDay = istTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
     const currentTime = istTime.getHours() * 60 + istTime.getMinutes(); // minutes since midnight
     
-    // Debug logging for salon status calculation
-    console.log(`[SALON DEBUG] ${salon.name} (${salon.id}):`);
-    console.log(`[SALON DEBUG] Current IST time: ${istTime.toLocaleString()}`);
-    console.log(`[SALON DEBUG] Current day: ${currentDay} (${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDay]})`);
-    console.log(`[SALON DEBUG] Current time in minutes: ${currentTime} (${Math.floor(currentTime/60)}:${(currentTime%60).toString().padStart(2, '0')})`);
-    console.log(`[SALON DEBUG] Working hours data:`, workingHours);
-    console.log(`[SALON DEBUG] Staff data:`, staff);
-    
     // If no working hours data available, fall back to basic logic
     if (!workingHours || workingHours.length === 0) {
-      console.log(`[SALON DEBUG] No working hours data, using fallback logic`);
       const isBusinessHours = currentTime >= 9 * 60 && currentTime < 21 * 60; // 9 AM to 9 PM
       const hasStaff = staff && staff.length > 0;
       const isOpen = isBusinessHours;
       const hasAvailability = hasStaff && isOpen;
-      
-      console.log(`[SALON DEBUG] Fallback: isBusinessHours=${isBusinessHours}, hasStaff=${hasStaff}, isOpen=${isOpen}`);
       
       return {
         status: isOpen ? "Open now" : "Closed now",
@@ -63,10 +52,8 @@ export default function SalonCard({ salon }: SalonCardProps) {
     
     // Find working hours for current day
     const todayWorkingHours = workingHours.find((wh: any) => wh.dayOfWeek === currentDay);
-    console.log(`[SALON DEBUG] Today's working hours:`, todayWorkingHours);
     
     if (!todayWorkingHours || !todayWorkingHours.isOpen) {
-      console.log(`[SALON DEBUG] No working hours for today or closed: todayWorkingHours=${!!todayWorkingHours}, isOpen=${todayWorkingHours?.isOpen}`);
       return { status: "Closed today", isOpen: false, hasAvailability: false };
     }
     
@@ -77,30 +64,20 @@ export default function SalonCard({ salon }: SalonCardProps) {
       const openTime = parseTimeToMinutes(todayWorkingHours.openTime);
       const closeTime = parseTimeToMinutes(todayWorkingHours.closeTime);
       
-      console.log(`[SALON DEBUG] Open time: ${todayWorkingHours.openTime} (${openTime} minutes)`);
-      console.log(`[SALON DEBUG] Close time: ${todayWorkingHours.closeTime} (${closeTime} minutes)`);
-      
       isWithinHours = currentTime >= openTime && currentTime <= closeTime;
-      console.log(`[SALON DEBUG] Is within hours: ${isWithinHours} (${currentTime} >= ${openTime} && ${currentTime} <= ${closeTime})`);
       
       // Check if currently in break time
       if (isWithinHours && todayWorkingHours.breakStartTime && todayWorkingHours.breakEndTime) {
         const breakStart = parseTimeToMinutes(todayWorkingHours.breakStartTime);
         const breakEnd = parseTimeToMinutes(todayWorkingHours.breakEndTime);
-        console.log(`[SALON DEBUG] Break time: ${todayWorkingHours.breakStartTime} - ${todayWorkingHours.breakEndTime}`);
         if (currentTime >= breakStart && currentTime <= breakEnd) {
           isWithinHours = false; // Currently on break
-          console.log(`[SALON DEBUG] Currently on break, setting isWithinHours to false`);
         }
       }
-    } else {
-      console.log(`[SALON DEBUG] Missing open/close times: openTime=${todayWorkingHours.openTime}, closeTime=${todayWorkingHours.closeTime}`);
     }
     
     const hasStaff = staff && staff.length > 0;
     const hasAvailability = hasStaff && isWithinHours;
-    
-    console.log(`[SALON DEBUG] Final result: isWithinHours=${isWithinHours}, hasStaff=${hasStaff}, hasAvailability=${hasAvailability}`);
     
     return {
       status: isWithinHours ? "Open now" : "Closed now",
