@@ -287,7 +287,7 @@ export default function SalonDetail() {
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      serviceId: "",
+      serviceIds: [],
       staffId: "",
       date: new Date(),
       timeSlotId: "",
@@ -303,7 +303,7 @@ export default function SalonDetail() {
 
       const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
         salonId,
-        serviceId: data.serviceId,
+        serviceIds: data.serviceIds,
         staffId: data.staffId || null,
         timeSlotId: data.timeSlotId,
         date: data.date.toISOString().split('T')[0],
@@ -343,7 +343,7 @@ export default function SalonDetail() {
       const formData = form.getValues();
       const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
         salonId,
-        serviceId: formData.serviceId,
+        serviceIds: formData.serviceIds,
         staffId: formData.staffId || null,
         timeSlotId: formData.timeSlotId,
         date: formData.date.toISOString().split('T')[0],
@@ -379,7 +379,7 @@ export default function SalonDetail() {
       // Step 1: Create payment order (with referral code support)
       const orderResponse = await apiRequest("POST", "/api/bookings/create-payment-order", {
         salonId,
-        serviceId: data.serviceId,
+        serviceIds: data.serviceIds,
         staffId: data.staffId || null,
         timeSlotId: data.timeSlotId,
         date: data.date.toISOString().split('T')[0],
@@ -396,7 +396,7 @@ export default function SalonDetail() {
         let endpoint = "/api/bookings/create-free";
         let payload: any = {
           salonId,
-          serviceId: data.serviceId,
+          serviceIds: data.serviceIds,
           staffId: data.staffId || null,
           timeSlotId: data.timeSlotId,
           date: data.date.toISOString().split('T')[0],
@@ -635,7 +635,7 @@ export default function SalonDetail() {
     );
   }
 
-  const selectedServiceData = services.find(s => s.id === selectedService);
+  const selectedServicesData = services.filter(s => selectedServices.includes(s.id));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1054,8 +1054,8 @@ export default function SalonDetail() {
                         </DialogTitle>
                         <DialogDescription>
                           {rescheduleBookingId 
-                            ? `Select new service, date and time for your appointment at ${salon.name}` 
-                            : `Choose your service, date and time to book an appointment at ${salon.name}`}
+                            ? `Select new services, date and time for your appointment at ${salon.name}` 
+                            : `Choose your services, date and time to book an appointment at ${salon.name}`}
                         </DialogDescription>
                       </DialogHeader>
                       
@@ -1063,31 +1063,54 @@ export default function SalonDetail() {
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                           <FormField
                             control={form.control}
-                            name="serviceId"
+                            name="serviceIds"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Select Service</FormLabel>
-                                <Select 
-                                  onValueChange={(value) => {
-                                    field.onChange(value);
-                                    setSelectedService(value);
-                                    setSelectedStaff(""); // Reset staff when service changes
-                                  }}
-                                  value={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Choose a service" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {services.map((service) => (
-                                      <SelectItem key={service.id} value={service.id}>
-                                        {service.name} - ₹{service.price}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <FormLabel>Select Services</FormLabel>
+                                <div className="space-y-3 max-h-48 overflow-y-auto border rounded-md p-3">
+                                  {services.map((service) => {
+                                    const isSelected = field.value?.includes(service.id) || false;
+                                    return (
+                                      <div key={service.id} className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`service-${service.id}`}
+                                          checked={isSelected}
+                                          onCheckedChange={(checked) => {
+                                            const currentServices = field.value || [];
+                                            let newServices;
+                                            if (checked) {
+                                              newServices = [...currentServices, service.id];
+                                            } else {
+                                              newServices = currentServices.filter(id => id !== service.id);
+                                            }
+                                            field.onChange(newServices);
+                                            setSelectedServices(newServices);
+                                            if (newServices.length === 0) {
+                                              setSelectedStaff(""); // Reset staff when no services selected
+                                            }
+                                          }}
+                                        />
+                                        <label 
+                                          htmlFor={`service-${service.id}`}
+                                          className="flex-1 cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        >
+                                          <div className="flex justify-between items-center">
+                                            <span>{service.name}</span>
+                                            <span className="text-green-600 font-semibold">₹{service.price}</span>
+                                          </div>
+                                        </label>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                {selectedServices.length > 0 && (
+                                  <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+                                    <strong>Total: ₹{selectedServices.reduce((total, serviceId) => {
+                                      const service = services.find(s => s.id === serviceId);
+                                      return total + (Number(service?.price) || 0);
+                                    }, 0)}</strong>
+                                  </div>
+                                )}
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -1160,7 +1183,7 @@ export default function SalonDetail() {
                             )}
                           />
 
-                          {selectedService && selectedDate && (
+                          {selectedServices.length > 0 && selectedDate && (
                             <FormField
                               control={form.control}
                               name="timeSlotId"
@@ -1230,10 +1253,10 @@ export default function SalonDetail() {
                           )}
 
                           {/* Emergency Booking Banner */}
-                          {selectedService && selectedDate && (
+                          {selectedServices.length > 0 && selectedDate && (
                             <EmergencyBookingBanner
                               salon={salon}
-                              service={services.find(s => s.id === selectedService)}
+                              service={services.find(s => s.id === selectedServices[0])}
                               selectedDate={selectedDate.toISOString().split('T')[0]}
                               hasAvailableSlots={timeSlots?.some((slot: TimeSlot) => slot.isAvailable) || false}
                             />
@@ -1247,21 +1270,31 @@ export default function SalonDetail() {
                             disabled={bookingMutation.isPending}
                           />
 
-                          {selectedServiceData && (
+                          {selectedServicesData.length > 0 && (
                             <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
                               <h4 className="font-semibold mb-2 text-sm sm:text-base">Booking Summary</h4>
-                              <div className="space-y-1 text-xs sm:text-sm">
-                                <div className="flex justify-between">
-                                  <span>Service:</span>
-                                  <span className="truncate ml-2">{selectedServiceData.name}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Duration:</span>
-                                  <span>{selectedServiceData.duration} mins</span>
-                                </div>
-                                <div className="flex justify-between font-semibold">
-                                  <span>Price:</span>
-                                  <span>₹{selectedServiceData.price}</span>
+                              <div className="space-y-2 text-xs sm:text-sm">
+                                {selectedServicesData.map((service, index) => (
+                                  <div key={service.id} className="space-y-1">
+                                    <div className="flex justify-between">
+                                      <span>Service {selectedServicesData.length > 1 ? `${index + 1}:` : ':'}:</span>
+                                      <span className="truncate ml-2">{service.name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Duration:</span>
+                                      <span>{service.duration} mins</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Price:</span>
+                                      <span>₹{service.price}</span>
+                                    </div>
+                                    {index < selectedServicesData.length - 1 && <Separator className="my-2" />}
+                                  </div>
+                                ))}
+                                <Separator className="my-2" />
+                                <div className="flex justify-between font-semibold text-base">
+                                  <span>Total:</span>
+                                  <span>₹{selectedServicesData.reduce((total, service) => total + (Number(service.price) || 0), 0)}</span>
                                 </div>
                                 {appliedReferralCode && (
                                   <>
