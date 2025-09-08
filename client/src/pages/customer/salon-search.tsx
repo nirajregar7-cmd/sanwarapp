@@ -31,6 +31,15 @@ export default function SalonSearchPage() {
     maxPrice: 1000,
   });
 
+  // Get location query from URL on page load
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const locationQuery = urlParams.get('location');
+    if (locationQuery) {
+      setSearchFilters(prev => ({ ...prev, location: locationQuery }));
+    }
+  }, []);
+
   // Get user's salon if they are a salon owner
   const { data: userSalon } = useQuery({
     queryKey: ['/api/user/salon'],

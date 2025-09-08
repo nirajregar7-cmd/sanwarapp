@@ -24,6 +24,7 @@ export default function Landing() {
   const queryClient = useQueryClient();
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [searchRadius, setSearchRadius] = useState(30);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Use the new LocationContext for unified location management
   const { 
@@ -279,19 +280,26 @@ export default function Landing() {
                 <MapPin className="text-gray-500 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
                 <Input 
                   type="text" 
-                  placeholder={userLocation ? "Search salons near you..." : "Find salon near me..."} 
+                  placeholder={userLocation ? "Search salons near you..." : "Enter your location (e.g., Chennai, Trichy)"}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-500"
                 />
               </div>
               <Button 
                 className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 hover:from-purple-700 hover:to-blue-700 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300"
-                asChild
+                onClick={() => {
+                  const query = searchQuery.trim();
+                  if (query) {
+                    window.location.href = `/discover?location=${encodeURIComponent(query)}`;
+                  } else {
+                    window.location.href = '/discover';
+                  }
+                }}
               >
-                <Link href="/discover">
-                  <Search className="h-4 w-4 mr-2" />
-                  <span className="hidden xs:inline">{t('nav.find_salons')}</span>
-                  <span className="xs:hidden">{t('search.find')}</span>
-                </Link>
+                <Search className="h-4 w-4 mr-2" />
+                <span className="hidden xs:inline">{t('nav.find_salons')}</span>
+                <span className="xs:hidden">{t('search.find')}</span>
               </Button>
             </div>
           </div>
