@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
@@ -40,7 +41,7 @@ declare global {
 }
 
 const bookingSchema = z.object({
-  serviceId: z.string().min(1, "Please select a service"),
+  serviceIds: z.array(z.string()).min(1, "Please select at least one service"),
   staffId: z.string().optional(),
   date: z.date({
     required_error: "Please select a date",
@@ -60,7 +61,7 @@ export default function SalonDetail() {
     const now = new Date();
     return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
   });
-  const [selectedService, setSelectedService] = useState<string>("");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
