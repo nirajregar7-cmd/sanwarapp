@@ -1041,7 +1041,7 @@ export default function SalonDetail() {
                 ) : (
                   <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button className="w-full" size="lg">
+                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg">
                         <CalendarIcon className="h-4 w-4 mr-2" />
                         Book Now
                       </Button>
