@@ -129,7 +129,7 @@ export default function SalonCard({ salon }: SalonCardProps) {
 
   return (
     <Link href={`/salon/${salon.id}`} data-testid={`link-salon-card-${salon.id}`}>
-      <Card className="overflow-hidden hover:shadow-xl transition-all duration-200 cursor-pointer group hover:scale-[1.02] hover:ring-2 hover:ring-primary/20">
+      <Card className="overflow-hidden hover:shadow-xl transition-all duration-200 cursor-pointer group hover:scale-[1.02] hover:ring-2 hover:ring-primary/20 h-full flex flex-col">
         <div className="relative">
           <img 
             src={salon.primaryImageUrl || salon.imageUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"} 
@@ -146,7 +146,7 @@ export default function SalonCard({ salon }: SalonCardProps) {
           )}
         </div>
         
-        <CardContent className="p-6">
+        <CardContent className="p-6 flex-1 flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary transition-colors">{salon.name}</h3>
             <div className="flex items-center text-yellow-500">
@@ -201,24 +201,31 @@ export default function SalonCard({ salon }: SalonCardProps) {
             </span>
           </div>
           
-          {bestOffer && (
-            <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center text-green-700">
-                <Percent className="h-4 w-4 mr-1" />
-                <span className="text-sm font-medium">{bestOffer.title}</span>
+          {/* Offer section with consistent height */}
+          <div className="mb-3 h-16 flex items-center">
+            {bestOffer ? (
+              <div className="w-full p-2 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center text-green-700">
+                  <Percent className="h-4 w-4 mr-1" />
+                  <span className="text-sm font-medium">{bestOffer.title}</span>
+                </div>
+                <p className="text-xs text-green-600 mt-1">
+                  Save {getOfferText(bestOffer)} on services
+                </p>
               </div>
-              <p className="text-xs text-green-600 mt-1">
-                Save {getOfferText(bestOffer)} on services
-              </p>
-            </div>
-          )}
+            ) : (
+              <div className="w-full h-full"></div>
+            )}
+          </div>
           
-          <Button 
-            className="w-full bg-primary hover:bg-primary/90 group-hover:bg-primary/80 group-hover:scale-105 transition-all duration-200 group-hover:shadow-lg"
-            data-testid={`button-book-salon-${salon.id}`}
-          >
-            {bestOffer ? `Book with ${getOfferText(bestOffer)}` : "View Details & Book"}
-          </Button>
+          <div className="mt-auto">
+            <Button 
+              className="w-full bg-primary hover:bg-primary/90 group-hover:bg-primary/80 group-hover:scale-105 transition-all duration-200 group-hover:shadow-lg"
+              data-testid={`button-book-salon-${salon.id}`}
+            >
+              {bestOffer ? `Book with ${getOfferText(bestOffer)}` : "View Details & Book"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </Link>
