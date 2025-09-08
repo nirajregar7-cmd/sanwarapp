@@ -587,9 +587,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .trim();
         
         if (cleanLocation) {
-          conditions.push(
-            sql`LOWER(${salons.address}) LIKE LOWER(${'%' + cleanLocation + '%'})`
+          // Enhanced location search - including popular areas for major cities
+          const locationVariants = [cleanLocation];
+          
+          // Add Chennai area mappings
+          if (cleanLocation.includes('chennai')) {
+            locationVariants.push(
+              'choolaimedu', 'anna nagar', 't nagar', 'velachery', 'tambaram',
+              'adyar', 'mylapore', 'nungambakkam', 'egmore', 'guindy',
+              'porur', 'omr', 'ecr', 'chrompet', 'kk nagar'
+            );
+          }
+          
+          // Add Trichy area mappings  
+          if (cleanLocation.includes('trichy') || cleanLocation.includes('tiruchirappalli')) {
+            locationVariants.push(
+              'nit', 'bhel', 'cantonment', 'srirangam', 'thuvakudi',
+              'chatram', 'airport', 'tennur', 'puthur'
+            );
+          }
+          
+          // Create OR conditions for all location variants
+          const locationConditions = locationVariants.map(variant => 
+            sql`LOWER(${salons.address}) LIKE LOWER(${'%' + variant + '%'})`
           );
+          
+          conditions.push(or(...locationConditions));
         }
       }
       
