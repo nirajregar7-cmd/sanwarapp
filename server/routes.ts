@@ -587,24 +587,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .trim();
         
         if (cleanLocation) {
-          // Enhanced location search - including popular areas for major cities
+          // Universal location search - works for any city/area
           const locationVariants = [cleanLocation];
           
-          // Add Chennai area mappings
+          // Add common variations and popular areas for major cities
           if (cleanLocation.includes('chennai')) {
             locationVariants.push(
               'choolaimedu', 'anna nagar', 't nagar', 'velachery', 'tambaram',
               'adyar', 'mylapore', 'nungambakkam', 'egmore', 'guindy',
-              'porur', 'omr', 'ecr', 'chrompet', 'kk nagar'
+              'porur', 'omr', 'ecr', 'chrompet', 'kk nagar', 'madras'
             );
           }
           
-          // Add Trichy area mappings  
           if (cleanLocation.includes('trichy') || cleanLocation.includes('tiruchirappalli')) {
             locationVariants.push(
               'nit', 'bhel', 'cantonment', 'srirangam', 'thuvakudi',
-              'chatram', 'airport', 'tennur', 'puthur'
+              'chatram', 'airport', 'tennur', 'puthur', 'tiruchirapalli'
             );
+          }
+          
+          if (cleanLocation.includes('delhi')) {
+            locationVariants.push(
+              'new delhi', 'cp', 'connaught place', 'karol bagh', 'lajpat nagar',
+              'saket', 'vasant kunj', 'dwarka', 'gurgaon', 'noida'
+            );
+          }
+          
+          if (cleanLocation.includes('mumbai')) {
+            locationVariants.push(
+              'bombay', 'andheri', 'bandra', 'juhu', 'colaba', 'worli',
+              'powai', 'malad', 'borivali', 'thane'
+            );
+          }
+          
+          if (cleanLocation.includes('bangalore') || cleanLocation.includes('bengaluru')) {
+            locationVariants.push(
+              'koramangala', 'indiranagar', 'whitefield', 'electronic city',
+              'jp nagar', 'btm layout', 'malleshwaram', 'jayanagar'
+            );
+          }
+          
+          if (cleanLocation.includes('hyderabad')) {
+            locationVariants.push(
+              'hitech city', 'jubilee hills', 'banjara hills', 'secunderabad',
+              'gachibowli', 'madhapur', 'kondapur'
+            );
+          }
+          
+          if (cleanLocation.includes('pune')) {
+            locationVariants.push(
+              'koregaon park', 'hinjewadi', 'viman nagar', 'kothrud',
+              'wakad', 'baner', 'aundh'
+            );
+          }
+          
+          // Add state names for broader search
+          if (cleanLocation.includes('rajasthan')) {
+            locationVariants.push('jaipur', 'jodhpur', 'udaipur', 'bikaner', 'ajmer');
+          }
+          
+          if (cleanLocation.includes('tamil nadu') || cleanLocation.includes('tamilnadu')) {
+            locationVariants.push('chennai', 'coimbatore', 'madurai', 'trichy', 'salem');
           }
           
           // Create OR conditions for all location variants
