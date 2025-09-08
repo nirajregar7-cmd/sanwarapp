@@ -1,11 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Star, Clock, MapPin, Search, Heart, Percent, Gift } from "lucide-react";
+import {
+  Star,
+  Clock,
+  MapPin,
+  Search,
+  Heart,
+  Percent,
+  Gift,
+} from "lucide-react";
 import type { Salon } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -19,13 +28,19 @@ import { PromoPopup } from "@/components/PromoPopup";
 
 export default function CustomerHome() {
   const { user } = useAuth();
-  const { shouldShowOnboarding, onboardingSteps, completeOnboarding, skipOnboarding } = useOnboarding('customer');
-  const { 
-    locationPreference, 
-    showLocationDialog, 
-    setShowLocationDialog, 
+  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    shouldShowOnboarding,
+    onboardingSteps,
+    completeOnboarding,
+    skipOnboarding,
+  } = useOnboarding("customer");
+  const {
+    locationPreference,
+    showLocationDialog,
+    setShowLocationDialog,
     requestLocationOnce,
-    denyLocationPermission
+    denyLocationPermission,
   } = useLocation();
 
   // Fetch salons based on user's location preference - optimized
@@ -34,21 +49,24 @@ export default function CustomerHome() {
       "/api/salons/featured",
       locationPreference?.lat,
       locationPreference?.lng,
-      locationPreference?.radius
+      locationPreference?.radius,
     ],
     queryFn: async () => {
       let url = "/api/salons/featured";
-      const permissionDenied = localStorage.getItem('sanwar_permission_denied') === 'true';
-      
+      const permissionDenied =
+        localStorage.getItem("sanwar_permission_denied") === "true";
+
       // If user denied location permission, show all salons across India
       // If user has location preference, use it for radius filtering
       if (locationPreference && !permissionDenied) {
         url += `?lat=${locationPreference.lat}&lng=${locationPreference.lng}&radius=${locationPreference.radius}`;
       } else if (permissionDenied) {
         // Show all salons across India without location filter
-        console.log('Showing all salons across India (location permission denied)');
+        console.log(
+          "Showing all salons across India (location permission denied)",
+        );
       }
-      
+
       const response = await fetch(url);
       return response.json();
     },
@@ -59,8 +77,6 @@ export default function CustomerHome() {
     queryKey: ["/api/public/offers"],
     staleTime: 10 * 60 * 1000, // 10 minutes cache - offers don't change frequently
   });
-
-
 
   // Handle location permission
   const handleLocationAllow = async () => {
@@ -75,9 +91,19 @@ export default function CustomerHome() {
 
   // Debug function to clear location preferences (remove in production)
   const clearLocationData = () => {
-    localStorage.removeItem('sanwar_location_preference');
-    localStorage.removeItem('sanwar_permission_asked');
+    localStorage.removeItem("sanwar_location_preference");
+    localStorage.removeItem("sanwar_permission_asked");
     window.location.reload();
+  };
+
+  // Handle search functionality
+  const handleSearch = () => {
+    const query = searchQuery.trim();
+    if (query) {
+      window.location.href = `/discover?location=${encodeURIComponent(query)}`;
+    } else {
+      window.location.href = '/discover';
+    }
   };
 
   if (isLoading) {
@@ -92,21 +118,30 @@ export default function CustomerHome() {
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 px-4">
               Discover top-rated salons near you and book appointments instantly
             </p>
-            
+
             {/* Search Bar */}
-            <div className="max-w-2xl mx-auto bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2" data-testid="search-input">
+            <div
+              className="max-w-2xl mx-auto bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2"
+              data-testid="search-input"
+            >
               <div className="flex-1 flex items-center px-3 sm:px-4 py-2 sm:py-0">
                 <MapPin className="text-gray-400 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
-                <Input 
-                  type="text" 
-                  placeholder="Enter your location" 
+                <Input
+                  type="text"
+                  placeholder="Enter your location"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
                 />
               </div>
-              <Button className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 text-sm sm:text-base">
+              <Button 
+                className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 text-sm sm:text-base"
+                onClick={handleSearch}
+              >
                 <Search className="h-4 w-4 mr-2" />
-                <span className="hidden xs:inline">Find Salons</span>
-                <span className="xs:hidden">Find</span>
+                <span className="hidden sm:inline">Find Salons</span>
+                <span className="sm:hidden">Find</span>
               </Button>
             </div>
           </div>
@@ -116,8 +151,12 @@ export default function CustomerHome() {
         <section className="py-12 sm:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8 sm:mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Featured Salons Near You</h2>
-              <p className="text-base sm:text-lg md:text-xl text-gray-600 px-4">Discover the best salon services in your area</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
+                Featured Salons Near You
+              </h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 px-4">
+                Discover the best salon services in your area
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
@@ -154,41 +193,56 @@ export default function CustomerHome() {
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 px-4">
             Discover top-rated salons near you and book appointments instantly
           </p>
-          
+
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto bg-white rounded-xl p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 shadow-2xl" data-testid="search-input">
+          <div
+            className="max-w-2xl mx-auto bg-white rounded-xl p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 shadow-2xl"
+            data-testid="search-input"
+          >
             <div className="flex-1 flex items-center px-3 sm:px-4 py-2 sm:py-0">
               <MapPin className="text-gray-400 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
-              <Input 
-                type="text" 
-                placeholder="Enter your location" 
+              <Input
+                type="text"
+                placeholder="Enter your location"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
               />
             </div>
-            <Button className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 rounded-lg font-semibold text-sm sm:text-base">
+            <Button 
+              className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 rounded-lg font-semibold text-sm sm:text-base"
+              onClick={handleSearch}
+            >
               <Search className="h-4 w-4 mr-2" />
-              <span className="hidden xs:inline">Find Salons</span>
-              <span className="xs:hidden">Find</span>
+              <span>Find Salons</span>
             </Button>
           </div>
         </div>
       </section>
 
-
-
       {/* Featured Salons */}
       <section className="py-8 sm:py-12 lg:py-16" data-testid="featured-salons">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="text-center mb-8 sm:mb-12">
-            {locationPreference && localStorage.getItem('sanwar_permission_denied') !== 'true' ? (
+            {locationPreference &&
+            localStorage.getItem("sanwar_permission_denied") !== "true" ? (
               <>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">Featured Salons Near You</h2>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 px-2">Discover the best salon services in your area</p>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">
+                  Featured Salons Near You
+                </h2>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 px-2">
+                  Discover the best salon services in your area
+                </p>
               </>
             ) : (
               <>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">Featured Salons Across India</h2>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 px-2">Discover the best salon services across India</p>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">
+                  Featured Salons Across India
+                </h2>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 px-2">
+                  Discover the best salon services across India
+                </p>
               </>
             )}
           </div>
@@ -201,8 +255,12 @@ export default function CustomerHome() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-600 text-lg">No salons found in your area.</p>
-              <p className="text-gray-500 mt-2">Check back later or try a different location.</p>
+              <p className="text-gray-600 text-lg">
+                No salons found in your area.
+              </p>
+              <p className="text-gray-500 mt-2">
+                Check back later or try a different location.
+              </p>
             </div>
           )}
 
