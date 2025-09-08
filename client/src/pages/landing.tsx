@@ -287,7 +287,7 @@ export default function Landing() {
                 />
               </div>
               <Button 
-                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 hover:from-purple-700 hover:to-blue-700 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 hover:from-purple-700 hover:to-blue-700 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
                 onClick={() => {
                   const query = searchQuery.trim();
                   if (query) {
@@ -298,8 +298,8 @@ export default function Landing() {
                 }}
               >
                 <Search className="h-4 w-4 mr-2" />
-                <span className="hidden xs:inline">{t('nav.find_salons')}</span>
-                <span className="xs:hidden">{t('search.find')}</span>
+                <span className="hidden sm:inline">Find Salons</span>
+                <span className="sm:hidden">Find</span>
               </Button>
             </div>
           </div>
