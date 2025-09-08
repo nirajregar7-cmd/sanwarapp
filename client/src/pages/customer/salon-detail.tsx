@@ -1031,8 +1031,9 @@ export default function SalonDetail() {
                   <div className="text-center py-4 sm:py-6">
                     <p className="text-gray-600 mb-4 text-sm sm:text-base">Please log in to book an appointment</p>
                     <Button 
-                      className="w-full"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                       onClick={() => navigate("/auth")}
+                      data-testid="button-login-to-book"
                     >
                       Log In to Book
                     </Button>
