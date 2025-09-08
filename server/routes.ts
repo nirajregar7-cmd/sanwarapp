@@ -559,6 +559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lng, 
         radius = '50', // Default 50km radius
         name,
+        location,
         minRating = '0',
         maxPrice = '10000'
       } = req.query;
@@ -574,6 +575,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Apply name filter
       if (name && typeof name === 'string') {
         conditions.push(sql`LOWER(${salons.name}) LIKE LOWER(${'%' + name + '%'})`);
+      }
+      
+      // Apply location/city filter
+      if (location && typeof location === 'string') {
+        // Clean up location query (remove common words like "salons in")
+        const cleanLocation = location.toLowerCase()
+          .replace(/salons?\s+(in|near|at)\s+/g, '')
+          .replace(/^\s*in\s+/g, '')
+          .replace(/^\s*near\s+/g, '')
+          .trim();
+        
+        if (cleanLocation) {
+          conditions.push(
+            sql`LOWER(${salons.address}) LIKE LOWER(${'%' + cleanLocation + '%'})`
+          );
+        }
       }
       
       // Apply rating filter

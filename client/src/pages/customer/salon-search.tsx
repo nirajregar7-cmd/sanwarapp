@@ -26,6 +26,7 @@ export default function SalonSearchPage() {
   const [showMap, setShowMap] = useState(false);
   const [searchFilters, setSearchFilters] = useState({
     name: '',
+    location: '',
     minRating: 0,
     maxPrice: 1000,
   });
@@ -38,7 +39,7 @@ export default function SalonSearchPage() {
 
   // Fetch salons based on location
   const { data: salons, isLoading, refetch } = useQuery<SalonWithDistance[]>({
-    queryKey: ['/api/salons/search', userLocation, searchRadius[0]],
+    queryKey: ['/api/salons/search', userLocation, searchRadius[0], searchFilters],
     queryFn: async () => {
       const params = new URLSearchParams();
       
@@ -50,6 +51,10 @@ export default function SalonSearchPage() {
       
       if (searchFilters.name) {
         params.append('name', searchFilters.name);
+      }
+      
+      if (searchFilters.location) {
+        params.append('location', searchFilters.location);
       }
       
       if (searchFilters.minRating > 0) {
@@ -124,6 +129,8 @@ export default function SalonSearchPage() {
 
   const handleLocationSelect = (location: { lat: number; lng: number; address?: string }) => {
     setUserLocation(location);
+    // Clear location filter when using GPS location
+    setSearchFilters(prev => ({ ...prev, location: '' }));
   };
 
   const handleSalonClick = (salon: Salon) => {
@@ -172,6 +179,50 @@ export default function SalonSearchPage() {
           </CardHeader>
           <CardContent>
             <LocationSearch onLocationSelect={handleLocationSelect} />
+            
+            {/* Manual city/area search */}
+            <div className="mt-4">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Or search by city/area name
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="e.g., Chennai, Trichy, Anna Nagar..."
+                    value={searchFilters.location}
+                    onChange={(e) => {
+                      setSearchFilters(prev => ({ ...prev, location: e.target.value }));
+                      // Clear GPS location when searching by city
+                      if (e.target.value) {
+                        setUserLocation(null);
+                      }
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+                <Button
+                  onClick={() => setSearchFilters(prev => ({ ...prev, location: '' }))}
+                  variant="outline"
+                  size="sm"
+                  className="px-3"
+                >
+                  Clear
+                </Button>
+              </div>
+              
+              {searchFilters.location && (
+                <div className="mt-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <Search className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      Searching for salons in: {searchFilters.location}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+            
             {userLocation && (
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex items-center gap-2 text-blue-800">
@@ -207,7 +258,7 @@ export default function SalonSearchPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {/* Search by name */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -219,6 +270,22 @@ export default function SalonSearchPage() {
                     placeholder="Salon name..."
                     value={searchFilters.name}
                     onChange={(e) => setSearchFilters(prev => ({ ...prev, name: e.target.value }))}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Search by location/city */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Search by city/area
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Chennai, Trichy, etc..."
+                    value={searchFilters.location}
+                    onChange={(e) => setSearchFilters(prev => ({ ...prev, location: e.target.value }))}
                     className="pl-10"
                   />
                 </div>
