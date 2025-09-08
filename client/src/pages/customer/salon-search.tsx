@@ -296,19 +296,20 @@ export default function SalonSearchPage() {
           {isLoading ? (
             // Loading skeleton
             Array.from({ length: 6 }).map((_, index) => (
-              <Card key={index} className="animate-pulse">
+              <Card key={index} className="animate-pulse h-full flex flex-col">
                 <div className="aspect-video bg-gray-300 rounded-t-lg"></div>
-                <CardContent className="p-4">
+                <CardContent className="p-4 flex-1 flex flex-col">
                   <div className="h-6 bg-gray-300 rounded mb-2"></div>
                   <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-300 rounded w-1/2 mb-4"></div>
+                  <div className="mt-auto h-8 bg-gray-300 rounded"></div>
                 </CardContent>
               </Card>
             ))
           ) : sortedSalons && sortedSalons.length > 0 ? (
             sortedSalons.map((salon) => (
               <Link key={salon.id} href={`/salon/${salon.id}`}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer group h-full flex flex-col">
                   <div className="aspect-video bg-gray-200 overflow-hidden rounded-t-lg">
                     {salon.imageUrl ? (
                       <img
@@ -322,7 +323,7 @@ export default function SalonSearchPage() {
                       </div>
                     )}
                   </div>
-                  <CardContent className="p-4">
+                  <CardContent className="p-4 flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold text-lg text-gray-900 group-hover:text-primary transition-colors">
                         {salon.name}
@@ -350,15 +351,19 @@ export default function SalonSearchPage() {
                       <span className="truncate">{salon.address}</span>
                     </div>
 
-                    {salon.distance && (
-                      <div className="flex items-center gap-2 mb-2">
+                    {/* Distance section with consistent height */}
+                    <div className="h-8 flex items-center mb-4">
+                      {salon.distance ? (
                         <Badge variant="secondary" className="text-xs">
                           {salon.distance.toFixed(1)} km away
                         </Badge>
-                      </div>
-                    )}
+                      ) : (
+                        <div></div>
+                      )}
+                    </div>
 
-                    <div className="flex justify-between items-center">
+                    {/* Button section at bottom */}
+                    <div className="mt-auto flex justify-between items-center">
                       <span className="text-sm font-medium text-green-600">
                         Book with ₹{salon.confirmationAmount || 0}
                       </span>
