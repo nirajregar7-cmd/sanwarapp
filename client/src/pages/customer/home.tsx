@@ -24,7 +24,6 @@ import OffersDisplayCard from "@/components/OffersDisplayCard";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import { useLocation } from "@/contexts/LocationContext";
 import SalonCard from "@/components/SalonCard";
-import { PromoPopup } from "@/components/PromoPopup";
 
 export default function CustomerHome() {
   const { user } = useAuth();
@@ -287,8 +286,6 @@ export default function CustomerHome() {
         />
       )}
 
-      {/* Promotional Popup - Shows both offers after 10 seconds */}
-      <PromoPopup />
     </div>
   );
 }

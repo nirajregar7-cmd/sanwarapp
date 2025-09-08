@@ -15,7 +15,6 @@ import { useToast } from "@/hooks/use-toast";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import LocationBasedSalonFilter from "@/components/LocationBasedSalonFilter";
 import { useLocation } from "@/contexts/LocationContext";
-import { PromoPopup } from "@/components/PromoPopup";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -972,8 +971,6 @@ export default function Landing() {
         </div>
       </footer>
 
-      {/* Promotional Popup - Shows both offers after 10 seconds */}
-      <PromoPopup />
     </div>
   );
 }

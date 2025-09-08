@@ -29,7 +29,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
 import { apiRequest } from "@/lib/queryClient";
-import { PromoPopup } from "@/components/PromoPopup";
 import { WorkingHoursForm } from "@/components/WorkingHoursForm";
 
 const salonSchema = z.object({
@@ -2424,8 +2423,6 @@ export default function OwnerDashboard() {
         />
       )}
 
-      {/* Promotional Popup - Shows both offers after 10 seconds */}
-      <PromoPopup />
     </div>
   );
 }
