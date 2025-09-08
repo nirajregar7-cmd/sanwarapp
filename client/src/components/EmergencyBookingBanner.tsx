@@ -19,7 +19,12 @@ export function EmergencyBookingBanner({
 }: EmergencyBookingBannerProps) {
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = (() => {
+    // Get current date in IST
+    const now = new Date();
+    const istDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    return istDate.toISOString().split('T')[0];
+  })();
   const isToday = selectedDate === today;
 
   // Only show emergency booking for today when no slots are available

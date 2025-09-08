@@ -37,8 +37,10 @@ export default function OffersDisplayCard({ offer, className = "" }: OffersDispl
     return `₹${offer.discountValue} off`;
   };
 
-  const isExpired = new Date(offer.validUntil) < new Date();
-  const isUpcoming = new Date(offer.validFrom) > new Date();
+  const now = new Date();
+  const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  const isExpired = new Date(offer.validUntil) < istNow;
+  const isUpcoming = new Date(offer.validFrom) > istNow;
 
   const getStatusBadge = () => {
     if (isExpired) return <Badge variant="destructive">Expired</Badge>;

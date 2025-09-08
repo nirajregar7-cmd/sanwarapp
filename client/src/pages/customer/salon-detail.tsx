@@ -55,7 +55,11 @@ export default function SalonDetail() {
   const [, navigate] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => {
+    // Get current date in IST
+    const now = new Date();
+    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  });
   const [selectedService, setSelectedService] = useState<string>("");
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
@@ -1140,7 +1144,13 @@ export default function SalonDetail() {
                                     field.onChange(date);
                                     setSelectedDate(date);
                                   }}
-                                  disabled={(date) => date < new Date() || date.getDay() === 0}
+                                  disabled={(date) => {
+                                    // Compare with current IST date
+                                    const now = new Date();
+                                    const istDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+                                    istDate.setHours(0, 0, 0, 0); // Start of day in IST
+                                    return date < istDate || date.getDay() === 0;
+                                  }}
                                   className="rounded-md border w-full"
                                 />
                                 <FormMessage />

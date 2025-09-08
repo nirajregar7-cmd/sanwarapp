@@ -34,14 +34,20 @@ interface StaffSlotGenerationConfig {
 
 export default function StaffSlotGenerator() {
   const queryClient = useQueryClient();
-  const [generationConfig, setGenerationConfig] = useState({
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: format(addDays(new Date(), 7), "yyyy-MM-dd"),
-    openingTime: "09:00",
-    closingTime: "18:00",
-    slotDuration: 30,
-    breakStartTime: "13:00",
-    breakEndTime: "14:00"
+  const [generationConfig, setGenerationConfig] = useState(() => {
+    // Get current date in IST
+    const now = new Date();
+    const istDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    
+    return {
+      startDate: format(istDate, "yyyy-MM-dd"),
+      endDate: format(addDays(istDate, 7), "yyyy-MM-dd"),
+      openingTime: "09:00",
+      closingTime: "18:00",
+      slotDuration: 30,
+      breakStartTime: "13:00",
+      breakEndTime: "14:00"
+    };
   });
 
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");

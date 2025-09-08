@@ -31,15 +31,25 @@ const bulkGenerateSchema = z.object({
 type BulkGenerateFormData = z.infer<typeof bulkGenerateSchema>;
 
 export default function TimeSlotManagement() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const now = new Date();
+    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  });
+  
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
-  const [bulkConfig, setBulkConfig] = useState({
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: format(addDays(new Date(), 30), "yyyy-MM-dd"),
-    startTime: "09:00",
-    endTime: "18:00",
-    duration: "30",
-    breaks: [] as Array<{startTime: string, duration: string}>
+  
+  const [bulkConfig, setBulkConfig] = useState(() => {
+    const now = new Date();
+    const istDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    
+    return {
+      startDate: format(istDate, "yyyy-MM-dd"),
+      endDate: format(addDays(istDate, 30), "yyyy-MM-dd"),
+      startTime: "09:00",
+      endTime: "18:00",
+      duration: "30",
+      breaks: [] as Array<{startTime: string, duration: string}>
+    };
   });
 
   const addBreak = () => {
