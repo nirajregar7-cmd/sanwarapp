@@ -128,96 +128,99 @@ export default function SalonCard({ salon }: SalonCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-xl transition-shadow">
-      <div className="relative">
-        <img 
-          src={salon.primaryImageUrl || salon.imageUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"} 
-          alt={salon.name} 
-          className="w-full h-48 object-cover"
-        />
-        {bestOffer && (
-          <div className="absolute top-3 left-3">
-            <Badge className="bg-green-500 text-white font-semibold px-3 py-1">
-              <Percent className="h-3 w-3 mr-1" />
-              {getOfferText(bestOffer)}
-            </Badge>
-          </div>
-        )}
-      </div>
-      
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xl font-semibold text-gray-900">{salon.name}</h3>
-          <div className="flex items-center text-yellow-500">
-            <Star className="h-4 w-4 fill-current" />
-            <span className="ml-1 text-gray-600">
-              {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
-            </span>
-          </div>
-        </div>
-        
-        <p className="text-gray-600 mb-3 line-clamp-2">
-          <MapPin className="h-4 w-4 inline mr-1" />
-          {salon.address}
-          {salon.distance && (
-            <span className="ml-2 text-sm text-blue-600 font-medium">
-              {salon.distance < 1 ? `${(salon.distance * 1000).toFixed(0)}m` : `${salon.distance.toFixed(1)}km`} away
-            </span>
-          )}
-        </p>
-        
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 text-gray-400 mr-2" />
-            <span className={`text-sm font-medium ${getStatusColor()}`}>{status}</span>
-          </div>
-          {hasAvailability && (
-            <Badge className={getAvailabilityBadgeColor()}>
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Available now
-            </Badge>
-          )}
-        </div>
-
-        {/* Confirmation Fee Display */}
-        <div className="flex items-center justify-between mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-          <span className="text-sm font-medium text-blue-900">Confirmation Fee:</span>
-          <span className="text-sm font-bold text-blue-700">
-            {formatConfirmationFee(salon.confirmationAmount || 300)}
-          </span>
-        </div>
-        
-        {/* Services Preview - would need to fetch services for each salon */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-            Haircut
-          </span>
-          <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-            Styling
-          </span>
-          <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-            Color
-          </span>
-        </div>
-        
-        {bestOffer && (
-          <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center text-green-700">
-              <Percent className="h-4 w-4 mr-1" />
-              <span className="text-sm font-medium">{bestOffer.title}</span>
+    <Link href={`/salon/${salon.id}`} data-testid={`link-salon-card-${salon.id}`}>
+      <Card className="overflow-hidden hover:shadow-xl transition-all duration-200 cursor-pointer group hover:scale-[1.02] hover:ring-2 hover:ring-primary/20">
+        <div className="relative">
+          <img 
+            src={salon.primaryImageUrl || salon.imageUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"} 
+            alt={salon.name} 
+            className="w-full h-48 object-cover transition-transform duration-200 group-hover:scale-105"
+          />
+          {bestOffer && (
+            <div className="absolute top-3 left-3">
+              <Badge className="bg-green-500 text-white font-semibold px-3 py-1">
+                <Percent className="h-3 w-3 mr-1" />
+                {getOfferText(bestOffer)}
+              </Badge>
             </div>
-            <p className="text-xs text-green-600 mt-1">
-              Save {getOfferText(bestOffer)} on services
-            </p>
-          </div>
-        )}
+          )}
+        </div>
         
-        <Link href={`/salon/${salon.id}`}>
-          <Button className="w-full bg-primary hover:bg-primary/90">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary transition-colors">{salon.name}</h3>
+            <div className="flex items-center text-yellow-500">
+              <Star className="h-4 w-4 fill-current" />
+              <span className="ml-1 text-gray-600">
+                {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
+              </span>
+            </div>
+          </div>
+          
+          <p className="text-gray-600 mb-3 line-clamp-2">
+            <MapPin className="h-4 w-4 inline mr-1" />
+            {salon.address}
+            {salon.distance && (
+              <span className="ml-2 text-sm text-blue-600 font-medium">
+                {salon.distance < 1 ? `${(salon.distance * 1000).toFixed(0)}m` : `${salon.distance.toFixed(1)}km`} away
+              </span>
+            )}
+          </p>
+          
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 text-gray-400 mr-2" />
+              <span className={`text-sm font-medium ${getStatusColor()}`}>{status}</span>
+            </div>
+            {hasAvailability && (
+              <Badge className={getAvailabilityBadgeColor()}>
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Available now
+              </Badge>
+            )}
+          </div>
+
+          {/* Confirmation Fee Display */}
+          <div className="flex items-center justify-between mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <span className="text-sm font-medium text-blue-900">Confirmation Fee:</span>
+            <span className="text-sm font-bold text-blue-700">
+              {formatConfirmationFee(salon.confirmationAmount || 300)}
+            </span>
+          </div>
+          
+          {/* Services Preview - would need to fetch services for each salon */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+              Haircut
+            </span>
+            <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+              Styling
+            </span>
+            <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+              Color
+            </span>
+          </div>
+          
+          {bestOffer && (
+            <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center text-green-700">
+                <Percent className="h-4 w-4 mr-1" />
+                <span className="text-sm font-medium">{bestOffer.title}</span>
+              </div>
+              <p className="text-xs text-green-600 mt-1">
+                Save {getOfferText(bestOffer)} on services
+              </p>
+            </div>
+          )}
+          
+          <Button 
+            className="w-full bg-primary hover:bg-primary/90 group-hover:bg-primary/80 group-hover:scale-105 transition-all duration-200 group-hover:shadow-lg"
+            data-testid={`button-book-salon-${salon.id}`}
+          >
             {bestOffer ? `Book with ${getOfferText(bestOffer)}` : "View Details & Book"}
           </Button>
-        </Link>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
