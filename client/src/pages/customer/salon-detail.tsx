@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import { 
-  ArrowLeft, Star, MapPin, Phone, Clock, Users, Calendar as CalendarIcon,
+  ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
   ChevronLeft, ChevronRight
 } from "lucide-react";
@@ -68,6 +68,7 @@ export default function SalonDetail() {
   const [appliedReferralCode, setAppliedReferralCode] = useState<any>(null);
   const [viewingMedia, setViewingMedia] = useState<any>(null);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [selectedStaffBio, setSelectedStaffBio] = useState<Staff | null>(null);
   
   // Check if this is a reschedule operation
   const searchParams = new URLSearchParams(window.location.search);
@@ -835,6 +836,25 @@ export default function SalonDetail() {
                               <p className="text-gray-600 text-sm mb-2">
                                 {member.experience}
                               </p>
+                            )}
+                            
+                            {/* Bio preview with Know More button */}
+                            {member.bio && member.bio.trim() !== '' && (
+                              <div className="mb-3">
+                                <p className="text-gray-700 text-sm line-clamp-2">
+                                  {member.bio.length > 100 ? `${member.bio.substring(0, 100)}...` : member.bio}
+                                </p>
+                                {member.bio.length > 100 && (
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="h-auto p-0 text-blue-600 hover:text-blue-800"
+                                    onClick={() => setSelectedStaffBio(member)}
+                                  >
+                                    Know More
+                                  </Button>
+                                )}
+                              </div>
                             )}
                             
                             {/* Rating */}
@@ -1606,6 +1626,84 @@ export default function SalonDetail() {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Staff Bio Modal */}
+      <Dialog open={!!selectedStaffBio} onOpenChange={() => setSelectedStaffBio(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          {selectedStaffBio && (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={selectedStaffBio.photoUrl || ""} alt={selectedStaffBio.name} className="object-cover" />
+                  <AvatarFallback className="text-xl font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    {selectedStaffBio.name.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{selectedStaffBio.name}</h2>
+                  <p className="text-blue-600 font-medium">{selectedStaffBio.role}</p>
+                  {selectedStaffBio.experience && (
+                    <p className="text-gray-600 text-sm mt-1">{selectedStaffBio.experience}</p>
+                  )}
+                  <div className="flex items-center mt-2">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {selectedStaffBio.rating ? Number(selectedStaffBio.rating).toFixed(1) : "0.0"}
+                    </span>
+                    {selectedStaffBio.totalReviews && selectedStaffBio.totalReviews > 0 && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        ({selectedStaffBio.totalReviews})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Specialties */}
+              {(selectedStaffBio as any).services && (selectedStaffBio as any).services.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Specialties</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedStaffBio as any).services.map((service: any, index: number) => (
+                      <Badge key={index} variant="secondary" className="text-sm">
+                        {service.serviceName}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Bio */}
+              {selectedStaffBio.bio && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">About {selectedStaffBio.name}</h3>
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+                    {selectedStaffBio.bio}
+                  </div>
+                </div>
+              )}
+
+              {/* Contact Information */}
+              <div className="pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedStaffBio.phone && (
+                    <div className="flex items-center space-x-2">
+                      <Phone className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">{selectedStaffBio.phone}</span>
+                    </div>
+                  )}
+                  {selectedStaffBio.email && (
+                    <div className="flex items-center space-x-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">{selectedStaffBio.email}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
