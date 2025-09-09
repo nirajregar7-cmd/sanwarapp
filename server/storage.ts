@@ -1028,26 +1028,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getReviewsBySalon(salonId: string): Promise<ReviewWithCustomer[]> {
-    return await db
-      .select({
-        id: reviews.id,
-        salonId: reviews.salonId,
-        customerId: reviews.customerId,
-        serviceId: reviews.serviceId,
-        rating: reviews.rating,
-        moodRating: reviews.moodRating,
-        comment: reviews.comment,
-        photos: reviews.photos,
-        createdAt: reviews.createdAt,
-        // Include customer information
-        customerFirstName: users.firstName,
-        customerLastName: users.lastName,
-        customerProfileImage: users.profileImageUrl,
-      })
+    const reviewsData = await db
+      .select()
       .from(reviews)
-      .leftJoin(users, eq(reviews.customerId, users.id))
       .where(eq(reviews.salonId, salonId))
       .orderBy(desc(reviews.createdAt));
+
+    // Fetch customer data for each review
+    const reviewsWithCustomers = await Promise.all(
+      reviewsData.map(async (review) => {
+        let customerData = null;
+        if (review.customerId) {
+          const [customer] = await db
+            .select({
+              firstName: users.firstName,
+              lastName: users.lastName,
+              profileImageUrl: users.profileImageUrl,
+            })
+            .from(users)
+            .where(eq(users.id, review.customerId));
+          customerData = customer || null;
+        }
+
+        return {
+          ...review,
+          customerFirstName: customerData?.firstName || null,
+          customerLastName: customerData?.lastName || null,
+          customerProfileImage: customerData?.profileImageUrl || null,
+        } as ReviewWithCustomer;
+      })
+    );
+
+    return reviewsWithCustomers;
   }
 
   async updateSalonRating(salonId: string): Promise<void> {
