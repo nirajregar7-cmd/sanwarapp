@@ -899,8 +899,9 @@ export default function SalonDetail() {
                     ))}
                   </div>
                 ) : gallery.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {gallery.map((media, index) => (
+                  <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {gallery.map((media, index) => (
                       <div 
                         key={media.id} 
                         className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
@@ -942,7 +943,17 @@ export default function SalonDetail() {
                           </div>
                         )}
                       </div>
-                    ))}
+                      ))}
+                    </div>
+                    
+                    {/* Scroll indicator for gallery */}
+                    {gallery.length > 8 && (
+                      <div className="text-center pt-4 border-t border-gray-100 mt-4">
+                        <p className="text-sm text-gray-500">
+                          Showing all {gallery.length} images • Scroll to see more
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12">
