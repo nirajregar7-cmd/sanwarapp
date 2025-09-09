@@ -1028,8 +1028,28 @@ export class DatabaseStorage implements IStorage {
 
   async getReviewsBySalon(salonId: string): Promise<Review[]> {
     return await db
-      .select()
+      .select({
+        id: reviews.id,
+        salonId: reviews.salonId,
+        customerId: reviews.customerId,
+        serviceId: reviews.serviceId,
+        rating: reviews.rating,
+        moodRating: reviews.moodRating,
+        comment: reviews.comment,
+        photos: reviews.photos,
+        createdAt: reviews.createdAt,
+        updatedAt: reviews.updatedAt,
+        // Include customer information
+        customerName: sql<string>`${users.firstName} || ' ' || COALESCE(${users.lastName}, '')`,
+        customerFirstName: users.firstName,
+        customerLastName: users.lastName,
+        customerProfileImage: users.profileImageUrl,
+        // Include service name
+        serviceName: services.name,
+      })
       .from(reviews)
+      .leftJoin(users, eq(reviews.customerId, users.id))
+      .leftJoin(services, eq(reviews.serviceId, services.id))
       .where(eq(reviews.salonId, salonId))
       .orderBy(desc(reviews.createdAt));
   }

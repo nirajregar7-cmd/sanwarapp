@@ -978,41 +978,72 @@ export default function SalonDetail() {
                 ) : reviews.length > 0 ? (
                   <div className="space-y-6">
                     {reviews.slice(0, 5).map((review) => (
-                      <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-3">
-                            {/* Show mood rating if available */}
-                            {review.moodRating && (
-                              <MoodRatingDisplay mood={review.moodRating} size="sm" />
+                      <div key={review.id} className="bg-white border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-start space-x-4">
+                          {/* Customer Profile Picture */}
+                          <div className="flex-shrink-0">
+                            {review.moodRating ? (
+                              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center border-2 border-amber-200">
+                                <MoodRatingDisplay mood={review.moodRating} size="lg" />
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
+                                {((review as any).customerName || (review as any).customer?.firstName || "H")[0].toUpperCase()}
+                              </div>
                             )}
-                            {/* Traditional star rating */}
-                            <div className="flex">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 ${
-                                    i < review.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-gray-300"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="font-medium">Customer Review</span>
                           </div>
-                          <span className="text-sm text-gray-500">
-                            {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "Recently"}
-                          </span>
+                          
+                          {/* Review Content */}
+                          <div className="flex-1 min-w-0">
+                            {/* Rating and Name */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-2">
+                                {/* Star rating */}
+                                <div className="flex">
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`h-4 w-4 ${
+                                        i < review.rating
+                                          ? "fill-yellow-400 text-yellow-400"
+                                          : "text-gray-300"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  {(review as any).customerName || (review as any).customer?.firstName || "Happy Client"}
+                                </span>
+                              </div>
+                              <span className="text-sm text-gray-500 flex-shrink-0">
+                                {review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-US', {
+                                  day: 'numeric',
+                                  month: 'numeric', 
+                                  year: 'numeric'
+                                }) : "Recently"}
+                              </span>
+                            </div>
+                            
+                            {/* Review Text */}
+                            <p className="text-gray-700 leading-relaxed mb-3">{review.comment}</p>
+                            
+                            {/* Service Information */}
+                            {(review as any).serviceName && (
+                              <p className="text-sm text-gray-500 mb-3">
+                                Service: {(review as any).serviceName}
+                              </p>
+                            )}
+                            
+                            {/* Display review photos */}
+                            {review.photos && review.photos.length > 0 && (
+                              <ReviewPhotoGallery 
+                                photos={review.photos}
+                                reviewId={review.id}
+                                className="mt-3"
+                              />
+                            )}
+                          </div>
                         </div>
-                        <p className="text-gray-700">{review.comment}</p>
-                        {/* Display review photos */}
-                        {review.photos && review.photos.length > 0 && (
-                          <ReviewPhotoGallery 
-                            photos={review.photos}
-                            reviewId={review.id}
-                            className="mt-3"
-                          />
-                        )}
                       </div>
                     ))}
                     
