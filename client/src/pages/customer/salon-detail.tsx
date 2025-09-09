@@ -754,8 +754,9 @@ export default function SalonDetail() {
                     ))}
                   </div>
                 ) : services.length > 0 ? (
-                  <div className="space-y-3 sm:space-y-4">
-                    {services.map((service) => (
+                  <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    <div className="space-y-3 sm:space-y-4">
+                      {services.map((service) => (
                       <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-blue-600 text-sm sm:text-base">{service.name}</h3>
@@ -771,7 +772,17 @@ export default function SalonDetail() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      ))}
+                    </div>
+                    
+                    {/* Scroll indicator for services */}
+                    {services.length > 3 && (
+                      <div className="text-center pt-4 border-t border-gray-100 mt-4">
+                        <p className="text-sm text-gray-500">
+                          Showing all {services.length} services • Scroll to see more
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-gray-600 text-center py-8">No services available</p>
