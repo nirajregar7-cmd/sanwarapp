@@ -1366,6 +1366,13 @@ export interface BookingWithDetails extends Booking {
   };
 }
 export type Review = typeof reviews.$inferSelect;
+export type ReviewWithCustomer = typeof reviews.$inferSelect & {
+  customerName?: string;
+  customerFirstName?: string;
+  customerLastName?: string;
+  customerProfileImage?: string;
+  serviceName?: string;
+};
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type PlatformStats = typeof platformStats.$inferSelect;
 // Admin revenue transaction types will be added when needed

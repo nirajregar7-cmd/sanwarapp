@@ -47,6 +47,7 @@ import {
   type InsertBooking,
   type InsertWalkInBooking,
   type Review,
+  type ReviewWithCustomer,
   type InsertReview,
   type SalonGallery,
   type InsertSalonGallery,
@@ -1026,7 +1027,7 @@ export class DatabaseStorage implements IStorage {
     return newReview;
   }
 
-  async getReviewsBySalon(salonId: string): Promise<Review[]> {
+  async getReviewsBySalon(salonId: string): Promise<ReviewWithCustomer[]> {
     return await db
       .select({
         id: reviews.id,
