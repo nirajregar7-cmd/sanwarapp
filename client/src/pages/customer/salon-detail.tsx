@@ -847,7 +847,7 @@ export default function SalonDetail() {
                                 {member.bio.length > 100 && (
                                   <Button
                                     size="sm"
-                                    className="rounded-full bg-amber-700 hover:bg-amber-800 text-white px-4 py-2"
+                                    className="rounded-full bg-green-500 hover:bg-green-600 text-black px-4 py-2"
                                     onClick={() => setSelectedStaffBio(member)}
                                   >
                                     Meet {member.name.split(' ')[0]}
