@@ -358,6 +358,27 @@ export default function OwnerDashboard() {
     },
   });
 
+  // Delete service mutation
+  const deleteServiceMutation = useMutation({
+    mutationFn: async (serviceId: string) => {
+      return apiRequest('DELETE', `/api/services/${serviceId}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Service Deleted!",
+        description: "Service has been removed from your salon.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/services`] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Staff mutation
   const staffMutation = useMutation({
     mutationFn: async (data: StaffFormData) => {
@@ -503,6 +524,12 @@ export default function OwnerDashboard() {
       duration: service.duration,
     });
     setServiceDialogOpen(true);
+  };
+
+  const handleDeleteService = (service: Service) => {
+    if (window.confirm(`Are you sure you want to delete "${service.name}"? This action cannot be undone.`)) {
+      deleteServiceMutation.mutate(service.id);
+    }
   };
 
   const handleEditStaff = (member: Staff) => {
@@ -1133,6 +1160,14 @@ export default function OwnerDashboard() {
                               onClick={() => handleEditService(service)}
                             >
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteService(service)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>

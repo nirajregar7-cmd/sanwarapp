@@ -2880,6 +2880,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete service
+  app.delete('/api/services/:serviceId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { serviceId } = req.params;
+      
+      // Verify ownership through salon
+      const [service] = await db.select({
+        service: services,
+        salon: salons
+      })
+        .from(services)
+        .innerJoin(salons, eq(services.salonId, salons.id))
+        .where(eq(services.id, serviceId));
+      
+      if (!service || service.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this service" });
+      }
+      
+      // Check if there are any pending or confirmed bookings for this service
+      const existingBookings = await db.select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.serviceId, serviceId),
+            or(
+              eq(bookings.status, "pending"),
+              eq(bookings.status, "confirmed")
+            )
+          )
+        );
+      
+      if (existingBookings.length > 0) {
+        return res.status(400).json({ 
+          message: "Cannot delete service with active bookings. Please cancel or complete existing bookings first." 
+        });
+      }
+      
+      await db.delete(services)
+        .where(eq(services.id, serviceId));
+      
+      res.json({ message: "Service deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      res.status(500).json({ message: "Failed to delete service" });
+    }
+  });
+
   // Add staff to salon
   app.post('/api/salons/:salonId/staff', isAuthenticated, async (req: any, res) => {
     try {
