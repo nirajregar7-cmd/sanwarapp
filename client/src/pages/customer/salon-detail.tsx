@@ -976,8 +976,8 @@ export default function SalonDetail() {
                     ))}
                   </div>
                 ) : reviews.length > 0 ? (
-                  <div className="space-y-6">
-                    {reviews.slice(0, 5).map((review) => (
+                  <div className="max-h-96 overflow-y-auto space-y-6 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    {reviews.map((review) => (
                       <div key={review.id} className="bg-white border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-start space-x-4">
                           {/* Customer Profile Picture */}
@@ -1054,6 +1054,15 @@ export default function SalonDetail() {
                         </div>
                       </div>
                     ))}
+                    
+                    {/* Scroll indicator */}
+                    {reviews.length > 3 && (
+                      <div className="text-center pt-4 border-t border-gray-100">
+                        <p className="text-sm text-gray-500">
+                          Showing all {reviews.length} reviews • Scroll to see more
+                        </p>
+                      </div>
+                    )}
                     
                     {/* Add Review Button for logged in customers */}
                     {isAuthenticated && user?.userType === 'customer' && (
