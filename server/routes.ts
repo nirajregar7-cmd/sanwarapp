@@ -835,22 +835,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Salon reviews endpoint
-  app.get('/api/salons/:salonId/reviews', async (req, res) => {
-    try {
-      const { salonId } = req.params;
-      const salonReviews = await db.select()
-        .from(reviews)
-        .where(eq(reviews.salonId, salonId))
-        .orderBy(desc(reviews.createdAt))
-        .limit(10);
-      
-      res.json(salonReviews);
-    } catch (error) {
-      console.error("Error fetching salon reviews:", error);
-      res.status(500).json({ message: "Failed to fetch salon reviews" });
-    }
-  });
 
   // Salon working hours endpoint
   app.get('/api/salons/:salonId/working-hours', async (req, res) => {
