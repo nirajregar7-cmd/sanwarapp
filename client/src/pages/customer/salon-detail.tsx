@@ -982,13 +982,17 @@ export default function SalonDetail() {
                         <div className="flex items-start space-x-4">
                           {/* Customer Profile Picture */}
                           <div className="flex-shrink-0">
-                            {review.moodRating ? (
-                              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center border-2 border-amber-200">
-                                <MoodRatingDisplay mood={review.moodRating} size="lg" />
+                            {(review as any).customerProfileImage ? (
+                              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200">
+                                <img 
+                                  src={(review as any).customerProfileImage} 
+                                  alt="Customer" 
+                                  className="w-full h-full object-cover"
+                                />
                               </div>
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
-                                {((review as any).customerName || (review as any).customer?.firstName || "H")[0].toUpperCase()}
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center text-white font-semibold text-lg border-2 border-amber-200">
+                                {((review as any).customerName || (review as any).customerFirstName || "Customer")[0].toUpperCase()}
                               </div>
                             )}
                           </div>
@@ -1012,7 +1016,11 @@ export default function SalonDetail() {
                                   ))}
                                 </div>
                                 <span className="font-semibold text-gray-900">
-                                  {(review as any).customerName || (review as any).customer?.firstName || "Happy Client"}
+                                  {(review as any).customerName || 
+                                   ((review as any).customerFirstName && (review as any).customerLastName ? 
+                                    `${(review as any).customerFirstName} ${(review as any).customerLastName}`.trim() : 
+                                    (review as any).customerFirstName) || 
+                                   "Customer Review"}
                                 </span>
                               </div>
                               <span className="text-sm text-gray-500 flex-shrink-0">
