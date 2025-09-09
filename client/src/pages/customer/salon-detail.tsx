@@ -805,8 +805,9 @@ export default function SalonDetail() {
                     ))}
                   </div>
                 ) : staff.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {staff.map((member) => (
+                  <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {staff.map((member) => (
                       <div key={member.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-start space-x-4">
                           <Avatar className="h-16 w-16 flex-shrink-0">
@@ -871,7 +872,17 @@ export default function SalonDetail() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      ))}
+                    </div>
+                    
+                    {/* Scroll indicator for team */}
+                    {staff.length > 4 && (
+                      <div className="text-center pt-4 border-t border-gray-100 mt-4">
+                        <p className="text-sm text-gray-500">
+                          Showing all {staff.length} team members • Scroll to see more
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12">
