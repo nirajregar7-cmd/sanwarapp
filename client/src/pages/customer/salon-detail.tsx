@@ -758,7 +758,7 @@ export default function SalonDetail() {
                     {services.map((service) => (
                       <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{service.name}</h3>
+                          <h3 className="font-semibold text-blue-600 text-sm sm:text-base">{service.name}</h3>
                           <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{service.description}</p>
                           <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-500">
                             <Clock className="h-3 w-3 mr-1" />
