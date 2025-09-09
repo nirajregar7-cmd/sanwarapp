@@ -851,7 +851,7 @@ export default function SalonDetail() {
                                     className="h-auto p-0 text-blue-600 hover:text-blue-800"
                                     onClick={() => setSelectedStaffBio(member)}
                                   >
-                                    Know More
+                                    Meet {member.name.split(' ')[0]}
                                   </Button>
                                 )}
                               </div>
@@ -1632,6 +1632,10 @@ export default function SalonDetail() {
       {/* Staff Bio Modal */}
       <Dialog open={!!selectedStaffBio} onOpenChange={() => setSelectedStaffBio(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Meet {selectedStaffBio?.name}</DialogTitle>
+            <DialogDescription>Learn more about our team member</DialogDescription>
+          </DialogHeader>
           {selectedStaffBio && (
             <div className="space-y-6">
               <div className="flex items-center space-x-4">
