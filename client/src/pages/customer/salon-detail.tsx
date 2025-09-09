@@ -848,7 +848,7 @@ export default function SalonDetail() {
                                   <Button
                                     variant="link"
                                     size="sm"
-                                    className="h-auto p-0 text-blue-600 hover:text-blue-800"
+                                    className="h-auto p-0 text-green-600 hover:text-green-800"
                                     onClick={() => setSelectedStaffBio(member)}
                                   >
                                     Meet {member.name.split(' ')[0]}
