@@ -1035,7 +1035,7 @@ export default function SalonDetail() {
                       onClick={() => navigate("/auth")}
                       data-testid="button-login-to-book"
                     >
-                      Log In to Book
+                      Book an Appointment
                     </Button>
                   </div>
                 ) : (
