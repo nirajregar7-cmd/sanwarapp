@@ -2820,13 +2820,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to update this salon" });
       }
       
-      // Convert Google Cloud Storage URL to local serving URL
+      // Convert Google Cloud Storage URL to local serving URL and set ACL policy
       let localVideoUrl = promotionalVideoUrl;
       if (promotionalVideoUrl.includes('storage.googleapis.com')) {
         // Extract the file ID from the storage URL
         const urlParts = promotionalVideoUrl.split('/');
         const fileId = urlParts[urlParts.length - 1].split('?')[0]; // Remove query parameters
         localVideoUrl = `/objects/uploads/${fileId}`;
+      }
+      
+      // Set ACL policy for public access (same as gallery images)
+      try {
+        const objectStorageService = new ObjectStorageService();
+        const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+          localVideoUrl,
+          {
+            owner: userId,
+            visibility: "public", // Promotional videos should be public
+          }
+        );
+        console.log('Promotional video ACL set:', objectPath);
+        localVideoUrl = objectPath; // Use the corrected path
+      } catch (error) {
+        console.error('Error setting promotional video ACL:', error);
+        // Continue with the original path if ACL setting fails
       }
       
       const [updatedSalon] = await db.update(salons)
@@ -2838,6 +2855,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating promotional video:", error);
       res.status(500).json({ message: "Failed to update promotional video" });
+    }
+  });
+
+  // Temporary fix for existing promotional video ACL
+  app.post('/api/fix-promo-video-acl', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Get salon with promotional video
+      const [salon] = await db.select()
+        .from(salons)
+        .where(and(
+          eq(salons.ownerId, userId),
+          isNotNull(salons.promotionalVideoUrl)
+        ));
+      
+      if (!salon || !salon.promotionalVideoUrl) {
+        return res.status(404).json({ message: "No promotional video found" });
+      }
+      
+      // Set ACL policy for public access
+      try {
+        const objectStorageService = new ObjectStorageService();
+        const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+          salon.promotionalVideoUrl,
+          {
+            owner: userId,
+            visibility: "public",
+          }
+        );
+        console.log('Fixed promotional video ACL:', objectPath);
+        
+        res.json({ 
+          message: "Promotional video ACL fixed",
+          videoUrl: objectPath
+        });
+      } catch (error) {
+        console.error('Error fixing promotional video ACL:', error);
+        res.status(500).json({ message: "Failed to fix ACL" });
+      }
+    } catch (error) {
+      console.error("Error in fix ACL endpoint:", error);
+      res.status(500).json({ message: "Failed to process request" });
     }
   });
 
