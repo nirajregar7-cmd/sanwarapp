@@ -601,6 +601,82 @@ export default function SalonDetail() {
     likeMutation.mutate();
   };
 
+  // Function to calculate discounted price for a service
+  const calculateServiceDiscountedPrice = (service: any) => {
+    if (!offers || !Array.isArray(offers) || offers.length === 0) return null;
+
+    let bestDiscount = 0;
+    let discountType = 'percentage';
+    
+    offers.forEach((offer: any) => {
+      if (!offer.isActive || !offer.isVisible) return;
+      
+      // Check if offer is currently valid
+      const now = new Date();
+      const validFrom = new Date(offer.validFrom);
+      const validUntil = new Date(offer.validUntil);
+      if (now < validFrom || now > validUntil) return;
+      
+      let applicableDiscount = 0;
+      
+      // Check if offer applies to all services
+      if (offer.isApplicableToAllServices) {
+        applicableDiscount = parseFloat(offer.discountValue);
+        discountType = offer.discountType;
+      } 
+      // Check if offer applies to this specific service
+      else if (offer.applicableServices && offer.applicableServices.includes(service.id)) {
+        // Check for service-specific discount first
+        if (offer.serviceSpecificDiscounts) {
+          try {
+            const serviceDiscounts = typeof offer.serviceSpecificDiscounts === 'string' 
+              ? JSON.parse(offer.serviceSpecificDiscounts) 
+              : offer.serviceSpecificDiscounts;
+            
+            if (serviceDiscounts[service.id]) {
+              applicableDiscount = parseFloat(serviceDiscounts[service.id]);
+              discountType = offer.discountType;
+            }
+          } catch (e) {
+            console.warn('Failed to parse service specific discounts:', e);
+          }
+        }
+        
+        // Fall back to general discount if no service-specific discount
+        if (applicableDiscount === 0) {
+          applicableDiscount = parseFloat(offer.discountValue);
+          discountType = offer.discountType;
+        }
+      }
+      
+      // Keep track of the best discount (highest percentage or amount)
+      if (applicableDiscount > bestDiscount) {
+        bestDiscount = applicableDiscount;
+      }
+    });
+    
+    if (bestDiscount === 0) return null;
+    
+    const originalPrice = parseFloat(service.price);
+    let discountedPrice = originalPrice;
+    
+    if (discountType === 'percentage') {
+      discountedPrice = originalPrice * (1 - bestDiscount / 100);
+    } else {
+      discountedPrice = originalPrice - bestDiscount;
+    }
+    
+    // Ensure discounted price is not negative
+    discountedPrice = Math.max(0, discountedPrice);
+    
+    return {
+      originalPrice,
+      discountedPrice,
+      discountPercentage: bestDiscount,
+      discountType
+    };
+  };
+
   const onSubmit = (data: BookingFormData) => {
     bookingMutation.mutate(data);
   };
@@ -767,9 +843,32 @@ export default function SalonDetail() {
                           </div>
                         </div>
                         <div className="text-left sm:text-right flex-shrink-0">
-                          <div className="text-lg font-semibold text-green-600">
-                            ₹{service.price}
-                          </div>
+                          {(() => {
+                            const discountInfo = calculateServiceDiscountedPrice(service);
+                            if (discountInfo) {
+                              return (
+                                <div className="space-y-1">
+                                  <div className="text-sm text-red-500 line-through">
+                                    ₹{discountInfo.originalPrice.toFixed(2)}
+                                  </div>
+                                  <div className="text-lg font-semibold text-green-600">
+                                    ₹{discountInfo.discountedPrice.toFixed(2)}
+                                  </div>
+                                  <div className="text-xs text-red-600 font-medium">
+                                    {discountInfo.discountType === 'percentage' 
+                                      ? `${discountInfo.discountPercentage}% OFF` 
+                                      : `₹${discountInfo.discountPercentage} OFF`}
+                                  </div>
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <div className="text-lg font-semibold text-green-600">
+                                  ₹{service.price}
+                                </div>
+                              );
+                            }
+                          })()}
                         </div>
                       </div>
                       ))}
