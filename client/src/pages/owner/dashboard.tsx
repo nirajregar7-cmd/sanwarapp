@@ -14,7 +14,7 @@ import {
   Store, Users, Calendar, IndianRupee, Clock, Star, Plus, 
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
-  CreditCard, Camera, User, MessageSquare, AlertCircle, Percent
+  CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -82,6 +82,7 @@ export default function OwnerDashboard() {
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
+  const [promoVideoDialogOpen, setPromoVideoDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [salonLocation, setSalonLocation] = useState<{lat: number, lng: number} | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -291,6 +292,30 @@ export default function OwnerDashboard() {
     },
     onError: (error: Error) => {
       toast({ title: "Failed to mark message as read", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Promotional video upload mutation
+  const updatePromoVideoMutation = useMutation({
+    mutationFn: async (promotionalVideoUrl: string) => {
+      return await apiRequest("PUT", `/api/salons/${salon?.id}/promotional-video`, {
+        promotionalVideoUrl
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/owner/salon'] });
+      toast({
+        title: "Video Updated!",
+        description: "Your promotional video has been updated successfully.",
+      });
+      setPromoVideoDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update promotional video",
+        variant: "destructive",
+      });
     },
   });
 
@@ -814,6 +839,18 @@ export default function OwnerDashboard() {
                         </div>
                       </Button>
                     </Link>
+
+                    <Button 
+                      variant="outline" 
+                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
+                      onClick={() => setPromoVideoDialogOpen(true)}
+                    >
+                      <Video className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mb-2 flex-shrink-0" />
+                      <div className="text-center w-full px-2">
+                        <p className="font-medium text-sm sm:text-base mb-1">Promotional Video</p>
+                        <p className="text-xs text-gray-600 leading-tight break-words">Upload a video tour of your salon for customers</p>
+                      </div>
+                    </Button>
                   </div>
                   
                   <div>
@@ -2427,6 +2464,63 @@ export default function OwnerDashboard() {
               )}
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Promotional Video Upload Dialog */}
+      <Dialog open={promoVideoDialogOpen} onOpenChange={setPromoVideoDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Upload Promotional Video</DialogTitle>
+            <DialogDescription>
+              Add a video tour of your salon to give customers a preview of your professional atmosphere
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {salon?.promotionalVideoUrl && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Current Video</label>
+                <video 
+                  src={salon.promotionalVideoUrl} 
+                  controls 
+                  className="w-full max-h-48 rounded-lg"
+                  poster=""
+                />
+              </div>
+            )}
+            
+            <div>
+              <label className="text-sm font-medium">
+                {salon?.promotionalVideoUrl ? 'Replace Video' : 'Upload Video'}
+              </label>
+              <div className="mt-2">
+                <ObjectUploader
+                  onGetUploadParameters={async () => {
+                    const response = await apiRequest("POST", "/api/objects/upload");
+                    const data = await response.json();
+                    return {
+                      method: 'PUT' as const,
+                      url: data.uploadURL,
+                    };
+                  }}
+                  onComplete={(result) => {
+                    if (result.successful && result.successful.length > 0) {
+                      const uploadURL = result.successful[0].uploadURL;
+                      updatePromoVideoMutation.mutate(uploadURL);
+                    }
+                  }}
+                  maxFileSize={100 * 1024 * 1024} // 100MB for videos
+                  buttonClassName="w-full"
+                >
+                  <Video className="h-4 w-4 mr-2" />
+                  {salon?.promotionalVideoUrl ? 'Replace Video' : 'Choose Video'}
+                </ObjectUploader>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Upload MP4, WebM, or MOV files up to 100MB. Keep videos under 2 minutes for best customer experience.
+              </p>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

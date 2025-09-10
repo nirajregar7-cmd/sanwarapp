@@ -2804,6 +2804,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update salon promotional video
+  app.put('/api/salons/:salonId/promotional-video', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+      const { promotionalVideoUrl } = req.body;
+      
+      // Verify ownership
+      const [existingSalon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+      
+      if (!existingSalon || existingSalon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this salon" });
+      }
+      
+      const [updatedSalon] = await db.update(salons)
+        .set({ promotionalVideoUrl, updatedAt: new Date() })
+        .where(eq(salons.id, salonId))
+        .returning();
+      
+      res.json(updatedSalon);
+    } catch (error) {
+      console.error("Error updating promotional video:", error);
+      res.status(500).json({ message: "Failed to update promotional video" });
+    }
+  });
+
   // Add service to salon
   app.post('/api/salons/:salonId/services', isAuthenticated, async (req: any, res) => {
     try {

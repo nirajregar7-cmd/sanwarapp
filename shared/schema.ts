@@ -79,6 +79,7 @@ export const salons = pgTable("salons", {
   phone: varchar("phone", { length: 20 }),
   address: text("address").notNull(),
   imageUrl: varchar("image_url"),
+  promotionalVideoUrl: varchar("promotional_video_url"), // URL for salon promotional/tour video
   // Location fields for map integration
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),

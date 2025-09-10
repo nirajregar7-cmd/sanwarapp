@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Video
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { useState, useEffect } from "react";
@@ -1011,6 +1011,39 @@ export default function SalonDetail() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Experience Our Salon Video */}
+            {salon.promotionalVideoUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Video className="h-5 w-5 mr-2" />
+                    Experience Our Salon
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Take a virtual tour and see what makes us special
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-lg overflow-hidden bg-black">
+                    <video 
+                      src={salon.promotionalVideoUrl} 
+                      controls 
+                      className="w-full h-64 sm:h-80 object-contain"
+                      poster=""
+                      preload="metadata"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                  <div className="mt-3 text-center">
+                    <p className="text-sm text-gray-600">
+                      Get a feel for our salon's atmosphere and see our professional workspace
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Gallery */}
             <Card>
