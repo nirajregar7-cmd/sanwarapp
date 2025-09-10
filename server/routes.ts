@@ -2820,8 +2820,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to update this salon" });
       }
       
+      // Convert Google Cloud Storage URL to local serving URL
+      let localVideoUrl = promotionalVideoUrl;
+      if (promotionalVideoUrl.includes('storage.googleapis.com')) {
+        // Extract the file ID from the storage URL
+        const urlParts = promotionalVideoUrl.split('/');
+        const fileId = urlParts[urlParts.length - 1].split('?')[0]; // Remove query parameters
+        localVideoUrl = `/objects/uploads/${fileId}`;
+      }
+      
       const [updatedSalon] = await db.update(salons)
-        .set({ promotionalVideoUrl, updatedAt: new Date() })
+        .set({ promotionalVideoUrl: localVideoUrl, updatedAt: new Date() })
         .where(eq(salons.id, salonId))
         .returning();
       
