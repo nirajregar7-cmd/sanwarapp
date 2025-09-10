@@ -319,6 +319,27 @@ export default function OwnerDashboard() {
     },
   });
 
+  // Fix promotional video ACL mutation
+  const fixPromoVideoAclMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/fix-promo-video-acl", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/owner/salon'] });
+      toast({
+        title: "Video Fixed!",
+        description: "Video permissions have been updated and should now play correctly.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fix video permissions",
+        variant: "destructive",
+      });
+    },
+  });
+
   const galleryForm = useForm<GalleryFormData>({
     resolver: zodResolver(gallerySchema),
     defaultValues: {
@@ -2485,7 +2506,21 @@ export default function OwnerDashboard() {
                   controls 
                   className="w-full max-h-48 rounded-lg"
                   poster=""
+                  onError={() => {
+                    console.log("Video failed to load, attempting to fix permissions...");
+                    fixPromoVideoAclMutation.mutate();
+                  }}
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fixPromoVideoAclMutation.mutate()}
+                  disabled={fixPromoVideoAclMutation.isPending}
+                  className="text-xs"
+                >
+                  {fixPromoVideoAclMutation.isPending ? "Fixing..." : "Fix Video Permissions"}
+                </Button>
               </div>
             )}
             

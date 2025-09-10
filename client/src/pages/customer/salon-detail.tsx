@@ -94,6 +94,20 @@ export default function SalonDetail() {
     }
   }, [salonId]);
 
+  // Fix promotional video ACL mutation
+  const fixPromoVideoAclMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/fix-promo-video-acl", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}`] });
+      console.log("Video permissions fixed successfully");
+    },
+    onError: (error: Error) => {
+      console.error("Failed to fix video permissions:", error);
+    },
+  });
+
 
 
   // Fetch salon details with optimized settings
@@ -1032,6 +1046,10 @@ export default function SalonDetail() {
                       className="w-full h-64 sm:h-80 object-contain"
                       poster=""
                       preload="metadata"
+                      onError={() => {
+                        console.log("Promotional video failed to load, attempting to fix permissions...");
+                        fixPromoVideoAclMutation.mutate();
+                      }}
                     >
                       Your browser does not support the video tag.
                     </video>
