@@ -607,6 +607,7 @@ export default function SalonDetail() {
 
     let bestDiscount = 0;
     let discountType = 'percentage';
+    let bestOfferTitle = '';
     
     offers.forEach((offer: any) => {
       if (!offer.isActive || !offer.isVisible) return;
@@ -652,6 +653,7 @@ export default function SalonDetail() {
       // Keep track of the best discount (highest percentage or amount)
       if (applicableDiscount > bestDiscount) {
         bestDiscount = applicableDiscount;
+        bestOfferTitle = offer.title || 'Special Offer';
       }
     });
     
@@ -673,7 +675,8 @@ export default function SalonDetail() {
       originalPrice,
       discountedPrice,
       discountPercentage: bestDiscount,
-      discountType
+      discountType,
+      offerTitle: bestOfferTitle
     };
   };
 
@@ -859,6 +862,11 @@ export default function SalonDetail() {
                                       ? `${discountInfo.discountPercentage}% OFF` 
                                       : `₹${discountInfo.discountPercentage} OFF`}
                                   </div>
+                                  {discountInfo.offerTitle && (
+                                    <div className="text-xs text-purple-600 font-medium mt-1">
+                                      {discountInfo.offerTitle}
+                                    </div>
+                                  )}
                                 </div>
                               );
                             } else {
