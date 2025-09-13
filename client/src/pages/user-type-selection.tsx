@@ -72,7 +72,7 @@ export default function UserTypeSelection() {
       <div className="max-w-4xl w-full">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">🔥 UPDATED VERSION 🔥</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Who are you?</h1>
           <p className="text-lg text-gray-600">Choose your account type to get started with Sanwar</p>
         </div>
 

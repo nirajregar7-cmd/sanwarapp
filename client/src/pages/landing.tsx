@@ -418,45 +418,45 @@ export default function Landing() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Customer Card */}
-              <div className="bg-gradient-to-br from-blue-500/25 to-cyan-600/15 backdrop-blur-md border border-blue-300/40 rounded-2xl p-6 hover:from-blue-500/35 hover:to-cyan-600/25 transition-all duration-300 cursor-pointer group hover:scale-105"
+              <div className="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-105 border-2 border-gray-200 hover:border-gray-300"
                    onClick={() => window.location.href = '/auth'}>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Users className="h-8 w-8 text-white" />
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-3">{t('hero.customer_title')}</h4>
-                  <p className="text-white/85 text-sm mb-4 leading-relaxed">
+                  <h4 className="text-xl font-bold text-gray-900 mb-3">{t('hero.customer_title')}</h4>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
                     {t('hero.customer_desc')}
                   </p>
-                  <ul className="text-white/90 text-sm space-y-2 mb-6 text-left">
+                  <ul className="text-gray-700 text-sm space-y-2 mb-6 text-left">
                     <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
                       Find nearby salons
                     </li>
                     <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
                       Book appointments instantly
                     </li>
                     <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
                       Manage bookings
                     </li>
                     <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
                       Leave reviews & earn rewards
                     </li>
                   </ul>
                   <div className="space-y-3">
                     <Button 
                       size="lg" 
-                      className="w-full bg-white hover:bg-gray-50 text-blue-700 font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      <span className="text-blue-700">{t('hero.signup_customer')}</span>
+                      <span className="text-white">{t('hero.signup_customer')}</span>
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="w-full bg-white/15 border-white/40 hover:bg-white/25 text-white font-medium py-2 rounded-xl transition-all duration-300"
+                      className="w-full bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-700 font-medium py-2 rounded-xl transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleReferEarnClick('customer');
@@ -470,45 +470,45 @@ export default function Landing() {
               </div>
 
               {/* Salon Owner Card */}
-              <div className="bg-gradient-to-br from-purple-500/25 to-pink-600/15 backdrop-blur-md border border-purple-300/40 rounded-2xl p-6 hover:from-purple-500/35 hover:to-pink-600/25 transition-all duration-300 cursor-pointer group hover:scale-105"
+              <div className="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-105 border-2 border-gray-200 hover:border-gray-300"
                    onClick={() => window.location.href = '/auth'}>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Scissors className="h-8 w-8 text-white" />
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-3">{t('hero.owner_title')}</h4>
-                  <p className="text-white/85 text-sm mb-4 leading-relaxed">
+                  <h4 className="text-xl font-bold text-gray-900 mb-3">{t('hero.owner_title')}</h4>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
                     {t('hero.owner_desc')}
                   </p>
-                  <ul className="text-white/90 text-sm space-y-2 mb-6 text-left">
+                  <ul className="text-gray-700 text-sm space-y-2 mb-6 text-left">
                     <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
                       Setup salon profile
                     </li>
                     <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
                       Manage services & staff
                     </li>
                     <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
                       Create time slots
                     </li>
                     <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-300" />
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
                       Handle bookings & earnings
                     </li>
                   </ul>
                   <div className="space-y-3">
                     <Button 
                       size="lg" 
-                      className="w-full bg-white hover:bg-gray-50 text-purple-700 font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      <span className="text-purple-700">{t('hero.signup_owner')}</span>
+                      <span className="text-white">{t('hero.signup_owner')}</span>
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="w-full bg-white/15 border-white/40 hover:bg-white/25 text-white font-medium py-2 rounded-xl transition-all duration-300"
+                      className="w-full bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-700 font-medium py-2 rounded-xl transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleReferEarnClick('salon_owner');
