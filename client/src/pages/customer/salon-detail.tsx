@@ -755,7 +755,7 @@ export default function SalonDetail() {
   ).filter(Boolean) || [];
   
   const totalSelectedPrice = selectedServicesData.reduce((total, service) => 
-    total + parseFloat(service.price), 0
+    total + parseFloat(service?.price || '0'), 0
   );
 
   return (
@@ -1637,12 +1637,12 @@ export default function SalonDetail() {
                                 <div className="flex justify-between">
                                   <span>Services ({selectedServicesData.length}):</span>
                                   <span className="truncate ml-2 text-right">
-                                    {selectedServicesData.map(service => service.name).join(", ")}
+                                    {selectedServicesData.map(service => service?.name || 'Unknown Service').join(", ")}
                                   </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span>Total Duration:</span>
-                                  <span>{selectedServicesData.reduce((total, service) => total + service.duration, 0)} mins</span>
+                                  <span>{selectedServicesData.reduce((total, service) => total + (service?.duration || 0), 0)} mins</span>
                                 </div>
                                 <div className="flex justify-between font-semibold">
                                   <span>Total Price:</span>
