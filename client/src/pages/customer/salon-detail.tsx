@@ -1532,7 +1532,7 @@ export default function SalonDetail() {
                             )}
                           />
 
-                          {selectedService && selectedDate && (
+                          {form.watch("serviceIds")?.length > 0 && selectedDate && (
                             <FormField
                               control={form.control}
                               name="timeSlotId"
@@ -1602,10 +1602,10 @@ export default function SalonDetail() {
                           )}
 
                           {/* Emergency Booking Banner */}
-                          {selectedService && selectedDate && (
+                          {form.watch("serviceIds")?.length > 0 && selectedDate && (
                             <EmergencyBookingBanner
                               salon={salon}
-                              service={services.find(s => s.id === selectedService)}
+                              service={services.find(s => form.watch("serviceIds")?.[0])}
                               selectedDate={selectedDate.toISOString().split('T')[0]}
                               hasAvailableSlots={timeSlots?.some((slot: TimeSlot) => slot.isAvailable) || false}
                             />
