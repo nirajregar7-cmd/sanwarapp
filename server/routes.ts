@@ -1892,8 +1892,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const date = storedOrder.date;
       const staffId = storedOrder.staffId;
       const notes = storedOrder.notes;
-      const additionalServices = storedOrder.additionalServices ? JSON.parse(storedOrder.additionalServices.toString()) : [];
-      const referralCodeData = storedOrder.referralCodeData ? JSON.parse(storedOrder.referralCodeData.toString()) : null;
+      const additionalServices = storedOrder.additionalServices || [];
+      const referralCodeData = storedOrder.referralCodeData || null;
       
       // Verify payment with Cashfree
       console.log('🔍 Verifying Cashfree payment...');
