@@ -293,13 +293,13 @@ export default function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white py-12 sm:py-16 lg:py-24 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-slate-200 via-blue-100 to-slate-300 text-gray-900 py-12 sm:py-16 lg:py-24 relative overflow-hidden">
         {/* Background decorations */}
-        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 bg-white/10"></div>
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
-          <div className="absolute top-40 right-20 w-32 h-32 bg-purple-300/20 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-blue-300/20 rounded-full blur-3xl"></div>
+          <div className="absolute top-10 left-10 w-20 h-20 bg-slate-300/30 rounded-full blur-xl"></div>
+          <div className="absolute top-40 right-20 w-32 h-32 bg-blue-200/40 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-slate-400/30 rounded-full blur-3xl"></div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="mb-6 sm:mb-8">
@@ -320,32 +320,32 @@ export default function Landing() {
 
           {/* Platform Statistics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12 max-w-4xl mx-auto">
-            <div className="bg-gradient-to-br from-white/25 to-white/15 backdrop-blur-md border border-white/40 rounded-xl p-4 sm:p-5 hover:from-white/30 hover:to-white/20 transition-all duration-300 group hover:scale-105">
+            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md">
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">😊</div>
-                <div className="text-sm sm:text-base font-bold text-white mb-1">Many</div>
-                <div className="text-xs sm:text-xs text-white/95 font-medium">Happy Customers</div>
+                <div className="text-sm sm:text-base font-bold text-gray-900 mb-1">Many Happy</div>
+                <div className="text-xs sm:text-xs text-gray-700 font-medium">Customers</div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-purple-400/25 to-purple-600/15 backdrop-blur-md border border-purple-300/40 rounded-xl p-4 sm:p-5 hover:from-purple-400/30 hover:to-purple-600/20 transition-all duration-300 group hover:scale-105">
+            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">💼</div>
-                <div className="text-sm sm:text-base font-bold text-white mb-1">Multiple</div>
-                <div className="text-xs sm:text-xs text-white/95 font-medium">Partner Salons & Parlours</div>
+                <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">🏠</div>
+                <div className="text-sm sm:text-base font-bold text-gray-900 mb-1">Multiple Partner</div>
+                <div className="text-xs sm:text-xs text-gray-700 font-medium">Salons</div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-400/25 to-blue-600/15 backdrop-blur-md border border-blue-300/40 rounded-xl p-4 sm:p-5 hover:from-blue-400/30 hover:to-blue-600/20 transition-all duration-300 group hover:scale-105">
+            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md">
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">📅</div>
-                <div className="text-sm sm:text-base font-bold text-white mb-1">Many</div>
-                <div className="text-xs sm:text-xs text-white/95 font-medium">Bookings Already</div>
+                <div className="text-sm sm:text-base font-bold text-gray-900 mb-1">Many Bookings</div>
+                <div className="text-xs sm:text-xs text-gray-700 font-medium">Already</div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-indigo-400/25 to-indigo-600/15 backdrop-blur-md border border-indigo-300/40 rounded-xl p-4 sm:p-5 hover:from-indigo-400/30 hover:to-indigo-600/20 transition-all duration-300 group hover:scale-105">
+            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md">
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">✨</div>
-                <div className="text-sm sm:text-base font-bold text-white mb-1">Wide Range</div>
-                <div className="text-xs sm:text-xs text-white/95 font-medium">of Services</div>
+                <div className="text-sm sm:text-base font-bold text-gray-900 mb-1">Wide Range of</div>
+                <div className="text-xs sm:text-xs text-gray-700 font-medium">Services</div>
               </div>
             </div>
           </div>
@@ -355,8 +355,8 @@ export default function Landing() {
             {/* Location Status */}
             <div className="text-center">
               {userLocation ? (
-                <div className="flex items-center justify-center text-white/90">
-                  <MapPin className="h-4 w-4 mr-2 text-green-300" />
+                <div className="flex items-center justify-center text-gray-700">
+                  <MapPin className="h-4 w-4 mr-2 text-green-600" />
                   <span className="text-sm">Showing salons within {searchRadius}km of your location</span>
                 </div>
               ) : (
@@ -365,12 +365,12 @@ export default function Landing() {
                     variant="outline" 
                     size="sm"
                     onClick={() => setShowLocationDialog(true)}
-                    className="bg-white/20 border-white/40 hover:bg-white/30 text-white"
+                    className="bg-white/90 border-gray-300 hover:bg-white text-gray-700"
                   >
                     <Navigation className="h-4 w-4 mr-2" />
                     Enable Location
                   </Button>
-                  <span className="text-white/80 text-sm">to find salons near you</span>
+                  <span className="text-gray-600 text-sm">to find salons near you</span>
                 </div>
               )}
             </div>
