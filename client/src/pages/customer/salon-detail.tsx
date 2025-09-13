@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
-  ChevronLeft, ChevronRight, Video, HelpCircle
+  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { useState, useEffect } from "react";
@@ -69,6 +69,20 @@ export default function SalonDetail() {
   const [viewingMedia, setViewingMedia] = useState<any>(null);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [selectedStaffBio, setSelectedStaffBio] = useState<Staff | null>(null);
+  const [expandedFaqs, setExpandedFaqs] = useState<Set<string>>(new Set());
+  
+  // Toggle FAQ expansion
+  const toggleFaqExpansion = (faqId: string) => {
+    setExpandedFaqs(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(faqId)) {
+        newSet.delete(faqId);
+      } else {
+        newSet.add(faqId);
+      }
+      return newSet;
+    });
+  };
   
   // Check if this is a reschedule operation
   const searchParams = new URLSearchParams(window.location.search);
@@ -1892,7 +1906,7 @@ export default function SalonDetail() {
               <ServiceSpecificOffers offers={offers} services={services} />
             )}
 
-            {/* Frequently Asked Questions Section */}
+            {/* Frequently Asked Questions Section - Collapsible */}
             {Array.isArray(faqs) && faqs.length > 0 && (
               <Card>
                 <CardHeader>
@@ -1902,23 +1916,48 @@ export default function SalonDetail() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {faqs
                       .filter((faq: any) => faq.isActive)
                       .sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0))
-                      .map((faq: any, index: number) => (
-                        <div key={faq.id} className="border-b border-gray-100 last:border-0 pb-4 last:pb-0">
-                          <h3 className="font-medium text-gray-900 mb-2 flex items-start gap-2">
-                            <span className="text-primary font-bold text-sm bg-primary/10 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              {index + 1}
-                            </span>
-                            {faq.question}
-                          </h3>
-                          <p className="text-gray-700 ml-8 leading-relaxed">
-                            {faq.answer}
-                          </p>
-                        </div>
-                      ))}
+                      .map((faq: any, index: number) => {
+                        const isExpanded = expandedFaqs.has(faq.id);
+                        return (
+                          <div key={faq.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                            {/* Question - Clickable */}
+                            <button
+                              onClick={() => toggleFaqExpansion(faq.id)}
+                              className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between"
+                              data-testid={`button-faq-${index + 1}`}
+                            >
+                              <div className="flex items-start gap-3 flex-1">
+                                <span className="text-primary font-bold text-sm bg-primary/10 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  {index + 1}
+                                </span>
+                                <h3 className="font-medium text-gray-900 text-sm">
+                                  {faq.question}
+                                </h3>
+                              </div>
+                              <div className="flex-shrink-0 ml-2">
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4 text-gray-500" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                                )}
+                              </div>
+                            </button>
+                            
+                            {/* Answer - Expandable */}
+                            {isExpanded && (
+                              <div className="px-4 py-3 bg-white border-t border-gray-100">
+                                <p className="text-gray-700 text-sm leading-relaxed ml-9">
+                                  {faq.answer}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 </CardContent>
               </Card>
