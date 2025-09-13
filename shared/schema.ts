@@ -1618,3 +1618,25 @@ export const insertPaymentOrderSchema = createInsertSchema(paymentOrders).omit({
 
 export type PaymentOrder = typeof paymentOrders.$inferSelect;
 export type InsertPaymentOrder = z.infer<typeof insertPaymentOrderSchema>;
+
+// FAQ table for salon-specific frequently asked questions
+export const faqs = pgTable("faqs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  displayOrder: integer("display_order").default(0), // For custom ordering
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// FAQ schema and types
+export const insertFaqSchema = createInsertSchema(faqs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Faq = typeof faqs.$inferSelect;
+export type InsertFaq = z.infer<typeof insertFaqSchema>;
