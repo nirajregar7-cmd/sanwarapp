@@ -714,7 +714,15 @@ export default function SalonDetail() {
   };
 
   const onSubmit = (data: BookingFormData) => {
-    bookingMutation.mutate(data);
+    // For multiple services or if user prefers pay at salon, use payAtSalonMutation
+    // For single service with online payment, use bookingMutation
+    if (data.serviceIds.length > 1) {
+      // Multiple services always use pay at salon flow
+      payAtSalonMutation.mutate(data);
+    } else {
+      // Single service uses regular payment flow
+      bookingMutation.mutate(data);
+    }
   };
 
   if (salonLoading) {
