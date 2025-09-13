@@ -315,21 +315,22 @@ export default function SalonDetail() {
         throw new Error("Please log in to book an appointment");
       }
 
-      // Create a booking for each selected service
-      const bookingPromises = data.serviceIds.map(async (serviceId) => {
-        const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
-          salonId,
-          serviceId: serviceId,
-          staffId: data.staffId || null,
-          timeSlotId: data.timeSlotId,
-          date: data.date.toISOString().split('T')[0],
-          notes: "Pay at salon booking - Multiple services"
-        });
-        return await response.json();
+      // Send all services in a single API call
+      const primaryServiceId = data.serviceIds[0];
+      const additionalServices = data.serviceIds.length > 1 ? data.serviceIds.slice(1) : undefined;
+      
+      const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
+        salonId,
+        serviceId: primaryServiceId,
+        additionalServices: additionalServices,
+        staffId: data.staffId || null,
+        timeSlotId: data.timeSlotId,
+        date: data.date.toISOString().split('T')[0],
+        notes: `Pay at salon booking - ${data.serviceIds.length} service${data.serviceIds.length > 1 ? 's' : ''} selected`
       });
       
-      const results = await Promise.all(bookingPromises);
-      return { bookings: results, serviceCount: data.serviceIds.length };
+      const result = await response.json();
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -361,20 +362,21 @@ export default function SalonDetail() {
     try {
       const formData = form.getValues();
       
-      // Create a booking for each selected service
-      const bookingPromises = formData.serviceIds.map(async (serviceId) => {
-        const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
-          salonId,
-          serviceId: serviceId,
-          staffId: formData.staffId || null,
-          timeSlotId: formData.timeSlotId,
-          date: formData.date.toISOString().split('T')[0],
-          notes: "Pay at salon - Online payment failed due to security checks"
-        });
-        return await response.json();
+      // Send all services in a single API call
+      const primaryServiceId = formData.serviceIds[0];
+      const additionalServices = formData.serviceIds.length > 1 ? formData.serviceIds.slice(1) : undefined;
+      
+      const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
+        salonId,
+        serviceId: primaryServiceId,
+        additionalServices: additionalServices,
+        staffId: formData.staffId || null,
+        timeSlotId: formData.timeSlotId,
+        date: formData.date.toISOString().split('T')[0],
+        notes: `Pay at salon - Online payment failed (${formData.serviceIds.length} service${formData.serviceIds.length > 1 ? 's' : ''} selected)`
       });
       
-      const bookings = await Promise.all(bookingPromises);
+      const result = await response.json();
       
       toast({
         title: "Booking Confirmed!",
