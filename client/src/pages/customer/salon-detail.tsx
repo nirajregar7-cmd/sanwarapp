@@ -1039,20 +1039,71 @@ export default function SalonDetail() {
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-lg overflow-hidden bg-black">
+                  <div className="rounded-lg overflow-hidden bg-black relative">
                     <video 
                       src={salon.promotionalVideoUrl} 
-                      controls 
                       className="w-full h-64 sm:h-80 object-contain"
                       poster=""
                       preload="metadata"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
                       onError={() => {
                         console.log("Promotional video failed to load, attempting to fix permissions...");
                         fixPromoVideoAclMutation.mutate();
                       }}
+                      ref={(video) => {
+                        if (video) {
+                          // Ensure video plays when loaded
+                          video.addEventListener('loadeddata', () => {
+                            video.play().catch(() => {
+                              // If autoplay fails, we'll show play button
+                            });
+                          });
+                        }
+                      }}
                     >
                       Your browser does not support the video tag.
                     </video>
+                    
+                    {/* Custom controls overlay */}
+                    <div className="absolute bottom-2 right-2 flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
+                          if (video) {
+                            if (video.paused) {
+                              video.play();
+                            } else {
+                              video.pause();
+                            }
+                          }
+                        }}
+                        className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                        data-testid="video-play-pause-button"
+                      >
+                        <Video className="h-4 w-4" />
+                      </button>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
+                          if (video) {
+                            video.muted = !video.muted;
+                          }
+                        }}
+                        className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                        data-testid="video-audio-button"
+                      >
+                        {/* Audio icon - will be muted by default */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M6 10l4-4v12l-4-4H3a1 1 0 01-1-1v-2a1 1 0 011-1h3z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <div className="mt-3 text-center">
                     <p className="text-sm text-gray-600">

@@ -2501,16 +2501,69 @@ export default function OwnerDashboard() {
             {salon?.promotionalVideoUrl && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Current Video</label>
-                <video 
-                  src={salon.promotionalVideoUrl} 
-                  controls 
-                  className="w-full max-h-48 rounded-lg"
-                  poster=""
-                  onError={() => {
-                    console.log("Video failed to load, attempting to fix permissions...");
-                    fixPromoVideoAclMutation.mutate();
-                  }}
-                />
+                <div className="relative rounded-lg overflow-hidden bg-black">
+                  <video 
+                    src={salon.promotionalVideoUrl} 
+                    className="w-full max-h-48 object-contain"
+                    poster=""
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    onError={() => {
+                      console.log("Video failed to load, attempting to fix permissions...");
+                      fixPromoVideoAclMutation.mutate();
+                    }}
+                    ref={(video) => {
+                      if (video) {
+                        // Ensure video plays when loaded
+                        video.addEventListener('loadeddata', () => {
+                          video.play().catch(() => {
+                            // If autoplay fails, we'll show play button
+                          });
+                        });
+                      }
+                    }}
+                  />
+                  
+                  {/* Custom controls overlay */}
+                  <div className="absolute bottom-2 right-2 flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
+                        if (video) {
+                          if (video.paused) {
+                            video.play();
+                          } else {
+                            video.pause();
+                          }
+                        }
+                      }}
+                      className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors"
+                      data-testid="owner-video-play-pause-button"
+                    >
+                      <Video className="h-3 w-3" />
+                    </button>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
+                        if (video) {
+                          video.muted = !video.muted;
+                        }
+                      }}
+                      className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors"
+                      data-testid="owner-video-audio-button"
+                    >
+                      {/* Audio icon */}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M6 10l4-4v12l-4-4H3a1 1 0 01-1-1v-2a1 1 0 011-1h3z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
