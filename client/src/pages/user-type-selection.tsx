@@ -76,7 +76,7 @@ export default function UserTypeSelection() {
           <p className="text-lg text-gray-600">Choose your account type to get started with Sanwar</p>
         </div>
 
-        {/* User Type Cards */}
+        {/* User Type Cards - Updated Design */}
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Customer Card */}
           <div
