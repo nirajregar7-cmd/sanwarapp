@@ -1616,11 +1616,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timeSlotId,
         date,
         staffId,
-        notes
+        notes,
+        // Support for multiple services
+        additionalServices
       } = req.body;
       
+      // Determine which services to book
+      let serviceIds = [];
+      if (serviceId) {
+        serviceIds.push(serviceId);
+        // If additional services are provided, add them too
+        if (additionalServices && Array.isArray(additionalServices)) {
+          serviceIds.push(...additionalServices);
+        }
+      }
+      
       // Validate required fields
-      if (!salonId || !serviceId || !timeSlotId || !date) {
+      if (!salonId || serviceIds.length === 0 || !timeSlotId || !date) {
         return res.status(400).json({ message: "Missing required fields" });
       }
       
@@ -1638,42 +1650,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Time slot is no longer available" });
       }
       
-      // Get time slot and service details
+      // Get time slot details
       const [timeSlot] = await db.select()
         .from(timeSlots)
         .where(eq(timeSlots.id, timeSlotId));
         
-      const [service] = await db.select()
-        .from(services)
-        .where(eq(services.id, serviceId));
-      
-      if (!timeSlot || !service) {
-        return res.status(400).json({ message: "Service or time slot not found" });
+      if (!timeSlot) {
+        return res.status(400).json({ message: "Time slot not found" });
       }
       
-      // Create "Pay at Salon" booking
-      const [booking] = await db.insert(bookings).values({
-        customerId: userId,
-        salonId,
-        serviceId,
-        staffId: staffId || null,
-        timeSlotId,
-        date,
-        startTime: timeSlot.startTime,
-        endTime: timeSlot.endTime,
-        totalAmount: service.price,
-        confirmationAmount: '0',
-        paymentStatus: 'pending',
-        status: 'pending',
-        notes: notes || 'Pay at salon - Online payment failed'
-      }).returning();
+      // Get all service details
+      const serviceDetails = await db.select()
+        .from(services)
+        .where(inArray(services.id, serviceIds));
       
-      // Send booking confirmation notification
-      await sendBookingConfirmationNotification(booking.id);
+      if (serviceDetails.length !== serviceIds.length) {
+        return res.status(400).json({ message: "One or more services not found" });
+      }
       
+      // Create separate booking records for each service
+      const createdBookings = [];
+      for (const service of serviceDetails) {
+        const [booking] = await db.insert(bookings).values({
+          customerId: userId,
+          salonId,
+          serviceId: service.id,
+          staffId: staffId || null,
+          timeSlotId,
+          date,
+          startTime: timeSlot.startTime,
+          endTime: timeSlot.endTime,
+          totalAmount: service.price,
+          confirmationAmount: '0',
+          paymentStatus: 'pending',
+          status: 'pending',
+          notes: notes || `Pay at salon - ${serviceDetails.length > 1 ? 'Multiple services booking' : 'Online payment failed'}`
+        }).returning();
+        
+        createdBookings.push(booking);
+        
+        // Send booking confirmation notification for each booking
+        await sendBookingConfirmationNotification(booking.id);
+      }
+      
+      // Return all created bookings
       res.status(201).json({
-        ...booking,
-        message: "Booking created successfully! Please pay at the salon."
+        bookings: createdBookings,
+        message: `${createdBookings.length} booking(s) created successfully! Please pay at the salon.`,
+        totalServices: createdBookings.length
       });
     } catch (error) {
       console.error("Error creating pay-at-salon booking:", error);
