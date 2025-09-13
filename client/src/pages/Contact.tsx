@@ -57,6 +57,9 @@ export default function Contact() {
               <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-contact">
                 Contact
               </Link>
+              <Link href="/auth" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium" data-testid="link-login">
+                Login
+              </Link>
             </div>
           </div>
         </div>
