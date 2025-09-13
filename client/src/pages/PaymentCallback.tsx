@@ -15,28 +15,18 @@ export default function PaymentCallback() {
   useEffect(() => {
     const processPaymentCallback = async () => {
       try {
-        // Get all parameters from URL
+        // Get order ID from URL - all other data is retrieved from secure server storage
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('order_id');
-        const orderToken = urlParams.get('order_token');
-        const salonId = urlParams.get('salon_id');
-        const serviceId = urlParams.get('service_id');
-        const timeSlotId = urlParams.get('time_slot_id');
-        const date = urlParams.get('date');
-        const staffId = urlParams.get('staff_id');
-        const notes = urlParams.get('notes');
-        const referralId = urlParams.get('referral_id');
 
-        console.log('Payment callback parameters:', {
-          orderId, salonId, serviceId, timeSlotId, date, staffId, notes, referralId
-        });
+        console.log('Payment callback for order:', orderId);
 
-        if (!orderId || !salonId || !serviceId || !timeSlotId || !date) {
-          console.error('Missing required parameters:', { orderId, salonId, serviceId, timeSlotId, date });
-          throw new Error('Missing required booking parameters in callback');
+        if (!orderId) {
+          console.error('Missing order ID in payment callback');
+          throw new Error('Missing order ID in payment callback');
         }
 
-        // Verify payment with backend (include credentials for auth)
+        // Verify payment with backend - only send orderId, server retrieves secure order data
         const response = await fetch('/api/bookings/verify-payment', {
           method: 'POST',
           headers: {
@@ -44,14 +34,7 @@ export default function PaymentCallback() {
           },
           credentials: 'include', // Include cookies for authentication
           body: JSON.stringify({ 
-            orderId,
-            salonId,
-            serviceId,
-            timeSlotId,
-            date,
-            staffId: staffId || null,
-            notes: notes ? decodeURIComponent(notes) : null,
-            referralCodeData: referralId ? { id: referralId } : null
+            orderId
           }),
         });
 

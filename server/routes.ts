@@ -18,7 +18,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -1395,11 +1395,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Time slot is already booked" });
       }
       
+      // Calculate total amount including additional services
+      let totalServiceAmount = service.price;
+      let additionalServiceDetails = [];
+      
+      if (additionalServices && Array.isArray(additionalServices) && additionalServices.length > 0) {
+        // Get additional service details and calculate total price
+        const additionalServiceRecords = await db.select()
+          .from(services)
+          .where(inArray(services.id, additionalServices));
+          
+        if (additionalServiceRecords.length !== additionalServices.length) {
+          return res.status(400).json({ message: "One or more additional services not found" });
+        }
+        
+        additionalServiceDetails = additionalServiceRecords;
+        const additionalServicePrice = additionalServiceRecords.reduce((sum, svc) => sum + parseFloat(svc.price.toString()), 0);
+        totalServiceAmount = parseFloat(service.price.toString()) + additionalServicePrice;
+        
+        console.log(`🎯 Including ${additionalServices.length} additional services, total service amount: ₹${totalServiceAmount}`);
+      }
+      
       // Use salon-specific confirmation amount (in paise) or default to ₹3 (300 paise)
       let confirmationAmountPaise = salon.confirmationAmount || 300;
       let finalAmount = confirmationAmountPaise / 100; // Convert to rupees for Cashfree
       
-      console.log(`💰 Using confirmation amount for ${salon.name}: ₹${finalAmount} (${confirmationAmountPaise} paise)`);
+      console.log(`💰 Total services amount: ₹${totalServiceAmount}, Confirmation amount for ${salon.name}: ₹${finalAmount} (${confirmationAmountPaise} paise)`);
       
       // Calculate revenue split (will be used in webhook)
       const adminShare = Math.round(confirmationAmountPaise * (salon.adminRevenueShare || 20) / 100);
@@ -1535,6 +1556,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const orderIdPrefix = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
+      // Store order metadata securely in database for verification
+      await db.insert(paymentOrders).values({
+        orderId: orderIdPrefix,
+        customerId: userId,
+        salonId,
+        serviceId,
+        additionalServices: additionalServices && additionalServices.length > 0 ? additionalServices : null,
+        timeSlotId,
+        date,
+        staffId: staffId || null,
+        notes: notes || null,
+        referralCodeData: validReferralCode ? JSON.stringify(validReferralCode) : null,
+        totalAmount: totalServiceAmount.toString(),
+        confirmationAmount: confirmationAmountPaise,
+        paymentStatus: 'pending'
+      });
+      
+      console.log(`🔒 Stored secure order metadata for ${orderIdPrefix}`);
+      
       // Get the request host for domain-specific payment callbacks
       const requestHost = req.get('host');
       const baseUrl = getBaseUrl(requestHost);
@@ -1550,11 +1590,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customerPhone: user?.phone || '9999999999'
         },
         orderMeta: {
-          returnUrl: `${baseUrl}/payment-callback?order_id=${orderIdPrefix}&salon_id=${salonId}&service_id=${serviceId}&time_slot_id=${timeSlotId}&date=${date}&staff_id=${staffId || ''}&notes=${encodeURIComponent(notes || '')}${validReferralCode ? `&referral_id=${validReferralCode.id}` : ''}`,
+          returnUrl: `${baseUrl}/payment-callback?order_id=${orderIdPrefix}`,
           notifyUrl: `${baseUrl}/api/cashfree/webhook`,
           paymentMethods: 'cc,dc,nb,upi,paylater,emi,app'
         },
-        orderNote: `Sanwar booking: ${salon.name} - ${service.name} on ${date}`
+        orderNote: `Sanwar booking: ${salon.name} - ${service.name}${additionalServiceDetails.length > 0 ? ` + ${additionalServiceDetails.length} additional services` : ''} on ${date}`
       });
       
       const processingTime = Date.now() - startTime;
@@ -1803,35 +1843,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/bookings/verify-payment', async (req: any, res) => {
     const startTime = Date.now();
     try {
-      // Get userId from the payment order data instead of session
-      let userId: string;
-      const {
-        orderId,
-        salonId,
-        serviceId,
-        timeSlotId,
-        date,
-        staffId,
-        notes,
-        referralCodeData,
-        discountApplied,
-        additionalServices
-      } = req.body;
+      const { orderId } = req.body;
       
       console.log('🔐 Starting payment verification for order ID:', orderId);
-      console.log('📝 Verification request body:', { 
-        orderId, salonId, serviceId, timeSlotId, date, staffId, notes 
-      });
 
       // Validate required fields
-      if (!orderId || !salonId || !serviceId || !timeSlotId || !date) {
-        console.error('❌ Missing required fields in verification request');
+      if (!orderId) {
+        console.error('❌ Missing orderId in verification request');
         return res.status(400).json({ 
-          message: "Missing required fields for payment verification",
-          required: ['orderId', 'salonId', 'serviceId', 'timeSlotId', 'date'],
-          received: { orderId, salonId, serviceId, timeSlotId, date }
+          message: "Missing orderId for payment verification"
         });
       }
+      
+      // Get stored order data from database - this prevents client tampering
+      const [storedOrder] = await db.select()
+        .from(paymentOrders)
+        .where(eq(paymentOrders.orderId, orderId));
+        
+      if (!storedOrder) {
+        console.error('❌ No stored order found for orderId:', orderId);
+        return res.status(400).json({ 
+          message: "Order not found. Invalid order ID.",
+          orderId
+        });
+      }
+      
+      if (storedOrder.isProcessed) {
+        console.error('❌ Order already processed:', orderId);
+        return res.status(400).json({ 
+          message: "Order already processed",
+          orderId
+        });
+      }
+      
+      console.log('✅ Found stored order data:', {
+        customerId: storedOrder.customerId,
+        salonId: storedOrder.salonId,
+        serviceId: storedOrder.serviceId,
+        additionalServices: storedOrder.additionalServices,
+        totalAmount: storedOrder.totalAmount
+      });
+      
+      // Use stored order data (secure) instead of client-sent data
+      const userId = storedOrder.customerId;
+      const salonId = storedOrder.salonId;
+      const serviceId = storedOrder.serviceId;
+      const timeSlotId = storedOrder.timeSlotId;
+      const date = storedOrder.date;
+      const staffId = storedOrder.staffId;
+      const notes = storedOrder.notes;
+      const additionalServices = storedOrder.additionalServices ? JSON.parse(storedOrder.additionalServices.toString()) : [];
+      const referralCodeData = storedOrder.referralCodeData ? JSON.parse(storedOrder.referralCodeData.toString()) : null;
       
       // Verify payment with Cashfree
       console.log('🔍 Verifying Cashfree payment...');
@@ -1860,9 +1922,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get userId from payment verification data
-      userId = paymentVerification.customerId;
-      console.log('👤 Customer ID from payment:', userId);
+      // Verify the payment customer matches the stored order customer
+      if (paymentVerification.customerId && paymentVerification.customerId !== userId) {
+        console.error('❌ Payment customer ID mismatch:', { 
+          paymentCustomerId: paymentVerification.customerId, 
+          storedCustomerId: userId 
+        });
+        return res.status(400).json({ 
+          message: "Payment verification failed: customer mismatch",
+          orderId
+        });
+      }
+      console.log('👤 Customer ID verified:', userId);
       
       console.log('✅ Payment signature verified successfully');
       
@@ -2090,7 +2161,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Note: Booking confirmation notifications already sent for each booking in the loop above
 
       const processingTime = Date.now() - startTime;
+      // Mark the order as processed to prevent duplicate bookings
+      await db.update(paymentOrders)
+        .set({ 
+          isProcessed: true, 
+          paymentStatus: 'completed',
+          updatedAt: new Date()
+        })
+        .where(eq(paymentOrders.orderId, orderId));
+      
       console.log(`✅ ${createdBookings.length} booking(s) created successfully after payment in ${processingTime}ms:`, createdBookings.map(b => b.id).join(', '));
+      console.log('🔒 Order marked as processed:', orderId);
 
       // Send booking confirmation emails to both customer and shopkeeper (async)
       setImmediate(async () => {

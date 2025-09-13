@@ -123,6 +123,27 @@ export const services = pgTable("services", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Payment orders table for secure order metadata storage
+export const paymentOrders = pgTable("payment_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().unique(), // Cashfree order ID
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  serviceId: varchar("service_id").references(() => services.id, { onDelete: "cascade" }).notNull(),
+  additionalServices: jsonb("additional_services"), // Array of additional service IDs
+  timeSlotId: varchar("time_slot_id").references(() => timeSlots.id, { onDelete: "cascade" }).notNull(),
+  date: varchar("date", { length: 10 }).notNull(),
+  staffId: varchar("staff_id").references(() => staff.id, { onDelete: "set null" }),
+  notes: text("notes"),
+  referralCodeData: jsonb("referral_code_data"), // Referral code information
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(), // Including additional services
+  confirmationAmount: integer("confirmation_amount").notNull(), // Amount paid online
+  paymentStatus: varchar("payment_status", { enum: ["pending", "completed", "failed", "cancelled"] }).default("pending"),
+  isProcessed: boolean("is_processed").default(false), // Whether booking was created
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Working hours table
 export const workingHours = pgTable("working_hours", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1587,3 +1608,13 @@ export const insertSalonOwnerOtpSchema = createInsertSchema(salonOwnerOtps).omit
 
 export type SalonOwnerOtp = typeof salonOwnerOtps.$inferSelect;
 export type InsertSalonOwnerOtp = z.infer<typeof insertSalonOwnerOtpSchema>;
+
+// Payment orders schema and types
+export const insertPaymentOrderSchema = createInsertSchema(paymentOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type PaymentOrder = typeof paymentOrders.$inferSelect;
+export type InsertPaymentOrder = z.infer<typeof insertPaymentOrderSchema>;
