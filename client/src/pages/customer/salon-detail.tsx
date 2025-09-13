@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
-  ChevronLeft, ChevronRight, Video
+  ChevronLeft, ChevronRight, Video, HelpCircle
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { useState, useEffect } from "react";
@@ -259,6 +259,13 @@ export default function SalonDetail() {
     queryKey: [`/api/salons/${salonId}/offers`],
     enabled: !!salonId,
     staleTime: 10 * 60 * 1000, // 10 minutes cache - offers change more frequently
+  });
+
+  // Fetch salon FAQs for customers - parallel loading
+  const { data: faqs = [], isLoading: faqsLoading } = useQuery({
+    queryKey: [`/api/salons/${salonId}/faqs`],
+    enabled: !!salonId,
+    staleTime: 15 * 60 * 1000, // 15 minutes cache - FAQs don't change often
   });
 
   // Fetch available time slots for selected date and staff (ignore service filter since slots are service-agnostic)
@@ -1883,6 +1890,38 @@ export default function SalonDetail() {
             {/* Service-Specific Offers Section - New Enhanced Display */}
             {Array.isArray(offers) && offers.length > 0 && (
               <ServiceSpecificOffers offers={offers} services={services} />
+            )}
+
+            {/* Frequently Asked Questions Section */}
+            {Array.isArray(faqs) && faqs.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5 text-primary" />
+                    Frequently Asked Questions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {faqs
+                      .filter((faq: any) => faq.isActive)
+                      .sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0))
+                      .map((faq: any, index: number) => (
+                        <div key={faq.id} className="border-b border-gray-100 last:border-0 pb-4 last:pb-0">
+                          <h3 className="font-medium text-gray-900 mb-2 flex items-start gap-2">
+                            <span className="text-primary font-bold text-sm bg-primary/10 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              {index + 1}
+                            </span>
+                            {faq.question}
+                          </h3>
+                          <p className="text-gray-700 ml-8 leading-relaxed">
+                            {faq.answer}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
         </div>
