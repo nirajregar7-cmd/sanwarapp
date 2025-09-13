@@ -18,7 +18,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -7066,6 +7066,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching public offers:", error);
       res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // FAQ Management Endpoints for Salon Owners
+  
+  // Get FAQs for owner's salon
+  app.get('/api/owner/salon/faqs', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Get owner's salon first
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+        
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Get all FAQs for this salon
+      const salonFaqs = await db.select()
+        .from(faqs)
+        .where(eq(faqs.salonId, salon.id))
+        .orderBy(faqs.displayOrder, faqs.createdAt);
+        
+      res.json(salonFaqs);
+    } catch (error) {
+      console.error("Error fetching salon FAQs:", error);
+      res.status(500).json({ message: "Failed to fetch FAQs" });
+    }
+  });
+  
+  // Create new FAQ for salon
+  app.post('/api/owner/salon/faqs', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { question, answer, displayOrder } = req.body;
+      
+      // Validate required fields
+      if (!question?.trim() || !answer?.trim()) {
+        return res.status(400).json({ message: "Question and answer are required" });
+      }
+      
+      // Get owner's salon
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+        
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Check FAQ count limit (maximum 10 FAQs per salon)
+      const existingFaqsCount = await db.select({ count: sql<number>`count(*)` })
+        .from(faqs)
+        .where(eq(faqs.salonId, salon.id));
+        
+      if (existingFaqsCount[0].count >= 10) {
+        return res.status(400).json({ 
+          message: "Maximum 10 FAQs allowed per salon. Please delete some FAQs to add new ones." 
+        });
+      }
+      
+      // Create new FAQ
+      const [newFaq] = await db.insert(faqs).values({
+        salonId: salon.id,
+        question: question.trim(),
+        answer: answer.trim(),
+        displayOrder: displayOrder || 0,
+        isActive: true
+      }).returning();
+      
+      res.status(201).json(newFaq);
+    } catch (error) {
+      console.error("Error creating FAQ:", error);
+      res.status(500).json({ message: "Failed to create FAQ" });
+    }
+  });
+  
+  // Update FAQ
+  app.put('/api/owner/salon/faqs/:faqId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { faqId } = req.params;
+      const { question, answer, displayOrder, isActive } = req.body;
+      
+      // Validate required fields
+      if (!question?.trim() || !answer?.trim()) {
+        return res.status(400).json({ message: "Question and answer are required" });
+      }
+      
+      // Verify FAQ ownership through salon
+      const [existingFaq] = await db.select({
+        faq: faqs,
+        salon: salons
+      })
+      .from(faqs)
+      .innerJoin(salons, eq(faqs.salonId, salons.id))
+      .where(eq(faqs.id, faqId));
+      
+      if (!existingFaq || existingFaq.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this FAQ" });
+      }
+      
+      // Update FAQ
+      const [updatedFaq] = await db.update(faqs)
+        .set({
+          question: question.trim(),
+          answer: answer.trim(),
+          displayOrder: displayOrder || 0,
+          isActive: isActive ?? true,
+          updatedAt: new Date()
+        })
+        .where(eq(faqs.id, faqId))
+        .returning();
+      
+      res.json(updatedFaq);
+    } catch (error) {
+      console.error("Error updating FAQ:", error);
+      res.status(500).json({ message: "Failed to update FAQ" });
+    }
+  });
+  
+  // Delete FAQ
+  app.delete('/api/owner/salon/faqs/:faqId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { faqId } = req.params;
+      
+      // Verify FAQ ownership through salon
+      const [existingFaq] = await db.select({
+        faq: faqs,
+        salon: salons
+      })
+      .from(faqs)
+      .innerJoin(salons, eq(faqs.salonId, salons.id))
+      .where(eq(faqs.id, faqId));
+      
+      if (!existingFaq || existingFaq.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this FAQ" });
+      }
+      
+      // Delete FAQ
+      await db.delete(faqs).where(eq(faqs.id, faqId));
+      
+      res.json({ message: "FAQ deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting FAQ:", error);
+      res.status(500).json({ message: "Failed to delete FAQ" });
+    }
+  });
+  
+  // Public endpoint to get salon FAQs for customers
+  app.get('/api/salons/:salonId/faqs', async (req: any, res) => {
+    try {
+      const { salonId } = req.params;
+      
+      // Get active FAQs for the salon
+      const salonFaqs = await db.select()
+        .from(faqs)
+        .where(
+          and(
+            eq(faqs.salonId, salonId),
+            eq(faqs.isActive, true)
+          )
+        )
+        .orderBy(faqs.displayOrder, faqs.createdAt);
+        
+      res.json(salonFaqs);
+    } catch (error) {
+      console.error("Error fetching salon FAQs:", error);
+      res.status(500).json({ message: "Failed to fetch FAQs" });
     }
   });
 
