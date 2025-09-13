@@ -1343,7 +1343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const startTime = Date.now();
     try {
       const userId = req.user?.id;
-      const { salonId, serviceId, timeSlotId, date, staffId, referralCode, notes } = req.body;
+      const { salonId, serviceId, timeSlotId, date, staffId, referralCode, notes, additionalServices } = req.body;
       
       console.log('🎯 Creating payment order for user:', userId, 'amount processing...');
       
@@ -1814,7 +1814,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         staffId,
         notes,
         referralCodeData,
-        discountApplied
+        discountApplied,
+        additionalServices
       } = req.body;
       
       console.log('🔐 Starting payment verification for order ID:', orderId);
@@ -1865,17 +1866,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('✅ Payment signature verified successfully');
       
-      // Get service and time slot details
-      const [service] = await db.select()
+      // Determine which services to book
+      let serviceIds = [serviceId];
+      if (additionalServices && Array.isArray(additionalServices)) {
+        serviceIds.push(...additionalServices);
+      }
+      
+      // Get all service details
+      const serviceDetails = await db.select()
         .from(services)
-        .where(eq(services.id, serviceId));
+        .where(inArray(services.id, serviceIds));
         
       const [timeSlot] = await db.select()
         .from(timeSlots)
         .where(eq(timeSlots.id, timeSlotId));
       
-      if (!service || !timeSlot) {
-        return res.status(400).json({ message: "Service or time slot not found" });
+      if (serviceDetails.length !== serviceIds.length || !timeSlot) {
+        return res.status(400).json({ message: "One or more services or time slot not found" });
       }
       
       // Check if slot is still available
@@ -1899,28 +1906,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const confirmationAmount = salon?.confirmationAmount || 10;
       
-      // Create booking after successful payment - automatically confirmed
-      const [booking] = await db.insert(bookings).values({
-        customerId: userId,
-        salonId,
-        serviceId,
-        staffId: staffId || null,
-        timeSlotId,
-        date,
-        startTime: timeSlot.startTime,
-        endTime: timeSlot.endTime,
-        totalAmount: service.price,
-        confirmationAmount: confirmationAmount.toString(),
-        status: 'confirmed', // Automatically confirmed when payment is successful
-        paymentId: paymentVerification.transactionId || orderId,
-        paymentStatus: 'completed',
-        notes: notes || 'Online payment successful'
-      }).returning();
+      // Create separate booking records for each service
+      const createdBookings = [];
+      for (const service of serviceDetails) {
+        const isMultipleServices = serviceIds.length > 1;
+        const bookingNotes = isMultipleServices 
+          ? `Confirmation fee paid online. Service fee (₹${service.price}) payable at salon.`
+          : notes || 'Online payment successful';
+          
+        const [booking] = await db.insert(bookings).values({
+          customerId: userId,
+          salonId,
+          serviceId: service.id,
+          staffId: staffId || null,
+          timeSlotId,
+          date,
+          startTime: timeSlot.startTime,
+          endTime: timeSlot.endTime,
+          totalAmount: service.price,
+          confirmationAmount: confirmationAmount.toString(),
+          status: 'confirmed', // Automatically confirmed when payment is successful
+          paymentId: paymentVerification.transactionId || orderId,
+          paymentStatus: 'completed',
+          notes: bookingNotes
+        }).returning();
+        
+        createdBookings.push(booking);
+        
+        // Send booking confirmation notification for each booking
+        await sendBookingConfirmationNotification(booking.id);
+      }
+      
+      // Use the first booking for revenue tracking (confirmation fee is paid once)
+      const primaryBooking = createdBookings[0];
       
       // Calculate and record revenue share
       const revenueShare = calculateRevenueShare(confirmationAmount);
       const [revenueRecord] = await db.insert(revenueShares).values({
-        bookingId: booking.id,
+        bookingId: primaryBooking.id,
         confirmationAmount: confirmationAmount.toString(),
         platformShare: revenueShare.platformShare.toString(),
         salonShare: revenueShare.salonShare.toString(),
@@ -1929,7 +1952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Attempt automatic payout to salon owner
       try {
-        console.log(`Starting automatic payout for booking ${booking.id}, salon ${salon.name}`);
+        console.log(`Starting automatic payout for primary booking ${primaryBooking.id}, salon ${salon.name}`);
         
         // Get salon owner bank details
         const bankDetails = await storage.getSalonOwnerBankDetails(salonId);
@@ -1961,7 +1984,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const payoutResult = await storage.processSalonPayout(
               fundAccountId,
               revenueShare.salonShare,
-              booking.id
+              primaryBooking.id
             );
             
             if (payoutResult.success) {
@@ -1969,18 +1992,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // Update transfer status to completed
               await storage.updateRevenueShareTransferStatus(
-                booking.id,
+                primaryBooking.id,
                 'completed',
                 payoutResult.payoutId,
                 new Date()
               );
             } else {
               console.error(`❌ Automatic payout failed: ${payoutResult.error}`);
-              await storage.updateRevenueShareTransferStatus(booking.id, 'failed');
+              await storage.updateRevenueShareTransferStatus(primaryBooking.id, 'failed');
             }
           } else {
             console.log(`⚠️ Could not create fund account for salon ${salon.name}`);
-            await storage.updateRevenueShareTransferStatus(booking.id, 'failed');
+            await storage.updateRevenueShareTransferStatus(primaryBooking.id, 'failed');
           }
         } else {
           console.log(`⚠️ No verified bank details found for salon ${salon.name}, payout will remain pending`);
@@ -1988,7 +2011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (payoutError) {
         console.error('Error in automatic payout process:', payoutError);
         // Keep transfer status as pending if payout fails
-        await storage.updateRevenueShareTransferStatus(booking.id, 'failed');
+        await storage.updateRevenueShareTransferStatus(primaryBooking.id, 'failed');
       }
       
       // Handle referral tracking for all referral types
@@ -2002,7 +2025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (referralRecord) {
           // Complete the referral
-          await storage.completeReferral(referralRecord.id, booking.id);
+          await storage.completeReferral(referralRecord.id, primaryBooking.id);
           
           // Check referral type and handle accordingly
           const [referrer] = await db.select()
@@ -2049,7 +2072,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Shopkeeper milestone referral - existing logic
               const milestoneCompleted = await storage.updateReferralMilestoneProgress(
                 referralRecord.referrerId,
-                booking.id,
+                primaryBooking.id,
                 confirmationAmount
               );
 
@@ -2064,16 +2087,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail the booking if referral processing fails
       }
 
-      // Send booking confirmation notification
-      try {
-        await sendBookingConfirmationNotification(booking.id);
-      } catch (notificationError) {
-        console.error("Failed to send booking confirmation notification:", notificationError);
-        // Don't fail the booking if notification fails
-      }
+      // Note: Booking confirmation notifications already sent for each booking in the loop above
 
       const processingTime = Date.now() - startTime;
-      console.log(`✅ Booking created successfully after payment in ${processingTime}ms:`, booking.id);
+      console.log(`✅ ${createdBookings.length} booking(s) created successfully after payment in ${processingTime}ms:`, createdBookings.map(b => b.id).join(', '));
 
       // Send booking confirmation emails to both customer and shopkeeper (async)
       setImmediate(async () => {
@@ -2087,10 +2104,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      const isMultipleServices = createdBookings.length > 1;
+      const message = isMultipleServices 
+        ? `${createdBookings.length} bookings confirmed! You've paid the ₹${confirmationAmount/100} confirmation fee online. Pay the service fees at the salon.`
+        : "Booking confirmed! You've paid the confirmation amount. Pay the remaining service cost at the salon.";
+        
       res.json({ 
         success: true, 
-        booking,
-        message: "Booking confirmed! You've paid the confirmation amount. Pay the remaining service cost at the salon.",
+        bookings: createdBookings,
+        primaryBooking,
+        totalServices: createdBookings.length,
+        message,
         processingTime: `${processingTime}ms`,
         paymentId: paymentVerification.transactionId
       });

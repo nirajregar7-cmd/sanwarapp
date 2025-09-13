@@ -714,15 +714,10 @@ export default function SalonDetail() {
   };
 
   const onSubmit = (data: BookingFormData) => {
-    // For multiple services or if user prefers pay at salon, use payAtSalonMutation
-    // For single service with online payment, use bookingMutation
-    if (data.serviceIds.length > 1) {
-      // Multiple services always use pay at salon flow
-      payAtSalonMutation.mutate(data);
-    } else {
-      // Single service uses regular payment flow
-      bookingMutation.mutate(data);
-    }
+    // Always use regular payment flow to ensure confirmation fee is paid online
+    // Whether single or multiple services, customer pays confirmation fee online
+    // Service fees will be paid at salon for multiple services
+    bookingMutation.mutate(data);
   };
 
   if (salonLoading) {
