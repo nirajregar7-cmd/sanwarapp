@@ -14,13 +14,14 @@ import {
   Store, Users, Calendar, IndianRupee, Clock, Star, Plus, 
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
-  CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play
+  CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play, 
+  HelpCircle, Edit2
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { LeafletLocationPicker } from "@/components/LeafletLocationPicker";
 import type { UploadResult } from '@uppy/core';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -77,10 +78,18 @@ const gallerySchema = z.object({
   category: z.enum(['work', 'staff', 'interior']).default('work'),
 });
 
+const faqSchema = z.object({
+  question: z.string().min(1, "Question is required"),
+  answer: z.string().min(1, "Answer is required"),
+  displayOrder: z.number().optional(),
+  isActive: z.boolean().default(true),
+});
+
 type SalonFormData = z.infer<typeof salonSchema>;
 type ServiceFormData = z.infer<typeof serviceSchema>;
 type StaffFormData = z.infer<typeof staffSchema>;
 type GalleryFormData = z.infer<typeof gallerySchema>;
+type FaqFormData = z.infer<typeof faqSchema>;
 
 export default function OwnerDashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -92,6 +101,7 @@ export default function OwnerDashboard() {
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [promoVideoDialogOpen, setPromoVideoDialogOpen] = useState(false);
+  const [faqDialogOpen, setFaqDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [salonLocation, setSalonLocation] = useState<{lat: number, lng: number} | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -255,6 +265,77 @@ export default function OwnerDashboard() {
       toast({
         title: "Error",
         description: "Failed to update working hours",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // FAQ queries and mutations
+  const { data: faqs = [], isLoading: faqsLoading } = useQuery<any[]>({
+    queryKey: [`/api/salons/${salon?.id}/faqs`],
+    enabled: !!salon?.id,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+  });
+
+  const createFaqMutation = useMutation({
+    mutationFn: async (faqData: FaqFormData) => {
+      return await apiRequest("POST", `/api/salons/${salon?.id}/faqs`, faqData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/faqs`] });
+      setFaqDialogOpen(false);
+      setEditingItem(null);
+      toast({
+        title: "Success",
+        description: "FAQ created successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create FAQ",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateFaqMutation = useMutation({
+    mutationFn: async ({ id, ...faqData }: FaqFormData & { id: string }) => {
+      return await apiRequest("PUT", `/api/salons/${salon?.id}/faqs/${id}`, faqData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/faqs`] });
+      setFaqDialogOpen(false);
+      setEditingItem(null);
+      toast({
+        title: "Success",
+        description: "FAQ updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update FAQ",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteFaqMutation = useMutation({
+    mutationFn: async (faqId: string) => {
+      return await apiRequest("DELETE", `/api/salons/${salon?.id}/faqs/${faqId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/faqs`] });
+      toast({
+        title: "Success",
+        description: "FAQ deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete FAQ",
         variant: "destructive",
       });
     },
@@ -425,6 +506,40 @@ export default function OwnerDashboard() {
       category: "work",
     },
   });
+
+  // FAQ form hook - moved to top level to avoid hooks violation
+  const faqForm = useForm<FaqFormData>({
+    resolver: zodResolver(faqSchema),
+    defaultValues: {
+      question: "",
+      answer: "",
+      isActive: true,
+      displayOrder: 0,
+    },
+  });
+
+  // Reset FAQ form when dialog opens/closes or editing item changes
+  useEffect(() => {
+    if (faqDialogOpen) {
+      if (editingItem) {
+        // Pre-populate form for editing
+        faqForm.reset({
+          question: editingItem.question || "",
+          answer: editingItem.answer || "",
+          isActive: editingItem.isActive ?? true,
+          displayOrder: editingItem.displayOrder || 0,
+        });
+      } else {
+        // Reset form for new FAQ
+        faqForm.reset({
+          question: "",
+          answer: "",
+          isActive: true,
+          displayOrder: faqs.length,
+        });
+      }
+    }
+  }, [faqDialogOpen, editingItem, faqs.length, faqForm]);
 
   // Salon mutation
   const salonMutation = useMutation({
@@ -871,6 +986,7 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="offers" className="text-xs py-3">Offers</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
+                  <TabsTrigger value="faqs" className="text-xs py-3">FAQs</TabsTrigger>
                   <TabsTrigger value="messages" className="text-xs py-3 relative">
                     Messages
                     {brandMessages.filter(msg => !msg.isRead).length > 0 && (
@@ -879,19 +995,22 @@ export default function OwnerDashboard() {
                       </span>
                     )}
                   </TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-1 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="settings" className="text-xs py-3" data-testid="settings-tab">Settings</TabsTrigger>
                 </TabsList>
               </div>
               
               {/* Desktop Tab Navigation */}
               <div className="hidden sm:block">
-                <TabsList className="grid w-full grid-cols-8 gap-1">
+                <TabsList className="grid w-full grid-cols-9 gap-1">
                   <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
                   <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
                   <TabsTrigger value="staff" className="text-sm">Staff</TabsTrigger>
                   <TabsTrigger value="gallery" className="text-sm">Media Gallery</TabsTrigger>
                   <TabsTrigger value="bookings" className="text-sm">Bookings</TabsTrigger>
                   <TabsTrigger value="offers" className="text-sm">Offers</TabsTrigger>
+                  <TabsTrigger value="faqs" className="text-sm">FAQs</TabsTrigger>
                   <TabsTrigger value="messages" className="text-sm relative">
                     Messages
                     {brandMessages.filter(msg => !msg.isRead).length > 0 && (
@@ -1817,6 +1936,129 @@ export default function OwnerDashboard() {
               </Card>
             </TabsContent>
 
+            <TabsContent value="faqs" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Frequently Asked Questions
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500">
+                        {faqs.length}/10 FAQs
+                      </span>
+                      <Button 
+                        onClick={() => {
+                          if (faqs.length >= 10) {
+                            toast({
+                              title: "Limit Reached",
+                              description: "You can have maximum 10 FAQs to maintain customer focus",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          setEditingItem(null);
+                          setFaqDialogOpen(true);
+                        }}
+                        disabled={faqs.length >= 10}
+                        size="sm"
+                        data-testid="button-add-faq"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add FAQ
+                      </Button>
+                    </div>
+                  </CardTitle>
+                  <CardDescription>
+                    Help customers by answering common questions about your salon. This builds trust and reduces repetitive inquiries. You can add up to 10 FAQs.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {faqsLoading ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-full"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : faqs.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="rounded-full bg-blue-50 w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                        <HelpCircle className="h-6 w-6 text-blue-500" />
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">No FAQs yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        Add frequently asked questions to help your customers and build trust.
+                      </p>
+                      <Button 
+                        onClick={() => {
+                          setEditingItem(null);
+                          setFaqDialogOpen(true);
+                        }}
+                        data-testid="button-add-first-faq"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Your First FAQ
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {faqs.map((faq: any, index: number) => (
+                        <div key={faq.id} className="border rounded-lg p-4" data-testid={`faq-item-${faq.id}`}>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="bg-blue-50 text-blue-700 text-xs font-medium px-2 py-1 rounded">
+                                  Q{index + 1}
+                                </span>
+                                {!faq.isActive && (
+                                  <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded">
+                                    Inactive
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="font-medium text-gray-900 mb-2" data-testid={`faq-question-${faq.id}`}>
+                                {faq.question}
+                              </h4>
+                              <p className="text-gray-600 text-sm leading-relaxed" data-testid={`faq-answer-${faq.id}`}>
+                                {faq.answer}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1 ml-4">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingItem(faq);
+                                  setFaqDialogOpen(true);
+                                }}
+                                data-testid={`button-edit-faq-${faq.id}`}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm("Are you sure you want to delete this FAQ?")) {
+                                    deleteFaqMutation.mutate(faq.id);
+                                  }
+                                }}
+                                disabled={deleteFaqMutation.isPending}
+                                data-testid={`button-delete-faq-${faq.id}`}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="settings" className="space-y-6">
               <Card>
                 <CardHeader>
@@ -2691,6 +2933,107 @@ export default function OwnerDashboard() {
               </p>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* FAQ Form Dialog */}
+      <Dialog open={faqDialogOpen} onOpenChange={setFaqDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingItem ? "Edit FAQ" : "Add New FAQ"}</DialogTitle>
+            <DialogDescription>
+              {editingItem 
+                ? "Update this frequently asked question and its answer." 
+                : `Add a helpful question and answer (${faqs.length}/10 FAQs used).`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...faqForm}>
+            <form onSubmit={faqForm.handleSubmit(async (values) => {
+                if (editingItem) {
+                  updateFaqMutation.mutate({ ...values, id: editingItem.id });
+                } else {
+                  createFaqMutation.mutate(values);
+                }
+              })} className="space-y-4">
+                
+                <FormField
+                  control={faqForm.control}
+                  name="question"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Question</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="What customers frequently ask..."
+                          className="min-h-[80px]"
+                          data-testid="input-faq-question"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={faqForm.control}
+                  name="answer"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Answer</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Your helpful response..."
+                          className="min-h-[100px]"
+                          data-testid="input-faq-answer"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex items-center space-x-2">
+                  <FormField
+                    control={faqForm.control}
+                    name="isActive"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <Switch 
+                            checked={field.value} 
+                            onCheckedChange={field.onChange}
+                            data-testid="switch-faq-active"
+                          />
+                        </FormControl>
+                        <FormLabel className="!mt-0">Show to customers</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setFaqDialogOpen(false)}
+                    data-testid="button-cancel-faq"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={createFaqMutation.isPending || updateFaqMutation.isPending}
+                    data-testid="button-save-faq"
+                  >
+                    {createFaqMutation.isPending || updateFaqMutation.isPending ? "Saving..." : 
+                     editingItem ? "Update FAQ" : "Add FAQ"}
+                  </Button>
+                </div>
+              </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
