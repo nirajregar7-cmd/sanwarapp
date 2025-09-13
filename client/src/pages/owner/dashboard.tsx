@@ -272,17 +272,17 @@ export default function OwnerDashboard() {
 
   // FAQ queries and mutations
   const { data: faqs = [], isLoading: faqsLoading } = useQuery<any[]>({
-    queryKey: [`/api/salons/${salon?.id}/faqs`],
+    queryKey: [`/api/owner/salon/faqs`],
     enabled: !!salon?.id,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
   const createFaqMutation = useMutation({
     mutationFn: async (faqData: FaqFormData) => {
-      return await apiRequest("POST", `/api/salons/${salon?.id}/faqs`, faqData);
+      return await apiRequest("POST", `/api/owner/salon/faqs`, faqData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/faqs`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/owner/salon/faqs`] });
       setFaqDialogOpen(false);
       setEditingItem(null);
       toast({
@@ -301,10 +301,10 @@ export default function OwnerDashboard() {
 
   const updateFaqMutation = useMutation({
     mutationFn: async ({ id, ...faqData }: FaqFormData & { id: string }) => {
-      return await apiRequest("PUT", `/api/salons/${salon?.id}/faqs/${id}`, faqData);
+      return await apiRequest("PUT", `/api/owner/salon/faqs/${id}`, faqData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/faqs`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/owner/salon/faqs`] });
       setFaqDialogOpen(false);
       setEditingItem(null);
       toast({
@@ -323,10 +323,10 @@ export default function OwnerDashboard() {
 
   const deleteFaqMutation = useMutation({
     mutationFn: async (faqId: string) => {
-      return await apiRequest("DELETE", `/api/salons/${salon?.id}/faqs/${faqId}`);
+      return await apiRequest("DELETE", `/api/owner/salon/faqs/${faqId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/faqs`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/owner/salon/faqs`] });
       toast({
         title: "Success",
         description: "FAQ deleted successfully",
