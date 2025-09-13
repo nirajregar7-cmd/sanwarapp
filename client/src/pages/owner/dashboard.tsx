@@ -121,7 +121,8 @@ export default function OwnerDashboard() {
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery<BookingWithDetails[]>({
     queryKey: [`/api/owner/bookings`],
     enabled: !!salon?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutes cache - bookings change more frequently
+    staleTime: 0, // No cache - force fresh data for debugging
+    gcTime: 0, // Don't cache the response (replaces old cacheTime)
   });
 
   // Fetch salon reviews - long cache

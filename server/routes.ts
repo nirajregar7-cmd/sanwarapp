@@ -3177,11 +3177,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/owner/bookings', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
+      console.log('[DEBUG] Owner bookings request - User ID:', userId);
       
       // Get the owner's salon first
       const [ownerSalon] = await db.select()
         .from(salons)
         .where(eq(salons.ownerId, userId));
+      
+      console.log('[DEBUG] Owner salon found:', ownerSalon ? { id: ownerSalon.id, name: ownerSalon.name } : 'No salon found');
       
       if (!ownerSalon) {
         return res.status(404).json({ message: "No salon found for this owner" });
@@ -3189,6 +3192,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use the storage method to get bookings with detailed information
       const ownerBookings = await storage.getBookingsBySalon(ownerSalon.id);
+      
+      console.log(`[DEBUG] Found ${ownerBookings.length} bookings for salon ${ownerSalon.id}`);
+      console.log('[DEBUG] Booking statuses:', ownerBookings.map(b => ({ id: b.id, status: b.status, serviceName: b.service?.name })));
       
       res.json(ownerBookings);
     } catch (error) {
