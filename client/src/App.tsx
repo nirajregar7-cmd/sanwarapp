@@ -67,6 +67,11 @@ import USCityDetail from "@/pages/usa/city-detail";
 // Blog Page
 import Blog from "@/pages/Blog";
 
+// Info Pages
+import About from "@/pages/About";
+import Services from "@/pages/Services";
+import Contact from "@/pages/Contact";
+
 
 
 // Payment Pages
@@ -453,6 +458,11 @@ function Router() {
         // Authenticated users without user type - show selection page
         <Route path="/" component={UserTypeSelection} />
       )}
+
+      {/* Public Info Pages */}
+      <Route path="/about" component={About} />
+      <Route path="/services" component={Services} />
+      <Route path="/contact" component={Contact} />
 
       {/* Fallback routes */}
       <Route path="/landing" component={Landing} />
