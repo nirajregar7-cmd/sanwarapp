@@ -748,6 +748,15 @@ export default function SalonDetail() {
   }
 
   const selectedServiceData = services.find(s => s.id === selectedService);
+  
+  // Get data for all selected services for booking summary
+  const selectedServicesData = form.watch("serviceIds")?.map(serviceId => 
+    services.find(s => s.id === serviceId)
+  ).filter(Boolean) || [];
+  
+  const totalSelectedPrice = selectedServicesData.reduce((total, service) => 
+    total + parseFloat(service.price), 0
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1621,21 +1630,23 @@ export default function SalonDetail() {
                             disabled={bookingMutation.isPending}
                           />
 
-                          {selectedServiceData && (
+                          {selectedServicesData.length > 0 && (
                             <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
                               <h4 className="font-semibold mb-2 text-sm sm:text-base">Booking Summary</h4>
                               <div className="space-y-1 text-xs sm:text-sm">
                                 <div className="flex justify-between">
-                                  <span>Service:</span>
-                                  <span className="truncate ml-2">{selectedServiceData.name}</span>
+                                  <span>Services ({selectedServicesData.length}):</span>
+                                  <span className="truncate ml-2 text-right">
+                                    {selectedServicesData.map(service => service.name).join(", ")}
+                                  </span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span>Duration:</span>
-                                  <span>{selectedServiceData.duration} mins</span>
+                                  <span>Total Duration:</span>
+                                  <span>{selectedServicesData.reduce((total, service) => total + service.duration, 0)} mins</span>
                                 </div>
                                 <div className="flex justify-between font-semibold">
-                                  <span>Price:</span>
-                                  <span>₹{selectedServiceData.price}</span>
+                                  <span>Total Price:</span>
+                                  <span>₹{totalSelectedPrice}</span>
                                 </div>
                                 {appliedReferralCode && (
                                   <>
