@@ -42,11 +42,20 @@ export default function Contact() {
               <span className="text-xl font-bold text-gray-900">Sanwar</span>
             </Link>
             <div className="flex items-center space-x-6">
-              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-about">
-                About
+              <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-home">
+                Home
               </Link>
               <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-services">
                 Services
+              </Link>
+              <Link href="/features" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-features">
+                Features
+              </Link>
+              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-about">
+                About Us
+              </Link>
+              <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-contact">
+                Contact
               </Link>
             </div>
           </div>

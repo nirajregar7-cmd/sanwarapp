@@ -33,6 +33,37 @@ import {
 export default function Features() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-200 via-blue-100 to-slate-300">
+      {/* Navigation */}
+      <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="flex items-center space-x-3" data-testid="link-home-logo">
+              <div className="bg-gray-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                S
+              </div>
+              <span className="text-xl font-bold text-gray-900">Sanwar</span>
+            </Link>
+            <div className="flex items-center space-x-6">
+              <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-home">
+                Home
+              </Link>
+              <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-services">
+                Services
+              </Link>
+              <Link href="/features" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-features">
+                Features
+              </Link>
+              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-about">
+                About Us
+              </Link>
+              <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-contact">
+                Contact
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Header Section */}
       <section className="py-16 text-center">
         <div className="max-w-4xl mx-auto px-4">
