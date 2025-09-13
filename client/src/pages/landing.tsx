@@ -211,6 +211,9 @@ export default function Landing() {
               <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-services">
                 Services
               </Link>
+              <Link href="/features" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-features">
+                Features
+              </Link>
               <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-contact">
                 Contact
               </Link>
@@ -258,6 +261,14 @@ export default function Landing() {
                   data-testid="link-services-mobile"
                 >
                   Services
+                </Link>
+                <Link 
+                  href="/features" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-features-mobile"
+                >
+                  Features
                 </Link>
                 <Link 
                   href="/contact" 
