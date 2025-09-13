@@ -408,10 +408,10 @@ export default function Landing() {
           {/* User Type Selection */}
           <div className="mt-8 sm:mt-12 max-w-4xl mx-auto px-4">
             <div className="text-center mb-8">
-              <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
                 {t('hero.who_are_you')}
               </h3>
-              <p className="text-white/90 text-sm sm:text-base">
+              <p className="text-gray-700 text-sm sm:text-base">
                 {t('hero.choose_account_type')}
               </p>
             </div>
