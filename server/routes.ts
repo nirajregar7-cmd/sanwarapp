@@ -1562,7 +1562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerId: userId,
         salonId,
         serviceId,
-        additionalServices: additionalServices && additionalServices.length > 0 ? additionalServices : null,
+        additionalServices: additionalServices && additionalServices.length > 0 ? JSON.stringify(additionalServices) : null,
         timeSlotId,
         date,
         staffId: staffId || null,

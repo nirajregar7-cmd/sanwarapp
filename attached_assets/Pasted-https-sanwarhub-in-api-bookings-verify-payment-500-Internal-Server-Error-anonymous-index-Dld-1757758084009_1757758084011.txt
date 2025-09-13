@@ -1,0 +1,113 @@
+https://sanwarhub.in/api/bookings/verify-payment 500 (Internal Server Error)
+(anonymous) @ index-DldFG-2Q.js:750
+(anonymous) @ index-DldFG-2Q.js:750
+L1 @ index-DldFG-2Q.js:40
+Mf @ index-DldFG-2Q.js:40
+Ihe @ index-DldFG-2Q.js:40
+nd @ index-DldFG-2Q.js:40
+SL @ index-DldFG-2Q.js:40
+Iu @ index-DldFG-2Q.js:38
+(anonymous) @ index-DldFG-2Q.js:40
+setTimeout
+i @ index-DldFG-2Q.js:48
+o @ index-DldFG-2Q.js:48
+batch @ index-DldFG-2Q.js:48
+Cl @ index-DldFG-2Q.js:48
+setData @ index-DldFG-2Q.js:48
+onSuccess @ index-DldFG-2Q.js:48
+f @ index-DldFG-2Q.js:48
+Promise.then
+v @ index-DldFG-2Q.js:48
+start @ index-DldFG-2Q.js:48
+fetch @ index-DldFG-2Q.js:48
+zg @ index-DldFG-2Q.js:48
+onSubscribe @ index-DldFG-2Q.js:48
+subscribe @ index-DldFG-2Q.js:48
+(anonymous) @ index-DldFG-2Q.js:48
+dH @ index-DldFG-2Q.js:38
+L1 @ index-DldFG-2Q.js:40
+Mf @ index-DldFG-2Q.js:40
+SL @ index-DldFG-2Q.js:40
+Iu @ index-DldFG-2Q.js:38
+Ihe @ index-DldFG-2Q.js:40
+nd @ index-DldFG-2Q.js:40
+VH @ index-DldFG-2Q.js:40
+S @ index-DldFG-2Q.js:25
+B @ index-DldFG-2Q.js:25
+index-DldFG-2Q.js:750  Payment verification error: 500 {"message":"Unexpected number in JSON at position 1","processingTime":"37ms","retryable":true}
+(anonymous) @ index-DldFG-2Q.js:750
+await in (anonymous)
+(anonymous) @ index-DldFG-2Q.js:750
+L1 @ index-DldFG-2Q.js:40
+Mf @ index-DldFG-2Q.js:40
+Ihe @ index-DldFG-2Q.js:40
+nd @ index-DldFG-2Q.js:40
+SL @ index-DldFG-2Q.js:40
+Iu @ index-DldFG-2Q.js:38
+(anonymous) @ index-DldFG-2Q.js:40
+setTimeout
+i @ index-DldFG-2Q.js:48
+o @ index-DldFG-2Q.js:48
+batch @ index-DldFG-2Q.js:48
+Cl @ index-DldFG-2Q.js:48
+setData @ index-DldFG-2Q.js:48
+onSuccess @ index-DldFG-2Q.js:48
+f @ index-DldFG-2Q.js:48
+Promise.then
+v @ index-DldFG-2Q.js:48
+start @ index-DldFG-2Q.js:48
+fetch @ index-DldFG-2Q.js:48
+zg @ index-DldFG-2Q.js:48
+onSubscribe @ index-DldFG-2Q.js:48
+subscribe @ index-DldFG-2Q.js:48
+(anonymous) @ index-DldFG-2Q.js:48
+dH @ index-DldFG-2Q.js:38
+L1 @ index-DldFG-2Q.js:40
+Mf @ index-DldFG-2Q.js:40
+SL @ index-DldFG-2Q.js:40
+Iu @ index-DldFG-2Q.js:38
+Ihe @ index-DldFG-2Q.js:40
+nd @ index-DldFG-2Q.js:40
+VH @ index-DldFG-2Q.js:40
+S @ index-DldFG-2Q.js:25
+B @ index-DldFG-2Q.js:25
+index-DldFG-2Q.js:750  Payment callback error: Error: Payment verification failed: 500 {"message":"Unexpected number in JSON at position 1","processingTime":"37ms","retryable":true}
+    at index-DldFG-2Q.js:750:127299
+(anonymous) @ index-DldFG-2Q.js:750
+await in (anonymous)
+(anonymous) @ index-DldFG-2Q.js:750
+L1 @ index-DldFG-2Q.js:40
+Mf @ index-DldFG-2Q.js:40
+Ihe @ index-DldFG-2Q.js:40
+nd @ index-DldFG-2Q.js:40
+SL @ index-DldFG-2Q.js:40
+Iu @ index-DldFG-2Q.js:38
+(anonymous) @ index-DldFG-2Q.js:40
+setTimeout
+i @ index-DldFG-2Q.js:48
+o @ index-DldFG-2Q.js:48
+batch @ index-DldFG-2Q.js:48
+Cl @ index-DldFG-2Q.js:48
+setData @ index-DldFG-2Q.js:48
+onSuccess @ index-DldFG-2Q.js:48
+f @ index-DldFG-2Q.js:48
+Promise.then
+v @ index-DldFG-2Q.js:48
+start @ index-DldFG-2Q.js:48
+fetch @ index-DldFG-2Q.js:48
+zg @ index-DldFG-2Q.js:48
+onSubscribe @ index-DldFG-2Q.js:48
+subscribe @ index-DldFG-2Q.js:48
+(anonymous) @ index-DldFG-2Q.js:48
+dH @ index-DldFG-2Q.js:38
+L1 @ index-DldFG-2Q.js:40
+Mf @ index-DldFG-2Q.js:40
+SL @ index-DldFG-2Q.js:40
+Iu @ index-DldFG-2Q.js:38
+Ihe @ index-DldFG-2Q.js:40
+nd @ index-DldFG-2Q.js:40
+VH @ index-DldFG-2Q.js:40
+S @ index-DldFG-2Q.js:25
+B @ index-DldFG-2Q.js:25
+manifest.json:1  Manifest: Line: 1, column: 1, Syntax error.
+payment-callback?order_id=booking_1757757984678_a3rhekh6m:1  <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
