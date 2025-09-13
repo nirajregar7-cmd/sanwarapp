@@ -991,18 +991,18 @@ export default function Landing() {
 
 
       {/* Call to Action Section */}
-      <section className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white py-16 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-slate-200 via-blue-100 to-slate-300 text-gray-900 py-16 relative overflow-hidden">
         {/* Background decorations */}
-        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 bg-white/10"></div>
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
-          <div className="absolute bottom-10 right-10 w-32 h-32 bg-purple-300/20 rounded-full blur-2xl"></div>
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white/20 rounded-full blur-xl"></div>
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-blue-200/30 rounded-full blur-2xl"></div>
         </div>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
             Ready to Transform Your Beauty Experience?
           </h2>
-          <p className="text-xl mb-8 opacity-90">
+          <p className="text-xl mb-8 text-gray-700">
             Join thousands of satisfied customers and partner salons on Sanwar
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
