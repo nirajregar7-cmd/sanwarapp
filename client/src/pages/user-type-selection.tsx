@@ -69,121 +69,115 @@ export default function UserTypeSelection() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-200 via-blue-100 to-slate-300 flex items-center justify-center px-4 py-8">
-      <div className="max-w-6xl w-full">
+      <div className="max-w-4xl w-full">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Who are you?</h1>
-          <p className="text-xl text-white/90">Choose your account type to get started with Sanwar</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Who are you?</h1>
+          <p className="text-lg text-gray-600">Choose your account type to get started with Sanwar</p>
         </div>
 
         {/* User Type Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Customer Card */}
           <div
             onClick={() => setUserType("customer")}
-            className={`bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-8 cursor-pointer transition-all duration-300 hover:scale-105 ${
-              userType === 'customer' ? 'ring-4 ring-white/50 shadow-2xl' : 'hover:shadow-xl'
+            className={`bg-white rounded-2xl p-8 cursor-pointer transition-all duration-300 hover:shadow-lg border-2 ${
+              userType === 'customer' ? 'border-blue-500 shadow-xl' : 'border-gray-200 hover:border-gray-300'
             }`}
           >
             <div className="text-center mb-6">
-              <div className="bg-blue-500 rounded-2xl p-4 inline-block mb-4">
-                <Users className="h-12 w-12 text-white" />
+              <div className="bg-blue-500 rounded-full p-3 inline-block mb-4">
+                <Users className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">I'm a Customer</h2>
-              <p className="text-blue-100">I want to discover and book salon services</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">I'm a Customer</h2>
+              <p className="text-gray-600 text-sm">I want to discover and book salon services</p>
             </div>
 
             <div className="space-y-3 mb-8">
-              <div className="flex items-center text-white">
-                <CheckCircle className="h-5 w-5 mr-3 text-green-300" />
-                <span>Find nearby salons</span>
+              <div className="flex items-center text-gray-700">
+                <CheckCircle className="h-5 w-5 mr-3 text-green-500" />
+                <span className="text-sm">Find nearby salons</span>
               </div>
-              <div className="flex items-center text-white">
-                <CheckCircle className="h-5 w-5 mr-3 text-green-300" />
-                <span>Book appointments instantly</span>
+              <div className="flex items-center text-gray-700">
+                <CheckCircle className="h-5 w-5 mr-3 text-green-500" />
+                <span className="text-sm">Book appointments instantly</span>
               </div>
-              <div className="flex items-center text-white">
-                <CheckCircle className="h-5 w-5 mr-3 text-green-300" />
-                <span>Manage bookings</span>
+              <div className="flex items-center text-gray-700">
+                <CheckCircle className="h-5 w-5 mr-3 text-green-500" />
+                <span className="text-sm">Manage bookings</span>
               </div>
-              <div className="flex items-center text-white">
-                <CheckCircle className="h-5 w-5 mr-3 text-green-300" />
-                <span>Leave reviews & earn rewards</span>
+              <div className="flex items-center text-gray-700">
+                <CheckCircle className="h-5 w-5 mr-3 text-green-500" />
+                <span className="text-sm">Leave reviews & earn rewards</span>
               </div>
             </div>
 
             <Button
               onClick={handleSubmit}
               disabled={updateUserTypeMutation.isPending || userType !== 'customer'}
-              className={`w-full bg-white text-blue-600 hover:bg-blue-50 font-semibold py-3 mb-4 ${
+              className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 mb-4 ${
                 userType === 'customer' ? 'block' : 'hidden'
               }`}
             >
               {updateUserTypeMutation.isPending ? "Setting up..." : "Sign Up / Login as Customer"}
             </Button>
 
-            <Button
-              variant="outline"
-              className="w-full bg-blue-500/30 border-blue-300 text-white hover:bg-blue-500/50"
-              data-testid="button-refer-earn-customer"
-            >
-              <Gift className="h-4 w-4 mr-2" />
-              Refer & Earn
-            </Button>
+            <div className="text-center">
+              <button className="text-gray-500 text-sm hover:text-gray-700" data-testid="button-refer-earn-customer">
+                Refer & Earn
+              </button>
+            </div>
           </div>
 
           {/* Salon Owner Card */}
           <div
             onClick={() => setUserType("salon_owner")}
-            className={`bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl p-8 cursor-pointer transition-all duration-300 hover:scale-105 ${
-              userType === 'salon_owner' ? 'ring-4 ring-white/50 shadow-2xl' : 'hover:shadow-xl'
+            className={`bg-white rounded-2xl p-8 cursor-pointer transition-all duration-300 hover:shadow-lg border-2 ${
+              userType === 'salon_owner' ? 'border-blue-500 shadow-xl' : 'border-gray-200 hover:border-gray-300'
             }`}
           >
             <div className="text-center mb-6">
-              <div className="bg-pink-500 rounded-2xl p-4 inline-block mb-4">
-                <Store className="h-12 w-12 text-white" />
+              <div className="bg-blue-500 rounded-full p-3 inline-block mb-4">
+                <Store className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">I'm a Salon Owner</h2>
-              <p className="text-purple-100">I want to manage my salon business online</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">I'm a Salon Owner</h2>
+              <p className="text-gray-600 text-sm">I want to manage my salon business online</p>
             </div>
 
             <div className="space-y-3 mb-8">
-              <div className="flex items-center text-white">
-                <CheckCircle className="h-5 w-5 mr-3 text-green-300" />
-                <span>Setup salon profile</span>
+              <div className="flex items-center text-gray-700">
+                <CheckCircle className="h-5 w-5 mr-3 text-green-500" />
+                <span className="text-sm">Setup salon profile</span>
               </div>
-              <div className="flex items-center text-white">
-                <CheckCircle className="h-5 w-5 mr-3 text-green-300" />
-                <span>Manage services & staff</span>
+              <div className="flex items-center text-gray-700">
+                <CheckCircle className="h-5 w-5 mr-3 text-green-500" />
+                <span className="text-sm">Manage services & staff</span>
               </div>
-              <div className="flex items-center text-white">
-                <CheckCircle className="h-5 w-5 mr-3 text-green-300" />
-                <span>Create time slots</span>
+              <div className="flex items-center text-gray-700">
+                <CheckCircle className="h-5 w-5 mr-3 text-green-500" />
+                <span className="text-sm">Create time slots</span>
               </div>
-              <div className="flex items-center text-white">
-                <CheckCircle className="h-5 w-5 mr-3 text-green-300" />
-                <span>Handle bookings & earnings</span>
+              <div className="flex items-center text-gray-700">
+                <CheckCircle className="h-5 w-5 mr-3 text-green-500" />
+                <span className="text-sm">Handle bookings & earnings</span>
               </div>
             </div>
 
             <Button
               onClick={handleSubmit}
               disabled={updateUserTypeMutation.isPending || userType !== 'salon_owner'}
-              className={`w-full bg-white text-purple-600 hover:bg-purple-50 font-semibold py-3 mb-4 ${
+              className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 mb-4 ${
                 userType === 'salon_owner' ? 'block' : 'hidden'
               }`}
             >
               {updateUserTypeMutation.isPending ? "Setting up..." : "Sign Up / Login as Salon Owner"}
             </Button>
 
-            <Button
-              variant="outline"
-              className="w-full bg-purple-500/30 border-purple-300 text-white hover:bg-purple-500/50"
-              data-testid="button-refer-earn-salon"
-            >
-              <Gift className="h-4 w-4 mr-2" />
-              Refer & Earn
-            </Button>
+            <div className="text-center">
+              <button className="text-gray-500 text-sm hover:text-gray-700" data-testid="button-refer-earn-salon">
+                Refer & Earn
+              </button>
+            </div>
           </div>
         </div>
       </div>
