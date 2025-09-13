@@ -40,7 +40,7 @@ declare global {
 }
 
 const bookingSchema = z.object({
-  serviceId: z.string().min(1, "Please select a service"),
+  serviceIds: z.array(z.string()).min(1, "Please select at least one service"),
   staffId: z.string().optional(),
   date: z.date({
     required_error: "Please select a date",
@@ -301,30 +301,35 @@ export default function SalonDetail() {
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      serviceId: "",
+      serviceIds: [],
       staffId: "",
       date: new Date(),
       timeSlotId: "",
     },
   });
 
-  // Pay at Salon mutation
+  // Pay at Salon mutation for multiple services
   const payAtSalonMutation = useMutation({
     mutationFn: async (data: BookingFormData) => {
       if (!isAuthenticated) {
         throw new Error("Please log in to book an appointment");
       }
 
-      const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
-        salonId,
-        serviceId: data.serviceId,
-        staffId: data.staffId || null,
-        timeSlotId: data.timeSlotId,
-        date: data.date.toISOString().split('T')[0],
-        notes: "Pay at salon booking"
+      // Create a booking for each selected service
+      const bookingPromises = data.serviceIds.map(async (serviceId) => {
+        const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
+          salonId,
+          serviceId: serviceId,
+          staffId: data.staffId || null,
+          timeSlotId: data.timeSlotId,
+          date: data.date.toISOString().split('T')[0],
+          notes: "Pay at salon booking - Multiple services"
+        });
+        return await response.json();
       });
       
-      return await response.json();
+      const results = await Promise.all(bookingPromises);
+      return { bookings: results, serviceCount: data.serviceIds.length };
     },
     onSuccess: () => {
       toast({
@@ -355,16 +360,21 @@ export default function SalonDetail() {
   const handlePayAtSalonBooking = async () => {
     try {
       const formData = form.getValues();
-      const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
-        salonId,
-        serviceId: formData.serviceId,
-        staffId: formData.staffId || null,
-        timeSlotId: formData.timeSlotId,
-        date: formData.date.toISOString().split('T')[0],
-        notes: "Pay at salon - Online payment failed due to security checks"
+      
+      // Create a booking for each selected service
+      const bookingPromises = formData.serviceIds.map(async (serviceId) => {
+        const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
+          salonId,
+          serviceId: serviceId,
+          staffId: formData.staffId || null,
+          timeSlotId: formData.timeSlotId,
+          date: formData.date.toISOString().split('T')[0],
+          notes: "Pay at salon - Online payment failed due to security checks"
+        });
+        return await response.json();
       });
       
-      const booking = await response.json();
+      const bookings = await Promise.all(bookingPromises);
       
       toast({
         title: "Booking Confirmed!",
@@ -390,14 +400,19 @@ export default function SalonDetail() {
         throw new Error("Please log in to book an appointment");
       }
 
-      // Step 1: Create payment order (with referral code support)
+      // Step 1: Create payment order for multiple services
+      // For now, we'll use the first service for payment order creation
+      // and handle multiple services in the booking creation
+      const primaryServiceId = data.serviceIds[0];
       const orderResponse = await apiRequest("POST", "/api/bookings/create-payment-order", {
         salonId,
-        serviceId: data.serviceId,
+        serviceId: primaryServiceId,
         staffId: data.staffId || null,
         timeSlotId: data.timeSlotId,
         date: data.date.toISOString().split('T')[0],
         referralCode: appliedReferralCode?.code || null,
+        // Include all services for total calculation
+        additionalServices: data.serviceIds.slice(1),
       });
 
       const orderData = await orderResponse.json();
@@ -410,10 +425,12 @@ export default function SalonDetail() {
         let endpoint = "/api/bookings/create-free";
         let payload: any = {
           salonId,
-          serviceId: data.serviceId,
+          serviceId: primaryServiceId, // Use primary service for free booking
           staffId: data.staffId || null,
           timeSlotId: data.timeSlotId,
           date: data.date.toISOString().split('T')[0],
+          // Include additional services if multiple selected
+          additionalServices: data.serviceIds.length > 1 ? data.serviceIds.slice(1) : undefined,
         };
 
         // Handle referral code free booking
@@ -1371,39 +1388,79 @@ export default function SalonDetail() {
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                           <FormField
                             control={form.control}
-                            name="serviceId"
+                            name="serviceIds"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Select Service</FormLabel>
-                                <Select 
-                                  onValueChange={(value) => {
-                                    field.onChange(value);
-                                    setSelectedService(value);
-                                    if (!value) {
-                                      setSelectedStaff(""); // Reset staff when no service selected
-                                    }
-                                  }} 
-                                  value={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Choose a service" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {services.map((service) => (
-                                      <SelectItem key={service.id} value={service.id}>
-                                        <div className="flex justify-between items-center w-full">
-                                          <span>{service.name}</span>
-                                          <span className="text-green-600 font-semibold ml-2">₹{service.price}</span>
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                {selectedService && (
-                                  <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
-                                    <strong>Price: ₹{selectedServiceData?.price || 0}</strong>
+                                <FormLabel>Select Services</FormLabel>
+                                <div className="space-y-3 max-h-48 overflow-y-auto border rounded-lg p-3">
+                                  {services.map((service) => {
+                                    const discountInfo = calculateServiceDiscountedPrice(service);
+                                    const originalPrice = parseFloat(service.price);
+                                    const isSelected = field.value?.includes(service.id) || false;
+                                    
+                                    return (
+                                      <div key={service.id} className="flex items-center space-x-3 p-2 rounded border hover:bg-gray-50">
+                                        <input
+                                          type="checkbox"
+                                          id={`service-${service.id}`}
+                                          checked={isSelected}
+                                          onChange={(e) => {
+                                            const currentValues = field.value || [];
+                                            if (e.target.checked) {
+                                              const newValues = [...currentValues, service.id];
+                                              field.onChange(newValues);
+                                            } else {
+                                              const newValues = currentValues.filter((id: string) => id !== service.id);
+                                              field.onChange(newValues);
+                                            }
+                                          }}
+                                          className="h-4 w-4 text-primary"
+                                          data-testid={`checkbox-service-${service.id}`}
+                                        />
+                                        <label htmlFor={`service-${service.id}`} className="flex-1 cursor-pointer">
+                                          <div className="flex justify-between items-center">
+                                            <div>
+                                              <span className="font-medium text-blue-600">{service.name}</span>
+                                              {service.description && (
+                                                <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                                              )}
+                                            </div>
+                                            <div className="text-right">
+                                              {discountInfo ? (
+                                                <div className="space-y-1">
+                                                  <div className="text-sm text-red-500 line-through">
+                                                    ₹{originalPrice}
+                                                  </div>
+                                                  <div className="text-green-600 font-bold">
+                                                    ₹{discountInfo.discountedPrice}
+                                                  </div>
+                                                  <div className="text-xs text-purple-600">
+                                                    {discountInfo.offerTitle}
+                                                  </div>
+                                                </div>
+                                              ) : (
+                                                <span className="text-green-600 font-semibold">₹{service.price}</span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </label>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                {field.value && field.value.length > 0 && (
+                                  <div className="mt-2 p-3 bg-blue-50 rounded-lg">
+                                    <div className="text-sm font-medium text-blue-900">Selected Services ({field.value.length}):</div>
+                                    <div className="mt-1 text-sm text-blue-800">
+                                      Total Price: ₹{services
+                                        .filter(service => field.value.includes(service.id))
+                                        .map(service => {
+                                          const discountInfo = calculateServiceDiscountedPrice(service);
+                                          return discountInfo ? discountInfo.discountedPrice : parseFloat(service.price);
+                                        })
+                                        .reduce((total, price) => total + price, 0)
+                                        .toFixed(0)}
+                                    </div>
                                   </div>
                                 )}
                                 <FormMessage />
