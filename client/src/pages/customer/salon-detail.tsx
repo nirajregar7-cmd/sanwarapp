@@ -1421,9 +1421,6 @@ export default function SalonDetail() {
                                           <div className="flex justify-between items-center">
                                             <div>
                                               <span className="font-medium text-blue-600">{service.name}</span>
-                                              {service.description && (
-                                                <p className="text-sm text-gray-600 mt-1">{service.description}</p>
-                                              )}
                                             </div>
                                             <div className="text-right">
                                               {discountInfo ? (
