@@ -205,14 +205,17 @@ export default function Landing() {
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-about">
-                About
+              <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-home">
+                Home
               </Link>
               <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-services">
                 Services
               </Link>
               <Link href="/features" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-features">
                 Features
+              </Link>
+              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-about">
+                About Us
               </Link>
               <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-contact">
                 Contact
@@ -247,12 +250,12 @@ export default function Landing() {
             <div className="md:hidden">
               <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
                 <Link 
-                  href="/about" 
+                  href="/" 
                   className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
                   onClick={() => setMobileMenuOpen(false)}
-                  data-testid="link-about-mobile"
+                  data-testid="link-home-mobile"
                 >
-                  About
+                  Home
                 </Link>
                 <Link 
                   href="/services" 
@@ -269,6 +272,14 @@ export default function Landing() {
                   data-testid="link-features-mobile"
                 >
                   Features
+                </Link>
+                <Link 
+                  href="/about" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-about-mobile"
+                >
+                  About Us
                 </Link>
                 <Link 
                   href="/contact" 
