@@ -2,9 +2,14 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Scissors, Sparkles, Users, Heart, Clock, Shield, CheckCircle } from "lucide-react";
+import { ArrowLeft, Scissors, Sparkles, Users, Heart, Clock, Shield, CheckCircle, Menu, X } from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Services() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
   const services = [
     {
       category: "Hair Services",
@@ -52,13 +57,16 @@ export default function Services() {
       <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-3" data-testid="link-home">
+            {/* Logo and Brand */}
+            <div className="flex items-center space-x-3">
               <div className="bg-gray-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                 S
               </div>
               <span className="text-xl font-bold text-gray-900">Sanwar</span>
-            </Link>
-            <div className="flex items-center space-x-6">
+            </div>
+
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center space-x-8">
               <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-home">
                 Home
               </Link>
@@ -74,11 +82,97 @@ export default function Services() {
               <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-contact">
                 Contact
               </Link>
-              <Link href="/auth" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium" data-testid="link-login">
-                Login
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/dashboard" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium" data-testid="link-dashboard">
+                  Dashboard
+                </Link>
+              ) : (
+                <Link href="/auth" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium" data-testid="link-login">
+                  Login
+                </Link>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-gray-600 hover:text-gray-900"
+                data-testid="button-mobile-menu"
+              >
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
             </div>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden">
+              <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+                <Link 
+                  href="/" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-home-mobile"
+                >
+                  Home
+                </Link>
+                <Link 
+                  href="/services" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-services-mobile"
+                >
+                  Services
+                </Link>
+                <Link 
+                  href="/features" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-features-mobile"
+                >
+                  Features
+                </Link>
+                <Link 
+                  href="/about" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-about-mobile"
+                >
+                  About Us
+                </Link>
+                <Link 
+                  href="/contact" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-contact-mobile"
+                >
+                  Contact
+                </Link>
+                {isAuthenticated ? (
+                  <Link 
+                    href="/dashboard" 
+                    className="block px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md hover:from-purple-700 hover:to-blue-700 transition-all font-medium mx-3 mt-3 text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="link-dashboard-mobile"
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <Link 
+                    href="/auth" 
+                    className="block px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md hover:from-purple-700 hover:to-blue-700 transition-all font-medium mx-3 mt-3 text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="link-login-mobile"
+                  >
+                    Login
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
