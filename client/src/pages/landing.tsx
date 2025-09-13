@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee, Gift, Navigation } from "lucide-react";
+import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee, Gift, Navigation, Menu, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,7 @@ export default function Landing() {
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [searchRadius, setSearchRadius] = useState(30);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Use the new LocationContext for unified location management
   const { 
@@ -190,6 +191,107 @@ export default function Landing() {
 
   return (
     <div className="interface-panel">
+      {/* Navigation Bar */}
+      <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo and Brand */}
+            <div className="flex items-center space-x-3">
+              <div className="bg-gray-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                S
+              </div>
+              <span className="text-xl font-bold text-gray-900">Sanwar</span>
+            </div>
+
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-about">
+                About
+              </Link>
+              <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-services">
+                Services
+              </Link>
+              <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-contact">
+                Contact
+              </Link>
+              {isAuthenticated ? (
+                <Link href="/dashboard" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium" data-testid="link-dashboard">
+                  Dashboard
+                </Link>
+              ) : (
+                <Link href="/auth" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium" data-testid="link-login">
+                  Login
+                </Link>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-gray-600 hover:text-gray-900"
+                data-testid="button-mobile-menu"
+              >
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden">
+              <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+                <Link 
+                  href="/about" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-about-mobile"
+                >
+                  About
+                </Link>
+                <Link 
+                  href="/services" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-services-mobile"
+                >
+                  Services
+                </Link>
+                <Link 
+                  href="/contact" 
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="link-contact-mobile"
+                >
+                  Contact
+                </Link>
+                {isAuthenticated ? (
+                  <Link 
+                    href="/dashboard" 
+                    className="block px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md hover:from-purple-700 hover:to-blue-700 transition-all font-medium mx-3 mt-3 text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="link-dashboard-mobile"
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <Link 
+                    href="/auth" 
+                    className="block px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md hover:from-purple-700 hover:to-blue-700 transition-all font-medium mx-3 mt-3 text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="link-login-mobile"
+                  >
+                    Login
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white py-12 sm:py-16 lg:py-24 relative overflow-hidden">
         {/* Background decorations */}
