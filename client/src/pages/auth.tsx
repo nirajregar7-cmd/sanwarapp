@@ -180,14 +180,14 @@ export default function AuthPage() {
   // Show OTP authentication for salon owners
   if (showOtpAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-200 via-blue-100 to-slate-300 px-4">
         <div className="max-w-md w-full">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
               Welcome to Sanwar
             </h1>
-            <p className="text-white/90 text-lg">
+            <p className="text-gray-700 text-lg">
               Your smart salon booking platform
             </p>
           </div>
@@ -201,14 +201,14 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-200 via-blue-100 to-slate-300 px-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Welcome to Sanwar
           </h1>
-          <p className="text-white/90 text-lg">
+          <p className="text-gray-700 text-lg">
             Your smart salon booking platform
           </p>
         </div>
