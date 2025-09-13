@@ -25,6 +25,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Salon, Service, Staff, BookingWithDetails, Review, SalonGallery } from "@shared/schema";
+
+// Extended type for grouped bookings
+interface GroupedBooking extends BookingWithDetails {
+  servicesList: string[];
+  servicesCount: number;
+  totalGroupAmount: number;
+  allBookingIds: string[];
+  groupStatus: string;
+}
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
@@ -117,13 +126,80 @@ export default function OwnerDashboard() {
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
+  // Group bookings by customer, date and time slot for multiple services
+  const groupBookingsByAppointment = (bookings: BookingWithDetails[]): GroupedBooking[] => {
+    const groups = new Map<string, BookingWithDetails[]>();
+    
+    bookings.forEach(booking => {
+      // Create unique customer identifier to avoid collisions
+      const customerId = booking.isWalkIn ? 
+        `walk-in-${booking.walkInCustomerPhone || booking.walkInCustomerName || booking.id}` : 
+        booking.customer?.id || `unknown-${booking.id}`;
+      const key = `${customerId}-${booking.date}-${booking.startTime}-${booking.endTime}`;
+      
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key)!.push(booking);
+    });
+    
+    // Helper function to aggregate status
+    const getGroupStatus = (group: BookingWithDetails[]): string => {
+      const statuses = group.map(b => b.status);
+      const uniqueStatuses = [...new Set(statuses)];
+      
+      if (uniqueStatuses.length === 1) {
+        return uniqueStatuses[0] || 'unknown';
+      }
+      
+      // Mixed statuses - prioritize based on importance
+      if (statuses.includes('cancelled')) {
+        return 'partially cancelled';
+      }
+      if (statuses.includes('pending')) {
+        return 'pending';
+      }
+      if (statuses.includes('confirmed')) {
+        return 'confirmed';
+      }
+      return 'mixed status';
+    };
+    
+    // Convert groups to array and sort by date/time
+    return Array.from(groups.values())
+      .map(group => {
+        // Sort services within group and return the primary booking with services list
+        const sortedGroup = group.sort((a, b) => 
+          new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+        );
+        const primaryBooking = sortedGroup[0];
+        
+        return {
+          ...primaryBooking,
+          servicesList: sortedGroup.map(b => b.service?.name || 'Service'),
+          servicesCount: sortedGroup.length,
+          totalGroupAmount: sortedGroup.reduce((sum, b) => sum + (b.totalAmount || 0), 0),
+          allBookingIds: sortedGroup.map(b => b.id),
+          groupStatus: getGroupStatus(sortedGroup)
+        } as GroupedBooking;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(`${a.date} ${a.startTime}`);
+        const dateB = new Date(`${b.date} ${b.startTime}`);
+        return dateB.getTime() - dateA.getTime();
+      });
+  };
+
   // Fetch salon bookings - optimized refresh
-  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<BookingWithDetails[]>({
+  const { data: rawBookings = [], isLoading: bookingsLoading } = useQuery<BookingWithDetails[]>({
     queryKey: [`/api/owner/bookings`],
     enabled: !!salon?.id,
     staleTime: 0, // No cache - force fresh data for debugging
     gcTime: 0, // Don't cache the response (replaces old cacheTime)
   });
+
+  // Group the bookings for display
+  const bookings = groupBookingsByAppointment(rawBookings);
 
   // Fetch salon reviews - long cache
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
@@ -1514,17 +1590,22 @@ export default function OwnerDashboard() {
                                 </div>
                                 <Badge 
                                   variant={
-                                    booking.status === 'confirmed' ? 'default' :
-                                    booking.status === 'completed' ? 'secondary' :
-                                    booking.status === 'cancelled' ? 'destructive' : 'outline'
+                                    booking.groupStatus === 'confirmed' ? 'default' :
+                                    booking.groupStatus === 'completed' ? 'secondary' :
+                                    booking.groupStatus.includes('cancelled') ? 'destructive' : 'outline'
                                   }
                                 >
-                                  {booking.status}
+                                  {booking.groupStatus}
                                 </Badge>
                               </div>
                               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm text-gray-600">
                                 <div>
-                                  <span className="font-medium">Service:</span> {booking.service?.name || 'Service'}
+                                  <span className="font-medium">Service{booking.servicesCount > 1 ? 's' : ''}:</span> 
+                                  {booking.servicesList ? 
+                                    booking.servicesList.join(', ') + 
+                                    (booking.servicesCount > 1 ? ` (${booking.servicesCount} services)` : '') :
+                                    (booking.service?.name || 'Service')
+                                  }
                                 </div>
                                 <div>
                                   <span className="font-medium">Appointment:</span> {booking.date}
@@ -1539,7 +1620,7 @@ export default function OwnerDashboard() {
                                   <span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}
                                 </div>
                                 <div>
-                                  <span className="font-medium">Amount:</span> ₹{booking.totalAmount}
+                                  <span className="font-medium">Amount:</span> ₹{booking.totalGroupAmount || booking.totalAmount}
                                 </div>
                                 <div>
                                   <span className="font-medium">Payment:</span> 
