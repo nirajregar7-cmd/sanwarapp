@@ -134,12 +134,15 @@ export default function SalonDetail() {
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
-  // Fetch salon services - parallel loading
-  const { data: services = [], isLoading: servicesLoading } = useQuery<Service[]>({
-    queryKey: [`/api/salons/${salonId}/services`],
+  // Fetch salon services organized by categories - parallel loading
+  const { data: servicesByCategory = [], isLoading: servicesLoading } = useQuery<any[]>({
+    queryKey: [`/api/salons/${salonId}/services-by-category`],
     enabled: !!salonId,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
+
+  // Flatten services for compatibility with existing booking logic
+  const services = servicesByCategory.flatMap(category => category.services || []);
 
   // Fetch salon staff with their assigned services - parallel loading
   const { data: staff = [], isLoading: staffLoading } = useQuery<Staff[]>({
@@ -898,53 +901,80 @@ export default function SalonDetail() {
                       <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
                     ))}
                   </div>
-                ) : services.length > 0 ? (
+                ) : servicesByCategory.length > 0 ? (
                   <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    <div className="space-y-3 sm:space-y-4">
-                      {services.map((service) => (
-                      <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-blue-600 text-sm sm:text-base">{service.name}</h3>
-                          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{service.description}</p>
-                          <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-500">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {service.duration} mins
+                    <div className="space-y-6">
+                      {servicesByCategory.map((category) => (
+                        <div key={category.id} className="space-y-3">
+                          {/* Category Header */}
+                          <div className="flex items-center space-x-3 pb-2 border-b border-gray-200">
+                            <div 
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
+                              style={{ backgroundColor: category.color || '#3B82F6' }}
+                            >
+                              {category.icon === 'Scissors' ? '✂️' : 
+                               category.icon === 'Sparkles' ? '✨' : 
+                               category.icon === 'Palette' ? '🎨' :
+                               category.icon === 'Heart' ? '❤️' :
+                               category.icon === 'Star' ? '⭐' : '💫'}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-lg">{category.name}</h3>
+                              {category.description && (
+                                <p className="text-sm text-gray-600">{category.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Services in this category */}
+                          <div className="space-y-3">
+                            {category.services.map((service: any) => (
+                              <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0 ml-4">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold text-blue-600 text-sm sm:text-base">{service.name}</h4>
+                                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{service.description}</p>
+                                  <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-500">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {service.duration} mins
+                                  </div>
+                                </div>
+                                <div className="text-left sm:text-right flex-shrink-0">
+                                  {(() => {
+                                    const discountInfo = calculateServiceDiscountedPrice(service);
+                                    if (discountInfo) {
+                                      return (
+                                        <div className="space-y-1">
+                                          <div className="text-sm text-red-500 line-through">
+                                            ₹{discountInfo.originalPrice.toFixed(2)}
+                                          </div>
+                                          <div className="text-lg font-semibold text-green-600">
+                                            ₹{discountInfo.discountedPrice.toFixed(2)}
+                                          </div>
+                                          <div className="text-xs text-red-600 font-medium">
+                                            {discountInfo.discountType === 'percentage' 
+                                              ? `${discountInfo.discountPercentage}% OFF` 
+                                              : `₹${discountInfo.discountPercentage} OFF`}
+                                          </div>
+                                          {discountInfo.offerTitle && (
+                                            <div className="text-xs text-purple-600 font-medium mt-1">
+                                              {discountInfo.offerTitle}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    } else {
+                                      return (
+                                        <div className="text-lg font-semibold text-green-600">
+                                          ₹{service.price}
+                                        </div>
+                                      );
+                                    }
+                                  })()}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                        <div className="text-left sm:text-right flex-shrink-0">
-                          {(() => {
-                            const discountInfo = calculateServiceDiscountedPrice(service);
-                            if (discountInfo) {
-                              return (
-                                <div className="space-y-1">
-                                  <div className="text-sm text-red-500 line-through">
-                                    ₹{discountInfo.originalPrice.toFixed(2)}
-                                  </div>
-                                  <div className="text-lg font-semibold text-green-600">
-                                    ₹{discountInfo.discountedPrice.toFixed(2)}
-                                  </div>
-                                  <div className="text-xs text-red-600 font-medium">
-                                    {discountInfo.discountType === 'percentage' 
-                                      ? `${discountInfo.discountPercentage}% OFF` 
-                                      : `₹${discountInfo.discountPercentage} OFF`}
-                                  </div>
-                                  {discountInfo.offerTitle && (
-                                    <div className="text-xs text-purple-600 font-medium mt-1">
-                                      {discountInfo.offerTitle}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            } else {
-                              return (
-                                <div className="text-lg font-semibold text-green-600">
-                                  ₹{service.price}
-                                </div>
-                              );
-                            }
-                          })()}
-                        </div>
-                      </div>
                       ))}
                     </div>
                     
@@ -952,7 +982,7 @@ export default function SalonDetail() {
                     {services.length > 3 && (
                       <div className="text-center pt-4 border-t border-gray-100 mt-4">
                         <p className="text-sm text-gray-500">
-                          Showing all {services.length} services • Scroll to see more
+                          Showing all {services.length} services across {servicesByCategory.length} categories • Scroll to see more
                         </p>
                       </div>
                     )}
