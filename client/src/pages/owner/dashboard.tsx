@@ -148,7 +148,7 @@ export default function OwnerDashboard() {
 
   // Fetch service categories for the salon - parallel loading with caching
   const { data: serviceCategories = [], isLoading: categoriesLoading } = useQuery<any[]>({
-    queryKey: [`/api/salons/${salon?.id}/service-categories`],
+    queryKey: [`/api/salons/${salon?.id}/categories`],
     enabled: !!salon?.id,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
     retry: false, // Don't retry if endpoint doesn't exist yet
@@ -552,7 +552,7 @@ export default function OwnerDashboard() {
   // Category mutation
   const categoryMutation = useMutation({
     mutationFn: async (data: ServiceCategoryFormData) => {
-      const endpoint = editingItem ? `/api/service-categories/${editingItem.id}` : `/api/salons/${salon?.id}/service-categories`;
+      const endpoint = editingItem ? `/api/categories/${editingItem.id}` : `/api/salons/${salon?.id}/categories`;
       const method = editingItem ? 'PUT' : 'POST';
       return apiRequest(method, endpoint, data);
     },
@@ -561,7 +561,7 @@ export default function OwnerDashboard() {
         title: editingItem ? "Category Updated!" : "Category Added!",
         description: editingItem ? "Service category has been updated." : "New service category has been created.",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/service-categories`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/categories`] });
       categoryForm.reset();
       setCategoryDialogOpen(false);
       setEditingItem(null);
