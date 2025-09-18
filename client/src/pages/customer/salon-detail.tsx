@@ -70,6 +70,7 @@ export default function SalonDetail() {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [selectedStaffBio, setSelectedStaffBio] = useState<Staff | null>(null);
   const [expandedFaqs, setExpandedFaqs] = useState<Set<string>>(new Set());
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
   
   // Toggle FAQ expansion
   const toggleFaqExpansion = (faqId: string) => {
@@ -912,84 +913,126 @@ export default function SalonDetail() {
                     ))}
                   </div>
                 ) : servicesByCategory.length > 0 ? (
-                  <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    <div className="space-y-6">
+                  <div className="space-y-4">
+                    {/* Category Filter Buttons */}
+                    <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+                      <button
+                        onClick={() => setSelectedCategoryFilter("all")}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                          selectedCategoryFilter === "all"
+                            ? "bg-primary text-white shadow-md"
+                            : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                        }`}
+                        data-testid="filter-category-all"
+                      >
+                        All Services
+                      </button>
                       {servicesByCategory.map((category) => (
-                        <div key={category.id} className="space-y-3">
-                          {/* Category Header */}
-                          <div className="flex items-center space-x-3 pb-2 border-b border-gray-200">
-                            <div 
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
-                              style={{ backgroundColor: category.color || '#3B82F6' }}
-                            >
-                              {category.icon === 'Scissors' ? '✂️' : 
-                               category.icon === 'Sparkles' ? '✨' : 
-                               category.icon === 'Palette' ? '🎨' :
-                               category.icon === 'Heart' ? '❤️' :
-                               category.icon === 'Star' ? '⭐' : '💫'}
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-gray-900 text-lg">{category.name}</h3>
-                              {category.description && (
-                                <p className="text-sm text-gray-600">{category.description}</p>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {/* Services in this category */}
-                          <div className="space-y-3">
-                            {category.services && category.services.length > 0 ? category.services.map((service: Service) => (
-                              <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0 ml-4">
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-semibold text-blue-600 text-sm sm:text-base">{service.name}</h4>
-                                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{service.description}</p>
-                                  <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-500">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {service.duration} mins
-                                  </div>
-                                </div>
-                                <div className="text-left sm:text-right flex-shrink-0">
-                                  {(() => {
-                                    const discountInfo = calculateServiceDiscountedPrice(service);
-                                    if (discountInfo) {
-                                      return (
-                                        <div className="space-y-1">
-                                          <div className="text-sm text-red-500 line-through">
-                                            ₹{discountInfo.originalPrice.toFixed(2)}
-                                          </div>
-                                          <div className="text-lg font-semibold text-green-600">
-                                            ₹{discountInfo.discountedPrice.toFixed(2)}
-                                          </div>
-                                          <div className="text-xs text-red-600 font-medium">
-                                            {discountInfo.discountType === 'percentage' 
-                                              ? `${discountInfo.discountPercentage}% OFF` 
-                                              : `₹${discountInfo.discountPercentage} OFF`}
-                                          </div>
-                                          {discountInfo.offerTitle && (
-                                            <div className="text-xs text-purple-600 font-medium mt-1">
-                                              {discountInfo.offerTitle}
-                                            </div>
-                                          )}
-                                        </div>
-                                      );
-                                    } else {
-                                      return (
-                                        <div className="text-lg font-semibold text-green-600">
-                                          ₹{service.price}
-                                        </div>
-                                      );
-                                    }
-                                  })()}
-                                </div>
-                              </div>
-                            )) : (
-                              <div className="text-sm text-gray-500 ml-4 py-2">
-                                No services in this category
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        <button
+                          key={category.id}
+                          onClick={() => setSelectedCategoryFilter(category.id)}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center space-x-2 ${
+                            selectedCategoryFilter === category.id
+                              ? "text-white shadow-md"
+                              : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                          }`}
+                          style={{
+                            backgroundColor: selectedCategoryFilter === category.id ? category.color || '#3B82F6' : undefined
+                          }}
+                          data-testid={`filter-category-${category.id}`}
+                        >
+                          <div 
+                            className="w-3 h-3 rounded-full"
+                            style={{ 
+                              backgroundColor: selectedCategoryFilter === category.id ? "rgba(255,255,255,0.3)" : category.color || '#3B82F6' 
+                            }}
+                          />
+                          <span>{category.name}</span>
+                        </button>
                       ))}
+                    </div>
+                    
+                    <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      <div className="space-y-6">
+                        {servicesByCategory
+                          .filter(category => selectedCategoryFilter === "all" || category.id === selectedCategoryFilter)
+                          .map((category) => (
+                            <div key={category.id} className="space-y-3">
+                              {/* Category Header */}
+                              <div className="flex items-center space-x-3 pb-2 border-b border-gray-200">
+                                <div 
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
+                                  style={{ backgroundColor: category.color || '#3B82F6' }}
+                                >
+                                  {category.icon === 'Scissors' ? '✂️' : 
+                                   category.icon === 'Sparkles' ? '✨' : 
+                                   category.icon === 'Palette' ? '🎨' :
+                                   category.icon === 'Heart' ? '❤️' :
+                                   category.icon === 'Star' ? '⭐' : '💫'}
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-gray-900 text-lg">{category.name}</h3>
+                                  {category.description && (
+                                    <p className="text-sm text-gray-600">{category.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Services in this category */}
+                              <div className="space-y-3">
+                                {category.services && category.services.length > 0 ? category.services.map((service: Service) => (
+                                  <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0 ml-4">
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-semibold text-blue-600 text-sm sm:text-base">{service.name}</h4>
+                                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{service.description}</p>
+                                      <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-500">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        {service.duration} mins
+                                      </div>
+                                    </div>
+                                    <div className="text-left sm:text-right flex-shrink-0">
+                                      {(() => {
+                                        const discountInfo = calculateServiceDiscountedPrice(service);
+                                        if (discountInfo) {
+                                          return (
+                                            <div className="space-y-1">
+                                              <div className="text-sm text-red-500 line-through">
+                                                ₹{discountInfo.originalPrice.toFixed(2)}
+                                              </div>
+                                              <div className="text-lg font-semibold text-green-600">
+                                                ₹{discountInfo.discountedPrice.toFixed(2)}
+                                              </div>
+                                              <div className="text-xs text-red-600 font-medium">
+                                                {discountInfo.discountType === 'percentage' 
+                                                  ? `${discountInfo.discountPercentage}% OFF` 
+                                                  : `₹${discountInfo.discountPercentage} OFF`}
+                                              </div>
+                                              {discountInfo.offerTitle && (
+                                                <div className="text-xs text-purple-600 font-medium mt-1">
+                                                  {discountInfo.offerTitle}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        } else {
+                                          return (
+                                            <div className="text-lg font-semibold text-green-600">
+                                              ₹{service.price}
+                                            </div>
+                                          );
+                                        }
+                                      })()}
+                                    </div>
+                                  </div>
+                                )) : (
+                                  <div className="text-sm text-gray-500 ml-4 py-2">
+                                    No services in this category
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
                     </div>
                     
                     {/* Scroll indicator for services */}
