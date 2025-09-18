@@ -15,7 +15,7 @@ import {
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
   CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play, 
-  HelpCircle, Edit2
+  HelpCircle, Edit2, Palette, Tags
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -25,7 +25,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { Salon, Service, Staff, BookingWithDetails, Review, SalonGallery } from "@shared/schema";
+import type { Salon, Service, Staff, BookingWithDetails, Review, SalonGallery, ServiceCategory, InsertServiceCategory } from "@shared/schema";
 
 // Extended type for grouped bookings
 interface GroupedBooking extends BookingWithDetails {
@@ -86,11 +86,19 @@ const faqSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+const serviceCategorySchema = z.object({
+  name: z.string().min(1, "Category name is required"),
+  description: z.string().optional(),
+  icon: z.string().min(1, "Please select an icon"),
+  color: z.string().min(4, "Please select a color"),
+});
+
 type SalonFormData = z.infer<typeof salonSchema>;
 type ServiceFormData = z.infer<typeof serviceSchema>;
 type StaffFormData = z.infer<typeof staffSchema>;
 type GalleryFormData = z.infer<typeof gallerySchema>;
 type FaqFormData = z.infer<typeof faqSchema>;
+type ServiceCategoryFormData = z.infer<typeof serviceCategorySchema>;
 
 export default function OwnerDashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -103,6 +111,7 @@ export default function OwnerDashboard() {
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [promoVideoDialogOpen, setPromoVideoDialogOpen] = useState(false);
   const [faqDialogOpen, setFaqDialogOpen] = useState(false);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [salonLocation, setSalonLocation] = useState<{lat: number, lng: number} | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -997,12 +1006,16 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="services" className="text-xs py-3" data-testid="services-section">Services</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
+                  <TabsTrigger value="categories" className="text-xs py-3">Categories</TabsTrigger>
                   <TabsTrigger value="staff" className="text-xs py-3" data-testid="staff-tab">Staff</TabsTrigger>
-                  <TabsTrigger value="gallery" className="text-xs py-3">Media Gallery</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
+                  <TabsTrigger value="gallery" className="text-xs py-3">Media Gallery</TabsTrigger>
                   <TabsTrigger value="bookings" className="text-xs py-3" data-testid="bookings-tab">Bookings</TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="offers" className="text-xs py-3">Offers</TabsTrigger>
+                  <TabsTrigger value="faqs" className="text-xs py-3">FAQs</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="faqs" className="text-xs py-3">FAQs</TabsTrigger>
@@ -1022,9 +1035,10 @@ export default function OwnerDashboard() {
               
               {/* Desktop Tab Navigation */}
               <div className="hidden sm:block">
-                <TabsList className="grid w-full grid-cols-9 gap-1">
+                <TabsList className="grid w-full grid-cols-10 gap-1">
                   <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
                   <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
+                  <TabsTrigger value="categories" className="text-sm">Categories</TabsTrigger>
                   <TabsTrigger value="staff" className="text-sm">Staff</TabsTrigger>
                   <TabsTrigger value="gallery" className="text-sm">Media Gallery</TabsTrigger>
                   <TabsTrigger value="bookings" className="text-sm">Bookings</TabsTrigger>
