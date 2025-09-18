@@ -134,8 +134,18 @@ export default function SalonDetail() {
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
+  // Type for category with services
+  type CategoryWithServices = {
+    id: string;
+    name: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+    services: Service[];
+  };
+
   // Fetch salon services organized by categories - parallel loading
-  const { data: servicesByCategory = [], isLoading: servicesLoading } = useQuery<any[]>({
+  const { data: servicesByCategory = [], isLoading: servicesLoading } = useQuery<CategoryWithServices[]>({
     queryKey: [`/api/salons/${salonId}/services-by-category`],
     enabled: !!salonId,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
@@ -928,7 +938,7 @@ export default function SalonDetail() {
                           
                           {/* Services in this category */}
                           <div className="space-y-3">
-                            {category.services.map((service: any) => (
+                            {category.services && category.services.length > 0 ? category.services.map((service: Service) => (
                               <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0 ml-4">
                                 <div className="flex-1 min-w-0">
                                   <h4 className="font-semibold text-blue-600 text-sm sm:text-base">{service.name}</h4>
@@ -972,7 +982,11 @@ export default function SalonDetail() {
                                   })()}
                                 </div>
                               </div>
-                            ))}
+                            )) : (
+                              <div className="text-sm text-gray-500 ml-4 py-2">
+                                No services in this category
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}

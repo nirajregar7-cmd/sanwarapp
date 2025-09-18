@@ -62,6 +62,7 @@ const serviceSchema = z.object({
   description: z.string().optional(),
   price: z.number().min(1, "Price must be greater than 0"),
   duration: z.number().min(15, "Duration must be at least 15 minutes"),
+  categoryId: z.string().optional(),
 });
 
 const staffSchema = z.object({
@@ -134,6 +135,15 @@ export default function OwnerDashboard() {
     queryKey: [`/api/salons/${salon?.id}/staff`],
     enabled: !!salon?.id,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
+  });
+
+  // Fetch service categories for the salon - parallel loading with caching
+  const { data: serviceCategories = [], isLoading: categoriesLoading } = useQuery<any[]>({
+    queryKey: [`/api/salons/${salon?.id}/service-categories`],
+    enabled: !!salon?.id,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    retry: false, // Don't retry if endpoint doesn't exist yet
+    refetchOnMount: false,
   });
 
   // Group bookings by customer, date and time slot for multiple services
@@ -403,6 +413,7 @@ export default function OwnerDashboard() {
       description: "",
       price: 0,
       duration: 30,
+      categoryId: "",
     },
   });
 
@@ -576,7 +587,14 @@ export default function OwnerDashboard() {
     mutationFn: async (data: ServiceFormData) => {
       const endpoint = editingItem ? `/api/services/${editingItem.id}` : `/api/salons/${salon?.id}/services`;
       const method = editingItem ? 'PUT' : 'POST';
-      return apiRequest(method, endpoint, data);
+      
+      // Filter out "none" category value and convert to null if needed
+      const serviceData = {
+        ...data,
+        categoryId: data.categoryId === "none" || data.categoryId === "" ? null : data.categoryId
+      };
+      
+      return apiRequest(method, endpoint, serviceData);
     },
     onSuccess: () => {
       toast({
@@ -760,6 +778,7 @@ export default function OwnerDashboard() {
       description: service.description || "",
       price: Number(service.price),
       duration: service.duration,
+      categoryId: (service as any).categoryId || "none",
     });
     setServiceDialogOpen(true);
   };
@@ -2472,6 +2491,47 @@ export default function OwnerDashboard() {
                   </FormItem>
                 )}
               />
+
+              {/* Service Category Selection - Show only if categories are available */}
+              {serviceCategories.length > 0 && (
+                <FormField
+                  control={serviceForm.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Category</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a category (optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">No Category</SelectItem>
+                          {serviceCategories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              <div className="flex items-center space-x-2">
+                                <div 
+                                  className="w-4 h-4 rounded-full flex items-center justify-center text-xs"
+                                  style={{ backgroundColor: category.color || '#3B82F6' }}
+                                >
+                                  {category.icon === 'Scissors' ? '✂️' : 
+                                   category.icon === 'Sparkles' ? '✨' : 
+                                   category.icon === 'Palette' ? '🎨' :
+                                   category.icon === 'Heart' ? '❤️' :
+                                   category.icon === 'Star' ? '⭐' : '💫'}
+                                </div>
+                                <span>{category.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               
               <div className="grid grid-cols-2 gap-4">
                 <FormField
