@@ -835,6 +835,23 @@ export default function OwnerDashboard() {
     }
   };
 
+  const handleQuickCategoryChange = (service: Service, newCategoryId: string) => {
+    const categoryValue = newCategoryId === "none" ? null : newCategoryId;
+    
+    const updateData = {
+      name: service.name,
+      description: service.description || "",
+      price: Number(service.price),
+      duration: service.duration,
+      categoryId: categoryValue,
+    };
+    
+    serviceMutation.mutate({
+      id: service.id,
+      data: updateData
+    });
+  };
+
   const handleEditStaff = (member: Staff) => {
     setEditingItem(member);
     staffForm.reset({
@@ -1478,6 +1495,29 @@ export default function OwnerDashboard() {
                             <div className="text-right">
                               <div className="text-lg font-semibold text-green-600">₹{service.price}</div>
                             </div>
+                            <Select
+                              value={(service as any).categoryId || "none"}
+                              onValueChange={(value) => handleQuickCategoryChange(service, value)}
+                            >
+                              <SelectTrigger className="h-8 w-32 text-xs">
+                                <Tags className="h-3 w-3 mr-1" />
+                                <SelectValue placeholder="Category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">No Category</SelectItem>
+                                {serviceCategories.map((category) => (
+                                  <SelectItem key={category.id} value={category.id}>
+                                    <div className="flex items-center space-x-2">
+                                      <div 
+                                        className="w-3 h-3 rounded-full"
+                                        style={{ backgroundColor: category.color || '#3B82F6' }}
+                                      />
+                                      <span>{category.name}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <Button
                               variant="outline"
                               size="sm"
