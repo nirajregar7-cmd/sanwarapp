@@ -2492,23 +2492,23 @@ export default function OwnerDashboard() {
                 )}
               />
 
-              {/* Service Category Selection - Show only if categories are available */}
-              {serviceCategories.length > 0 && (
-                <FormField
-                  control={serviceForm.control}
-                  name="categoryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Service Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a category (optional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">No Category</SelectItem>
-                          {serviceCategories.map((category) => (
+              {/* Service Category Selection - Always show with option to create categories */}
+              <FormField
+                control={serviceForm.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Service Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={serviceCategories.length > 0 ? "Select a category (optional)" : "No categories yet - leave uncategorized"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No Category</SelectItem>
+                        {serviceCategories.length > 0 ? (
+                          serviceCategories.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               <div className="flex items-center space-x-2">
                                 <div 
@@ -2524,14 +2524,18 @@ export default function OwnerDashboard() {
                                 <span>{category.name}</span>
                               </div>
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+                          ))
+                        ) : (
+                          <SelectItem value="create-first" disabled>
+                            <span className="text-gray-500 italic">Create categories first to organize services</span>
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <div className="grid grid-cols-2 gap-4">
                 <FormField
