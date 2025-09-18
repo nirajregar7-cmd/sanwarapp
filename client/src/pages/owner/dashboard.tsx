@@ -538,6 +538,17 @@ export default function OwnerDashboard() {
     },
   });
 
+  // Category form hook
+  const categoryForm = useForm<ServiceCategoryFormData>({
+    resolver: zodResolver(serviceCategorySchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      icon: "Scissors",
+      color: "#3B82F6",
+    },
+  });
+
   // Reset FAQ form when dialog opens/closes or editing item changes
   useEffect(() => {
     if (faqDialogOpen) {
@@ -1472,6 +1483,228 @@ export default function OwnerDashboard() {
                         <Plus className="h-4 w-4 mr-2" />
                         Add Your First Service
                       </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="categories" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-xl">Service Categories</CardTitle>
+                      <CardDescription>
+                        Organize your services into categories to help customers find what they need
+                      </CardDescription>
+                    </div>
+                    <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button onClick={() => {
+                          setEditingItem(null);
+                          categoryForm.reset({
+                            name: "",
+                            description: "",
+                            icon: "Scissors",
+                            color: "#3B82F6",
+                          });
+                        }}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Category
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                          <DialogTitle>
+                            {editingItem ? "Edit Category" : "Add New Category"}
+                          </DialogTitle>
+                          <DialogDescription>
+                            Create categories to organize your services and help customers navigate your offerings
+                          </DialogDescription>
+                        </DialogHeader>
+                        <Form {...categoryForm}>
+                          <form onSubmit={categoryForm.handleSubmit((data) => {
+                            console.log('Category form submitted:', data);
+                          })}>
+                            <div className="space-y-4">
+                              <FormField
+                                control={categoryForm.control}
+                                name="name"
+                                render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Category Name *</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      {...field} 
+                                      placeholder="e.g., Hair Care, Facial Treatments, Nail Services"
+                                      data-testid="input-category-name"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={categoryForm.control}
+                              name="description"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Description (Optional)</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      {...field} 
+                                      placeholder="Brief description of services in this category"
+                                      rows={2}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={categoryForm.control}
+                                name="icon"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Icon *</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Choose an icon" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="Scissors">✂️ Scissors</SelectItem>
+                                        <SelectItem value="Sparkles">✨ Sparkles</SelectItem>
+                                        <SelectItem value="Palette">🎨 Palette</SelectItem>
+                                        <SelectItem value="Heart">❤️ Heart</SelectItem>
+                                        <SelectItem value="Star">⭐ Star</SelectItem>
+                                        <SelectItem value="Crown">👑 Crown</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={categoryForm.control}
+                                name="color"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Color *</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Choose a color" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="#3B82F6">🔵 Blue</SelectItem>
+                                        <SelectItem value="#10B981">🟢 Green</SelectItem>
+                                        <SelectItem value="#F59E0B">🟡 Yellow</SelectItem>
+                                        <SelectItem value="#EF4444">🔴 Red</SelectItem>
+                                        <SelectItem value="#8B5CF6">🟣 Purple</SelectItem>
+                                        <SelectItem value="#EC4899">🩷 Pink</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end space-x-2 mt-6">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              onClick={() => setCategoryDialogOpen(false)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button type="submit" data-testid="button-save-category">
+                              {editingItem ? "Update Category" : "Add Category"}
+                            </Button>
+                          </div>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {serviceCategories.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Tags className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        Create categories to organize your services and make them easier for customers to find
+                      </p>
+                      <Button onClick={() => setCategoryDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create First Category
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {serviceCategories.map((category) => (
+                        <Card key={category.id} className="p-4">
+                          <div className="flex items-start space-x-3">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0"
+                              style={{ backgroundColor: category.color || '#3B82F6' }}
+                            >
+                              {category.icon === 'Scissors' ? '✂️' : 
+                               category.icon === 'Sparkles' ? '✨' : 
+                               category.icon === 'Palette' ? '🎨' :
+                               category.icon === 'Heart' ? '❤️' :
+                               category.icon === 'Star' ? '⭐' : 
+                               category.icon === 'Crown' ? '👑' : '💫'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-gray-900 truncate" data-testid={`text-category-name-${category.id}`}>
+                                {category.name}
+                              </h3>
+                              {category.description && (
+                                <p className="text-sm text-gray-600 mt-1">{category.description}</p>
+                              )}
+                              <div className="flex justify-end space-x-2 mt-3">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingItem(category);
+                                    categoryForm.reset({
+                                      name: category.name,
+                                      description: category.description || "",
+                                      icon: category.icon || "Scissors",
+                                      color: category.color || "#3B82F6",
+                                    });
+                                    setCategoryDialogOpen(true);
+                                  }}
+                                  data-testid={`button-edit-category-${category.id}`}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (window.confirm(`Are you sure you want to delete "${category.name}"? Services in this category will become uncategorized.`)) {
+                                      // Add delete mutation here
+                                      console.log('Delete category:', category.id);
+                                    }
+                                  }}
+                                  data-testid={`button-delete-category-${category.id}`}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
                     </div>
                   )}
                 </CardContent>
