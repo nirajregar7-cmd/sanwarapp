@@ -110,10 +110,25 @@ export const salons = pgTable("salons", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Service categories table
+export const serviceCategories = pgTable("service_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 50 }), // Icon name for UI display
+  color: varchar("color", { length: 7 }).default("#3B82F6"), // Hex color code for category styling
+  order: integer("order").default(0), // For custom ordering of categories
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Services table
 export const services = pgTable("services", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  categoryId: varchar("category_id").references(() => serviceCategories.id, { onDelete: "set null" }),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
@@ -1149,6 +1164,16 @@ export const insertSalonSchema = createInsertSchema(salons).omit({
   createdAt: true,
   updatedAt: true,
 });
+
+// Service categories schema and types
+export const insertServiceCategorySchema = createInsertSchema(serviceCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ServiceCategory = typeof serviceCategories.$inferSelect;
+export type InsertServiceCategory = z.infer<typeof insertServiceCategorySchema>;
 
 export const insertServiceSchema = createInsertSchema(services).omit({
   id: true,

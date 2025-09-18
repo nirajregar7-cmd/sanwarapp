@@ -18,7 +18,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, salons, users, bookings, services, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs } from "@shared/schema";
 import { sendBookingConfirmationNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -3027,6 +3027,185 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error in fix ACL endpoint:", error);
       res.status(500).json({ message: "Failed to process request" });
+    }
+  });
+
+  // Service Categories endpoints
+  
+  // Get all categories for a salon
+  app.get('/api/salons/:salonId/categories', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const categories = await db.select()
+        .from(serviceCategories)
+        .where(and(
+          eq(serviceCategories.salonId, salonId),
+          eq(serviceCategories.isActive, true)
+        ))
+        .orderBy(serviceCategories.order, serviceCategories.name);
+      
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching service categories:", error);
+      res.status(500).json({ message: "Failed to fetch service categories" });
+    }
+  });
+
+  // Get services organized by categories for a salon
+  app.get('/api/salons/:salonId/services-by-category', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      
+      // Get all categories for this salon
+      const categories = await db.select()
+        .from(serviceCategories)
+        .where(and(
+          eq(serviceCategories.salonId, salonId),
+          eq(serviceCategories.isActive, true)
+        ))
+        .orderBy(serviceCategories.order, serviceCategories.name);
+      
+      // Get all services for this salon with their categories
+      const salonServices = await db.select({
+        service: services,
+        category: serviceCategories
+      })
+        .from(services)
+        .leftJoin(serviceCategories, eq(services.categoryId, serviceCategories.id))
+        .where(and(
+          eq(services.salonId, salonId),
+          eq(services.isActive, true)
+        ))
+        .orderBy(services.name);
+      
+      // Organize services by category
+      const categorizedServices = categories.map(category => ({
+        ...category,
+        services: salonServices
+          .filter(item => item.category?.id === category.id)
+          .map(item => item.service)
+      }));
+      
+      // Add services without category
+      const uncategorizedServices = salonServices
+        .filter(item => !item.category)
+        .map(item => item.service);
+      
+      if (uncategorizedServices.length > 0) {
+        categorizedServices.push({
+          id: 'uncategorized',
+          salonId,
+          name: 'Other Services',
+          description: 'Services without a specific category',
+          icon: 'Scissors',
+          color: '#64748B',
+          order: 999,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          services: uncategorizedServices
+        });
+      }
+      
+      res.json(categorizedServices);
+    } catch (error) {
+      console.error("Error fetching services by category:", error);
+      res.status(500).json({ message: "Failed to fetch services by category" });
+    }
+  });
+
+  // Create a new service category
+  app.post('/api/salons/:salonId/categories', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+      const categoryData = req.body;
+      
+      // Verify salon ownership
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.id, salonId));
+      
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to add categories to this salon" });
+      }
+      
+      const [category] = await db.insert(serviceCategories).values({
+        ...categoryData,
+        salonId
+      }).returning();
+      
+      res.json(category);
+    } catch (error) {
+      console.error("Error adding service category:", error);
+      res.status(500).json({ message: "Failed to add service category" });
+    }
+  });
+
+  // Update a service category
+  app.put('/api/categories/:categoryId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { categoryId } = req.params;
+      const categoryData = req.body;
+      
+      // Verify ownership through salon
+      const [category] = await db.select({
+        category: serviceCategories,
+        salon: salons
+      })
+        .from(serviceCategories)
+        .innerJoin(salons, eq(serviceCategories.salonId, salons.id))
+        .where(eq(serviceCategories.id, categoryId));
+      
+      if (!category || category.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this category" });
+      }
+      
+      const [updatedCategory] = await db.update(serviceCategories)
+        .set({ ...categoryData, updatedAt: new Date() })
+        .where(eq(serviceCategories.id, categoryId))
+        .returning();
+      
+      res.json(updatedCategory);
+    } catch (error) {
+      console.error("Error updating service category:", error);
+      res.status(500).json({ message: "Failed to update service category" });
+    }
+  });
+
+  // Delete a service category
+  app.delete('/api/categories/:categoryId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { categoryId } = req.params;
+      
+      // Verify ownership through salon
+      const [category] = await db.select({
+        category: serviceCategories,
+        salon: salons
+      })
+        .from(serviceCategories)
+        .innerJoin(salons, eq(serviceCategories.salonId, salons.id))
+        .where(eq(serviceCategories.id, categoryId));
+      
+      if (!category || category.salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this category" });
+      }
+      
+      // Set services in this category to have null categoryId
+      await db.update(services)
+        .set({ categoryId: null, updatedAt: new Date() })
+        .where(eq(services.categoryId, categoryId));
+      
+      // Delete the category
+      await db.delete(serviceCategories)
+        .where(eq(serviceCategories.id, categoryId));
+      
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting service category:", error);
+      res.status(500).json({ message: "Failed to delete service category" });
     }
   });
 
