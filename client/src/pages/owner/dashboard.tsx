@@ -838,6 +838,9 @@ export default function OwnerDashboard() {
   const handleQuickCategoryChange = (service: Service, newCategoryId: string) => {
     const categoryValue = newCategoryId === "none" ? null : newCategoryId;
     
+    // Set the service as being edited to use PUT method instead of POST
+    setEditingItem(service);
+    
     const updateData = {
       name: service.name,
       description: service.description || "",
@@ -846,10 +849,7 @@ export default function OwnerDashboard() {
       categoryId: categoryValue,
     };
     
-    serviceMutation.mutate({
-      id: service.id,
-      data: updateData
-    });
+    serviceMutation.mutate(updateData);
   };
 
   const handleEditStaff = (member: Staff) => {
