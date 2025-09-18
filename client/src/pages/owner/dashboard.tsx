@@ -549,6 +549,32 @@ export default function OwnerDashboard() {
     },
   });
 
+  // Category mutation
+  const categoryMutation = useMutation({
+    mutationFn: async (data: ServiceCategoryFormData) => {
+      const endpoint = editingItem ? `/api/service-categories/${editingItem.id}` : `/api/salons/${salon?.id}/service-categories`;
+      const method = editingItem ? 'PUT' : 'POST';
+      return apiRequest(method, endpoint, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: editingItem ? "Category Updated!" : "Category Added!",
+        description: editingItem ? "Service category has been updated." : "New service category has been created.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/service-categories`] });
+      categoryForm.reset();
+      setCategoryDialogOpen(false);
+      setEditingItem(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to ${editingItem ? 'update' : 'create'} category. Please try again.`,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Reset FAQ form when dialog opens/closes or editing item changes
   useEffect(() => {
     if (faqDialogOpen) {
@@ -1525,7 +1551,7 @@ export default function OwnerDashboard() {
                         </DialogHeader>
                         <Form {...categoryForm}>
                           <form onSubmit={categoryForm.handleSubmit((data) => {
-                            console.log('Category form submitted:', data);
+                            categoryMutation.mutate(data);
                           })}>
                             <div className="space-y-4">
                               <FormField
