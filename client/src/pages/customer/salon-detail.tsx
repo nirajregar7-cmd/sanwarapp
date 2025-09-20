@@ -109,6 +109,11 @@ export default function SalonDetail() {
     }
   }, [salonId]);
 
+  // Always scroll to top when component mounts to ensure page starts from Experience Our Salon section
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [salonId]);
+
   // Track video error state
   const [videoError, setVideoError] = useState(false);
 
