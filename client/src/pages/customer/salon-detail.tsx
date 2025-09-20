@@ -1666,7 +1666,7 @@ export default function SalonDetail() {
                       data-testid="button-login-to-book"
                     >
                       <Crown className="h-4 w-4 mr-2" />
-                      Book and Luxury
+                      Book an Luxury
                     </Button>
                   </div>
                 ) : (
@@ -1674,7 +1674,7 @@ export default function SalonDetail() {
                     <DialogTrigger asChild>
                       <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg">
                         <Crown className="h-4 w-4 mr-2" />
-                        Book and Luxury
+                        Book an Luxury
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -2318,7 +2318,7 @@ export default function SalonDetail() {
               data-testid="button-mobile-login-to-book"
             >
               <Crown className="h-4 w-4 mr-2" />
-              Book and Luxury
+              Book an Luxury
             </Button>
           ) : (
             <Button 
@@ -2327,7 +2327,7 @@ export default function SalonDetail() {
               data-testid="button-mobile-book-now"
             >
               <Crown className="h-4 w-4 mr-2" />
-              Book and Luxury
+              Book an Luxury
             </Button>
           )}
         </div>
