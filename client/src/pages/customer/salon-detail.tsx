@@ -647,7 +647,7 @@ export default function SalonDetail() {
         description: "Please log in to save salons to your favorites.",
         variant: "destructive",
       });
-      navigate("/auth");
+      navigate(`/auth?redirect=/salon/${salonId}`);
       return;
     }
     
@@ -1489,26 +1489,6 @@ export default function SalonDetail() {
                               </div>
                             )}
                             
-                            {salon.email && (
-                              <div className="flex items-center text-gray-600">
-                                <span className="mr-2">✉️</span>
-                                <span className="text-sm break-all">{salon.email}</span>
-                              </div>
-                            )}
-                            
-                            {salon.website && (
-                              <div className="flex items-center text-gray-600">
-                                <span className="mr-2">🌐</span>
-                                <a 
-                                  href={salon.website} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-sm text-blue-600 hover:underline break-all"
-                                >
-                                  {salon.website}
-                                </a>
-                              </div>
-                            )}
                           </div>
                           
                           {/* Location Map */}
@@ -1735,7 +1715,7 @@ export default function SalonDetail() {
                     <p className="text-gray-600 mb-4 text-sm sm:text-base">Please log in to book an appointment</p>
                     <Button 
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => navigate("/auth")}
+                      onClick={() => navigate(`/auth?redirect=/salon/${salonId}`)}
                       data-testid="button-login-to-book"
                     >
                       <Crown className="h-4 w-4 mr-2" />
@@ -2387,7 +2367,7 @@ export default function SalonDetail() {
           {!isAuthenticated ? (
             <Button 
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate(`/auth?redirect=/salon/${salonId}`)}
               data-testid="button-mobile-login-to-book"
             >
               <Crown className="h-4 w-4 mr-2" />
