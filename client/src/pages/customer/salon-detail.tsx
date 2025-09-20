@@ -835,67 +835,6 @@ export default function SalonDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Salon Header */}
-            <Card>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
-                  <div className="w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden">
-                    {salon.imageUrl ? (
-                      <img
-                        src={salon.imageUrl}
-                        alt={salon.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Scissors className="h-16 w-16 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
-                      <div className="flex-1 min-w-0">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 truncate">{salon.name}</h1>
-                        <div className="flex items-center mb-2">
-                          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                          <span className="ml-1 text-lg font-medium">
-                            {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
-                          </span>
-                          <span className="ml-1 text-gray-500">
-                            ({salon.totalReviews || 0} reviews)
-                          </span>
-                        </div>
-                        <div className="flex items-center text-gray-600 mb-4">
-                          <MapPin className="h-4 w-4 mr-2" />
-                          {salon.address}
-                        </div>
-                        {/* Location Map */}
-                        {salon.latitude && salon.longitude && (
-                          <div className="mt-4">
-                            <CustomerSalonMap
-                              shopLat={Number(salon.latitude)}
-                              shopLng={Number(salon.longitude)}
-                              shopName={salon.name}
-                              shopAddress={salon.address}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      {salon.isPremium && (
-                        <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white flex-shrink-0">
-                          Premium
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {salon.description && (
-                      <p className="text-gray-700 mb-4">{salon.description}</p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Experience Our Salon Video */}
             {salon.promotionalVideoUrl && (
@@ -1460,6 +1399,74 @@ export default function SalonDetail() {
                     <p className="text-gray-500 text-sm mt-2">We're updating our staff profiles to show you detailed information about our talented team.</p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Location & Salon Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <MapPin className="h-5 w-5 mr-2" />
+                  Location & Info
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
+                  <div className="w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden">
+                    {salon.imageUrl ? (
+                      <img
+                        src={salon.imageUrl}
+                        alt={salon.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Scissors className="h-16 w-16 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
+                      <div className="flex-1 min-w-0">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 truncate">{salon.name}</h1>
+                        <div className="flex items-center mb-2">
+                          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                          <span className="ml-1 text-lg font-medium">
+                            {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
+                          </span>
+                          <span className="ml-1 text-gray-500">
+                            ({salon.totalReviews || 0} reviews)
+                          </span>
+                        </div>
+                        <div className="flex items-center text-gray-600 mb-4">
+                          <MapPin className="h-4 w-4 mr-2" />
+                          {salon.address}
+                        </div>
+                        {/* Location Map */}
+                        {salon.latitude && salon.longitude && (
+                          <div className="mt-4">
+                            <CustomerSalonMap
+                              shopLat={Number(salon.latitude)}
+                              shopLng={Number(salon.longitude)}
+                              shopName={salon.name}
+                              shopAddress={salon.address}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      {salon.isPremium && (
+                        <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white flex-shrink-0">
+                          Premium
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {salon.description && (
+                      <p className="text-gray-700 mb-4">{salon.description}</p>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
