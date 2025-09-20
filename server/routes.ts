@@ -2961,6 +2961,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set ACL policy for public access (same as gallery images)
       try {
         const objectStorageService = new ObjectStorageService();
+        console.log('Setting promotional video ACL for:', localVideoUrl);
         const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
           localVideoUrl,
           {
@@ -2968,10 +2969,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             visibility: "public", // Promotional videos should be public
           }
         );
-        console.log('Promotional video ACL set:', objectPath);
+        console.log('✅ Promotional video ACL set successfully:', objectPath);
         localVideoUrl = objectPath; // Use the corrected path
       } catch (error) {
-        console.error('Error setting promotional video ACL:', error);
+        console.error('❌ Error setting promotional video ACL:', error);
+        console.error('Continuing with original path:', localVideoUrl);
         // Continue with the original path if ACL setting fails
       }
       
