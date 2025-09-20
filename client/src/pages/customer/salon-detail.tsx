@@ -897,7 +897,179 @@ export default function SalonDetail() {
               </CardContent>
             </Card>
 
-            {/* Services */}
+            {/* Experience Our Salon Video */}
+            {salon.promotionalVideoUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Video className="h-5 w-5 mr-2" />
+                    Experience Our Salon
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Take a virtual tour and see what makes us special
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-lg overflow-hidden bg-black relative">
+                    <video 
+                      src={salon.promotionalVideoUrl} 
+                      className="w-full h-64 sm:h-80 object-contain"
+                      poster=""
+                      preload="metadata"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      onError={() => {
+                        console.log("Promotional video failed to load, attempting to fix permissions...");
+                        fixPromoVideoAclMutation.mutate();
+                      }}
+                      ref={(video) => {
+                        if (video) {
+                          // Ensure video plays when loaded
+                          video.addEventListener('loadeddata', () => {
+                            video.play().catch(() => {
+                              // If autoplay fails, we'll show play button
+                            });
+                          });
+                        }
+                      }}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                    
+                    {/* Custom controls overlay */}
+                    <div className="absolute bottom-2 right-2 flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
+                          if (video) {
+                            if (video.paused) {
+                              video.play();
+                            } else {
+                              video.pause();
+                            }
+                          }
+                        }}
+                        className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                        data-testid="video-play-pause-button"
+                      >
+                        <Video className="h-4 w-4" />
+                      </button>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
+                          if (video) {
+                            video.muted = !video.muted;
+                          }
+                        }}
+                        className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                        data-testid="video-audio-button"
+                      >
+                        {/* Audio icon - will be muted by default */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M6 10l4-4v12l-4-4H3a1 1 0 01-1-1v-2a1 1 0 011-1h3z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-center">
+                    <p className="text-sm text-gray-600">
+                      Get a feel for our salon's atmosphere and see our professional workspace
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Gallery */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Camera className="h-5 w-5 mr-2" />
+                  Gallery
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {galleryLoading ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : gallery.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      {gallery.map((media, index) => (
+                      <div 
+                        key={media.id} 
+                        className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
+                        onClick={() => openMediaViewer(media, index)}
+                        data-testid={`media-item-${media.id}`}
+                      >
+                        {media.fileType === "video" ? (
+                          <video 
+                            src={media.fileUrl} 
+                            className="w-full h-full object-cover"
+                            controls={false}
+                            preload="metadata"
+                            onMouseEnter={(e) => e.currentTarget.play()}
+                            onMouseLeave={(e) => e.currentTarget.pause()}
+                            data-testid={`video-media-${media.id}`}
+                          />
+                        ) : (
+                          <img 
+                            src={media.fileUrl} 
+                            alt={media.title || media.fileName || "Gallery image"} 
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            data-testid={`img-media-${media.id}`}
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Eye className="h-8 w-8 text-white" />
+                          </div>
+                        </div>
+                        {media.isPrimary && (
+                          <div className="absolute top-2 right-2">
+                            <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded">Primary</span>
+                          </div>
+                        )}
+                        {(media.title || media.category) && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
+                            {media.title && <p className="text-white text-sm font-medium">{media.title}</p>}
+                            {media.category && <p className="text-white text-xs capitalize">{media.category}</p>}
+                          </div>
+                        )}
+                      </div>
+                      ))}
+                    </div>
+                    
+                    {/* Scroll indicator for gallery */}
+                    {gallery.length > 8 && (
+                      <div className="text-center pt-4 border-t border-gray-100 mt-4">
+                        <p className="text-sm text-gray-500">
+                          Showing all {gallery.length} images • Scroll to see more
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Camera className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Images Yet</h3>
+                    <p className="text-gray-600">
+                      This salon hasn't uploaded any images of their work yet.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Services & Pricing */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -1050,294 +1222,7 @@ export default function SalonDetail() {
               </CardContent>
             </Card>
 
-            {/* Our Team */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Users className="h-5 w-5 mr-2" />
-                  Our Team
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {staffLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="border rounded-lg p-4 animate-pulse">
-                        <div className="flex items-start space-x-4">
-                          <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
-                          <div className="flex-1 space-y-2">
-                            <div className="h-5 bg-gray-200 rounded w-32"></div>
-                            <div className="h-4 bg-gray-200 rounded w-24"></div>
-                            <div className="h-3 bg-gray-200 rounded w-20"></div>
-                            <div className="h-3 bg-gray-200 rounded w-40"></div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : staff.length > 0 ? (
-                  <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {staff.map((member) => (
-                      <div key={member.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-start space-x-4">
-                          <Avatar className="h-16 w-16 flex-shrink-0">
-                            <AvatarImage src={member.photoUrl || ""} alt={member.name} className="object-cover" />
-                            <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                              {member.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 text-lg">{member.name}</h4>
-                            
-                            {/* Assigned Services as subtitle */}
-                            {(member as any).services && (member as any).services.length > 0 ? (
-                              <p className="text-blue-600 text-sm mb-1">
-                                {(member as any).services.map((service: any) => service.serviceName).join(', ')}
-                              </p>
-                            ) : member.specialties && member.specialties.length > 0 ? (
-                              <p className="text-blue-600 text-sm mb-1">
-                                {member.specialties.join(', ')}
-                              </p>
-                            ) : (
-                              <p className="text-blue-600 font-medium text-sm mb-1">{member.role}</p>
-                            )}
-                            
-                            {/* Experience below services */}
-                            {member.experience && member.experience.trim() !== '' && (
-                              <p className="text-gray-600 text-sm mb-2">
-                                {member.experience}
-                              </p>
-                            )}
-                            
-                            {/* Bio preview with Know More button */}
-                            {member.bio && member.bio.trim() !== '' && (
-                              <div className="mb-3">
-                                <p className="text-gray-700 text-sm line-clamp-2">
-                                  {member.bio.length > 100 ? `${member.bio.substring(0, 100)}...` : member.bio}
-                                </p>
-                                {member.bio.length > 100 && (
-                                  <Button
-                                    size="sm"
-                                    className="rounded-full bg-green-500 hover:bg-green-600 text-black px-4 py-2"
-                                    onClick={() => setSelectedStaffBio(member)}
-                                  >
-                                    Meet {member.name.split(' ')[0]}
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                            
-                            {/* Rating */}
-                            <div className="flex items-center">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                              <span className="text-sm font-medium text-gray-700">
-                                {member.rating ? Number(member.rating).toFixed(1) : "0.0"}
-                              </span>
-                              {member.totalReviews && member.totalReviews > 0 && (
-                                <span className="text-xs text-gray-500 ml-1">
-                                  ({member.totalReviews})
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      ))}
-                    </div>
-                    
-                    {/* Scroll indicator for team */}
-                    {staff.length > 4 && (
-                      <div className="text-center pt-4 border-t border-gray-100 mt-4">
-                        <p className="text-sm text-gray-500">
-                          Showing all {staff.length} team members • Scroll to see more
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 text-lg font-medium">Our Team Information Coming Soon</p>
-                    <p className="text-gray-500 text-sm mt-2">We're updating our staff profiles to show you detailed information about our talented team.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Experience Our Salon Video */}
-            {salon.promotionalVideoUrl && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Video className="h-5 w-5 mr-2" />
-                    Experience Our Salon
-                  </CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Take a virtual tour and see what makes us special
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-lg overflow-hidden bg-black relative">
-                    <video 
-                      src={salon.promotionalVideoUrl} 
-                      className="w-full h-64 sm:h-80 object-contain"
-                      poster=""
-                      preload="metadata"
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      onError={() => {
-                        console.log("Promotional video failed to load, attempting to fix permissions...");
-                        fixPromoVideoAclMutation.mutate();
-                      }}
-                      ref={(video) => {
-                        if (video) {
-                          // Ensure video plays when loaded
-                          video.addEventListener('loadeddata', () => {
-                            video.play().catch(() => {
-                              // If autoplay fails, we'll show play button
-                            });
-                          });
-                        }
-                      }}
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                    
-                    {/* Custom controls overlay */}
-                    <div className="absolute bottom-2 right-2 flex gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
-                          if (video) {
-                            if (video.paused) {
-                              video.play();
-                            } else {
-                              video.pause();
-                            }
-                          }
-                        }}
-                        className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                        data-testid="video-play-pause-button"
-                      >
-                        <Video className="h-4 w-4" />
-                      </button>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
-                          if (video) {
-                            video.muted = !video.muted;
-                          }
-                        }}
-                        className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                        data-testid="video-audio-button"
-                      >
-                        {/* Audio icon - will be muted by default */}
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M6 10l4-4v12l-4-4H3a1 1 0 01-1-1v-2a1 1 0 011-1h3z" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-3 text-center">
-                    <p className="text-sm text-gray-600">
-                      Get a feel for our salon's atmosphere and see our professional workspace
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Gallery */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Camera className="h-5 w-5 mr-2" />
-                  Gallery
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {galleryLoading ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse"></div>
-                    ))}
-                  </div>
-                ) : gallery.length > 0 ? (
-                  <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {gallery.map((media, index) => (
-                      <div 
-                        key={media.id} 
-                        className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
-                        onClick={() => openMediaViewer(media, index)}
-                        data-testid={`media-item-${media.id}`}
-                      >
-                        {media.fileType === "video" ? (
-                          <video 
-                            src={media.fileUrl} 
-                            className="w-full h-full object-cover"
-                            controls={false}
-                            preload="metadata"
-                            onMouseEnter={(e) => e.currentTarget.play()}
-                            onMouseLeave={(e) => e.currentTarget.pause()}
-                            data-testid={`video-media-${media.id}`}
-                          />
-                        ) : (
-                          <img 
-                            src={media.fileUrl} 
-                            alt={media.title || media.fileName || "Gallery image"} 
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            data-testid={`img-media-${media.id}`}
-                          />
-                        )}
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center">
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Eye className="h-8 w-8 text-white" />
-                          </div>
-                        </div>
-                        {media.isPrimary && (
-                          <div className="absolute top-2 right-2">
-                            <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded">Primary</span>
-                          </div>
-                        )}
-                        {(media.title || media.category) && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
-                            {media.title && <p className="text-white text-sm font-medium">{media.title}</p>}
-                            {media.category && <p className="text-white text-xs capitalize">{media.category}</p>}
-                          </div>
-                        )}
-                      </div>
-                      ))}
-                    </div>
-                    
-                    {/* Scroll indicator for gallery */}
-                    {gallery.length > 8 && (
-                      <div className="text-center pt-4 border-t border-gray-100 mt-4">
-                        <p className="text-sm text-gray-500">
-                          Showing all {gallery.length} images • Scroll to see more
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Camera className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Images Yet</h3>
-                    <p className="text-gray-600">
-                      This salon hasn't uploaded any images of their work yet.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Reviews */}
+            {/* Customer Reviews */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -1460,6 +1345,296 @@ export default function SalonDetail() {
                     )}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Our Team */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="h-5 w-5 mr-2" />
+                  Our Team
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {staffLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="border rounded-lg p-4 animate-pulse">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-5 bg-gray-200 rounded w-32"></div>
+                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                            <div className="h-3 bg-gray-200 rounded w-20"></div>
+                            <div className="h-3 bg-gray-200 rounded w-40"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : staff.length > 0 ? (
+                  <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {staff.map((member) => (
+                      <div key={member.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start space-x-4">
+                          <Avatar className="h-16 w-16 flex-shrink-0">
+                            <AvatarImage src={member.photoUrl || ""} alt={member.name} className="object-cover" />
+                            <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                              {member.name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-900 text-lg">{member.name}</h4>
+                            
+                            {/* Assigned Services as subtitle */}
+                            {(member as any).services && (member as any).services.length > 0 ? (
+                              <p className="text-blue-600 text-sm mb-1">
+                                {(member as any).services.map((service: any) => service.serviceName).join(', ')}
+                              </p>
+                            ) : member.specialties && member.specialties.length > 0 ? (
+                              <p className="text-blue-600 text-sm mb-1">
+                                {member.specialties.join(', ')}
+                              </p>
+                            ) : (
+                              <p className="text-blue-600 font-medium text-sm mb-1">{member.role}</p>
+                            )}
+                            
+                            {/* Experience below services */}
+                            {member.experience && member.experience.trim() !== '' && (
+                              <p className="text-gray-600 text-sm mb-2">
+                                {member.experience}
+                              </p>
+                            )}
+                            
+                            {/* Bio preview with Know More button */}
+                            {member.bio && member.bio.trim() !== '' && (
+                              <div className="mb-3">
+                                <p className="text-gray-700 text-sm line-clamp-2">
+                                  {member.bio.length > 100 ? `${member.bio.substring(0, 100)}...` : member.bio}
+                                </p>
+                                {member.bio.length > 100 && (
+                                  <Button
+                                    size="sm"
+                                    className="rounded-full bg-green-500 hover:bg-green-600 text-black px-4 py-2"
+                                    onClick={() => setSelectedStaffBio(member)}
+                                  >
+                                    Meet {member.name.split(' ')[0]}
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* Rating */}
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                              <span className="text-sm font-medium text-gray-700">
+                                {member.rating ? Number(member.rating).toFixed(1) : "0.0"}
+                              </span>
+                              {member.totalReviews && member.totalReviews > 0 && (
+                                <span className="text-xs text-gray-500 ml-1">
+                                  ({member.totalReviews})
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      ))}
+                    </div>
+                    
+                    {/* Scroll indicator for team */}
+                    {staff.length > 4 && (
+                      <div className="text-center pt-4 border-t border-gray-100 mt-4">
+                        <p className="text-sm text-gray-500">
+                          Showing all {staff.length} team members • Scroll to see more
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 text-lg font-medium">Our Team Information Coming Soon</p>
+                    <p className="text-gray-500 text-sm mt-2">We're updating our staff profiles to show you detailed information about our talented team.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Facilities */}
+            {Array.isArray(facilities) && facilities.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <span className="mr-2">🏢</span>
+                    Facilities
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {facilities.map((facility: any) => (
+                      <div
+                        key={facility.id}
+                        className={`flex items-center p-3 rounded-lg border ${
+                          facility.isAvailable
+                            ? "bg-green-50 border-green-200"
+                            : "bg-gray-50 border-gray-200"
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <span className="text-lg mr-2">{facility.icon || "🔧"}</span>
+                            <span className="font-medium">{facility.name}</span>
+                          </div>
+                          {facility.description && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              {facility.description}
+                            </p>
+                          )}
+                        </div>
+                        <div
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            facility.isAvailable
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {facility.isAvailable ? "Available" : "Unavailable"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Products */}
+            {Array.isArray(products) && products.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <span className="mr-2">🛍️</span>
+                    Products
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {products.map((product: any) => (
+                      <div
+                        key={product.id}
+                        className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                      >
+                        {product.imageUrl && (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="w-full h-32 object-cover rounded-md mb-3"
+                          />
+                        )}
+                        <div className="space-y-2">
+                          <h4 className="font-semibold">{product.name}</h4>
+                          {product.brand && (
+                            <p className="text-sm text-gray-600">Brand: {product.brand}</p>
+                          )}
+                          {product.category && (
+                            <p className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-block">
+                              {product.category}
+                            </p>
+                          )}
+                          {product.description && (
+                            <p className="text-sm text-gray-700">{product.description}</p>
+                          )}
+                          <div className="flex items-center justify-between">
+                            {product.price && (
+                              <span className="font-bold text-primary">₹{product.price}</span>
+                            )}
+                            <div
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                product.inStock
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-red-100 text-red-700"
+                              }`}
+                            >
+                              {product.inStock ? "In Stock" : "Out of Stock"}
+                            </div>
+                          </div>
+                          {product.stockQuantity > 0 && (
+                            <p className="text-xs text-gray-500">
+                              {product.stockQuantity} units available
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Working Hours & Contact Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Clock className="h-5 w-5 mr-2" />
+                  Working Hours & Contact
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Working Hours */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Business Hours</h4>
+                  {hoursLoading ? (
+                    <div className="space-y-2">
+                      {Array.from({ length: 7 }).map((_, i) => (
+                        <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      ))}
+                    </div>
+                  ) : workingHours.length > 0 ? (
+                    <div className="space-y-2 text-sm">
+                      {formatWorkingHoursForDisplay().map((dayInfo, index) => (
+                        <div key={index} className="flex justify-between">
+                          <span>{dayInfo.day}</span>
+                          <span className={dayInfo.isOpen ? 'text-gray-600' : 'text-red-500'}>
+                            {dayInfo.hours}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">Hours not specified</p>
+                  )}
+                </div>
+                
+                {/* Contact Information */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Contact Information</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <Phone className="h-4 w-4 mr-3 text-gray-400" />
+                      <span>{salon.phone || "Contact via booking"}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-3 text-gray-400" />
+                      <span className="text-sm">{salon.address}</span>
+                    </div>
+                    {salon.instagramId && (
+                      <div className="flex items-center">
+                        <SiInstagram className="h-4 w-4 mr-3 text-gray-400" />
+                        <a 
+                          href={`https://www.instagram.com/${salon.instagramId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-purple-600 hover:text-purple-800 transition-colors text-sm flex items-center"
+                          data-testid="link-instagram"
+                        >
+                          @{salon.instagramId}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
