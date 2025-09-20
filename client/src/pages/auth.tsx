@@ -43,6 +43,12 @@ export default function AuthPage() {
     message: string;
   }>({ status: "idle", message: "" });
 
+  // Extract redirect parameter from URL
+  const getRedirectUrl = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('redirect') || '/';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -68,7 +74,7 @@ export default function AuthPage() {
         if (response.ok) {
           const data = await response.json();
           console.log("Login successful:", data);
-          navigate("/");
+          navigate(getRedirectUrl());
           window.location.reload();
         } else {
           const data = await response.json();
@@ -114,7 +120,7 @@ export default function AuthPage() {
             "true",
           );
 
-          navigate("/");
+          navigate(getRedirectUrl());
           window.location.reload();
         } else {
           const data = await response.json();
