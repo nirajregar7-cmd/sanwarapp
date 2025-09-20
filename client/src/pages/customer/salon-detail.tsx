@@ -109,19 +109,8 @@ export default function SalonDetail() {
     }
   }, [salonId]);
 
-  // Fix promotional video ACL mutation
-  const fixPromoVideoAclMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("POST", "/api/fix-promo-video-acl", {});
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}`] });
-      console.log("Video permissions fixed successfully");
-    },
-    onError: (error: Error) => {
-      console.error("Failed to fix video permissions:", error);
-    },
-  });
+  // Track video error state
+  const [videoError, setVideoError] = useState(false);
 
 
 
@@ -860,8 +849,11 @@ export default function SalonDetail() {
                       muted
                       playsInline
                       onError={() => {
-                        console.log("Promotional video failed to load, attempting to fix permissions...");
-                        fixPromoVideoAclMutation.mutate();
+                        console.log("Promotional video failed to load");
+                        setVideoError(true);
+                      }}
+                      onLoadedData={() => {
+                        setVideoError(false); // Reset error state on successful load
                       }}
                       ref={(video) => {
                         if (video) {
@@ -876,6 +868,19 @@ export default function SalonDetail() {
                     >
                       Your browser does not support the video tag.
                     </video>
+                    
+                    {/* Video error overlay */}
+                    {videoError && (
+                      <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                        <div className="text-center text-white p-4">
+                          <Video className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p className="text-lg font-medium mb-2">Video Temporarily Unavailable</p>
+                          <p className="text-sm opacity-75">
+                            The promotional video is currently being processed. Please check back later.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Custom controls overlay */}
                     <div className="absolute bottom-2 right-2 flex gap-2">
