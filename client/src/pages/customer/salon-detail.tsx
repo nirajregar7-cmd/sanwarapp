@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
-  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp
+  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { useState, useEffect } from "react";
@@ -1665,15 +1665,16 @@ export default function SalonDetail() {
                       onClick={() => navigate("/auth")}
                       data-testid="button-login-to-book"
                     >
-                      Book an Appointment
+                      <Crown className="h-4 w-4 mr-2" />
+                      Book and Luxury
                     </Button>
                   </div>
                 ) : (
                   <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg">
-                        <CalendarIcon className="h-4 w-4 mr-2" />
-                        Book Now
+                        <Crown className="h-4 w-4 mr-2" />
+                        Book and Luxury
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -2316,8 +2317,8 @@ export default function SalonDetail() {
               onClick={() => navigate("/auth")}
               data-testid="button-mobile-login-to-book"
             >
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Book an Appointment
+              <Crown className="h-4 w-4 mr-2" />
+              Book and Luxury
             </Button>
           ) : (
             <Button 
@@ -2325,8 +2326,8 @@ export default function SalonDetail() {
               onClick={() => setBookingDialogOpen(true)}
               data-testid="button-mobile-book-now"
             >
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Book Now
+              <Crown className="h-4 w-4 mr-2" />
+              Book and Luxury
             </Button>
           )}
         </div>
