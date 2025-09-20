@@ -826,8 +826,7 @@ export default function SalonDetail() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* Experience Our Salon Video */}
-            {salon.promotionalVideoUrl && (
-              <Card>
+            <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Video className="h-5 w-5 mr-2" />
@@ -838,88 +837,108 @@ export default function SalonDetail() {
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-lg overflow-hidden bg-black relative">
-                    <video 
-                      src={salon.promotionalVideoUrl} 
-                      className="w-full h-64 sm:h-80 object-contain"
-                      poster=""
-                      preload="metadata"
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      onError={() => {
-                        console.log("Promotional video failed to load");
-                        setVideoError(true);
-                      }}
-                      onLoadedData={() => {
-                        setVideoError(false); // Reset error state on successful load
-                      }}
-                      ref={(video) => {
-                        if (video) {
-                          // Ensure video plays when loaded
-                          video.addEventListener('loadeddata', () => {
-                            video.play().catch(() => {
-                              // If autoplay fails, we'll show play button
+                  {salon.promotionalVideoUrl ? (
+                    <div className="rounded-lg overflow-hidden bg-black relative">
+                      <video 
+                        src={salon.promotionalVideoUrl} 
+                        className="w-full h-64 sm:h-80 object-contain"
+                        poster=""
+                        preload="metadata"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        onError={() => {
+                          console.log("Promotional video failed to load");
+                          setVideoError(true);
+                        }}
+                        onLoadedData={() => {
+                          setVideoError(false); // Reset error state on successful load
+                        }}
+                        ref={(video) => {
+                          if (video) {
+                            // Ensure video plays when loaded
+                            video.addEventListener('loadeddata', () => {
+                              video.play().catch(() => {
+                                // If autoplay fails, we'll show play button
+                              });
                             });
-                          });
-                        }
-                      }}
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                    
-                    {/* Video error overlay */}
-                    {videoError && (
-                      <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-                        <div className="text-center text-white p-4">
-                          <Video className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                          <p className="text-lg font-medium mb-2">Video Temporarily Unavailable</p>
-                          <p className="text-sm opacity-75">
-                            The promotional video is currently being processed. Please check back later.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Custom controls overlay */}
-                    <div className="absolute bottom-2 right-2 flex gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
-                          if (video) {
-                            if (video.paused) {
-                              video.play();
-                            } else {
-                              video.pause();
-                            }
                           }
                         }}
-                        className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                        data-testid="video-play-pause-button"
                       >
-                        <Video className="h-4 w-4" />
-                      </button>
+                        Your browser does not support the video tag.
+                      </video>
                       
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
-                          if (video) {
-                            video.muted = !video.muted;
-                          }
-                        }}
-                        className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                        data-testid="video-audio-button"
-                      >
-                        {/* Audio icon - will be muted by default */}
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M6 10l4-4v12l-4-4H3a1 1 0 01-1-1v-2a1 1 0 011-1h3z" />
-                        </svg>
-                      </button>
+                      {/* Video error overlay */}
+                      {videoError && (
+                        <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                          <div className="text-center text-white p-4">
+                            <Video className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                            <p className="text-lg font-medium mb-2">Video Temporarily Unavailable</p>
+                            <p className="text-sm opacity-75">
+                              The promotional video is currently being processed. Please check back later.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Custom controls overlay */}
+                      <div className="absolute bottom-2 right-2 flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
+                            if (video) {
+                              if (video.paused) {
+                                video.play();
+                              } else {
+                                video.pause();
+                              }
+                            }
+                          }}
+                          className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                          data-testid="video-play-pause-button"
+                        >
+                          <Video className="h-4 w-4" />
+                        </button>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const video = e.currentTarget.parentElement?.parentElement?.querySelector('video');
+                            if (video) {
+                              video.muted = !video.muted;
+                            }
+                          }}
+                          className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                          data-testid="video-audio-button"
+                        >
+                          {/* Audio icon - will be muted by default */}
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M6 10l4-4v12l-4-4H3a1 1 0 01-1-1v-2a1 1 0 011-1h3z" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    // Fallback when no promotional video is available
+                    <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                      <Video className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Promotional Video Coming Soon</h3>
+                      <p className="text-gray-600 mb-4">
+                        We're preparing an exciting video tour of our salon to show you our beautiful space and talented team.
+                      </p>
+                      <div className="bg-white rounded-lg p-4 shadow-sm">
+                        <h4 className="font-medium text-gray-900 mb-2">What to Expect:</h4>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>• Professional salon atmosphere</li>
+                          <li>• State-of-the-art equipment</li>
+                          <li>• Skilled team at work</li>
+                          <li>• Clean and modern facilities</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                   <div className="mt-3 text-center">
                     <p className="text-sm text-gray-600">
                       Get a feel for our salon's atmosphere and see our professional workspace
@@ -927,7 +946,6 @@ export default function SalonDetail() {
                   </div>
                 </CardContent>
               </Card>
-            )}
 
             {/* Gallery */}
             <Card>
