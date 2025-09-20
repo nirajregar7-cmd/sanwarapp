@@ -825,8 +825,8 @@ export default function SalonDetail() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
 
-            {/* Experience Our Salon Video */}
-            <Card>
+            {/* Experience Our Salon Section - Always First */}
+            <Card data-testid="experience-salon-section">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Video className="h-5 w-5 mr-2" />
@@ -1425,8 +1425,8 @@ export default function SalonDetail() {
               </CardContent>
             </Card>
 
-            {/* Location & Salon Info */}
-            <Card>
+            {/* Location & Salon Info - Last Section */}
+            <Card data-testid="location-info-section">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <MapPin className="h-5 w-5 mr-2" />
