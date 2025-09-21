@@ -107,6 +107,8 @@ export default function OwnerDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [salonDialogOpen, setSalonDialogOpen] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState<string>("");
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
@@ -617,8 +619,68 @@ export default function OwnerDashboard() {
         facebookId: salon.facebookId || "",
         confirmationAmount: salon.confirmationAmount || 0,
       });
+      // Reset temporary image state
+      setTempImageUrl("");
+      setImageUploading(false);
     }
   }, [salonDialogOpen, salon, salonForm]);
+
+  // Manual image upload function
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    
+    setImageUploading(true);
+    try {
+      // Get upload URL
+      const response = await fetch('/api/objects/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const { uploadURL } = await response.json();
+
+      // Upload file
+      await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+      });
+
+      // Set ACL policy
+      try {
+        const aclResponse = await fetch('/api/salon-images', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl: uploadURL }),
+        });
+        
+        if (aclResponse.ok) {
+          const { objectPath } = await aclResponse.json();
+          setTempImageUrl(objectPath);
+          salonForm.setValue('imageUrl', objectPath);
+        } else {
+          setTempImageUrl(uploadURL);
+          salonForm.setValue('imageUrl', uploadURL);
+        }
+      } catch (error) {
+        console.error("Error setting image ACL:", error);
+        setTempImageUrl(uploadURL);
+        salonForm.setValue('imageUrl', uploadURL);
+      }
+
+      toast({
+        title: "Image Ready",
+        description: "Click 'Update Salon' below to save your new image.",
+      });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setImageUploading(false);
+    }
+  };
 
   // Salon mutation
   const salonMutation = useMutation({
@@ -2711,62 +2773,36 @@ export default function OwnerDashboard() {
                         <div className="flex items-center justify-center">
                           <span className="text-sm text-gray-500">OR</span>
                         </div>
-                        <ObjectUploader
-                          maxNumberOfFiles={1}
-                          maxFileSize={10485760}
-                          onGetUploadParameters={async () => {
-                            const response = await fetch('/api/objects/upload', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                            });
-                            const data = await response.json();
-                            return {
-                              method: 'PUT' as const,
-                              url: data.uploadURL,
-                            };
-                          }}
-                          onComplete={async (result) => {
-                            if (result.successful && result.successful.length > 0) {
-                              const uploadURL = result.successful[0].uploadURL;
-                              if (uploadURL) {
-                                try {
-                                  // Set ACL policy for the uploaded image
-                                  const response = await fetch('/api/salon-images', {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ imageUrl: uploadURL }),
-                                  });
-                                  
-                                  if (response.ok) {
-                                    const data = await response.json();
-                                    field.onChange(data.objectPath);
-                                  } else {
-                                    field.onChange(uploadURL);
-                                  }
-                                  
-                                  toast({
-                                    title: "Image Ready",
-                                    description: "Click 'Update Salon' below to save your new image.",
-                                  });
-                                } catch (error) {
-                                  console.error("Error setting image ACL:", error);
-                                  field.onChange(uploadURL);
-                                  toast({
-                                    title: "Image Ready",
-                                    description: "Click 'Update Salon' below to save your new image.",
-                                  });
-                                }
+                        <div className="space-y-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleImageUpload(file);
                               }
-                            }
-                          }}
-                          buttonClassName="w-full"
-                          buttonType="button"
-                        >
-                          <div className="flex items-center justify-center space-x-2">
-                            <Upload className="h-4 w-4" />
-                            <span>Upload Image from Gallery</span>
-                          </div>
-                        </ObjectUploader>
+                            }}
+                            className="hidden"
+                            id="salon-image-upload"
+                          />
+                          <label
+                            htmlFor="salon-image-upload"
+                            className="w-full inline-flex items-center justify-center space-x-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 cursor-pointer"
+                          >
+                            {imageUploading ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                <span>Uploading...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4" />
+                                <span>Upload Image from Gallery</span>
+                              </>
+                            )}
+                          </label>
+                        </div>
                         {field.value && (
                           <div className="mt-4">
                             <img 
