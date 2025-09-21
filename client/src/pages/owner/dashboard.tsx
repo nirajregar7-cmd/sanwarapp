@@ -2711,63 +2711,62 @@ export default function OwnerDashboard() {
                         <div className="flex items-center justify-center">
                           <span className="text-sm text-gray-500">OR</span>
                         </div>
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <ObjectUploader
-                            maxNumberOfFiles={1}
-                            maxFileSize={10485760}
-                            onGetUploadParameters={async () => {
-                              const response = await fetch('/api/objects/upload', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                              });
-                              const data = await response.json();
-                              return {
-                                method: 'PUT' as const,
-                                url: data.uploadURL,
-                              };
-                            }}
-                            onComplete={async (result) => {
-                              if (result.successful && result.successful.length > 0) {
-                                const uploadURL = result.successful[0].uploadURL;
-                                if (uploadURL) {
-                                  try {
-                                    // Set ACL policy for the uploaded image
-                                    const response = await fetch('/api/salon-images', {
-                                      method: 'PUT',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ imageUrl: uploadURL }),
-                                    });
-                                    
-                                    if (response.ok) {
-                                      const data = await response.json();
-                                      field.onChange(data.objectPath);
-                                    } else {
-                                      field.onChange(uploadURL);
-                                    }
-                                    
-                                    toast({
-                                      title: "Image Ready",
-                                      description: "Click 'Update Salon' below to save your new image.",
-                                    });
-                                  } catch (error) {
-                                    console.error("Error setting image ACL:", error);
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={10485760}
+                          onGetUploadParameters={async () => {
+                            const response = await fetch('/api/objects/upload', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                            });
+                            const data = await response.json();
+                            return {
+                              method: 'PUT' as const,
+                              url: data.uploadURL,
+                            };
+                          }}
+                          onComplete={async (result) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const uploadURL = result.successful[0].uploadURL;
+                              if (uploadURL) {
+                                try {
+                                  // Set ACL policy for the uploaded image
+                                  const response = await fetch('/api/salon-images', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ imageUrl: uploadURL }),
+                                  });
+                                  
+                                  if (response.ok) {
+                                    const data = await response.json();
+                                    field.onChange(data.objectPath);
+                                  } else {
                                     field.onChange(uploadURL);
-                                    toast({
-                                      title: "Image Ready",
-                                      description: "Click 'Update Salon' below to save your new image.",
-                                    });
                                   }
+                                  
+                                  toast({
+                                    title: "Image Ready",
+                                    description: "Click 'Update Salon' below to save your new image.",
+                                  });
+                                } catch (error) {
+                                  console.error("Error setting image ACL:", error);
+                                  field.onChange(uploadURL);
+                                  toast({
+                                    title: "Image Ready",
+                                    description: "Click 'Update Salon' below to save your new image.",
+                                  });
                                 }
                               }
-                            }}
-                            buttonClassName="w-full"
-                          >
-                            <div className="flex items-center justify-center space-x-2">
-                              <Upload className="h-4 w-4" />
-                              <span>Upload Image from Gallery</span>
-                            </div>
-                          </ObjectUploader>
-                        </div>
+                            }
+                          }}
+                          buttonClassName="w-full"
+                          buttonType="button"
+                        >
+                          <div className="flex items-center justify-center space-x-2">
+                            <Upload className="h-4 w-4" />
+                            <span>Upload Image from Gallery</span>
+                          </div>
+                        </ObjectUploader>
                         {field.value && (
                           <div className="mt-4">
                             <img 
