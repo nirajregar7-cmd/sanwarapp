@@ -54,6 +54,7 @@ const salonSchema = z.object({
   }),
   imageUrl: z.string().optional(),
   instagramId: z.string().optional(),
+  facebookId: z.string().optional(),
   confirmationAmount: z.number().min(0),
 });
 
@@ -411,6 +412,8 @@ export default function OwnerDashboard() {
       latitude: salon?.latitude ? Number(salon.latitude) : undefined,
       longitude: salon?.longitude ? Number(salon.longitude) : undefined,
       imageUrl: salon?.imageUrl || "",
+      instagramId: salon?.instagramId || "",
+      facebookId: salon?.facebookId || "",
       confirmationAmount: salon?.confirmationAmount || 0,
     },
   });
@@ -2610,19 +2613,35 @@ export default function OwnerDashboard() {
                 />
               </div>
               
-              <FormField
-                control={salonForm.control}
-                name="instagramId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instagram ID (optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="yourhandle (without @)" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={salonForm.control}
+                  name="instagramId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram ID (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="yourhandle (without @)" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={salonForm.control}
+                  name="facebookId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Facebook ID (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="yourpage (without facebook.com/)" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
               <FormField
                 control={salonForm.control}
