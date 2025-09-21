@@ -601,6 +601,25 @@ export default function OwnerDashboard() {
     }
   }, [faqDialogOpen, editingItem, faqs.length, faqForm]);
 
+  // Reset salon form when dialog opens/closes
+  useEffect(() => {
+    if (salonDialogOpen && salon) {
+      // Pre-populate form for editing existing salon
+      salonForm.reset({
+        name: salon.name || "",
+        description: salon.description || "",
+        phone: salon.phone || "",
+        address: salon.address || "",
+        latitude: salon.latitude ? Number(salon.latitude) : undefined,
+        longitude: salon.longitude ? Number(salon.longitude) : undefined,
+        imageUrl: salon.imageUrl || "",
+        instagramId: salon.instagramId || "",
+        facebookId: salon.facebookId || "",
+        confirmationAmount: salon.confirmationAmount || 0,
+      });
+    }
+  }, [salonDialogOpen, salon, salonForm]);
+
   // Salon mutation
   const salonMutation = useMutation({
     mutationFn: async (data: SalonFormData) => {
