@@ -1193,10 +1193,23 @@ export default function SalonDetail() {
             {/* Customer Reviews */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Star className="h-5 w-5 mr-2" />
-                  Customer Reviews
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center">
+                    <Star className="h-5 w-5 mr-2" />
+                    Customer Reviews
+                  </CardTitle>
+                  {user && (
+                    <ReviewForm 
+                      salonId={salonId!} 
+                      trigger={
+                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700" data-testid="button-write-review">
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Write a Review
+                        </Button>
+                      }
+                    />
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 {reviewsLoading ? (
@@ -1344,20 +1357,10 @@ export default function SalonDetail() {
                         </p>
                       </div>
                     )}
-                    
-                    {/* Add Review Button for logged in customers */}
-                    {isAuthenticated && user?.userType === 'customer' && (
-                      <div className="pt-4 border-t border-gray-200">
-                        <ReviewForm salonId={salonId!} />
-                      </div>
-                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-gray-600 mb-4">No reviews yet. Be the first to review!</p>
-                    {isAuthenticated && user?.userType === 'customer' && (
-                      <ReviewForm salonId={salonId!} />
-                    )}
                   </div>
                 )}
               </CardContent>
