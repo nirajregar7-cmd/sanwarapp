@@ -2310,40 +2310,51 @@ export default function OwnerDashboard() {
                   ) : (
                     <div className="space-y-6">
                       {reviews.map((review: ReviewWithReplies) => (
-                        <div key={review.id} className="border border-gray-200 rounded-lg p-6" data-testid={`review-card-${review.id}`}>
-                          {/* Customer Info & Rating */}
+                        <div key={review.id} className="border border-gray-100 rounded-lg p-6 bg-white shadow-sm" data-testid={`review-card-${review.id}`}>
+                          {/* Header with Profile, Name, Rating & Date */}
                           <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="bg-gray-200 rounded-full h-10 w-10 flex items-center justify-center">
-                                <User className="h-5 w-5 text-gray-600" />
+                            <div className="flex items-start space-x-4">
+                              {/* Profile Circle with Initial */}
+                              <div className="bg-orange-500 rounded-full h-12 w-12 flex items-center justify-center flex-shrink-0">
+                                <span className="text-white font-semibold text-lg">
+                                  {(review.customerFirstName?.[0] || 'U').toUpperCase()}
+                                </span>
                               </div>
-                              <div>
-                                <h4 className="font-medium text-gray-900" data-testid={`review-customer-${review.id}`}>
-                                  {review.customerFirstName} {review.customerLastName}
-                                </h4>
-                                <div className="flex items-center space-x-2">
-                                  <div className="flex items-center">
-                                    {Array.from({ length: 5 }).map((_, index) => (
-                                      <Star
-                                        key={index}
-                                        className={`h-4 w-4 ${index < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                      />
-                                    ))}
+                              
+                              {/* Name and Rating */}
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    {/* Star Rating */}
+                                    <div className="flex items-center">
+                                      {Array.from({ length: 5 }).map((_, index) => (
+                                        <Star
+                                          key={index}
+                                          className={`h-4 w-4 ${index < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                        />
+                                      ))}
+                                    </div>
+                                    {/* Customer Name */}
+                                    <h4 className="font-medium text-gray-900" data-testid={`review-customer-${review.id}`}>
+                                      {review.customerFirstName} {review.customerLastName}
+                                    </h4>
                                   </div>
-                                  {review.moodRating && (
-                                    <MoodRatingDisplay mood={review.moodRating} size="sm" />
-                                  )}
+                                  {/* Date */}
+                                  <div className="text-sm text-gray-500" data-testid={`review-date-${review.id}`}>
+                                    {new Date(review.createdAt).toLocaleDateString('en-US', { 
+                                      month: 'numeric', 
+                                      day: 'numeric', 
+                                      year: 'numeric' 
+                                    })}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div className="text-sm text-gray-500" data-testid={`review-date-${review.id}`}>
-                              {new Date(review.createdAt).toLocaleDateString()}
                             </div>
                           </div>
 
                           {/* Review Content */}
-                          <div className="mb-4">
-                            <p className="text-gray-700 leading-relaxed" data-testid={`review-text-${review.id}`}>
+                          <div className="mb-4 pl-16">
+                            <p className="text-gray-700 leading-relaxed text-base" data-testid={`review-text-${review.id}`}>
                               {review.reviewText}
                             </p>
                           </div>
