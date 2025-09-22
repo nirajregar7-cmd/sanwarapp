@@ -13,19 +13,20 @@ import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
-  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown
+  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown, Building2, MessageSquare, Edit, Trash2
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { Salon, Service, Staff, WorkingHours, TimeSlot, Review, SalonOffer } from "@shared/schema";
+import type { Salon, Service, Staff, WorkingHours, TimeSlot, Review, ReviewWithReplies, ReviewReply, SalonOffer } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
 import { ReviewPhotoGallery } from "@/components/ReviewPhotoGallery";
 import { ReviewForm } from "./review-form";
+import { ReplyForm } from "@/components/ReplyForm";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { CustomerSalonMap } from "@/components/CustomerSalonMap";
 import { EmergencyBookingBanner } from "@/components/EmergencyBookingBanner";
@@ -164,8 +165,8 @@ export default function SalonDetail() {
     staleTime: 30 * 1000, // 30 seconds cache
   });
 
-  // Fetch salon reviews - parallel loading
-  const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
+  // Fetch salon reviews with replies - parallel loading
+  const { data: reviews = [], isLoading: reviewsLoading } = useQuery<ReviewWithReplies[]>({
     queryKey: [`/api/salons/${salonId}/reviews`],
     enabled: !!salonId,
     staleTime: 15 * 60 * 1000, // 15 minutes cache - reviews don't change often
@@ -1282,6 +1283,53 @@ export default function SalonDetail() {
                                 reviewId={review.id}
                                 className="mt-3"
                               />
+                            )}
+                            
+                            {/* Display salon owner replies */}
+                            {review.replies && review.replies.length > 0 && (
+                              <div className="mt-4 border-t border-gray-100 pt-4">
+                                {review.replies.map((reply) => (
+                                  <div key={reply.id} className="bg-blue-50 border border-blue-100 rounded-lg p-3 ml-4">
+                                    <div className="flex items-start space-x-3">
+                                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                                        <Building2 className="h-4 w-4" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <div className="flex items-center space-x-2">
+                                            <span className="font-semibold text-blue-900 text-sm">Salon Owner</span>
+                                            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">Reply</span>
+                                          </div>
+                                          <span className="text-xs text-blue-600">
+                                            {reply.createdAt ? new Date(reply.createdAt).toLocaleDateString('en-US', {
+                                              day: 'numeric',
+                                              month: 'numeric',
+                                              year: 'numeric'
+                                            }) : 'Recently'}
+                                          </span>
+                                        </div>
+                                        <p className="text-blue-800 text-sm leading-relaxed">
+                                          {reply.replyText}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {/* Reply form for salon owners */}
+                            {isAuthenticated && user?.userType === 'salon_owner' && salon?.ownerId === user?.id && (
+                              <div className="mt-4 border-t border-gray-100 pt-4">
+                                <ReplyForm 
+                                  reviewId={review.id} 
+                                  existingReply={review.replies?.[0]}
+                                  onReplySuccess={() => {
+                                    // Invalidate the reviews cache to refresh data
+                                    queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/reviews`] });
+                                  }}
+                                />
+                              </div>
                             )}
                           </div>
                         </div>
