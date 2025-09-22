@@ -5935,10 +5935,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle photo processing
       let processedPhotos: string[] = [];
       if (req.body.photos && Array.isArray(req.body.photos)) {
-        try {
-          const objectStorageService = new ObjectStorageService();
-          for (const photoUrl of req.body.photos) {
-            if (photoUrl && typeof photoUrl === 'string') {
+        const objectStorageService = new ObjectStorageService();
+        for (const photoUrl of req.body.photos) {
+          if (photoUrl && typeof photoUrl === 'string') {
+            try {
               const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
                 photoUrl,
                 {
@@ -5947,11 +5947,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               );
               processedPhotos.push(objectPath);
+            } catch (photoError) {
+              console.error(`Error processing review photo ${photoUrl}:`, photoError);
+              // Try to add the original photo URL as fallback
+              processedPhotos.push(photoUrl);
             }
           }
-        } catch (photoError) {
-          console.error("Error processing review photos:", photoError);
-          // Continue with review creation even if photo processing fails
         }
       }
       
