@@ -374,6 +374,7 @@ export async function sendSalonOwnerBookingNotification(bookingId: string) {
         endTime: bookings.endTime,
         status: bookings.status,
         totalAmount: bookings.totalAmount,
+        confirmationAmount: bookings.confirmationAmount,
         salon: {
           id: salons.id,
           name: salons.name,
@@ -405,36 +406,70 @@ export async function sendSalonOwnerBookingNotification(bookingId: string) {
     // Get salon owner details
     const [salonOwner] = await db.select().from(users).where(eq(users.id, booking.salon.ownerId));
     
-    if (!salonOwner) {
-      console.error(`Salon owner user not found: ${booking.salon.ownerId}`);
+    if (!salonOwner || !salonOwner.email) {
+      console.error(`Salon owner user not found or no email: ${booking.salon.ownerId}`);
       return;
     }
 
     // Get customer details
     const [customer] = await db.select().from(users).where(eq(users.id, booking.customerId));
     
-    // Create notification payload for salon owner
-    const payload: NotificationPayload = {
-      userId: booking.salon.ownerId,
-      type: 'new_booking_received',
-      title: 'New Booking Received! 📅',
-      message: `You have a new booking from ${customer?.firstName || 'Customer'} for ${booking.service?.name || 'Service'} on ${booking.date} at ${booking.startTime}`,
+    if (!customer) {
+      console.error(`Customer not found: ${booking.customerId}`);
+      return;
+    }
+
+    // Import the rich email template
+    const { sendSalonOwnerBookingEmail } = await import('./email-notifications');
+    
+    // Send rich HTML email to salon owner
+    const emailData = {
       bookingId: booking.id,
-      data: {
-        customerName: `${customer?.firstName} ${customer?.lastName}` || 'Customer',
-        customerPhone: customer?.phone || '',
-        salonName: booking.salon?.name,
-        serviceName: booking.service?.name,
-        date: booking.date,
-        time: booking.startTime,
-        duration: booking.service?.duration,
-        totalAmount: booking.totalAmount,
-        status: booking.status
-      }
+      customerName: `${customer.firstName} ${customer.lastName}` || 'Customer',
+      customerEmail: customer.email || '',
+      customerPhone: customer.phone || '',
+      salonOwnerName: `${salonOwner.firstName} ${salonOwner.lastName}` || 'Salon Owner',
+      salonOwnerEmail: salonOwner.email,
+      salonName: booking.salon?.name || 'Your Salon',
+      serviceName: booking.service?.name || 'Service',
+      date: booking.date,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      totalAmount: booking.totalAmount.toString(),
+      confirmationAmount: (booking.confirmationAmount || '0').toString(),
+      salonAddress: booking.salon?.address,
+      salonPhone: booking.salon?.phone,
+      status: booking.status
     };
 
-    console.log(`📧 Sending booking notification to salon owner: ${salonOwner.firstName} (${salonOwner.email})`);
-    return await sendNotification(payload);
+    console.log(`📧 Sending rich booking notification email to salon owner: ${salonOwner.firstName} (${salonOwner.email})`);
+    const emailSent = await sendSalonOwnerBookingEmail(emailData);
+    
+    if (emailSent) {
+      // Log notification to history
+      await logNotification({
+        userId: booking.salon.ownerId,
+        type: 'new_booking_received',
+        title: 'New Booking Received! 📅',
+        message: `Rich HTML booking notification sent to ${salonOwner.email}`,
+        channel: 'email',
+        status: 'sent',
+        bookingId: booking.id
+      });
+    } else {
+      await logNotification({
+        userId: booking.salon.ownerId,
+        type: 'new_booking_received',
+        title: 'New Booking Received! 📅',
+        message: `Failed to send booking notification to ${salonOwner.email}`,
+        channel: 'email',
+        status: 'failed',
+        bookingId: booking.id,
+        failureReason: 'Email sending failed'
+      });
+    }
+
+    return emailSent;
 
   } catch (error) {
     console.error('Error sending salon owner booking notification:', error);
