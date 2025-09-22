@@ -25,7 +25,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { Salon, Service, Staff, BookingWithDetails, Review, SalonGallery, ServiceCategory, InsertServiceCategory } from "@shared/schema";
+import type { Salon, Service, Staff, BookingWithDetails, Review, ReviewWithReplies, SalonGallery, ServiceCategory, InsertServiceCategory } from "@shared/schema";
 
 // Extended type for grouped bookings
 interface GroupedBooking extends BookingWithDetails {
@@ -40,6 +40,8 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
 import { apiRequest } from "@/lib/queryClient";
 import { WorkingHoursForm } from "@/components/WorkingHoursForm";
+import { ReplyForm } from "@/components/ReplyForm";
+import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
 
 const salonSchema = z.object({
   name: z.string().min(1, "Salon name is required"),
@@ -158,6 +160,7 @@ export default function OwnerDashboard() {
     refetchOnMount: false,
   });
 
+
   // Group bookings by customer, date and time slot for multiple services
   const groupBookingsByAppointment = (bookings: BookingWithDetails[]): GroupedBooking[] => {
     const groups = new Map<string, BookingWithDetails[]>();
@@ -233,8 +236,8 @@ export default function OwnerDashboard() {
   // Group the bookings for display
   const bookings = groupBookingsByAppointment(rawBookings);
 
-  // Fetch salon reviews - long cache
-  const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
+  // Fetch salon reviews with replies - long cache
+  const { data: reviews = [], isLoading: reviewsLoading } = useQuery<ReviewWithReplies[]>({
     queryKey: [`/api/salons/${salon?.id}/reviews`],
     enabled: !!salon?.id,
     staleTime: 15 * 60 * 1000, // 15 minutes cache - reviews don't change often
@@ -1156,7 +1159,7 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="faqs" className="text-xs py-3">FAQs</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
-                  <TabsTrigger value="faqs" className="text-xs py-3">FAQs</TabsTrigger>
+                  <TabsTrigger value="reviews" className="text-xs py-3">Reviews</TabsTrigger>
                   <TabsTrigger value="messages" className="text-xs py-3 relative">
                     Messages
                     {brandMessages.filter(msg => !msg.isRead).length > 0 && (
@@ -1173,7 +1176,7 @@ export default function OwnerDashboard() {
               
               {/* Desktop Tab Navigation */}
               <div className="hidden sm:block">
-                <TabsList className="grid w-full grid-cols-10 gap-1">
+                <TabsList className="grid w-full grid-cols-11 gap-1">
                   <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
                   <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
                   <TabsTrigger value="categories" className="text-sm">Categories</TabsTrigger>
@@ -1182,6 +1185,7 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="bookings" className="text-sm">Bookings</TabsTrigger>
                   <TabsTrigger value="offers" className="text-sm">Offers</TabsTrigger>
                   <TabsTrigger value="faqs" className="text-sm">FAQs</TabsTrigger>
+                  <TabsTrigger value="reviews" className="text-sm">Reviews</TabsTrigger>
                   <TabsTrigger value="messages" className="text-sm relative">
                     Messages
                     {brandMessages.filter(msg => !msg.isRead).length > 0 && (
@@ -2275,6 +2279,122 @@ export default function OwnerDashboard() {
                       </Button>
                     </Link>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="reviews" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Star className="h-5 w-5 mr-2" />
+                    Customer Reviews & Replies
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Manage and respond to customer reviews to build trust
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {reviewsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : reviews.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
+                      <p className="text-gray-500 mb-6">
+                        Your salon doesn't have any customer reviews yet. Great reviews help build trust and attract more customers.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {reviews.map((review: ReviewWithReplies) => (
+                        <div key={review.id} className="border border-gray-200 rounded-lg p-6" data-testid={`review-card-${review.id}`}>
+                          {/* Customer Info & Rating */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="bg-gray-200 rounded-full h-10 w-10 flex items-center justify-center">
+                                <User className="h-5 w-5 text-gray-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-900" data-testid={`review-customer-${review.id}`}>
+                                  {review.customerFirstName} {review.customerLastName}
+                                </h4>
+                                <div className="flex items-center space-x-2">
+                                  <div className="flex items-center">
+                                    {Array.from({ length: 5 }).map((_, index) => (
+                                      <Star
+                                        key={index}
+                                        className={`h-4 w-4 ${index < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  {review.moodRating && (
+                                    <MoodRatingDisplay mood={review.moodRating} size="sm" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-500" data-testid={`review-date-${review.id}`}>
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+
+                          {/* Review Content */}
+                          <div className="mb-4">
+                            <p className="text-gray-700 leading-relaxed" data-testid={`review-text-${review.id}`}>
+                              {review.reviewText}
+                            </p>
+                          </div>
+
+                          {/* Service Details */}
+                          {review.serviceName && (
+                            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Service:</span> {review.serviceName}
+                              </p>
+                              {review.staffName && (
+                                <p className="text-sm text-gray-600">
+                                  <span className="font-medium">Staff:</span> {review.staffName}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Existing Reply */}
+                          {review.replies && review.replies.length > 0 && (
+                            <div className="mb-4 ml-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                              <div className="flex items-center mb-2">
+                                <div className="bg-blue-500 rounded-full h-6 w-6 flex items-center justify-center mr-2">
+                                  <User className="h-3 w-3 text-white" />
+                                </div>
+                                <span className="font-medium text-blue-900">Your Reply</span>
+                                <span className="text-xs text-blue-600 ml-2">
+                                  {new Date(review.replies[0].createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-blue-800 leading-relaxed" data-testid={`reply-text-${review.replies[0].id}`}>
+                                {review.replies[0].replyText}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Reply Form */}
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <ReplyForm
+                              reviewId={review.id}
+                              existingReply={review.replies?.[0]}
+                              onReplySuccess={() => {
+                                // Refresh the reviews after successful reply
+                                queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/reviews`] });
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
