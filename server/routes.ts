@@ -19,7 +19,7 @@ import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
 import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs } from "@shared/schema";
-import { sendBookingConfirmationNotification } from "./notifications";
+import { sendBookingConfirmationNotification, sendSalonOwnerBookingNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
@@ -1731,6 +1731,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Send booking confirmation notification for each booking
         await sendBookingConfirmationNotification(booking.id);
+        
+        // Send notification to salon owner about new booking
+        await sendSalonOwnerBookingNotification(booking.id);
       }
       
       // Return all created bookings
@@ -2006,6 +2009,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Send booking confirmation notification for each booking
         await sendBookingConfirmationNotification(booking.id);
+        
+        // Send notification to salon owner about new booking
+        await sendSalonOwnerBookingNotification(booking.id);
       }
       
       // Use the first booking for revenue tracking (confirmation fee is paid once)

@@ -361,6 +361,87 @@ async function logNotification(data: {
   }
 }
 
+// Salon owner booking notification
+export async function sendSalonOwnerBookingNotification(bookingId: string) {
+  try {
+    // Get booking details with related data including salon owner
+    const [booking] = await db
+      .select({
+        id: bookings.id,
+        customerId: bookings.customerId,
+        date: bookings.date,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        status: bookings.status,
+        totalAmount: bookings.totalAmount,
+        salon: {
+          id: salons.id,
+          name: salons.name,
+          address: salons.address,
+          phone: salons.phone,
+          ownerId: salons.ownerId
+        },
+        service: {
+          name: services.name,
+          price: services.price,
+          duration: services.duration
+        }
+      })
+      .from(bookings)
+      .leftJoin(salons, eq(bookings.salonId, salons.id))
+      .leftJoin(services, eq(bookings.serviceId, services.id))
+      .where(eq(bookings.id, bookingId));
+
+    if (!booking) {
+      console.error(`Booking not found: ${bookingId}`);
+      return;
+    }
+
+    if (!booking.salon?.ownerId) {
+      console.error(`Salon owner not found for booking: ${bookingId}`);
+      return;
+    }
+
+    // Get salon owner details
+    const [salonOwner] = await db.select().from(users).where(eq(users.id, booking.salon.ownerId));
+    
+    if (!salonOwner) {
+      console.error(`Salon owner user not found: ${booking.salon.ownerId}`);
+      return;
+    }
+
+    // Get customer details
+    const [customer] = await db.select().from(users).where(eq(users.id, booking.customerId));
+    
+    // Create notification payload for salon owner
+    const payload: NotificationPayload = {
+      userId: booking.salon.ownerId,
+      type: 'new_booking_received',
+      title: 'New Booking Received! 📅',
+      message: `You have a new booking from ${customer?.firstName || 'Customer'} for ${booking.service?.name || 'Service'} on ${booking.date} at ${booking.startTime}`,
+      bookingId: booking.id,
+      data: {
+        customerName: `${customer?.firstName} ${customer?.lastName}` || 'Customer',
+        customerPhone: customer?.phone || '',
+        salonName: booking.salon?.name,
+        serviceName: booking.service?.name,
+        date: booking.date,
+        time: booking.startTime,
+        duration: booking.service?.duration,
+        totalAmount: booking.totalAmount,
+        status: booking.status
+      }
+    };
+
+    console.log(`📧 Sending booking notification to salon owner: ${salonOwner.firstName} (${salonOwner.email})`);
+    return await sendNotification(payload);
+
+  } catch (error) {
+    console.error('Error sending salon owner booking notification:', error);
+    throw error;
+  }
+}
+
 // Booking confirmation notification
 export async function sendBookingConfirmationNotification(bookingId: string) {
   try {
