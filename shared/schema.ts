@@ -233,6 +233,16 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Review replies table for salon owners to respond to reviews
+export const reviewReplies = pgTable("review_replies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reviewId: varchar("review_id").references(() => reviews.id, { onDelete: "cascade" }).notNull(),
+  salonOwnerId: varchar("salon_owner_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  replyText: text("reply_text").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Staff table
 export const staff = pgTable("staff", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -904,7 +914,7 @@ export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   reviews: many(reviews),
 }));
 
-export const reviewsRelations = relations(reviews, ({ one }) => ({
+export const reviewsRelations = relations(reviews, ({ one, many }) => ({
   customer: one(users, {
     fields: [reviews.customerId],
     references: [users.id],
@@ -917,6 +927,19 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   booking: one(bookings, {
     fields: [reviews.bookingId],
     references: [bookings.id],
+  }),
+  replies: many(reviewReplies),
+}));
+
+export const reviewRepliesRelations = relations(reviewReplies, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewReplies.reviewId],
+    references: [reviews.id],
+  }),
+  salonOwner: one(users, {
+    fields: [reviewReplies.salonOwnerId],
+    references: [users.id],
+    relationName: "salon_owner_replies",
   }),
 }));
 
@@ -1236,6 +1259,12 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   createdAt: true,
 });
 
+export const insertReviewReplySchema = createInsertSchema(reviewReplies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertWalletSchema = createInsertSchema(wallets).omit({
   id: true,
   createdAt: true,
@@ -1422,6 +1451,16 @@ export type ReviewWithCustomer = typeof reviews.$inferSelect & {
   serviceName?: string;
 };
 export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type ReviewReply = typeof reviewReplies.$inferSelect;
+export type InsertReviewReply = z.infer<typeof insertReviewReplySchema>;
+export type ReviewWithReplies = Review & {
+  replies: ReviewReply[];
+  customerName?: string;
+  customerFirstName?: string;
+  customerLastName?: string;
+  customerProfileImage?: string;
+  serviceName?: string;
+};
 export type PlatformStats = typeof platformStats.$inferSelect;
 // Admin revenue transaction types will be added when needed
 export type Wallet = typeof wallets.$inferSelect;
