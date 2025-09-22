@@ -389,3 +389,174 @@ export async function getBookingNotificationData(bookingId: string): Promise<Boo
     return null;
   }
 }
+
+// Send salon owner booking notification email
+export async function sendSalonOwnerBookingEmail(data: {
+  bookingId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  salonOwnerName: string;
+  salonOwnerEmail: string;
+  salonName: string;
+  serviceName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  totalAmount: string;
+  confirmationAmount: string;
+  salonAddress?: string;
+  salonPhone?: string;
+  status: string;
+}) {
+  const emailSubject = `📅 New Booking Received - ${data.salonName}`;
+  
+  const emailHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px 20px; text-align: center; }
+            .content { padding: 30px 20px; }
+            .booking-details { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .customer-details { background: #e3f2fd; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .detail-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #eee; }
+            .detail-label { font-weight: 600; color: #495057; }
+            .detail-value { color: #212529; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 14px; }
+            .action-buttons { text-align: center; margin: 30px 0; }
+            .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 10px; font-weight: 600; }
+            .button-secondary { background: #6b7280; }
+            .button-contact { background: #3b82f6; }
+            .highlight-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+            .status-pending { color: #f59e0b; font-weight: bold; }
+            .status-confirmed { color: #10b981; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📅 New Booking Received!</h1>
+                <p>You have a new appointment at ${data.salonName}</p>
+            </div>
+            
+            <div class="content">
+                <p>Dear ${data.salonOwnerName},</p>
+                <p>Great news! You have received a new booking. Here are the appointment details:</p>
+                
+                <div class="customer-details">
+                    <h3 style="margin-top: 0; color: #1f2937;">👤 Customer Information</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Customer Name:</span>
+                        <span class="detail-value"><strong>${data.customerName}</strong></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">${data.customerEmail}</span>
+                    </div>
+                    ${data.customerPhone ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Phone:</span>
+                        <span class="detail-value"><strong>${data.customerPhone}</strong></span>
+                    </div>` : ''}
+                </div>
+
+                <div class="booking-details">
+                    <h3 style="margin-top: 0; color: #1f2937;">📋 Booking Details</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Booking ID:</span>
+                        <span class="detail-value">#${data.bookingId.substring(0, 8).toUpperCase()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Service:</span>
+                        <span class="detail-value"><strong>${data.serviceName}</strong></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Date:</span>
+                        <span class="detail-value">${new Date(data.date).toLocaleDateString('en-GB', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Time:</span>
+                        <span class="detail-value"><strong>${data.startTime} - ${data.endTime}</strong></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value ${data.status === 'confirmed' ? 'status-confirmed' : 'status-pending'}">${data.status.toUpperCase()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Service Amount:</span>
+                        <span class="detail-value"><strong>₹${data.totalAmount}</strong></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Confirmation Fee Paid:</span>
+                        <span class="detail-value"><strong>₹${data.confirmationAmount}</strong> ✅</span>
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <strong>💰 Payment Information:</strong>
+                    <ul style="margin: 10px 0;">
+                        <li>Confirmation fee of ₹${data.confirmationAmount} has been paid online</li>
+                        <li>Service fee of ₹${data.totalAmount} will be collected at the salon</li>
+                        <li>Your revenue share will be automatically processed</li>
+                    </ul>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="${process.env.FRONTEND_URL || 'https://sanwarhub.in'}/owner/dashboard" class="button">
+                        📊 View Dashboard
+                    </a>
+                    <a href="${process.env.FRONTEND_URL || 'https://sanwarhub.in'}/owner/bookings" class="button button-secondary">
+                        📅 Manage Bookings
+                    </a>
+                    <a href="tel:${data.customerPhone}" class="button button-contact">
+                        📞 Call Customer
+                    </a>
+                </div>
+                
+                <div class="highlight-box">
+                    <strong>📋 Next Steps:</strong>
+                    <ul style="margin: 10px 0;">
+                        <li>Prepare for the appointment at the scheduled time</li>
+                        <li>Contact the customer if you need to reschedule</li>
+                        <li>Collect the service fee (₹${data.totalAmount}) when the customer arrives</li>
+                        <li>Update the booking status after completion</li>
+                    </ul>
+                </div>
+                
+                <p>Thank you for using Sanwar! We're helping you grow your business.</p>
+                <p><strong>The Sanwar Team</strong></p>
+            </div>
+            
+            <div class="footer">
+                <p>This is an automated notification from Sanwar booking system.</p>
+                <p>For support, contact us at support@sanwarhub.in</p>
+                <p><a href="${process.env.FRONTEND_URL || 'https://sanwarhub.in'}/owner/dashboard">Manage your salon on Sanwar</a></p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: data.salonOwnerEmail,
+      subject: emailSubject,
+      html: emailHTML
+    });
+    
+    console.log(`✅ Salon owner booking notification email sent to ${data.salonOwnerEmail}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error sending salon owner booking notification email:', error);
+    return false;
+  }
+}
