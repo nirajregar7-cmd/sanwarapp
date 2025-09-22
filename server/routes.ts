@@ -5973,10 +5973,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/salons/:salonId/reviews", async (req, res) => {
     try {
       const reviews = await storage.getReviewsBySalon(req.params.salonId);
-      res.json(reviews);
+      
+      // Fetch replies for each review
+      const reviewsWithReplies = await Promise.all(
+        reviews.map(async (review) => {
+          const replies = await storage.getReviewReplies(review.id);
+          return { ...review, replies };
+        })
+      );
+      
+      res.json(reviewsWithReplies);
     } catch (error) {
       console.error("Error fetching reviews:", error);
       res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  // Review reply routes
+  app.post("/api/reviews/:reviewId/replies", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userType = req.user?.userType;
+      const { reviewId } = req.params;
+      const { replyText } = req.body;
+
+      // Only salon owners can reply to reviews
+      if (userType !== "salon_owner") {
+        return res.status(403).json({ message: "Only salon owners can reply to reviews" });
+      }
+
+      // Validate required fields
+      if (!replyText || replyText.trim().length === 0) {
+        return res.status(400).json({ message: "Reply text is required" });
+      }
+
+      // Verify the review exists and belongs to the salon owner's salon
+      const reviewsData = await db
+        .select({
+          reviewId: reviews.id,
+          salonId: reviews.salonId,
+          salonOwnerId: salons.ownerId
+        })
+        .from(reviews)
+        .leftJoin(salons, eq(reviews.salonId, salons.id))
+        .where(eq(reviews.id, reviewId));
+
+      if (reviewsData.length === 0) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+
+      const reviewData = reviewsData[0];
+      if (reviewData.salonOwnerId !== userId) {
+        return res.status(403).json({ message: "You can only reply to reviews for your own salon" });
+      }
+
+      const replyData = {
+        reviewId,
+        salonOwnerId: userId,
+        replyText: replyText.trim()
+      };
+
+      const reply = await storage.createReviewReply(replyData);
+      res.status(201).json(reply);
+    } catch (error) {
+      console.error("Error creating review reply:", error);
+      res.status(500).json({ message: "Failed to create reply" });
+    }
+  });
+
+  app.put("/api/reviews/replies/:replyId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { replyId } = req.params;
+      const { replyText } = req.body;
+
+      // Validate required fields
+      if (!replyText || replyText.trim().length === 0) {
+        return res.status(400).json({ message: "Reply text is required" });
+      }
+
+      // Verify the reply exists and belongs to the user
+      const existingReplies = await db
+        .select()
+        .from(reviewReplies)
+        .where(eq(reviewReplies.id, replyId));
+
+      if (existingReplies.length === 0) {
+        return res.status(404).json({ message: "Reply not found" });
+      }
+
+      const existingReply = existingReplies[0];
+      if (existingReply.salonOwnerId !== userId) {
+        return res.status(403).json({ message: "You can only edit your own replies" });
+      }
+
+      const updatedReply = await storage.updateReviewReply(replyId, replyText.trim());
+      res.json(updatedReply);
+    } catch (error) {
+      console.error("Error updating review reply:", error);
+      res.status(500).json({ message: "Failed to update reply" });
+    }
+  });
+
+  app.delete("/api/reviews/replies/:replyId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { replyId } = req.params;
+
+      // Verify the reply exists and belongs to the user
+      const existingReplies = await db
+        .select()
+        .from(reviewReplies)
+        .where(eq(reviewReplies.id, replyId));
+
+      if (existingReplies.length === 0) {
+        return res.status(404).json({ message: "Reply not found" });
+      }
+
+      const existingReply = existingReplies[0];
+      if (existingReply.salonOwnerId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own replies" });
+      }
+
+      await storage.deleteReviewReply(replyId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting review reply:", error);
+      res.status(500).json({ message: "Failed to delete reply" });
     }
   });
 

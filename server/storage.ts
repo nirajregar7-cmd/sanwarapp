@@ -7,6 +7,7 @@ import {
   timeSlots,
   bookings,
   reviews,
+  reviewReplies,
   salonGallery,
   salonLikes,
   salonOwnerAccounts,
@@ -48,7 +49,10 @@ import {
   type InsertWalkInBooking,
   type Review,
   type ReviewWithCustomer,
+  type ReviewReply,
+  type ReviewWithReplies,
   type InsertReview,
+  type InsertReviewReply,
   type SalonGallery,
   type InsertSalonGallery,
   type SalonLike,
@@ -143,6 +147,12 @@ export interface IStorage {
   createReview(review: InsertReview): Promise<Review>;
   getReviewsBySalon(salonId: string): Promise<Review[]>;
   updateSalonRating(salonId: string): Promise<void>;
+  
+  // Review reply operations
+  createReviewReply(reply: InsertReviewReply): Promise<ReviewReply>;
+  getReviewReplies(reviewId: string): Promise<ReviewReply[]>;
+  updateReviewReply(replyId: string, replyText: string): Promise<ReviewReply>;
+  deleteReviewReply(replyId: string): Promise<void>;
 
   // Gallery operations
   createGalleryImage(galleryImage: InsertSalonGallery): Promise<SalonGallery>;
@@ -1076,6 +1086,36 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(salons.id, salonId));
     }
+  }
+
+  // Review reply operations
+  async createReviewReply(reply: InsertReviewReply): Promise<ReviewReply> {
+    const [newReply] = await db.insert(reviewReplies).values(reply).returning();
+    return newReply;
+  }
+
+  async getReviewReplies(reviewId: string): Promise<ReviewReply[]> {
+    return await db
+      .select()
+      .from(reviewReplies)
+      .where(eq(reviewReplies.reviewId, reviewId))
+      .orderBy(asc(reviewReplies.createdAt));
+  }
+
+  async updateReviewReply(replyId: string, replyText: string): Promise<ReviewReply> {
+    const [updatedReply] = await db
+      .update(reviewReplies)
+      .set({ 
+        replyText,
+        updatedAt: sql`now()`
+      })
+      .where(eq(reviewReplies.id, replyId))
+      .returning();
+    return updatedReply;
+  }
+
+  async deleteReviewReply(replyId: string): Promise<void> {
+    await db.delete(reviewReplies).where(eq(reviewReplies.id, replyId));
   }
 
   // Gallery operations
