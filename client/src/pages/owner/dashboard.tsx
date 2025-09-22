@@ -2355,7 +2355,7 @@ export default function OwnerDashboard() {
                           {/* Review Content */}
                           <div className="mb-4 pl-16">
                             <p className="text-gray-700 leading-relaxed text-base" data-testid={`review-text-${review.id}`}>
-                              {review.reviewText}
+                              {review.comment}
                             </p>
                           </div>
 
