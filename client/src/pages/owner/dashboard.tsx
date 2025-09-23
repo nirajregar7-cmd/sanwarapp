@@ -15,7 +15,7 @@ import {
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
   CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play, 
-  HelpCircle, Edit2, Palette, Tags
+  HelpCircle, Edit2, Palette, Tags, Mail
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -96,12 +96,21 @@ const serviceCategorySchema = z.object({
   color: z.string().min(4, "Please select a color"),
 });
 
+const profileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().optional(),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
+  profileImageUrl: z.string().optional(),
+});
+
 type SalonFormData = z.infer<typeof salonSchema>;
 type ServiceFormData = z.infer<typeof serviceSchema>;
 type StaffFormData = z.infer<typeof staffSchema>;
 type GalleryFormData = z.infer<typeof gallerySchema>;
 type FaqFormData = z.infer<typeof faqSchema>;
 type ServiceCategoryFormData = z.infer<typeof serviceCategorySchema>;
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function OwnerDashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -121,6 +130,9 @@ export default function OwnerDashboard() {
   const [salonLocation, setSalonLocation] = useState<{lat: number, lng: number} | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editingWorkingHours, setEditingWorkingHours] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [profileImageUploading, setProfileImageUploading] = useState(false);
+  const [tempProfileImageUrl, setTempProfileImageUrl] = useState<string>("");
 
   // Fetch user's salon - optimized caching
   const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
@@ -445,6 +457,17 @@ export default function OwnerDashboard() {
     },
   });
 
+  const profileForm = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      profileImageUrl: user?.profileImageUrl || "",
+    },
+  });
+
   // Mutation for responding to brand invitations
   const respondToInvitationMutation = useMutation({
     mutationFn: async ({ invitationId, status }: { invitationId: string, status: 'accepted' | 'rejected' }) => {
@@ -705,6 +728,28 @@ export default function OwnerDashboard() {
       queryClient.setQueryData(['/api/owner/salon'], data);
       // Also invalidate to trigger a fresh fetch
       queryClient.invalidateQueries({ queryKey: ['/api/owner/salon'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const profileMutation = useMutation({
+    mutationFn: async (data: ProfileFormData) => {
+      return apiRequest('PUT', '/api/customer/profile', data);
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Profile Updated!",
+        description: "Your profile information has been updated successfully.",
+      });
+      setProfileDialogOpen(false);
+      // Clear the cache and invalidate user data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
     },
     onError: (error: Error) => {
       toast({
@@ -2607,6 +2652,95 @@ export default function OwnerDashboard() {
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-6">
+              {/* Owner Profile Management */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <User className="h-5 w-5 mr-2" />
+                      Owner Profile
+                    </div>
+                    <Button onClick={() => {
+                      profileForm.reset({
+                        firstName: user?.firstName || "",
+                        lastName: user?.lastName || "",
+                        email: user?.email || "",
+                        phone: user?.phone || "",
+                        profileImageUrl: user?.profileImageUrl || "",
+                      });
+                      setProfileDialogOpen(true);
+                    }}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start space-x-6">
+                    {/* Profile Picture */}
+                    <div className="flex-shrink-0">
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200">
+                        {user?.profileImageUrl ? (
+                          <img 
+                            src={user.profileImageUrl} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center text-white font-semibold text-2xl">
+                            {user?.firstName?.[0]?.toUpperCase() || "O"}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Profile Information */}
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <h3 className="font-semibold text-lg">
+                          {user?.firstName} {user?.lastName}
+                        </h3>
+                        <p className="text-gray-500 text-sm">Salon Owner</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                          <span className="text-gray-600">{user?.email || "Not provided"}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Phone className="h-4 w-4 mr-2 text-gray-400" />
+                          <span className="text-gray-600">{user?.phone || "Not provided"}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Edit Profile Button */}
+                    <div className="flex-shrink-0">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          profileForm.reset({
+                            firstName: user?.firstName || "",
+                            lastName: user?.lastName || "",
+                            email: user?.email || "",
+                            phone: user?.phone || "",
+                            profileImageUrl: user?.profileImageUrl || "",
+                          });
+                          setTempProfileImageUrl(user?.profileImageUrl || "");
+                          setProfileDialogOpen(true);
+                        }}
+                        data-testid="button-edit-profile"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -3635,6 +3769,144 @@ export default function OwnerDashboard() {
             onCancel={() => setEditingWorkingHours(false)}
             isLoading={updateWorkingHoursMutation.isPending}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Edit Dialog */}
+      <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your personal information and profile picture
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...profileForm}>
+            <form onSubmit={profileForm.handleSubmit((data) => profileMutation.mutate(data))} className="space-y-4">
+              {/* Profile Picture Upload */}
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200">
+                  {tempProfileImageUrl || user?.profileImageUrl ? (
+                    <img 
+                      src={tempProfileImageUrl || user?.profileImageUrl || ""} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center text-white font-semibold text-xl">
+                      {user?.firstName?.[0]?.toUpperCase() || "O"}
+                    </div>
+                  )}
+                </div>
+                
+                <ObjectUploader
+                  onGetUploadParameters={async () => {
+                    setProfileImageUploading(true);
+                    const response = await apiRequest("POST", "/api/objects/upload");
+                    const data = await response.json();
+                    return {
+                      method: "PUT" as const,
+                      url: data.uploadURL,
+                    };
+                  }}
+                  onComplete={(result) => {
+                    setProfileImageUploading(false);
+                    const photoUrl = result.successful?.[0]?.uploadURL || "";
+                    
+                    if (photoUrl) {
+                      const normalizedPath = photoUrl.startsWith('/objects/') 
+                        ? photoUrl 
+                        : photoUrl.includes('/uploads/') 
+                          ? `/objects${photoUrl.split('/uploads')[1] ? '/uploads' + photoUrl.split('/uploads')[1] : ''}`
+                          : photoUrl;
+                      
+                      setTempProfileImageUrl(normalizedPath);
+                      profileForm.setValue('profileImageUrl', normalizedPath);
+                    }
+                  }}
+                  maxFileSize={5485760} // 5MB
+                  buttonClassName="w-full"
+                  buttonType="button"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  {profileImageUploading ? "Uploading..." : "Change Photo"}
+                </ObjectUploader>
+              </div>
+
+              <FormField
+                control={profileForm.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your first name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your last name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="your@email.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="9876543210" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setProfileDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={profileMutation.isPending}
+                  data-testid="button-save-profile"
+                >
+                  {profileMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
