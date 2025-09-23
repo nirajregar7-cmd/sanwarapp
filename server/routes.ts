@@ -3770,6 +3770,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Please enter a valid email address' });
       }
 
+      // Check if the email is already taken by another user
+      const existingUser = await db.select().from(users).where(eq(users.email, email.trim())).limit(1);
+      if (existingUser.length > 0 && existingUser[0].id !== userId) {
+        return res.status(400).json({ message: 'This email address is already registered. Please use a different email.' });
+      }
+
       // Set ACL policy for profile image if provided
       if (profileImageUrl && profileImageUrl.startsWith('/objects/')) {
         const objectStorageService = new ObjectStorageService();
