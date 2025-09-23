@@ -3752,12 +3752,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const { firstName, lastName, phone, profileImageUrl } = req.body;
-      console.log('Received profile update data:', { firstName, lastName, phone, profileImageUrl });
+      const { firstName, lastName, email, phone, profileImageUrl } = req.body;
+      console.log('Received profile update data:', { firstName, lastName, email, phone, profileImageUrl });
 
       // Validate input
       if (!firstName?.trim()) {
         return res.status(400).json({ message: 'First name is required' });
+      }
+
+      if (!email?.trim()) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ message: 'Please enter a valid email address' });
       }
 
       // Set ACL policy for profile image if provided
@@ -3783,6 +3793,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .set({
           firstName: firstName.trim(),
           lastName: lastName?.trim() || null,
+          email: email.trim(),
           phone: phone?.trim() || null,
           profileImageUrl: profileImageUrl || null,
           updatedAt: new Date(),
