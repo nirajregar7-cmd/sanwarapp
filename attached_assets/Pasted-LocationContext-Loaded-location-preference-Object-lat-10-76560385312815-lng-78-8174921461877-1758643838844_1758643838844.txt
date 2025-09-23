@@ -1,0 +1,28 @@
+LocationContext: Loaded location preference: 
+Object {lat: 10.76560385312815, lng: 78.81749214618772, radius: 30, lastUpdated: "2025-08-24T17:39:36.020Z"}
+LocationContext: Permission already asked/denied, not showing dialog
+LocationContext: Checking if should show dialog 
+Object {isAuthenticated: true, hasAskedPermission: true, hasLocationPreference: true, showLocationDialog: false, permissionDenied: false, …}
+LocationContext: Not showing dialog - conditions not met
+LocationContext: Checking if should show dialog 
+Object {isAuthenticated: true, hasAskedPermission: true, hasLocationPreference: true, showLocationDialog: false, permissionDenied: false, …}
+LocationContext: Not showing dialog - conditions not met
+Impersonation error: 
+Error {}
+
+at t.value (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Impersonation error: 
+Error {}
+message: "HTTP error! status: 401"
+stack: "Error: HTTP error! status: 401↵ at impersonateUser (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/src/pages/admin/impersonate.tsx:52:15)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+at t.value (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://ac9e5a28-ddcc-43e7-8168-cb0762543f12-00-1m1vjvdmybedf.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400

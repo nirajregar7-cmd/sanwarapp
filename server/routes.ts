@@ -7011,13 +7011,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userType: adminUser.userType
       };
       
-      // Update session to impersonate target user
+      // Update session to impersonate target user using passport serialization
       req.session.passport = {
-        user: {
-          id: targetUser.id,
-          email: targetUser.email,
-          userType: targetUser.userType
-        }
+        user: targetUser.id  // Passport expects just the user ID here
       };
       
       console.log(`[ADMIN IMPERSONATION] Admin ${adminUser.email} is now impersonating ${targetUser.email}`);
@@ -7062,13 +7058,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const originalAdmin = req.session.originalAdmin;
       
-      // Restore original admin session
+      // Restore original admin session using passport serialization
       req.session.passport = {
-        user: {
-          id: originalAdmin.id,
-          email: originalAdmin.email,
-          userType: originalAdmin.userType
-        }
+        user: originalAdmin.id  // Passport expects just the user ID here
       };
       
       // Clear impersonation data
