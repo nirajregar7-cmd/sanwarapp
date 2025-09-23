@@ -175,10 +175,23 @@ export function setupAuth(app: Express) {
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: string, done) => {
     try {
+      // Handle corrupted sessions gracefully
+      if (!id || typeof id !== 'string') {
+        console.log('Invalid user ID in session, clearing session');
+        return done(null, false);
+      }
+      
       const user = await storage.getUser(id);
+      if (!user) {
+        console.log(`User ${id} not found in database, clearing session`);
+        return done(null, false);
+      }
+      
       done(null, user);
     } catch (error) {
-      done(error);
+      console.error('Session deserialization error:', error);
+      // Clear corrupted session instead of throwing error
+      done(null, false);
     }
   });
 
