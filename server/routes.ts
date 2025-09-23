@@ -6987,6 +6987,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin impersonation endpoint
+  app.post("/api/admin/impersonate/:userId", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const adminUser = req.adminUser;
+      
+      // Get the target user
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Only allow impersonating salon owners
+      if (targetUser.userType !== 'salon_owner') {
+        return res.status(400).json({ error: "Can only impersonate salon owners" });
+      }
+      
+      // Store original admin user in session
+      req.session.originalAdmin = {
+        id: adminUser.id,
+        email: adminUser.email,
+        userType: adminUser.userType
+      };
+      
+      // Update session to impersonate target user
+      req.session.passport = {
+        user: {
+          id: targetUser.id,
+          email: targetUser.email,
+          userType: targetUser.userType
+        }
+      };
+      
+      console.log(`[ADMIN IMPERSONATION] Admin ${adminUser.email} is now impersonating ${targetUser.email}`);
+      
+      res.json({ 
+        success: true, 
+        message: `Now logged in as ${targetUser.firstName} ${targetUser.lastName}`,
+        targetUser: {
+          id: targetUser.id,
+          firstName: targetUser.firstName,
+          lastName: targetUser.lastName,
+          email: targetUser.email,
+          userType: targetUser.userType
+        }
+      });
+    } catch (error) {
+      console.error("Error during admin impersonation:", error);
+      res.status(500).json({ error: "Failed to impersonate user" });
+    }
+  });
+
+  // Session check for impersonation status
+  app.get("/api/auth/session-check", async (req: any, res) => {
+    try {
+      const isImpersonating = !!(req.session && req.session.originalAdmin);
+      res.json({ 
+        isImpersonating,
+        originalAdmin: req.session?.originalAdmin || null
+      });
+    } catch (error) {
+      console.error("Error checking session:", error);
+      res.json({ isImpersonating: false, originalAdmin: null });
+    }
+  });
+
+  // Admin exit impersonation endpoint
+  app.post("/api/admin/exit-impersonation", async (req: any, res) => {
+    try {
+      if (!req.session.originalAdmin) {
+        return res.status(400).json({ error: "Not currently impersonating a user" });
+      }
+      
+      const originalAdmin = req.session.originalAdmin;
+      
+      // Restore original admin session
+      req.session.passport = {
+        user: {
+          id: originalAdmin.id,
+          email: originalAdmin.email,
+          userType: originalAdmin.userType
+        }
+      };
+      
+      // Clear impersonation data
+      delete req.session.originalAdmin;
+      
+      console.log(`[ADMIN IMPERSONATION] Restored admin session for ${originalAdmin.email}`);
+      
+      res.json({ 
+        success: true, 
+        message: "Returned to admin account",
+        adminUser: originalAdmin
+      });
+    } catch (error) {
+      console.error("Error exiting impersonation:", error);
+      res.status(500).json({ error: "Failed to exit impersonation" });
+    }
+  });
+
   // Get notification history for a user
   app.get('/api/notifications/history', isAuthenticated, async (req: any, res) => {
     try {

@@ -53,6 +53,7 @@ import UserManagement from "@/pages/admin/user-management";
 import ActivityLogs from "@/pages/admin/activity-logs";
 import AdminFeedbackSupportPage from "@/pages/admin-feedback-support";
 import BrandOwnerManagement from "@/pages/admin/brand-owner-management";
+import ImpersonatePage from "@/pages/admin/impersonate";
 
 // Clerk Auth Pages
 import ClerkSignInPage, { ClerkSignUpPage } from "@/pages/clerk-auth";
@@ -304,6 +305,9 @@ function Router() {
                 <Layout>
                   <AdminFeedbackSupportPage />
                 </Layout>
+              </Route>
+              <Route path="/admin/impersonate/:userId">
+                <ImpersonatePage />
               </Route>
             </>
           )}

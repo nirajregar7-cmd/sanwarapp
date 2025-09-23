@@ -15,7 +15,7 @@ import {
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
   CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play, 
-  HelpCircle, Edit2, Palette, Tags, Mail
+  HelpCircle, Edit2, Palette, Tags, Mail, LogOut, Shield
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -123,7 +123,74 @@ export default function OwnerDashboard() {
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
+  const [isImpersonating, setIsImpersonating] = useState(false);
+  const [exitingImpersonation, setExitingImpersonation] = useState(false);
   const [promoVideoDialogOpen, setPromoVideoDialogOpen] = useState(false);
+
+  // Check if we're in impersonation mode
+  useEffect(() => {
+    const checkImpersonationStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/user', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          // Check if this is an impersonation by looking at session data
+          const checkSession = await fetch('/api/auth/session-check', {
+            method: 'GET',
+            credentials: 'include'
+          });
+          
+          if (checkSession.ok) {
+            const sessionData = await checkSession.json();
+            setIsImpersonating(sessionData.isImpersonating || false);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking impersonation status:', error);
+      }
+    };
+
+    checkImpersonationStatus();
+  }, []);
+
+  const exitImpersonation = async () => {
+    try {
+      setExitingImpersonation(true);
+      
+      const response = await fetch('/api/admin/exit-impersonation', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Returned to Admin Account",
+          description: "You have successfully returned to your admin account",
+        });
+        
+        // Redirect to admin dashboard
+        window.location.href = '/admin/salons';
+      } else {
+        throw new Error('Failed to exit impersonation');
+      }
+    } catch (error) {
+      console.error('Error exiting impersonation:', error);
+      toast({
+        title: "Exit Failed",
+        description: "Unable to return to admin account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setExitingImpersonation(false);
+    }
+  };
   const [faqDialogOpen, setFaqDialogOpen] = useState(false);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -1070,6 +1137,39 @@ export default function OwnerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Admin Impersonation Banner */}
+      {isImpersonating && (
+        <div className="bg-red-600 text-white px-4 py-3 sticky top-0 z-50 shadow-lg">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Shield className="h-5 w-5" />
+              <div>
+                <span className="font-semibold">Admin Mode:</span> You are viewing this salon owner's dashboard
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exitImpersonation}
+              disabled={exitingImpersonation}
+              className="bg-white text-red-600 hover:bg-gray-100 border-white"
+            >
+              {exitingImpersonation ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                  Exiting...
+                </>
+              ) : (
+                <>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Return to Admin
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">

@@ -376,6 +376,16 @@ export default function SalonManagement() {
                         <FileText className="h-4 w-4 mr-2" />
                         View Full Profile
                       </Button>
+
+                      <Link href={`/admin/impersonate/${salon.owner.id}`}>
+                        <Button 
+                          size="sm"
+                          className="flex items-center bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          Login as Owner
+                        </Button>
+                      </Link>
                       
                       <Dialog>
                         <DialogTrigger asChild>
