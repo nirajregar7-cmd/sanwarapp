@@ -93,7 +93,7 @@ export default function SalonDetail() {
   // Profile visit tracking mutation
   const trackVisitMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("POST", `/api/salons/${salonId}/profile-visit`, {
+      return await apiRequest("POST", `/api/salons/${actualSalonId}/profile-visit`, {
         pageViewed: 'profile'
       });
     },
@@ -140,10 +140,13 @@ export default function SalonDetail() {
     services: Service[];
   };
 
+  // Use actual salon ID for all queries (works with both UUID and slug URLs)
+  const actualSalonId = salon?.id || salonId;
+
   // Fetch salon services organized by categories - parallel loading
   const { data: servicesByCategory = [], isLoading: servicesLoading } = useQuery<CategoryWithServices[]>({
-    queryKey: [`/api/salons/${salonId}/services-by-category`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/services-by-category`],
+    enabled: !!actualSalonId && !!salon,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
@@ -152,30 +155,30 @@ export default function SalonDetail() {
 
   // Fetch salon staff with their assigned services - parallel loading
   const { data: staff = [], isLoading: staffLoading } = useQuery<Staff[]>({
-    queryKey: [`/api/salons/${salonId}/staff`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/staff`],
+    enabled: !!actualSalonId && !!salon,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
   // Fetch staff slot counts - optimized refresh
   const { data: staffSlotCounts = {} } = useQuery<Record<string, number>>({
-    queryKey: [`/api/salons/${salonId}/public-staff-slot-counts`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/public-staff-slot-counts`],
+    enabled: !!actualSalonId && !!salon,
     refetchInterval: 60000, // Reduced to 60 seconds to improve performance
     staleTime: 30 * 1000, // 30 seconds cache
   });
 
   // Fetch salon reviews with replies - parallel loading
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery<ReviewWithReplies[]>({
-    queryKey: [`/api/salons/${salonId}/reviews`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/reviews`],
+    enabled: !!actualSalonId && !!salon,
     staleTime: 15 * 60 * 1000, // 15 minutes cache - reviews don't change often
   });
 
   // Fetch salon media gallery - parallel loading
   const { data: gallery = [], isLoading: galleryLoading } = useQuery<any[]>({
-    queryKey: [`/api/salons/${salonId}/media`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/media`],
+    enabled: !!actualSalonId && !!salon,
     staleTime: 30 * 60 * 1000, // 30 minutes cache - media doesn't change often
   });
 
@@ -221,8 +224,8 @@ export default function SalonDetail() {
 
   // Fetch working hours from staff schedule data - parallel loading
   const { data: workingHours = [], isLoading: hoursLoading } = useQuery<any[]>({
-    queryKey: [`/api/salons/${salonId}/working-hours`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/working-hours`],
+    enabled: !!actualSalonId && !!salon,
     staleTime: 60 * 60 * 1000, // 1 hour cache - working hours rarely change
   });
 
@@ -265,40 +268,40 @@ export default function SalonDetail() {
 
   // Fetch salon facilities - parallel loading
   const { data: facilities = [], isLoading: facilitiesLoading } = useQuery({
-    queryKey: [`/api/salons/${salonId}/facilities`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/facilities`],
+    enabled: !!actualSalonId && !!salon,
     staleTime: 30 * 60 * 1000, // 30 minutes cache - facilities don't change often
   });
 
   // Fetch salon products - parallel loading
   const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: [`/api/salons/${salonId}/products`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/products`],
+    enabled: !!actualSalonId && !!salon,
     staleTime: 30 * 60 * 1000, // 30 minutes cache - products don't change often
   });
 
   // Fetch salon offers - parallel loading
   const { data: offers = [], isLoading: offersLoading } = useQuery({
-    queryKey: [`/api/salons/${salonId}/offers`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/offers`],
+    enabled: !!actualSalonId && !!salon,
     staleTime: 10 * 60 * 1000, // 10 minutes cache - offers change more frequently
   });
 
   // Fetch salon FAQs for customers - parallel loading
   const { data: faqs = [], isLoading: faqsLoading } = useQuery({
-    queryKey: [`/api/salons/${salonId}/faqs`],
-    enabled: !!salonId,
+    queryKey: [`/api/salons/${actualSalonId}/faqs`],
+    enabled: !!actualSalonId && !!salon,
     staleTime: 15 * 60 * 1000, // 15 minutes cache - FAQs don't change often
   });
 
   // Fetch available time slots for selected date and staff (ignore service filter since slots are service-agnostic)
   const { data: timeSlots = [], isLoading: timeSlotsLoading } = useQuery({
-    queryKey: [`/api/salons/${salonId}/time-slots`, selectedDate?.toISOString().split('T')[0], selectedStaff],
-    enabled: !!salonId && !!selectedDate,
+    queryKey: [`/api/salons/${actualSalonId}/time-slots`, selectedDate?.toISOString().split('T')[0], selectedStaff],
+    enabled: !!actualSalonId && !!salon && !!selectedDate,
     queryFn: async (): Promise<TimeSlot[]> => {
       if (!selectedDate) return [];
       const dateStr = selectedDate.toISOString().split('T')[0];
-      let url = `/api/salons/${salonId}/time-slots?date=${dateStr}`;
+      let url = `/api/salons/${actualSalonId}/time-slots?date=${dateStr}`;
       if (selectedStaff) {
         url += `&staffId=${selectedStaff}`;
       }
@@ -310,10 +313,10 @@ export default function SalonDetail() {
 
   // Fetch salon like status for authenticated customers - optimized
   const { data: likeStatus } = useQuery({
-    queryKey: [`/api/salons/${salonId}/like-status`],
-    enabled: !!salonId && !!isAuthenticated && user?.userType === 'customer',
+    queryKey: [`/api/salons/${actualSalonId}/like-status`],
+    enabled: !!actualSalonId && !!salon && !!isAuthenticated && user?.userType === 'customer',
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/salons/${salonId}/like-status`);
+      const response = await apiRequest("GET", `/api/salons/${actualSalonId}/like-status`);
       return await response.json();
     },
     retry: false,
@@ -350,7 +353,7 @@ export default function SalonDetail() {
       const additionalServices = data.serviceIds.length > 1 ? data.serviceIds.slice(1) : undefined;
       
       const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
-        salonId,
+        actualSalonId,
         serviceId: primaryServiceId,
         additionalServices: additionalServices,
         staffId: data.staffId || null,
@@ -370,7 +373,7 @@ export default function SalonDetail() {
       
       setBookingDialogOpen(false);
       form.reset();
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/time-slots`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${actualSalonId}/time-slots`] });
     },
     onError: (error) => {
       console.error("Pay at salon booking failed:", error);
@@ -397,7 +400,7 @@ export default function SalonDetail() {
       const additionalServices = formData.serviceIds.length > 1 ? formData.serviceIds.slice(1) : undefined;
       
       const response = await apiRequest("POST", "/api/bookings/create-pay-at-salon", {
-        salonId,
+        actualSalonId,
         serviceId: primaryServiceId,
         additionalServices: additionalServices,
         staffId: formData.staffId || null,
@@ -415,7 +418,7 @@ export default function SalonDetail() {
       
       setBookingDialogOpen(false);
       form.reset();
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/time-slots`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${actualSalonId}/time-slots`] });
     } catch (error) {
       console.error("Pay at salon booking failed:", error);
       toast({
@@ -441,7 +444,7 @@ export default function SalonDetail() {
       // and handle multiple services in the booking creation
       const primaryServiceId = data.serviceIds[0];
       console.log('[BOOKING] Creating payment order with:', {
-        salonId,
+        actualSalonId,
         serviceId: primaryServiceId,
         staffId: data.staffId || null,
         timeSlotId: data.timeSlotId,
@@ -450,7 +453,7 @@ export default function SalonDetail() {
       });
       
       const orderResponse = await apiRequest("POST", "/api/bookings/create-payment-order", {
-        salonId,
+        actualSalonId,
         serviceId: primaryServiceId,
         staffId: data.staffId || null,
         timeSlotId: data.timeSlotId,
@@ -469,7 +472,7 @@ export default function SalonDetail() {
       if (orderData.isFreeBooking || orderData.freeBooking) {
         let endpoint = "/api/bookings/create-free";
         let payload: any = {
-          salonId,
+          actualSalonId,
           serviceId: primaryServiceId, // Use primary service for free booking
           staffId: data.staffId || null,
           timeSlotId: data.timeSlotId,
@@ -553,7 +556,7 @@ export default function SalonDetail() {
       setBookingDialogOpen(false);
       setAppliedReferralCode(null); // Reset referral code
       form.reset();
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/time-slots`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${actualSalonId}/time-slots`] });
     },
     onError: (error: Error) => {
       console.error("Booking mutation error:", error);
@@ -601,7 +604,7 @@ export default function SalonDetail() {
   // Like toggle mutation
   const likeMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/salons/${salonId}/like`);
+      const response = await apiRequest("POST", `/api/salons/${actualSalonId}/like`);
       return await response.json();
     },
     onSuccess: (data) => {
@@ -612,7 +615,7 @@ export default function SalonDetail() {
         description: data.message,
       });
       // Invalidate the like status query to refresh
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/like-status`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${actualSalonId}/like-status`] });
     },
     onError: (error: Error) => {
       toast({
@@ -626,7 +629,7 @@ export default function SalonDetail() {
   // Share functionality
   const handleShare = async () => {
     try {
-      const response = await apiRequest("GET", `/api/salons/${salonId}/share`);
+      const response = await apiRequest("GET", `/api/salons/${actualSalonId}/share`);
       const data = await response.json();
       
       if (navigator.share && /mobile|android|iphone/i.test(navigator.userAgent)) {
@@ -1364,7 +1367,7 @@ export default function SalonDetail() {
                                   existingReply={review.replies?.[0]}
                                   onReplySuccess={() => {
                                     // Invalidate the reviews cache to refresh data
-                                    queryClient.invalidateQueries({ queryKey: [`/api/salons/${salonId}/reviews`] });
+                                    queryClient.invalidateQueries({ queryKey: [`/api/salons/${actualSalonId}/reviews`] });
                                   }}
                                 />
                               </div>
