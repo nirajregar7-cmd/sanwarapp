@@ -663,7 +663,7 @@ export default function SalonDetail() {
         description: "Please log in to save salons to your favorites.",
         variant: "destructive",
       });
-      navigate(`/auth?redirect=/salon/${salonId}`);
+      navigate(`/auth?redirect=${window.location.pathname}`);
       return;
     }
     
@@ -1793,7 +1793,7 @@ export default function SalonDetail() {
                     <p className="text-gray-600 mb-4 text-sm sm:text-base">Please log in to book an appointment</p>
                     <Button 
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => navigate(`/auth?redirect=/salon/${salonId}`)}
+                      onClick={() => navigate(`/auth?redirect=${window.location.pathname}`)}
                       data-testid="button-login-to-book"
                     >
                       <Crown className="h-4 w-4 mr-2" />
@@ -2445,7 +2445,7 @@ export default function SalonDetail() {
           {!isAuthenticated ? (
             <Button 
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
-              onClick={() => navigate(`/auth?redirect=/salon/${salonId}`)}
+              onClick={() => navigate(`/auth?redirect=${window.location.pathname}`)}
               data-testid="button-mobile-login-to-book"
             >
               <Crown className="h-4 w-4 mr-2" />
