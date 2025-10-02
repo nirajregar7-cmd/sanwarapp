@@ -721,22 +721,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Individual salon details endpoint  
+  // Individual salon details endpoint (supports both ID and name slug)
   app.get('/api/salons/:salonId', async (req, res) => {
     try {
       const { salonId } = req.params;
-      const [salon] = await db.select()
-        .from(salons)
-        .where(
-          and(
-            eq(salons.id, salonId),
-            // Only allow access to non-rejected salons for public
+      
+      let salon;
+      
+      // Check if parameter looks like a UUID (salon ID) or a slug (salon name)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(salonId);
+      
+      if (isUUID) {
+        // Fetch by ID
+        [salon] = await db.select()
+          .from(salons)
+          .where(
+            and(
+              eq(salons.id, salonId),
+              or(
+                eq(salons.verificationStatus, 'approved'),
+                eq(salons.verificationStatus, 'pending')
+              )
+            )
+          );
+      } else {
+        // Fetch by name slug - convert slug back to name pattern
+        const allSalons = await db.select()
+          .from(salons)
+          .where(
             or(
               eq(salons.verificationStatus, 'approved'),
               eq(salons.verificationStatus, 'pending')
             )
-          )
-        );
+          );
+        
+        // Find salon by matching slug
+        salon = allSalons.find(s => {
+          const nameSlug = s.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+          return nameSlug === salonId;
+        });
+      }
       
       if (!salon) {
         return res.status(404).json({ message: "Salon not found" });
@@ -6784,8 +6811,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Salon not found" });
       }
       
-      // Generate shareable link
-      const shareableLink = `${req.protocol}://${req.get('host')}/salon/${salonId}`;
+      // Generate shareable link with salon name slug for better SEO
+      const salonSlug = salon.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric with hyphens
+        .replace(/^-+|-+$/g, '');      // Remove leading/trailing hyphens
+      
+      const shareableLink = `${req.protocol}://${req.get('host')}/salon/${salonSlug}`;
       
       res.json({
         shareableLink,
