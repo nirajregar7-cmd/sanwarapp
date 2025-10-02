@@ -126,6 +126,18 @@ function Router() {
       {/* Landing page - accessible to all users */}
       <Route path="/landing" component={Landing} />
       
+      {/* Salon discovery/listing pages - accessible to all users */}
+      <Route path="/salons">
+        <Layout>
+          <SalonDiscovery />
+        </Layout>
+      </Route>
+      <Route path="/salon">
+        <Layout>
+          <SalonDiscovery />
+        </Layout>
+      </Route>
+      
       {/* Salon detail pages - accessible to all users */}
       <Route path="/salon/:salonId">
         <Layout>
