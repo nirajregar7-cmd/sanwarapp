@@ -90,6 +90,22 @@ export default function SalonDetail() {
   const searchParams = new URLSearchParams(window.location.search);
   const rescheduleBookingId = searchParams.get('reschedule');
 
+  // Track video error state
+  const [videoError, setVideoError] = useState(false);
+
+  // Fetch salon details with optimized settings
+  const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
+    queryKey: [`/api/salons/${salonId}`],
+    enabled: !!salonId,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Use cache first
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+
+  // Use actual salon ID for all queries (works with both UUID and slug URLs)
+  const actualSalonId = salon?.id || salonId;
+
   // Profile visit tracking mutation
   const trackVisitMutation = useMutation({
     mutationFn: async () => {
@@ -115,21 +131,6 @@ export default function SalonDetail() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [salonId]);
 
-  // Track video error state
-  const [videoError, setVideoError] = useState(false);
-
-
-
-  // Fetch salon details with optimized settings
-  const { data: salon, isLoading: salonLoading, error: salonError } = useQuery<Salon>({
-    queryKey: [`/api/salons/${salonId}`],
-    enabled: !!salonId,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false, // Use cache first
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-  });
-
   // Type for category with services
   type CategoryWithServices = {
     id: string;
@@ -139,9 +140,6 @@ export default function SalonDetail() {
     color?: string;
     services: Service[];
   };
-
-  // Use actual salon ID for all queries (works with both UUID and slug URLs)
-  const actualSalonId = salon?.id || salonId;
 
   // Fetch salon services organized by categories - parallel loading
   const { data: servicesByCategory = [], isLoading: servicesLoading } = useQuery<CategoryWithServices[]>({
