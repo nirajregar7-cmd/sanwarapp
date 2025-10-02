@@ -428,6 +428,10 @@ export default function SalonDetail() {
 
   const bookingMutation = useMutation({
     mutationFn: async (data: BookingFormData) => {
+      console.log('[BOOKING] Mutation started');
+      console.log('[BOOKING] Is authenticated:', isAuthenticated);
+      console.log('[BOOKING] User:', user);
+      
       if (!isAuthenticated) {
         throw new Error("Please log in to book an appointment");
       }
@@ -436,6 +440,15 @@ export default function SalonDetail() {
       // For now, we'll use the first service for payment order creation
       // and handle multiple services in the booking creation
       const primaryServiceId = data.serviceIds[0];
+      console.log('[BOOKING] Creating payment order with:', {
+        salonId,
+        serviceId: primaryServiceId,
+        staffId: data.staffId || null,
+        timeSlotId: data.timeSlotId,
+        date: data.date.toISOString().split('T')[0],
+        additionalServices: data.serviceIds.slice(1),
+      });
+      
       const orderResponse = await apiRequest("POST", "/api/bookings/create-payment-order", {
         salonId,
         serviceId: primaryServiceId,
@@ -744,10 +757,22 @@ export default function SalonDetail() {
   };
 
   const onSubmit = (data: BookingFormData) => {
+    console.log('[BOOKING] Form submitted with data:', data);
+    console.log('[BOOKING] Form validation errors:', form.formState.errors);
+    
     // Always use regular payment flow to ensure confirmation fee is paid online
     // Whether single or multiple services, customer pays confirmation fee online
     // Service fees will be paid at salon for multiple services
-    bookingMutation.mutate(data);
+    try {
+      bookingMutation.mutate(data);
+    } catch (error) {
+      console.error('[BOOKING] Mutation error:', error);
+      toast({
+        title: "Booking Error",
+        description: "Failed to initiate booking. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (salonLoading) {
