@@ -57,7 +57,7 @@ export default function ImpersonatePage({}: ImpersonatePageProps) {
 
         // Redirect to salon owner dashboard after 2 seconds
         setTimeout(() => {
-          setLocation("/owner/dashboard");
+          setLocation("/shopkeeper/dashboard");
         }, 2000);
       } else {
         throw new Error(data.message || "Failed to impersonate user");
@@ -152,7 +152,7 @@ export default function ImpersonatePage({}: ImpersonatePageProps) {
               Redirecting to salon dashboard...
             </p>
             <Button
-              onClick={() => setLocation("/owner/dashboard")}
+              onClick={() => setLocation("/shopkeeper/dashboard")}
               className="w-full"
             >
               Go to Dashboard Now
