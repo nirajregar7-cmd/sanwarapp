@@ -710,7 +710,7 @@ export default function Landing() {
                   </Button>
                 ) : (
                   <Button asChild className="bg-primary hover:bg-primary/90">
-                    <Link href="/owner">
+                    <Link href="/auth">
                       <Scissors className="h-4 w-4 mr-2" />
                       Register Your Salon
                     </Link>

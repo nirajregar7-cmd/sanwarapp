@@ -412,7 +412,7 @@ export default function MediaGallery() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/owner" className="inline-flex">
+          <Link href="/shopkeeper/dashboard" className="inline-flex">
             <Button variant="ghost" size="sm" data-testid="button-back">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
