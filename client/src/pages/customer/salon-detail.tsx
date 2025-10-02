@@ -103,12 +103,12 @@ export default function SalonDetail() {
     }
   });
 
-  // Track profile visit when component mounts
+  // Track profile visit when salon data is loaded
   useEffect(() => {
-    if (salonId && !trackVisitMutation.isSuccess) {
+    if (actualSalonId && salon && !trackVisitMutation.isSuccess) {
       trackVisitMutation.mutate();
     }
-  }, [salonId]);
+  }, [actualSalonId, salon]);
 
   // Always scroll to top when component mounts to ensure page starts from Experience Our Salon section
   useEffect(() => {
