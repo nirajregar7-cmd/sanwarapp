@@ -43,10 +43,37 @@ export default function AuthPage() {
     message: string;
   }>({ status: "idle", message: "" });
 
-  // Extract redirect parameter from URL
-  const getRedirectUrl = () => {
+  // Extract redirect parameter from URL and convert slug to UUID if needed
+  const getRedirectUrl = async () => {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('redirect') || '/';
+    const redirectUrl = urlParams.get('redirect') || '/';
+    
+    // Check if redirect is a slug-based salon URL (e.g., /salon/comfort-luxury-men-salon)
+    const salonSlugMatch = redirectUrl.match(/^\/salon\/([^\/]+)$/);
+    if (salonSlugMatch) {
+      const slugOrId = salonSlugMatch[1];
+      
+      // Check if it's already a UUID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(slugOrId)) {
+        // Already a UUID, return as-is
+        return redirectUrl;
+      }
+      
+      // It's a slug, fetch salon to get UUID
+      try {
+        const response = await fetch(`/api/salons/${slugOrId}`);
+        if (response.ok) {
+          const salon = await response.json();
+          // Return UUID-based URL
+          return `/salon/${salon.id}`;
+        }
+      } catch (error) {
+        console.error('Failed to convert slug to UUID:', error);
+      }
+    }
+    
+    return redirectUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +101,8 @@ export default function AuthPage() {
         if (response.ok) {
           const data = await response.json();
           console.log("Login successful:", data);
-          navigate(getRedirectUrl());
+          const redirectUrl = await getRedirectUrl();
+          navigate(redirectUrl);
           window.location.reload();
         } else {
           const data = await response.json();
@@ -120,7 +148,8 @@ export default function AuthPage() {
             "true",
           );
 
-          navigate(getRedirectUrl());
+          const redirectUrl = await getRedirectUrl();
+          navigate(redirectUrl);
           window.location.reload();
         } else {
           const data = await response.json();
