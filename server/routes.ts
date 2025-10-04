@@ -2954,8 +2954,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to update this salon" });
       }
       
+      // Prepare update data with proper type conversions
+      const updateData = {
+        ...salonData,
+        latitude: salonData.latitude ? salonData.latitude.toString() : null,
+        longitude: salonData.longitude ? salonData.longitude.toString() : null,
+        confirmationAmount: salonData.confirmationAmount ? Number(salonData.confirmationAmount) : undefined,
+        updatedAt: new Date()
+      };
+
       const [updatedSalon] = await db.update(salons)
-        .set({ ...salonData, updatedAt: new Date() })
+        .set(updateData)
         .where(eq(salons.id, salonId))
         .returning();
       
