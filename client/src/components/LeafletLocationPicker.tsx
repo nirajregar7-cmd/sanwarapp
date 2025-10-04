@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
-import { MapPin, Navigation } from 'lucide-react';
+import { MapPin, Navigation, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface LeafletLocationPickerProps {
   initialLat?: number;
   initialLng?: number;
   onLocationSelect: (lat: number, lng: number) => void;
+  onLocationReset?: () => void;
   disabled?: boolean;
 }
 
@@ -14,6 +15,7 @@ export function LeafletLocationPicker({
   initialLat, 
   initialLng, 
   onLocationSelect, 
+  onLocationReset,
   disabled 
 }: LeafletLocationPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -162,6 +164,34 @@ export function LeafletLocationPicker({
     };
   }, [leafletLoaded, initialLat, initialLng, onLocationSelect, disabled]);
 
+  const resetLocation = () => {
+    if (!mapInstanceRef.current) return;
+    
+    const L = (window as any).L;
+    if (!L) return;
+
+    // Remove marker if exists
+    if (markerRef.current) {
+      markerRef.current.remove();
+      markerRef.current = null;
+    }
+
+    // Clear current location state
+    setCurrentLocation(null);
+
+    // Call the reset callback if provided
+    if (onLocationReset) {
+      onLocationReset();
+    }
+
+    // Show toast asking to use current location
+    toast({
+      title: "Location Reset",
+      description: "Click 'Use Current Location' to set your shop location",
+      duration: 5000,
+    });
+  };
+
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       toast({
@@ -283,7 +313,7 @@ export function LeafletLocationPicker({
   return (
     <div className="space-y-4">
       {!disabled && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button 
             type="button"
             variant="outline" 
@@ -291,6 +321,7 @@ export function LeafletLocationPicker({
             onClick={getCurrentLocation}
             disabled={isGettingLocation}
             className="flex items-center gap-2"
+            data-testid="button-use-current-location"
           >
             {isGettingLocation ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
@@ -298,6 +329,17 @@ export function LeafletLocationPicker({
               <Navigation className="w-4 h-4" />
             )}
             {isGettingLocation ? "Getting Location..." : "Use Current Location"}
+          </Button>
+          <Button 
+            type="button"
+            variant="outline" 
+            size="sm"
+            onClick={resetLocation}
+            className="flex items-center gap-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+            data-testid="button-reset-location"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset Location
           </Button>
         </div>
       )}

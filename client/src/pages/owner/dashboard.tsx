@@ -3119,6 +3119,11 @@ export default function OwnerDashboard() {
                     salonForm.setValue('latitude', lat);
                     salonForm.setValue('longitude', lng);
                   }}
+                  onLocationReset={() => {
+                    setSalonLocation(null);
+                    salonForm.setValue('latitude', undefined as any);
+                    salonForm.setValue('longitude', undefined as any);
+                  }}
                   disabled={false}
                 />
               </div>
