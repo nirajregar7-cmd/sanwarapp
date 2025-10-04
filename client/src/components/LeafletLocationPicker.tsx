@@ -187,7 +187,7 @@ export function LeafletLocationPicker({
     // Show toast asking to use current location
     toast({
       title: "Location Reset",
-      description: "Click 'Use Current Location' to set your shop location",
+      description: "Click 'Use Current Location' to use your device's GPS location (Google Location)",
       duration: 5000,
     });
   };
@@ -267,8 +267,8 @@ export function LeafletLocationPicker({
         }
         
         toast({
-          title: "Location found",
-          description: "Your current location has been set on the map",
+          title: "Google Location Set Successfully",
+          description: "Your shop location has been set using your device's GPS coordinates",
         });
       },
       (error) => {
@@ -320,15 +320,15 @@ export function LeafletLocationPicker({
             size="sm"
             onClick={getCurrentLocation}
             disabled={isGettingLocation}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 border-blue-300"
             data-testid="button-use-current-location"
           >
             {isGettingLocation ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
             ) : (
-              <Navigation className="w-4 h-4" />
+              <Navigation className="w-4 h-4 text-blue-600" />
             )}
-            {isGettingLocation ? "Getting Location..." : "Use Current Location"}
+            {isGettingLocation ? "Getting GPS Location..." : "Use My GPS Location"}
           </Button>
           <Button 
             type="button"

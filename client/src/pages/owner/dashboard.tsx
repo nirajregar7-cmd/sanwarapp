@@ -3109,7 +3109,7 @@ export default function OwnerDashboard() {
                   Mark Your Shop Location on Map *
                 </label>
                 <p className="text-sm text-muted-foreground">
-                  Required: Help customers find your exact location by marking it on the map
+                  Required: Help customers find your exact location. Click "Use My GPS Location" to automatically detect your shop's location using Google Location Services
                 </p>
                 <LeafletLocationPicker
                   initialLat={salon?.latitude ? Number(salon.latitude) : undefined}
