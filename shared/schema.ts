@@ -86,6 +86,8 @@ export const salons = pgTable("salons", {
   // Social media fields
   instagramId: varchar("instagram_id", { length: 100 }), // Instagram handle without @ symbol
   facebookId: varchar("facebook_id", { length: 100 }), // Facebook page handle or ID
+  // Google Maps link for customer navigation
+  googleMapsLink: text("google_maps_link"), // Full Google Maps URL for directions
   // Country field for global filtering
   country: varchar("country", { length: 2 }).default("IN"), // ISO country code (IN, US, GB, etc.)
   // Rating fields

@@ -57,6 +57,7 @@ const salonSchema = z.object({
   imageUrl: z.string().optional(),
   instagramId: z.string().optional(),
   facebookId: z.string().optional(),
+  googleMapsLink: z.string().optional(),
   confirmationAmount: z.number().min(0),
 });
 
@@ -498,6 +499,7 @@ export default function OwnerDashboard() {
       imageUrl: salon?.imageUrl || "",
       instagramId: salon?.instagramId || "",
       facebookId: salon?.facebookId || "",
+      googleMapsLink: salon?.googleMapsLink || "",
       confirmationAmount: salon?.confirmationAmount || 0,
     },
   });
@@ -710,6 +712,7 @@ export default function OwnerDashboard() {
         imageUrl: salon.imageUrl || "",
         instagramId: salon.instagramId || "",
         facebookId: salon.facebookId || "",
+        googleMapsLink: salon.googleMapsLink || "",
         confirmationAmount: salon.confirmationAmount || 0,
       });
       // Reset temporary image state
@@ -2855,6 +2858,8 @@ export default function OwnerDashboard() {
                         longitude: salon?.longitude ? Number(salon.longitude) : undefined,
                         imageUrl: salon?.imageUrl || "",
                         instagramId: salon?.instagramId || "",
+                        facebookId: salon?.facebookId || "",
+                        googleMapsLink: salon?.googleMapsLink || "",
                         confirmationAmount: salon?.confirmationAmount || 0,
                       });
                       setSalonDialogOpen(true);
@@ -3088,6 +3093,23 @@ export default function OwnerDashboard() {
                   )}
                 />
               </div>
+              
+              <FormField
+                control={salonForm.control}
+                name="googleMapsLink"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Google Maps Link (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://maps.app.goo.gl/..." {...field} data-testid="input-google-maps-link" />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Paste your Google Maps link so customers can get directions easily
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <FormField
                 control={salonForm.control}

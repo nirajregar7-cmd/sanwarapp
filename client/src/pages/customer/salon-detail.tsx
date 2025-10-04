@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
-  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown, Building2, MessageSquare, Edit, Trash2
+  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown, Building2, MessageSquare, Edit, Trash2, Navigation
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { useState, useEffect } from "react";
@@ -1546,9 +1546,23 @@ export default function SalonDetail() {
                               ({salon.totalReviews || 0} reviews)
                             </span>
                           </div>
-                          <div className="flex items-center text-gray-600 mb-4">
-                            <MapPin className="h-4 w-4 mr-2" />
-                            <span className="break-words">{salon.address}</span>
+                          <div className="flex flex-col gap-2 mb-4">
+                            <div className="flex items-center text-gray-600">
+                              <MapPin className="h-4 w-4 mr-2" />
+                              <span className="break-words">{salon.address}</span>
+                            </div>
+                            {salon.googleMapsLink && (
+                              <a
+                                href={salon.googleMapsLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium w-fit"
+                                data-testid="link-get-directions"
+                              >
+                                <Navigation className="h-4 w-4" />
+                                Get Directions on Google Maps
+                              </a>
+                            )}
                           </div>
                           
                           {salon.description && (
