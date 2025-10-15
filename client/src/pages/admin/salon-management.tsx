@@ -477,6 +477,34 @@ export default function SalonManagement() {
                               </Button>
                             </DialogFooter>
                           )}
+                          
+                          {salon.verificationStatus === 'rejected' && (
+                            <DialogFooter>
+                              <div className="w-full space-y-2">
+                                <Label htmlFor="approve-notes" className="text-sm font-medium">
+                                  Approval Notes (Optional)
+                                </Label>
+                                <Textarea
+                                  id="approve-notes"
+                                  placeholder="Add notes for approval..."
+                                  value={actionNotes}
+                                  onChange={(e) => setActionNotes(e.target.value)}
+                                  className="mb-2"
+                                />
+                              </div>
+                              <Button
+                                onClick={() => {
+                                  approveMutation.mutate({ salonId: salon.id, notes: actionNotes });
+                                  setActionNotes("");
+                                }}
+                                disabled={approveMutation.isPending}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Approve Salon (Reverse Rejection)
+                              </Button>
+                            </DialogFooter>
+                          )}
                         </DialogContent>
                       </Dialog>
                     </div>
@@ -499,7 +527,7 @@ export default function SalonManagement() {
                   Salon Profile Preview - Customer View
                 </DialogTitle>
                 <div className="flex items-center space-x-2">
-                  {salonProfile && (
+                  {salonProfile && salonProfile.verificationStatus === 'pending' && (
                     <>
                       <Button
                         variant="destructive"
@@ -539,6 +567,23 @@ export default function SalonManagement() {
                         Approve
                       </Button>
                     </>
+                  )}
+                  {salonProfile && salonProfile.verificationStatus === 'rejected' && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        approveMutation.mutate({ 
+                          salonId: viewingProfile, 
+                          notes: actionNotes 
+                        });
+                        setViewingProfile(null);
+                      }}
+                      disabled={approveMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Approve Salon
+                    </Button>
                   )}
                 </div>
               </div>
