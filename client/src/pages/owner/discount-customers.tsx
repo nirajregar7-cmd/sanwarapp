@@ -29,7 +29,7 @@ export default function DiscountCustomers() {
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6">
       <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 xs:gap-4 mb-6">
-        <Link href="/owner/dashboard">
+        <Link href="/shopkeeper/dashboard">
           <Button variant="outline" size="sm" className="w-fit">
             <ArrowLeft className="h-4 w-4 mr-2" />
             <span className="hidden xs:inline">Back to Dashboard</span>
