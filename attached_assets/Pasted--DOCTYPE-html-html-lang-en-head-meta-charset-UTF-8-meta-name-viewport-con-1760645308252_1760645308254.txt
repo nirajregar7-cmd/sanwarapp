@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Salon Stylist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #f9fafb;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        .message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .user-message {
+            background-color: #6366f1;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.5rem;
+        }
+        .ai-message {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            align-self: flex-start;
+            border-bottom-left-radius: 0.5rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div class="max-w-7xl mx-auto bg-white shadow-xl rounded-2xl p-6 sm:p-10 border border-gray-200">
+        <h1 class="text-4xl sm:text-5xl font-bold text-center mb-2 text-gray-800">
+            AI Salon Stylist
+        </h1>
+        <p class="text-lg text-center text-gray-600 mb-8">
+            Take a photo or upload one to see 10 new hairstyles and grooming looks.
+        </p>
+
+        <!-- Initial Options and Controls -->
+        <div id="initial-options" class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+            <button id="takePhotoButton" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
+                Take Photo
+            </button>
+            <label for="uploadPhotoInput" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95 cursor-pointer">
+                Upload Photo
+            </label>
+            <input type="file" id="uploadPhotoInput" accept="image/*" class="hidden">
+            <button id="bestLookButton" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
+                Best Look This Month
+            </button>
+        </div>
+        
+        <!-- Gender and Hair Length Selection -->
+        <div id="selection-options" class="hidden flex flex-col items-center justify-center mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-center">Tell Us a Bit About Your Style</h2>
+            <div class="flex flex-col sm:flex-row gap-6 mb-6 w-full max-w-lg">
+                <div class="flex-1">
+                    <label class="block text-gray-700 font-semibold mb-2">I am a:</label>
+                    <select id="genderSelect" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="male">Man</option>
+                        <option value="female">Woman</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-gray-700 font-semibold mb-2">My hair is:</label>
+                    <select id="hairLengthSelect" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="any">Any Length</option>
+                        <option value="short">Short</option>
+                        <option value="medium">Medium</option>
+                        <option value="long">Long</option>
+                    </select>
+                </div>
+            </div>
+            <button id="startStylingButton" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
+                Start Styling
+            </button>
+        </div>
+
+        <!-- Camera Section -->
+        <div id="camera-section" class="hidden flex flex-col items-center justify-center mb-8">
+            <div class="relative w-full max-w-2xl rounded-xl overflow-hidden mb-4 shadow-lg border border-gray-300">
+                <video id="video" class="w-full h-auto" autoplay playsinline></video>
+                <canvas id="canvas" class="hidden"></canvas>
+            </div>
+            <button id="captureButton" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
+                Capture
+            </button>
+        </div>
+        
+        <!-- Status and Loading Spinner -->
+        <div id="status-container" class="text-center mb-8">
+            <div id="loadingSpinner" class="hidden">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto"></div>
+                <p class="mt-4 text-gray-600">Generating your looks...</p>
+            </div>
+            <p id="statusMessage" class="text-gray-500 italic"></p>
+        </div>
+
+        <!-- Generated Images Container -->
+        <div id="results-container" class="hidden">
+            <h2 class="text-3xl font-bold text-center mb-6">Your New Looks</h2>
+            <div id="stylesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <!-- Generated styles will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Start Over Button -->
+        <div id="startOverButtonContainer" class="hidden text-center mt-8">
+            <button id="startOverButton" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
+                Start Over
+            </button>
+        </div>
+    </div>
+
+    <!-- AI Stylist Chat Modal -->
+    <div id="chatModal" class="modal">
+        <div class="modal-content">
+            <h2 id="chatTitle" class="text-2xl font-bold text-center mb-4"></h2>
+            <div id="chatHistory" class="chat-container mb-4"></div>
+            <div class="flex gap-2">
+                <input type="text" id="chatInput" class="flex-grow rounded-full py-2 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ask about this style...">
+                <button id="chatSendButton" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-6 rounded-full font-semibold transition-colors">Send</button>
+            </div>
+            <button id="chatCloseButton" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors">&times;</button>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const initialOptions = document.getElementById('initial-options');
+        const takePhotoButton = document.getElementById('takePhotoButton');
+        const uploadPhotoInput = document.getElementById('uploadPhotoInput');
+        const bestLookButton = document.getElementById('bestLookButton');
+        const captureButton = document.getElementById('captureButton');
+        const startStylingButton = document.getElementById('startStylingButton');
+        const selectionOptions = document.getElementById('selection-options');
+        const genderSelect = document.getElementById('genderSelect');
+        const hairLengthSelect = document.getElementById('hairLengthSelect');
+        const startOverButton = document.getElementById('startOverButton');
+        const stylesGrid = document.getElementById('stylesGrid');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const statusMessage = document.getElementById('statusMessage');
+        const cameraSection = document.getElementById('camera-section');
+        const resultsContainer = document.getElementById('results-container');
+        const startOverButtonContainer = document.getElementById('startOverButtonContainer');
+        const API_KEY = ""; // Do not change this, Canvas will provide the key.
+
+        const API_ENDPOINT_TEXT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+        const API_ENDPOINT_IMAGE = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${API_KEY}`;
+        
+        const chatModal = document.getElementById('chatModal');
+        const chatTitle = document.getElementById('chatTitle');
+        const chatHistory = document.getElementById('chatHistory');
+        const chatInput = document.getElementById('chatInput');
+        const chatSendButton = document.getElementById('chatSendButton');
+        const chatCloseButton = document.getElementById('chatCloseButton');
+
+        let videoStream = null;
+        let chatHistoryData = [];
+        let captureMode = 'standard';
+        let capturedImageBase64 = null;
+
+        // Function to show a temporary message to the user
+        const showMessage = (message, isError = false) => {
+            statusMessage.textContent = message;
+            statusMessage.className = isError ? 'text-red-500 italic' : 'text-gray-500 italic';
+            console.log(message);
+        };
+
+        // --- Event Listeners for different workflows ---
+
+        // Standard "Take Photo" workflow
+        takePhotoButton.addEventListener('click', () => {
+            initialOptions.classList.add('hidden');
+            selectionOptions.classList.remove('hidden');
+            captureMode = 'standard';
+        });
+
+        // "Upload Photo" workflow
+        uploadPhotoInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            initialOptions.classList.add('hidden');
+            selectionOptions.classList.remove('hidden');
+            captureMode = 'upload';
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                capturedImageBase64 = e.target.result.split(',')[1];
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // New "Best Look This Month" automated workflow
+        bestLookButton.addEventListener('click', async () => {
+            initialOptions.classList.add('hidden');
+            selectionOptions.classList.remove('hidden');
+            captureMode = 'monthly';
+        });
+
+        startStylingButton.addEventListener('click', async () => {
+            selectionOptions.classList.add('hidden');
+            if (captureMode === 'standard' || captureMode === 'monthly') {
+                cameraSection.classList.remove('hidden');
+                captureButton.classList.remove('hidden');
+                if (captureMode === 'monthly') {
+                    captureButton.classList.add('hidden');
+                    showMessage("Getting ready to capture your look in 3 seconds...");
+                    await setupCamera();
+                    setTimeout(async () => {
+                        await autoCaptureAndGenerate();
+                    }, 3000);
+                } else {
+                    await setupCamera();
+                }
+            } else if (captureMode === 'upload') {
+                if (capturedImageBase64) {
+                    await generateAllStyles(capturedImageBase64, 'upload');
+                } else {
+                    showMessage("Please select a file to upload.", true);
+                    selectionOptions.classList.remove('hidden');
+                }
+            }
+        });
+
+        // Manual capture from camera
+        captureButton.addEventListener('click', async () => {
+            if (!videoStream) {
+                showMessage("Camera not available. Please allow camera access.", true);
+                return;
+            }
+            await capturePhoto();
+        });
+
+        // "Start Over" button to reset the app
+        startOverButton.addEventListener('click', () => {
+            resultsContainer.classList.add('hidden');
+            startOverButtonContainer.classList.add('hidden');
+            initialOptions.classList.remove('hidden');
+            stylesGrid.innerHTML = '';
+            statusMessage.textContent = '';
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+            cameraSection.classList.add('hidden');
+            selectionOptions.classList.add('hidden');
+            capturedImageBase64 = null;
+        });
+
+        // --- Core Application Functions ---
+
+        // Initializes camera access
+        async function setupCamera() {
+            try {
+                if (videoStream) {
+                    videoStream.getTracks().forEach(track => track.stop());
+                }
+                showMessage("Grant camera access to begin.");
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoStream = stream;
+                video.srcObject = stream;
+            } catch (err) {
+                showMessage('Error: Camera access was denied. Please allow camera access to use this app.', true);
+                console.error("Camera access error: ", err);
+                initialOptions.classList.remove('hidden');
+                cameraSection.classList.add('hidden');
+            }
+        }
+        
+        // Automated photo capture and generation
+        async function autoCaptureAndGenerate() {
+            if (!videoStream) {
+                showMessage("Camera not available. Please allow camera access.", true);
+                return;
+            }
+            
+            // Perform the capture
+            const imageDataURL = capturePhotoToDataURL();
+            
+            // Stop video stream and hide camera section
+            videoStream.getTracks().forEach(track => track.stop());
+            cameraSection.classList.add('hidden');
+
+            const base64Data = imageDataURL.split(',')[1];
+            await generateAllStyles(base64Data, 'monthly');
+        }
+
+        // Manual photo capture and generation
+        async function capturePhoto() {
+            const imageDataURL = capturePhotoToDataURL();
+            
+            // Stop video stream and hide camera section
+            videoStream.getTracks().forEach(track => track.stop());
+            cameraSection.classList.add('hidden');
+
+            const base64Data = imageDataURL.split(',')[1];
+            await generateAllStyles(base64Data, 'standard');
+        }
+
+        // Helper function to capture the photo to data URL
+        function capturePhotoToDataURL() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/png');
+        }
+
+        async function generateAllStyles(base64Image, generationType) {
+            loadingSpinner.classList.remove('hidden');
+            stylesGrid.innerHTML = '';
+            resultsContainer.classList.add('hidden');
+            startOverButtonContainer.classList.add('hidden');
+            showMessage("Processing looks...");
+
+            try {
+                // Get the JSON list of styles based on user selection
+                const gender = genderSelect.value;
+                const hairLength = hairLengthSelect.value;
+                const styles = await getStyleList(gender, hairLength);
+                
+                if (!styles || styles.length === 0) {
+                    showMessage("Could not get a list of styles. Please try again.", true);
+                    return;
+                }
+                
+                // 2. Generate an image for each style, handling failures gracefully
+                const imagePromises = styles.map(async style => {
+                    try {
+                        return await generateImageForStyle(base64Image, style.style_name);
+                    } catch (error) {
+                        console.error(`Failed to generate image for style "${style.style_name}":`, error);
+                        return null; // Return null on failure
+                    }
+                });
+
+                const generatedImages = await Promise.all(imagePromises);
+                
+                // 3. Display the results
+                styles.forEach((style, index) => {
+                    const base64ImageData = generatedImages[index];
+                    const styleDiv = document.createElement('div');
+                    styleDiv.className = 'bg-gray-50 rounded-xl overflow-hidden shadow-md transition-transform transform hover:scale-105 hover:shadow-lg border border-gray-200';
+                    
+                    let imageContent;
+                    if (base64ImageData) {
+                        imageContent = `<img src="data:image/png;base64,${base64ImageData}" alt="${style.style_name}" class="w-full h-auto object-cover">`;
+                    } else {
+                        imageContent = `<div class="w-full aspect-square flex flex-col items-center justify-center bg-gray-200 text-gray-500 text-sm p-4 text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mb-2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            <p>Failed to generate look</p>
+                        </div>`;
+                    }
+
+                    styleDiv.innerHTML = `
+                        ${imageContent}
+                        <div class="p-4">
+                            <h3 class="font-bold text-xl mb-1">${style.style_name}</h3>
+                            <div class="flex flex-wrap gap-2 text-sm text-gray-600 mb-2">
+                                <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full font-semibold">${style.tag}</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-4">Services: <span class="font-medium text-gray-700">${style.services_needed}</span></p>
+                            <button class="ask-stylist-btn w-full bg-blue-500 text-white py-2 px-4 rounded-full font-semibold transition-colors hover:bg-blue-600" data-style-name="${style.style_name}">Ask an AI Stylist ✨</button>
+                        </div>
+                    `;
+                    stylesGrid.appendChild(styleDiv);
+                });
+
+                resultsContainer.classList.remove('hidden');
+                startOverButtonContainer.classList.remove('hidden');
+                showMessage("Generation complete!");
+
+                // Add event listeners for the new buttons
+                document.querySelectorAll('.ask-stylist-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const styleName = e.target.dataset.styleName;
+                        openChatModal(styleName);
+                    });
+                });
+
+            } catch (error) {
+                showMessage("An error occurred during generation. Please try again.", true);
+                console.error('Generation Error:', error);
+            } finally {
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        // --- AI Chat Functionality ---
+        function openChatModal(styleName) {
+            chatTitle.textContent = `Stylist Advice for: ${styleName}`;
+            chatModal.style.display = 'flex';
+            chatHistory.innerHTML = ''; // Clear previous chat
+            chatHistoryData = [{
+                role: 'model',
+                parts: [{ text: `Hello! I'm your AI stylist. I can give you advice on the "${styleName}" look. What would you like to know?` }]
+            }];
+            renderChatHistory();
+        }
+
+        chatCloseButton.addEventListener('click', () => {
+            chatModal.style.display = 'none';
+        });
+
+        chatSendButton.addEventListener('click', handleChatSend);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleChatSend();
+            }
+        });
+
+        async function handleChatSend() {
+            const userMessage = chatInput.value.trim();
+            if (!userMessage) return;
+
+            // Add user message to history
+            chatHistoryData.push({ role: 'user', parts: [{ text: userMessage }] });
+            renderChatHistory();
+
+            chatInput.value = '';
+            chatInput.disabled = true;
+            chatSendButton.disabled = true;
+            const loadingMessage = addChatMessage('model', '...', false);
+
+            try {
+                const response = await getChatResponse(userMessage);
+                loadingMessage.remove();
+                addChatMessage('model', response, true);
+            } catch (error) {
+                loadingMessage.remove();
+                addChatMessage('model', 'Sorry, I am unable to provide advice at this moment. Please try again.', true);
+                console.error('Chat API Error:', error);
+            } finally {
+                chatInput.disabled = false;
+                chatSendButton.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        function addChatMessage(role, text, isFinal = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role === 'user' ? 'user-message' : 'ai-message'}`;
+            messageDiv.innerHTML = isFinal ? text : `<div class="animate-pulse">...</div>`;
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            return messageDiv;
+        }
+
+        function renderChatHistory() {
+            chatHistory.innerHTML = '';
+            chatHistoryData.forEach(message => {
+                if (message.role === 'user') {
+                    addChatMessage('user', message.parts[0].text, true);
+                } else if (message.role === 'model') {
+                    addChatMessage('model', message.parts[0].text, true);
+                }
+            });
+        }
+
+        async function getChatResponse(prompt) {
+            const payload = {
+                contents: chatHistoryData,
+                systemInstruction: {
+                    parts: [{ text: "You are a professional AI salon stylist. Provide helpful, concise, and friendly advice on the selected hairstyle. Your responses should be based on general knowledge about hair care, styling, and fashion. Do not offer medical advice." }]
+                }
+            };
+            
+            const response = await fetchWithExponentialBackoff(API_ENDPOINT_TEXT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            return result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        }
+
+        // Fetches a list of styles based on gender and hair length
+        async function getStyleList(gender, hairLength) {
+            let prompt = "";
+            const numStyles = 10; // Changed from 15 to 10
+            const exclusions = [
+                "Curtain Bangs Revival (Mid-Length)", 
+                "Buzz Cut (Zero Guard)",
+                "Mid-Length Cut" // Excluding this name specifically based on user feedback
+            ].join(", ");
+
+            if (gender === 'male') {
+                prompt = `Generate a JSON array of ${numStyles} diverse and popular male hairstyle and grooming looks for an Indian customer. The styles should be a mix of short, neat cuts with sharp fades and textured tops, as well as longer, wavy, and layered looks. Exclude the following styles: ${exclusions}. Ensure a variety of tags: "Professional", "Party", "Trendy", and "Casual". Each look should be distinct and popular in contemporary Indian salons. For each style, include: 1. "style_name": a descriptive name, 2. "tag": a single tag from "Professional", "Party", "Trendy", or "Casual", 3. "services_needed": a comma-separated list of services. Ensure the output is a single, valid JSON array.`;
+            } else if (gender === 'female') {
+                prompt = `Generate a JSON array of ${numStyles} popular Indian female hairstyles. Focus on looks that are ${hairLength} or a mix of ${hairLength} and medium length, inspired by loose waves, braids, and half-up looks suitable for formal or casual wear. Exclude the following styles: ${exclusions}. Ensure a variety of tags: "Professional", "Party", "Trendy", and "Casual". For each style, include: 1. "style_name": a descriptive name, 2. "tag": a single tag from "Professional", "Party", "Trendy", or "Casual", 3. "services_needed": a comma-separated list of services. Ensure the output is a single, valid JSON array.`;
+            }
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "style_name": { "type": "STRING" },
+                                "tag": { "type": "STRING", "enum": ["Professional", "Party", "Trendy", "Casual"] },
+                                "services_needed": { "type": "STRING" }
+                            },
+                            "propertyOrdering": ["style_name", "tag", "services_needed"]
+                        }
+                    }
+                }
+            };
+            return await fetchJsonData(payload);
+        }
+
+        async function fetchJsonData(payload) {
+            let response = await fetchWithExponentialBackoff(API_ENDPOINT_TEXT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+            return jsonText ? JSON.parse(jsonText) : null;
+        }
+
+        // Generate a single image with a specific style
+        async function generateImageForStyle(base64Image, styleName) {
+            const prompt = `Apply the "${styleName}" style to the person's hair and adjust their grooming in this photo. The style should be realistic and fit the person's features.`;
+            
+            const payload = {
+                contents: [{ 
+                    parts: [
+                        { text: prompt },
+                        { inlineData: { mimeType: "image/png", data: base64Image } }
+                    ]
+                }],
+                generationConfig: {
+                    responseModalities: ["TEXT", "IMAGE"]
+                }
+            };
+            
+            let response = await fetchWithExponentialBackoff(API_ENDPOINT_IMAGE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            return result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+        }
+
+        // Utility for exponential backoff
+        async function fetchWithExponentialBackoff(url, options, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status === 429) { // Too Many Requests
+                        if (i < retries - 1) {
+                            console.warn(`Rate limit exceeded. Retrying in ${delay / 1000}s...`);
+                            await new Promise(res => setTimeout(res, delay));
+                            delay *= 2;
+                            continue;
+                        }
+                    }
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        throw new Error(`API error: ${response.status} - ${response.statusText} - ${errorData}`);
+                    }
+                    return response;
+                } catch (error) {
+                    if (i < retries - 1) {
+                        console.warn(`Fetch failed. Retrying in ${delay / 1000}s...`, error);
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+        }
+        
+        // Start the app
+        window.onload = () => showMessage("Choose to take a photo or upload one.");
+    </script>
+</body>
+</html>
