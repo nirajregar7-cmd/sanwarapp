@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import LocationBasedSalonFilter from "@/components/LocationBasedSalonFilter";
 import { useLocation } from "@/contexts/LocationContext";
+import { VirtualTryOn } from "@/components/VirtualTryOn";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -719,6 +720,13 @@ export default function Landing() {
               </div>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* Virtual Try-On Section */}
+      <section className="py-16 bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <VirtualTryOn />
         </div>
       </section>
 
