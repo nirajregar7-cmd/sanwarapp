@@ -10222,7 +10222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { salonId } = req.params;
 
-      // Get salon owner ID
+      // Get salon first to verify it exists
       const [salon] = await db.select().from(salons)
         .where(eq(salons.id, salonId))
         .limit(1);
@@ -10231,9 +10231,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Salon not found' });
       }
 
-      // Get account details
+      // Get account details using salonId
       const [account] = await db.select().from(salonOwnerAccounts)
-        .where(eq(salonOwnerAccounts.ownerId, salon.ownerId))
+        .where(eq(salonOwnerAccounts.salonId, salonId))
         .limit(1);
 
       if (!account) {

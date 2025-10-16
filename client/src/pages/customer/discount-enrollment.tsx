@@ -40,7 +40,7 @@ export default function DiscountEnrollment() {
   // Fetch salon account for UPI
   const { data: salonAccount } = useQuery({
     queryKey: [`/api/salons/${salonId}/account`],
-    enabled: step === 'payment',
+    enabled: step === 'confirmation' || step === 'payment',
   });
 
   const form = useForm<EnrollmentFormData>({
