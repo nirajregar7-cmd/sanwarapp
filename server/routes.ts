@@ -10250,6 +10250,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Virtual Try-On AI Routes
+  
+  // Get AI-generated hairstyle suggestions
+  app.post('/api/virtual-tryon/styles', async (req, res) => {
+    try {
+      const { gender, hairLength } = req.body;
+      
+      if (!gender || !['male', 'female'].includes(gender)) {
+        return res.status(400).json({ error: 'Invalid gender. Must be "male" or "female"' });
+      }
+
+      const numStyles = 10;
+      const exclusions = [
+        "Curtain Bangs Revival (Mid-Length)",
+        "Buzz Cut (Zero Guard)",
+        "Mid-Length Cut"
+      ].join(", ");
+
+      let prompt = "";
+      if (gender === 'male') {
+        prompt = `Generate a JSON array of ${numStyles} diverse and popular male hairstyle and grooming looks for an Indian customer. The styles should be a mix of short, neat cuts with sharp fades and textured tops, as well as longer, wavy, and layered looks. Exclude the following styles: ${exclusions}. Ensure a variety of tags: "Professional", "Party", "Trendy", and "Casual". Each look should be distinct and popular in contemporary Indian salons. For each style, include: 1. "style_name": a descriptive name, 2. "tag": a single tag from "Professional", "Party", "Trendy", or "Casual", 3. "services_needed": a comma-separated list of services. Ensure the output is a single, valid JSON array.`;
+      } else {
+        prompt = `Generate a JSON array of ${numStyles} popular Indian female hairstyles. Focus on looks that are ${hairLength || 'any length'} or a mix of ${hairLength || 'any length'} and medium length, inspired by loose waves, braids, and half-up looks suitable for formal or casual wear. Exclude the following styles: ${exclusions}. Ensure a variety of tags: "Professional", "Party", "Trendy", and "Casual". For each style, include: 1. "style_name": a descriptive name, 2. "tag": a single tag from "Professional", "Party", "Trendy", or "Casual", 3. "services_needed": a comma-separated list of services. Ensure the output is a single, valid JSON array.`;
+      }
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    "style_name": { "type": "STRING" },
+                    "tag": { "type": "STRING", "enum": ["Professional", "Party", "Trendy", "Casual"] },
+                    "services_needed": { "type": "STRING" }
+                  },
+                  "propertyOrdering": ["style_name", "tag", "services_needed"]
+                }
+              }
+            }
+          })
+        }
+      );
+
+      const result = await response.json();
+      const styles = JSON.parse(result?.candidates?.[0]?.content?.parts?.[0]?.text || '[]');
+      
+      res.json({ styles });
+    } catch (error) {
+      console.error('Error generating styles:', error);
+      res.status(500).json({ error: 'Failed to generate styles' });
+    }
+  });
+
+  // Generate styled image using Gemini
+  app.post('/api/virtual-tryon/generate', async (req, res) => {
+    try {
+      const { image, styleName } = req.body;
+      
+      if (!image || !styleName) {
+        return res.status(400).json({ error: 'Missing image or style name' });
+      }
+
+      // Remove data URL prefix if present
+      const base64Image = image.includes(',') ? image.split(',')[1] : image;
+
+      const prompt = `Apply the "${styleName}" style to the person's hair and adjust their grooming in this photo. The style should be realistic and fit the person's features.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-image-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: prompt },
+                { inlineData: { mimeType: "image/png", data: base64Image } }
+              ]
+            }],
+            generationConfig: {
+              responseModalities: ["TEXT", "IMAGE"]
+            }
+          })
+        }
+      );
+
+      const result = await response.json();
+      const generatedImage = result?.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data;
+
+      if (!generatedImage) {
+        return res.status(500).json({ error: 'Failed to generate image' });
+      }
+
+      res.json({ image: generatedImage });
+    } catch (error) {
+      console.error('Error generating image:', error);
+      res.status(500).json({ error: 'Failed to generate image' });
+    }
+  });
+
+  // AI Stylist chat
+  app.post('/api/virtual-tryon/chat', async (req, res) => {
+    try {
+      const { messages, styleName } = req.body;
+      
+      if (!messages || !Array.isArray(messages)) {
+        return res.status(400).json({ error: 'Invalid messages format' });
+      }
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: messages,
+            systemInstruction: {
+              parts: [{ 
+                text: `You are a professional AI salon stylist. Provide helpful, concise, and friendly advice on the selected hairstyle "${styleName}". Your responses should be based on general knowledge about hair care, styling, and fashion. Do not offer medical advice.` 
+              }]
+            }
+          })
+        }
+      );
+
+      const result = await response.json();
+      const reply = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      res.json({ reply });
+    } catch (error) {
+      console.error('Error in AI chat:', error);
+      res.status(500).json({ error: 'Failed to get chat response' });
+    }
+  });
+
   // Register smart scheduling routes
   const { registerSmartSchedulingRoutes } = await import('./smart-scheduling-routes');
   registerSmartSchedulingRoutes(app);
