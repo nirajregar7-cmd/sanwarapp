@@ -37,10 +37,9 @@ export default function DiscountEnrollment() {
     queryKey: [`/api/salons/${salonId}`],
   });
 
-  // Fetch salon account for UPI
+  // Fetch salon account for UPI (load from the start so "Skip & Pay Now" button works)
   const { data: salonAccount } = useQuery({
     queryKey: [`/api/salons/${salonId}/account`],
-    enabled: step === 'confirmation' || step === 'payment',
   });
 
   const form = useForm<EnrollmentFormData>({
@@ -284,24 +283,44 @@ export default function DiscountEnrollment() {
                     )}
                   />
 
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setStep('welcome')}
-                      className="flex-1"
-                      data-testid="button-back-to-discount"
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={enrollMutation.isPending}
-                      className="flex-1 bg-purple-600 hover:bg-purple-700"
-                      data-testid="button-submit-enrollment"
-                    >
-                      {enrollMutation.isPending ? "Processing..." : "Get My Discount Card"}
-                    </Button>
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setStep('welcome')}
+                        className="flex-1"
+                        data-testid="button-back-to-discount"
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={enrollMutation.isPending}
+                        className="flex-1 bg-purple-600 hover:bg-purple-700"
+                        data-testid="button-submit-enrollment"
+                      >
+                        {enrollMutation.isPending ? "Processing..." : "Get My Discount Card"}
+                      </Button>
+                    </div>
+                    
+                    {salonAccount?.upiId && (
+                      <a
+                        href={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&cu=INR`}
+                        className="block"
+                      >
+                        <Button
+                          type="button"
+                          size="lg"
+                          variant="outline"
+                          className="w-full border-purple-600 text-purple-600 hover:bg-purple-50"
+                          data-testid="button-skip-form-to-payment"
+                        >
+                          <CreditCard className="h-5 w-5 mr-2" />
+                          Skip Form & Pay Now
+                        </Button>
+                      </a>
+                    )}
                   </div>
                 </form>
               </Form>
