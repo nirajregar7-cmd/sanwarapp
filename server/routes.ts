@@ -10326,7 +10326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const prompt = `Apply the "${styleName}" style to the person's hair and adjust their grooming in this photo. The style should be realistic and fit the person's features.`;
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-image-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
