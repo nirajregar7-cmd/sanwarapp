@@ -1420,7 +1420,7 @@ export default function OwnerDashboard() {
                       </Button>
                     </Link>
 
-                    <Link href="/owner/discount-customers">
+                    <Link href="/shopkeeper/discount-customers">
                       <Button 
                         variant="outline" 
                         className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
