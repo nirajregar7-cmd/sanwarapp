@@ -316,15 +316,38 @@ export default function DiscountEnrollment() {
                 <p className="text-sm text-gray-600 mb-4">
                   To complete the process, please make a small payment to the salon owner:
                 </p>
-                <Button
-                  size="lg"
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                  onClick={() => setStep('payment')}
-                  data-testid="button-proceed-to-payment"
-                >
-                  <CreditCard className="h-5 w-5 mr-2" />
-                  Proceed to Payment
-                </Button>
+                {salonAccount?.upiId ? (
+                  <a
+                    href={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&cu=INR`}
+                    className="block"
+                  >
+                    <Button
+                      size="lg"
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      data-testid="button-proceed-to-payment"
+                    >
+                      <CreditCard className="h-5 w-5 mr-2" />
+                      Proceed to Payment
+                    </Button>
+                  </a>
+                ) : (
+                  <Button
+                    size="lg"
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    onClick={() => setStep('payment')}
+                    data-testid="button-proceed-to-payment"
+                  >
+                    <CreditCard className="h-5 w-5 mr-2" />
+                    Proceed to Payment
+                  </Button>
+                )}
+                <p className="text-xs text-gray-500 mt-3">
+                  {salonAccount?.upiId ? (
+                    <>UPI ID: <span className="font-semibold">{salonAccount.upiId}</span></>
+                  ) : (
+                    'Payment details not available'
+                  )}
+                </p>
               </div>
             </CardContent>
           </Card>
