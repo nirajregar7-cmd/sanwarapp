@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import QRCode from 'qrcode';
 
 // Create transporter using Gmail SMTP
 const createTransporter = () => {
@@ -277,6 +278,24 @@ export const sendDiscountCardEmail = async (
 
     const transporter = process.env.GMAIL_USER ? createTransporter() : createCustomTransporter();
 
+    // Generate QR code with discount card information
+    const qrData = JSON.stringify({
+      cardId,
+      salonName,
+      discountPercentage,
+      type: 'sanwar-discount-card'
+    });
+    
+    const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+      errorCorrectionLevel: 'H',
+      margin: 2,
+      width: 300,
+      color: {
+        dark: '#8B5CF6',
+        light: '#FFFFFF'
+      }
+    });
+
     const mailOptions = {
       from: `"Sanwar Team" <${process.env.GMAIL_USER || process.env.SMTP_USER}>`,
       to: customerEmail,
@@ -294,11 +313,19 @@ export const sendDiscountCardEmail = async (
               <p style="color: white; margin: 10px 0 0 0; font-size: 18px;">on your next visit to</p>
               <p style="color: white; margin: 5px 0 0 0; font-size: 24px; font-weight: bold;">${salonName}</p>
             </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="background-color: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <img src="${qrCodeDataUrl}" alt="Discount Card QR Code" style="width: 250px; height: 250px; display: block; margin: 0 auto;" />
+                <p style="color: #8B5CF6; font-size: 14px; margin: 10px 0 0 0; font-weight: bold;">Your Discount Card</p>
+                <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">Show this QR code at the salon</p>
+              </div>
+            </div>
             
             <div style="background-color: #f8f4ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #8B5CF6; margin-top: 0;">How to use your discount:</h3>
               <ol style="color: #555; line-height: 1.8;">
-                <li>Show this email or mention your discount card at ${salonName}</li>
+                <li>Show this QR code or mention your card ID at ${salonName}</li>
                 <li>Enjoy ${discountPercentage}% off on your next visit</li>
                 <li>Valid for one-time use only</li>
               </ol>
@@ -320,6 +347,9 @@ export const sendDiscountCardEmail = async (
               <p style="color: #888; font-size: 14px;">
                 Best regards,<br>
                 The Sanwar Team
+              </p>
+              <p style="color: #999; font-size: 12px; margin-top: 10px;">
+                Powered by <strong style="color: #8B5CF6;">Sanwar</strong> - Smart Salon Booking Platform
               </p>
             </div>
           </div>
