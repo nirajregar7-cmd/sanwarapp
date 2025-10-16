@@ -108,13 +108,11 @@ export function VirtualTryOn() {
     setIsGenerating(true);
     try {
       // First, get the style list
-      const { styles: styleList } = await apiRequest<{ styles: HairstyleOption[] }>('/api/virtual-tryon/styles', {
-        method: 'POST',
-        body: JSON.stringify({ gender, hairLength })
-      });
+      const response = await apiRequest('POST', '/api/virtual-tryon/styles', { gender, hairLength });
+      const { styles: styleList } = await response.json();
 
       // Initialize styles with loading state
-      const initialStyles: GeneratedStyle[] = styleList.map(style => ({
+      const initialStyles: GeneratedStyle[] = styleList.map((style: HairstyleOption) => ({
         ...style,
         loading: true,
         error: false
@@ -124,13 +122,11 @@ export function VirtualTryOn() {
       // Generate images for each style
       for (let i = 0; i < styleList.length; i++) {
         try {
-          const { image } = await apiRequest<{ image: string }>('/api/virtual-tryon/generate', {
-            method: 'POST',
-            body: JSON.stringify({
-              image: imageData,
-              styleName: styleList[i].style_name
-            })
+          const imageResponse = await apiRequest('POST', '/api/virtual-tryon/generate', {
+            image: imageData,
+            styleName: styleList[i].style_name
           });
+          const { image } = await imageResponse.json();
 
           setStyles(prev => prev.map((s, idx) => 
             idx === i ? { ...s, image, loading: false } : s
@@ -177,13 +173,11 @@ export function VirtualTryOn() {
     setIsChatLoading(true);
 
     try {
-      const { reply } = await apiRequest<{ reply: string }>('/api/virtual-tryon/chat', {
-        method: 'POST',
-        body: JSON.stringify({
-          messages: updatedMessages,
-          styleName: selectedStyle.style_name
-        })
+      const response = await apiRequest('POST', '/api/virtual-tryon/chat', {
+        messages: updatedMessages,
+        styleName: selectedStyle.style_name
       });
+      const { reply } = await response.json();
 
       setChatMessages([...updatedMessages, {
         role: 'model',
