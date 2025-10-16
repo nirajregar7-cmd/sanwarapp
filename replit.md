@@ -22,6 +22,7 @@ SEO Enhancement: Added comprehensive JSON-LD structured data schema for Sanwar, 
 Statistics wording: User wants flexible language instead of exact numbers. Final chosen format: "Many Happy Customers", "Multiple Partner Salons & Parlours", "Many Bookings Already", "Wide Range of Services".
 USA & India SEO Expansion: Implemented comprehensive SEO pages for both USA (25 major cities) and India (with popular salon brands). Added dedicated brand pages for Lakme Salon, VLCC, Naturals, Juice Salon, Jawed Habib, Toni & Guy, Looks Salon, Green Trends, Headturners, and Bounce Salon for improved local search visibility.
 Enhanced Image Gallery Navigation: Implemented seamless navigation for both customer salon detail pages and owner media gallery. Users can now click one image and browse through the entire gallery using navigation arrows, keyboard controls (arrow keys, Escape), with image counter display and wraparound navigation for better UX.
+AI Virtual Try-On Feature: Implemented AI-powered virtual hairstyle try-on using Google Gemini AI on the homepage. Customers can take photos, upload images, or use the "Best Look This Month" feature to see 10 personalized hairstyle options with realistic previews. Includes an AI stylist chat feature for personalized advice on each hairstyle.
 
 ## System Architecture
 
@@ -83,6 +84,7 @@ The platform supports mobile access via a Progressive Web App and is wrapped for
 - **Twilio**: SMS OTP for password reset.
 - **Nodemailer with Gmail**: Automated welcome email system.
 - **Cashfree**: Payment gateway.
+- **Google Gemini AI**: AI-powered virtual hairstyle try-on and stylist chat.
 
 ### Mobile App Development
 - **Capacitor**: Native mobile app wrapper.
