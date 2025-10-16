@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, CreditCard, Building2, DollarSign, TrendingUp } from "lucide-react";
+import { ArrowLeft, CreditCard, Building2, DollarSign, TrendingUp, QrCode, Download, Gift } from "lucide-react";
 import { Link } from "wouter";
+import { QRCodeSVG } from "qrcode.react";
 import type { SalonOwnerAccount } from "@shared/schema";
 
 const accountSchema = z.object({
@@ -29,6 +30,7 @@ type AccountFormData = z.infer<typeof accountSchema>;
 export default function AccountDetails() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [qrDownloaded, setQrDownloaded] = useState(false);
 
   // Fetch account details
   const { data: account, isLoading: accountLoading } = useQuery({
@@ -39,6 +41,12 @@ export default function AccountDetails() {
   // Fetch revenue data
   const { data: revenue, isLoading: revenueLoading } = useQuery({
     queryKey: ['/api/owner/revenue'],
+    retry: false,
+  });
+
+  // Fetch salon data for QR code
+  const { data: salon } = useQuery({
+    queryKey: ['/api/owner/salon'],
     retry: false,
   });
 
@@ -108,6 +116,40 @@ export default function AccountDetails() {
   const onSubmit = (data: AccountFormData) => {
     saveAccountMutation.mutate(data);
   };
+
+  // Download QR code function
+  const downloadQRCode = () => {
+    const svg = document.getElementById("sanwar-qr-code");
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL("image/png");
+
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `sanwar-discount-qr-${salon?.name?.replace(/\s+/g, '-')}.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+      
+      setQrDownloaded(true);
+      toast({
+        title: "QR Code Downloaded!",
+        description: "Share this QR code with your customers to offer discounts",
+      });
+    };
+
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+  };
+
+  // Generate QR code URL
+  const qrCodeUrl = salon?.id ? `${window.location.origin}/discount-enrollment/${salon.id}` : "";
 
   if (accountLoading || revenueLoading) {
     return (
@@ -325,6 +367,84 @@ export default function AccountDetails() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sanwar Discount QR Code - Only show if UPI ID is saved */}
+      {account?.upiId && salon?.id && (
+        <div className="mt-6">
+          <Card className="bg-gradient-to-br from-purple-50 to-pink-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="h-5 w-5 text-purple-600" />
+                Sanwar Discount QR Code
+                <Badge className="bg-purple-600">New Feature!</Badge>
+              </CardTitle>
+              <CardDescription>
+                Show this QR code to customers after service. They can scan to get 10% or 20% discount on their next visit and pay you directly via UPI!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="bg-white p-4 rounded-lg shadow-lg">
+                  <QRCodeSVG
+                    id="sanwar-qr-code"
+                    value={qrCodeUrl}
+                    size={200}
+                    level="H"
+                    includeMargin={true}
+                  />
+                  <div className="text-center mt-2 text-sm font-medium text-gray-700">
+                    Scan for Discount
+                  </div>
+                </div>
+                
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">How it works:</h3>
+                    <ol className="space-y-2 text-sm text-gray-600">
+                      <li className="flex items-start gap-2">
+                        <span className="font-bold text-purple-600">1.</span>
+                        <span>Customer scans QR code after enjoying your service</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="font-bold text-purple-600">2.</span>
+                        <span>They choose 10% or 20% discount for next visit</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="font-bold text-purple-600">3.</span>
+                        <span>Customer provides email and phone number</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="font-bold text-purple-600">4.</span>
+                        <span>We send them their Sanwar discount card via email</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="font-bold text-purple-600">5.</span>
+                        <span>Customer pays you directly via your UPI: <strong>{account.upiId}</strong></span>
+                      </li>
+                    </ol>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button onClick={downloadQRCode} variant="default" className="bg-purple-600 hover:bg-purple-700">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download QR Code
+                    </Button>
+                    {qrDownloaded && (
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        ✓ Downloaded
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="bg-purple-100 p-3 rounded-md text-sm">
+                    <strong>💡 Tip:</strong> Print this QR code and display it at your counter or send it digitally to customers after service!
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Info Cards */}
       <div className="grid gap-4 md:grid-cols-2 mt-6">
