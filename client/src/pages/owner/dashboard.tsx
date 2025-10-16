@@ -15,7 +15,7 @@ import {
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
   CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play, 
-  HelpCircle, Edit2, Palette, Tags, Mail, LogOut, Shield
+  HelpCircle, Edit2, Palette, Tags, Mail, LogOut, Shield, Gift
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -1416,6 +1416,19 @@ export default function OwnerDashboard() {
                         <div className="text-center w-full px-2">
                           <p className="font-medium text-sm sm:text-base mb-1">Account Details</p>
                           <p className="text-xs text-gray-600 leading-tight break-words">Setup bank account for payment transfers</p>
+                        </div>
+                      </Button>
+                    </Link>
+
+                    <Link href="/owner/discount-customers">
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
+                      >
+                        <Gift className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mb-2 flex-shrink-0" />
+                        <div className="text-center w-full px-2">
+                          <p className="font-medium text-sm sm:text-base mb-1">Discount Customers</p>
+                          <p className="text-xs text-gray-600 leading-tight break-words">View customers with Sanwar discount cards</p>
                         </div>
                       </Button>
                     </Link>

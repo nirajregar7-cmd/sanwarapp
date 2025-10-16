@@ -16,6 +16,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Gift, CheckCircle, Sparkles, CreditCard } from "lucide-react";
 
 const enrollmentSchema = z.object({
+  customerName: z.string().min(2, "Name must be at least 2 characters"),
   customerEmail: z.string().email("Invalid email address"),
   customerPhone: z.string().min(10, "Phone number must be at least 10 digits"),
   serviceEnjoyed: z.string().min(3, "Please tell us which service you enjoyed"),
@@ -45,6 +46,7 @@ export default function DiscountEnrollment() {
   const form = useForm<EnrollmentFormData>({
     resolver: zodResolver(enrollmentSchema),
     defaultValues: {
+      customerName: "",
       customerEmail: "",
       customerPhone: "",
       serviceEnjoyed: "",
@@ -107,6 +109,12 @@ export default function DiscountEnrollment() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
+        {/* Powered by Sanwar Header */}
+        <div className="text-center mb-6">
+          <p className="text-sm text-gray-600">
+            Powered by <span className="font-bold text-purple-600">Sanwar</span>
+          </p>
+        </div>
         {/* Welcome Step - Choose Discount */}
         {step === 'welcome' && (
           <Card className="border-2 border-purple-200">
@@ -183,6 +191,24 @@ export default function DiscountEnrollment() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="customerName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Your Name</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter your name" 
+                            {...field}
+                            data-testid="input-customer-name"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="customerEmail"
@@ -361,6 +387,13 @@ export default function DiscountEnrollment() {
             </CardContent>
           </Card>
         )}
+        
+        {/* Powered by Sanwar Footer */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-gray-500">
+            Powered by <span className="font-bold text-purple-600">Sanwar</span> - Smart Salon Booking Platform
+          </p>
+        </div>
       </div>
     </div>
   );

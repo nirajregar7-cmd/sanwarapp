@@ -1712,6 +1712,7 @@ export type InsertFaq = z.infer<typeof insertFaqSchema>;
 export const sanwarDiscountCards = pgTable("sanwar_discount_cards", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  customerName: varchar("customer_name", { length: 255 }),
   customerEmail: varchar("customer_email").notNull(),
   customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
   serviceEnjoyed: text("service_enjoyed"), // Which service customer enjoyed

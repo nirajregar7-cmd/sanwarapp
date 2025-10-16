@@ -40,6 +40,7 @@ import StaffSchedulePage from "@/pages/owner/staff-schedule";
 import StaffManagement from "@/pages/owner/staff-management";
 import StaffSlotGenerator from "@/pages/owner/staff-slot-generator";
 import AccountDetails from "@/pages/owner/account-details";
+import DiscountCustomers from "@/pages/owner/discount-customers";
 import ReferEarn from "@/pages/owner/refer-earn";
 import WalkInBookings from "@/pages/salon-owner/walk-in-bookings";
 import ProductsFacilities from "@/pages/salon-owner/products-facilities";
@@ -364,6 +365,11 @@ function Router() {
               <Route path="/shopkeeper/account-details">
                 <Layout>
                   <AccountDetails />
+                </Layout>
+              </Route>
+              <Route path="/shopkeeper/discount-customers">
+                <Layout>
+                  <DiscountCustomers />
                 </Layout>
               </Route>
               <Route path="/shopkeeper/confirmation-settings">

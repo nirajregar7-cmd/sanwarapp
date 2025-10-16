@@ -10133,7 +10133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sanwar Discount Card Enrollment
   app.post('/api/discount-cards/enroll', async (req, res) => {
     try {
-      const { salonId, customerEmail, customerPhone, serviceEnjoyed, discountPercentage } = req.body;
+      const { salonId, customerName, customerEmail, customerPhone, serviceEnjoyed, discountPercentage } = req.body;
 
       // Validate input
       if (!salonId || !customerEmail || !customerPhone || !discountPercentage) {
@@ -10156,6 +10156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create discount card
       const [discountCard] = await db.insert(sanwarDiscountCards).values({
         salonId,
+        customerName: customerName || null,
         customerEmail,
         customerPhone,
         serviceEnjoyed: serviceEnjoyed || null,
@@ -10182,6 +10183,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating discount card:', error);
       res.status(500).json({ error: 'Failed to create discount card' });
+    }
+  });
+
+  // Get discount card customers for salon owner
+  app.get('/api/owner/discount-customers', async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const userId = (req.user as any).id;
+
+      // Get salon for this owner
+      const [salon] = await db.select().from(salons)
+        .where(eq(salons.ownerId, userId))
+        .limit(1);
+
+      if (!salon) {
+        return res.status(404).json({ error: 'Salon not found' });
+      }
+
+      // Get all discount card customers for this salon
+      const discountCustomers = await db.select()
+        .from(sanwarDiscountCards)
+        .where(eq(sanwarDiscountCards.salonId, salon.id))
+        .orderBy(desc(sanwarDiscountCards.createdAt));
+
+      res.json(discountCustomers);
+    } catch (error) {
+      console.error('Error fetching discount customers:', error);
+      res.status(500).json({ error: 'Failed to fetch discount customers' });
     }
   });
 
