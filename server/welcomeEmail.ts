@@ -261,6 +261,81 @@ export const sendWelcomeEmail = async (
   }
 };
 
+// Send discount card confirmation email
+export const sendDiscountCardEmail = async (
+  customerEmail: string,
+  salonName: string,
+  discountPercentage: number,
+  cardId: string
+): Promise<boolean> => {
+  try {
+    // Check if email credentials are configured
+    if (!process.env.GMAIL_USER && !process.env.SMTP_USER) {
+      console.log('Email service not configured - skipping discount card email');
+      return false;
+    }
+
+    const transporter = process.env.GMAIL_USER ? createTransporter() : createCustomTransporter();
+
+    const mailOptions = {
+      from: `"Sanwar Team" <${process.env.GMAIL_USER || process.env.SMTP_USER}>`,
+      to: customerEmail,
+      subject: `Your Sanwar ${discountPercentage}% Discount Card is Ready!`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #8B5CF6; margin: 0;">🎉 Congratulations!</h1>
+              <p style="color: #666; font-size: 18px;">Your Sanwar Discount Card is Ready</p>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); padding: 30px; border-radius: 10px; text-align: center; margin: 20px 0;">
+              <h2 style="color: white; margin: 0; font-size: 48px;">${discountPercentage}% OFF</h2>
+              <p style="color: white; margin: 10px 0 0 0; font-size: 18px;">on your next visit to</p>
+              <p style="color: white; margin: 5px 0 0 0; font-size: 24px; font-weight: bold;">${salonName}</p>
+            </div>
+            
+            <div style="background-color: #f8f4ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #8B5CF6; margin-top: 0;">How to use your discount:</h3>
+              <ol style="color: #555; line-height: 1.8;">
+                <li>Show this email or mention your discount card at ${salonName}</li>
+                <li>Enjoy ${discountPercentage}% off on your next visit</li>
+                <li>Valid for one-time use only</li>
+              </ol>
+            </div>
+            
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 20px 0;">
+              <p style="color: #856404; margin: 0; font-size: 14px;">
+                <strong>Card ID:</strong> ${cardId}<br>
+                <strong>Salon:</strong> ${salonName}<br>
+                <strong>Discount:</strong> ${discountPercentage}% OFF
+              </p>
+            </div>
+            
+            <p style="color: #555; line-height: 1.6; margin-top: 20px;">
+              Thank you for choosing ${salonName}! We hope to see you again soon.
+            </p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+              <p style="color: #888; font-size: 14px;">
+                Best regards,<br>
+                The Sanwar Team
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Discount card email sent successfully to ${customerEmail}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending discount card email:', error);
+    return false;
+  }
+};
+
 // Test email configuration
 export const testEmailConnection = async (): Promise<boolean> => {
   try {

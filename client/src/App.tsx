@@ -29,6 +29,7 @@ import CustomerBookings from "@/pages/customer/bookings";
 import CustomerProfile from "@/pages/customer/customer-profile";
 import ReferEarnPage from "@/pages/customer/refer-earn";
 import SalonSearchPage from "@/pages/customer/salon-search";
+import DiscountEnrollment from "@/pages/customer/discount-enrollment";
 import FeedbackHelp from "@/pages/feedback-help";
 import CountryOnboarding from "@/pages/CountryOnboarding";
 import CountrySettings from "@/pages/CountrySettings";
@@ -122,6 +123,9 @@ function Router() {
       
       {/* Payment callback page */}
       <Route path="/payment-callback" component={PaymentCallback} />
+      
+      {/* Discount enrollment - accessible to all users */}
+      <Route path="/discount-enrollment/:salonId" component={DiscountEnrollment} />
       
       {/* Landing page - accessible to all users */}
       <Route path="/landing" component={Landing} />

@@ -18,9 +18,9 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs, sanwarDiscountCards } from "@shared/schema";
 import { sendBookingConfirmationNotification, sendSalonOwnerBookingNotification } from "./notifications";
-import { sendWelcomeEmail, testEmailConnection } from "./welcomeEmail";
+import { sendWelcomeEmail, testEmailConnection, sendDiscountCardEmail } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
 // All payment processing now handled by Cashfree
@@ -10127,6 +10127,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error verifying salon owner OTP:", error);
       res.status(500).json({ error: "Failed to verify OTP" });
+    }
+  });
+
+  // Sanwar Discount Card Enrollment
+  app.post('/api/discount-cards/enroll', async (req, res) => {
+    try {
+      const { salonId, customerEmail, customerPhone, serviceEnjoyed, discountPercentage } = req.body;
+
+      // Validate input
+      if (!salonId || !customerEmail || !customerPhone || !discountPercentage) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      if (![10, 20].includes(discountPercentage)) {
+        return res.status(400).json({ error: 'Invalid discount percentage. Must be 10 or 20' });
+      }
+
+      // Check if salon exists
+      const [salon] = await db.select().from(salons)
+        .where(eq(salons.id, salonId))
+        .limit(1);
+
+      if (!salon) {
+        return res.status(404).json({ error: 'Salon not found' });
+      }
+
+      // Create discount card
+      const [discountCard] = await db.insert(sanwarDiscountCards).values({
+        salonId,
+        customerEmail,
+        customerPhone,
+        serviceEnjoyed: serviceEnjoyed || null,
+        discountPercentage,
+        status: 'active',
+      }).returning();
+
+      // Send confirmation email
+      sendDiscountCardEmail(customerEmail, salon.name, discountPercentage, discountCard.id)
+        .then(success => {
+          if (success) {
+            console.log(`Discount card email sent to ${customerEmail}`);
+          }
+        })
+        .catch(err => {
+          console.log(`Discount card email failed for ${customerEmail}:`, err);
+        });
+
+      res.json({
+        message: 'Discount card created successfully',
+        id: discountCard.id,
+        discountPercentage: discountCard.discountPercentage,
+      });
+    } catch (error) {
+      console.error('Error creating discount card:', error);
+      res.status(500).json({ error: 'Failed to create discount card' });
+    }
+  });
+
+  // Get salon account details for UPI payment (public endpoint)
+  app.get('/api/salons/:salonId/account', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+
+      // Get salon owner ID
+      const [salon] = await db.select().from(salons)
+        .where(eq(salons.id, salonId))
+        .limit(1);
+
+      if (!salon) {
+        return res.status(404).json({ error: 'Salon not found' });
+      }
+
+      // Get account details
+      const [account] = await db.select().from(salonOwnerAccounts)
+        .where(eq(salonOwnerAccounts.ownerId, salon.ownerId))
+        .limit(1);
+
+      if (!account) {
+        return res.json({ upiId: null });
+      }
+
+      // Only return UPI ID for payment (don't expose sensitive bank details)
+      res.json({
+        upiId: account.upiId || null,
+      });
+    } catch (error) {
+      console.error('Error fetching salon account:', error);
+      res.status(500).json({ error: 'Failed to fetch salon account' });
     }
   });
 
