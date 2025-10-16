@@ -159,17 +159,36 @@ export default function DiscountEnrollment() {
               </div>
 
               {selectedDiscount && (
-                <Button
-                  size="lg"
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                  onClick={() => {
-                    form.setValue('discountPercentage', selectedDiscount);
-                    setStep('details');
-                  }}
-                  data-testid="button-continue-to-details"
-                >
-                  Continue with {selectedDiscount}% Discount
-                </Button>
+                <div className="space-y-3">
+                  <Button
+                    size="lg"
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    onClick={() => {
+                      form.setValue('discountPercentage', selectedDiscount);
+                      setStep('details');
+                    }}
+                    data-testid="button-continue-to-details"
+                  >
+                    Continue with {selectedDiscount}% Discount
+                  </Button>
+                  
+                  {salonAccount?.upiId && (
+                    <a
+                      href={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&cu=INR`}
+                      className="block"
+                    >
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full border-purple-600 text-purple-600 hover:bg-purple-50"
+                        data-testid="button-skip-to-payment"
+                      >
+                        <CreditCard className="h-5 w-5 mr-2" />
+                        Skip & Pay Now
+                      </Button>
+                    </a>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
