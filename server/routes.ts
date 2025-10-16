@@ -10344,11 +10344,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       );
 
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Gemini API error:', response.status, errorData);
+        return res.status(500).json({ error: `Gemini API failed: ${response.status}` });
+      }
+
       const result = await response.json();
+      console.log('Gemini API response:', JSON.stringify(result).substring(0, 200));
+      
       const generatedImage = result?.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data;
 
       if (!generatedImage) {
-        return res.status(500).json({ error: 'Failed to generate image' });
+        console.error('No image in response:', JSON.stringify(result));
+        return res.status(500).json({ error: 'Failed to generate image - no image in response' });
       }
 
       res.json({ image: generatedImage });
