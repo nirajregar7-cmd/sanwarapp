@@ -1707,3 +1707,28 @@ export const insertFaqSchema = createInsertSchema(faqs).omit({
 
 export type Faq = typeof faqs.$inferSelect;
 export type InsertFaq = z.infer<typeof insertFaqSchema>;
+
+// Sanwar Discount Cards - Customer loyalty system
+export const sanwarDiscountCards = pgTable("sanwar_discount_cards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  customerEmail: varchar("customer_email").notNull(),
+  customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
+  serviceEnjoyed: text("service_enjoyed"), // Which service customer enjoyed
+  discountPercentage: integer("discount_percentage").notNull(), // 10 or 20
+  status: varchar("status", { enum: ["active", "used", "expired"] }).default("active"),
+  usedAt: timestamp("used_at"),
+  expiresAt: timestamp("expires_at"), // Optional expiry date
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Sanwar Discount Cards schema and types
+export const insertSanwarDiscountCardSchema = createInsertSchema(sanwarDiscountCards).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type SanwarDiscountCard = typeof sanwarDiscountCards.$inferSelect;
+export type InsertSanwarDiscountCard = z.infer<typeof insertSanwarDiscountCardSchema>;
