@@ -173,7 +173,7 @@ export default function DiscountEnrollment() {
                   
                   {salonAccount?.upiId && (
                     <a
-                      href={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&cu=INR`}
+                      href={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&am=${selectedDiscount === 20 ? '100' : '50'}&cu=INR&tn=${encodeURIComponent(`Sanwar ${selectedDiscount}% Discount Card`)}`}
                       className="block"
                     >
                       <Button
@@ -183,7 +183,7 @@ export default function DiscountEnrollment() {
                         data-testid="button-skip-to-payment"
                       >
                         <CreditCard className="h-5 w-5 mr-2" />
-                        Skip & Pay Now
+                        Skip & Pay ₹{selectedDiscount === 20 ? '100' : '50'}
                       </Button>
                     </a>
                   )}
@@ -306,7 +306,7 @@ export default function DiscountEnrollment() {
                     
                     {salonAccount?.upiId && (
                       <a
-                        href={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&cu=INR`}
+                        href={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&am=${selectedDiscount === 20 ? '100' : '50'}&cu=INR&tn=${encodeURIComponent(`Sanwar ${selectedDiscount}% Discount Card`)}`}
                         className="block"
                       >
                         <Button
@@ -317,7 +317,7 @@ export default function DiscountEnrollment() {
                           data-testid="button-skip-form-to-payment"
                         >
                           <CreditCard className="h-5 w-5 mr-2" />
-                          Skip Form & Pay Now
+                          Skip Form & Pay ₹{selectedDiscount === 20 ? '100' : '50'}
                         </Button>
                       </a>
                     )}
@@ -352,11 +352,11 @@ export default function DiscountEnrollment() {
 
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-4">
-                  To complete the process, please make a small payment to the salon owner:
+                  To activate your card, please pay ₹{selectedDiscount === 20 ? '100' : '50'} enrollment fee:
                 </p>
                 {salonAccount?.upiId ? (
                   <a
-                    href={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&cu=INR`}
+                    href={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&am=${selectedDiscount === 20 ? '100' : '50'}&cu=INR&tn=${encodeURIComponent(`Sanwar ${selectedDiscount}% Discount Card`)}`}
                     className="block"
                   >
                     <Button
@@ -365,7 +365,7 @@ export default function DiscountEnrollment() {
                       data-testid="button-proceed-to-payment"
                     >
                       <CreditCard className="h-5 w-5 mr-2" />
-                      Proceed to Payment
+                      Pay ₹{selectedDiscount === 20 ? '100' : '50'} Now
                     </Button>
                   </a>
                 ) : (
@@ -397,7 +397,7 @@ export default function DiscountEnrollment() {
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Complete Payment</CardTitle>
               <CardDescription>
-                Scan the QR code below to pay the salon owner directly
+                Scan the QR code to pay ₹{selectedDiscount === 20 ? '100' : '50'} enrollment fee
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -406,14 +406,14 @@ export default function DiscountEnrollment() {
                   <div className="flex justify-center">
                     <div className="bg-white p-6 rounded-lg shadow-lg">
                       <QRCodeSVG
-                        value={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&cu=INR`}
+                        value={`upi://pay?pa=${salonAccount.upiId}&pn=${encodeURIComponent(salon.name)}&am=${selectedDiscount === 20 ? '100' : '50'}&cu=INR&tn=${encodeURIComponent(`Sanwar ${selectedDiscount}% Discount Card`)}`}
                         size={250}
                         level="H"
                         includeMargin={true}
                       />
                       <div className="text-center mt-3">
-                        <p className="text-sm text-gray-600">UPI ID:</p>
-                        <p className="font-semibold">{salonAccount.upiId}</p>
+                        <p className="text-sm text-gray-600">Amount: ₹{selectedDiscount === 20 ? '100' : '50'}</p>
+                        <p className="text-xs text-gray-500">UPI ID: {salonAccount.upiId}</p>
                       </div>
                     </div>
                   </div>
@@ -421,10 +421,10 @@ export default function DiscountEnrollment() {
                   <div className="bg-green-50 p-4 rounded-lg text-center">
                     <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
                     <p className="font-semibold text-green-800">
-                      Thank you for your payment!
+                      After payment, your card will be activated!
                     </p>
                     <p className="text-sm text-green-600 mt-1">
-                      Your {selectedDiscount}% discount card is active and ready to use on your next visit
+                      Your {selectedDiscount}% discount card will be ready to use on your next visit
                     </p>
                   </div>
                 </>
