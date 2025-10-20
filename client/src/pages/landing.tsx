@@ -777,11 +777,11 @@ export default function Landing() {
               Complete Platform Features
             </h2>
             <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-              Everything you need to know about how Sanwar works for customers and salon owners
+              Everything you need to know about how Sanwar works for customers
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="max-w-3xl mx-auto">
             
             {/* Customer Features */}
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
@@ -865,103 +865,6 @@ export default function Landing() {
                   <li><span className="font-medium text-blue-600">5.</span> Receive instant email confirmation and booking reminders</li>
                   <li><span className="font-medium text-blue-600">6.</span> Visit salon at booked time, enjoy service, pay remaining amount</li>
                   <li><span className="font-medium text-blue-600">7.</span> Rate and review your experience, refer friends to earn rewards</li>
-                </ol>
-              </div>
-            </div>
-
-            {/* Salon Owner Features */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Scissors className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">For Salon Owners</h3>
-                <p className="text-gray-600">Complete business management and growth tools</p>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Smartphone className="h-4 w-4 text-indigo-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Digital Salon Profile</h4>
-                    <p className="text-gray-600 text-sm">Create attractive salon profile with photos/videos, service menu, pricing, staff details, working hours</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Clock className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Smart Slot Management</h4>
-                    <p className="text-gray-600 text-sm">Auto-generate time slots based on working hours, manage staff schedules, handle walk-in bookings</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <TrendingUp className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Business Analytics</h4>
-                    <p className="text-gray-600 text-sm">Track bookings, earnings, customer analytics, staff performance, popular services and growth trends</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Users className="h-4 w-4 text-cyan-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Daily Visitor Analytics</h4>
-                    <p className="text-gray-600 text-sm">See exactly how many customers visited your salon profile today, track daily trends and customer interest levels</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <IndianRupee className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Revenue Management</h4>
-                    <p className="text-gray-600 text-sm">Receive 80% of earnings (platform keeps 20%), automatic payment processing, detailed financial reports</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Gift className="h-4 w-4 text-orange-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Marketing Tools</h4>
-                    <p className="text-gray-600 text-sm">Create service-specific offers, manage promotional campaigns, referral programs, customer retention tools</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Navigation className="h-4 w-4 text-teal-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Automated Notifications</h4>
-                    <p className="text-gray-600 text-sm">Automatic email alerts for new bookings, cancellations, and customer updates to keep you informed</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h5 className="font-semibold text-gray-900 mb-3">How Salon Owners Use Sanwar:</h5>
-                <ol className="text-sm text-gray-600 space-y-2">
-                  <li><span className="font-medium text-purple-600">1.</span> Register salon and create detailed business profile with photos</li>
-                  <li><span className="font-medium text-purple-600">2.</span> Add services, pricing, staff members and set working hours</li>
-                  <li><span className="font-medium text-purple-600">3.</span> Generate time slots automatically or manually for staff</li>
-                  <li><span className="font-medium text-purple-600">4.</span> Receive bookings instantly with email notifications, manage appointments through dashboard</li>
-                  <li><span className="font-medium text-purple-600">5.</span> Get automated booking confirmations and customer update emails</li>
-                  <li><span className="font-medium text-purple-600">6.</span> Monitor daily visitor analytics to see how many customers viewed your profile</li>
-                  <li><span className="font-medium text-purple-600">7.</span> Provide services, collect remaining payment, build customer reviews</li>
-                  <li><span className="font-medium text-purple-600">8.</span> Track earnings, analyze business performance, grow customer base</li>
                 </ol>
               </div>
             </div>
@@ -1065,15 +968,6 @@ export default function Landing() {
                 <li><a href="#" className="hover:text-white">Book Services</a></li>
                 <li><a href="#" className="hover:text-white">Manage Bookings</a></li>
                 <li><a href="#" className="hover:text-white">Refer & Earn</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">For Salon Owners</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">List Your Salon</a></li>
-                <li><a href="#" className="hover:text-white">Manage Bookings</a></li>
-                <li><a href="#" className="hover:text-white">Business Analytics</a></li>
-                <li><a href="#" className="hover:text-white">Staff Management</a></li>
               </ul>
             </div>
             <div>
