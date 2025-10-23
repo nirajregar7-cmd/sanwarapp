@@ -7100,6 +7100,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all bookings for admin with full details
+  app.get("/api/admin/bookings", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { limit = 100, offset = 0, status } = req.query;
+      
+      const whereConditions = status ? eq(bookings.status, status as string) : undefined;
+      
+      const allBookings = await db
+        .select({
+          booking: bookings,
+          customer: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            phone: users.phone,
+          },
+          salon: {
+            id: salons.id,
+            name: salons.name,
+            address: salons.address,
+            phone: salons.phone,
+          },
+          service: {
+            id: services.id,
+            name: services.name,
+            price: services.price,
+          },
+          staff: {
+            id: staff.id,
+            name: staff.name,
+          }
+        })
+        .from(bookings)
+        .innerJoin(users, eq(bookings.customerId, users.id))
+        .innerJoin(salons, eq(bookings.salonId, salons.id))
+        .innerJoin(services, eq(bookings.serviceId, services.id))
+        .leftJoin(staff, eq(bookings.staffId, staff.id))
+        .where(whereConditions)
+        .orderBy(desc(bookings.createdAt))
+        .limit(parseInt(limit as string))
+        .offset(parseInt(offset as string));
+      
+      // Get total count
+      const [countResult] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(bookings)
+        .where(whereConditions);
+      
+      res.json({
+        bookings: allBookings,
+        total: countResult.count,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+      });
+    } catch (error) {
+      console.error("Error fetching admin bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
+    }
+  });
+
   // Get admin settings
   app.get("/api/admin/settings", isAuthenticated, isAdmin, async (req, res) => {
     try {

@@ -41,6 +41,184 @@ interface AnalyticsData {
   dateRange: { startDate: string; endDate: string; days: number };
 }
 
+function AllBookingsView() {
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  
+  const { data: bookingsData, isLoading } = useQuery<any>({
+    queryKey: ["/api/admin/bookings", statusFilter ? `?status=${statusFilter}` : ''],
+    retry: false,
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400">Loading bookings...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const bookings = bookingsData?.bookings || [];
+
+  const statusColors: Record<string, string> = {
+    'confirmed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    'completed': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'cancelled': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5" />
+                <span>All Bookings</span>
+              </CardTitle>
+              <CardDescription>Complete booking history with customer and salon details</CardDescription>
+            </div>
+            <div className="flex items-center space-x-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm"
+                data-testid="select-booking-status"
+              >
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <Badge variant="secondary">
+                {bookingsData?.total || 0} total
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {bookings.length === 0 ? (
+            <div className="text-center py-12">
+              <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <p className="text-gray-500 dark:text-gray-400">No bookings found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-gray-200 dark:border-gray-700">
+                  <tr className="text-left text-sm font-medium text-gray-600 dark:text-gray-400">
+                    <th className="pb-3 px-2">Booking ID</th>
+                    <th className="pb-3 px-2">Customer</th>
+                    <th className="pb-3 px-2">Salon</th>
+                    <th className="pb-3 px-2">Service</th>
+                    <th className="pb-3 px-2">Date & Time</th>
+                    <th className="pb-3 px-2">Amount</th>
+                    <th className="pb-3 px-2">Status</th>
+                    <th className="pb-3 px-2">Created</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {bookings.map((item: any) => (
+                    <tr key={item.booking.id} className="text-sm hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="py-4 px-2">
+                        <span className="font-mono text-xs font-semibold">
+                          #{item.booking.id.substring(0, 8)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {item.customer.firstName} {item.customer.lastName}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {item.customer.email}
+                          </p>
+                          {item.customer.phone && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {item.customer.phone}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-2">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {item.salon.name}
+                          </p>
+                          {item.salon.address && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {item.salon.address.substring(0, 40)}...
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-2">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {item.service.name}
+                          </p>
+                          {item.staff && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Staff: {item.staff.name}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-2">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {new Date(item.booking.date).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {item.booking.startTime} - {item.booking.endTime}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="py-4 px-2">
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            ₹{item.service.price}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Conf: ₹{(parseFloat(item.booking.confirmationAmount || 0) / 100).toFixed(0)}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="py-4 px-2">
+                        <Badge 
+                          className={`capitalize ${statusColors[item.booking.status] || 'bg-gray-100 text-gray-800'}`}
+                        >
+                          {item.booking.status}
+                        </Badge>
+                      </td>
+                      <td className="py-4 px-2 text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(item.booking.createdAt).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric'
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function AnalyticsContent() {
   const [days, setDays] = useState(30);
   
@@ -428,6 +606,7 @@ export default function AdminDashboard() {
         <Tabs defaultValue="actions" className="space-y-6">
           <TabsList>
             <TabsTrigger value="actions">Quick Actions</TabsTrigger>
+            <TabsTrigger value="bookings">All Bookings</TabsTrigger>
             <TabsTrigger value="pending">Pending Reviews</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -463,6 +642,10 @@ export default function AdminDashboard() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="bookings" className="space-y-6">
+            <AllBookingsView />
           </TabsContent>
 
           <TabsContent value="pending" className="space-y-6">
