@@ -16,6 +16,7 @@ The platform now supports multiple countries with automatic regional configurati
 Preferred communication style: Simple, everyday language.
 Shopkeeper prefers: Single simple slot generation method to avoid confusion.
 Individual staff-based slot generation: Implemented with real-time slot counts and staff-specific booking system.
+Admin Email Control: Admin dashboard now includes toggle to enable/disable shopkeeper booking notification emails. When ON, salon owners receive email notifications for new bookings. When OFF, no booking emails are sent to shopkeepers (customers still receive confirmation emails).
 Location-based discovery: Implemented comprehensive geolocation features with automatic permission requests and 30km radius filtering. Fixed location denial handling - when users deny permission, the app respects this choice permanently and shows all India salons without repeated requests.
 Promotional offers: Combined popup showing both shopkeeper (top) and customer offers together, appears after 10 seconds, once per session. Fixed button redirects to use correct `/auth` page.
 SEO Enhancement: Added comprehensive JSON-LD structured data schema for Sanwar, including founder information (Niraj Regar & Naveen Chopra from NIT Trichy), company details, and social media links to improve search engine visibility and rich snippets.

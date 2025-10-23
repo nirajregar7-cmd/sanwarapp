@@ -7028,6 +7028,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get admin settings
+  app.get("/api/admin/settings", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching admin settings:", error);
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  // Update a specific admin setting
+  app.put("/api/admin/settings/:settingKey", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { settingKey } = req.params;
+      const { settingValue } = req.body;
+      
+      if (!settingValue) {
+        return res.status(400).json({ error: "Setting value is required" });
+      }
+      
+      const updated = await storage.updateAdminSetting(settingKey, settingValue, req.user.id);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating admin setting:", error);
+      res.status(500).json({ error: "Failed to update setting" });
+    }
+  });
+
   // Admin impersonation endpoint
   app.post("/api/admin/impersonate/:userId", isAuthenticated, isAdmin, async (req: any, res) => {
     try {

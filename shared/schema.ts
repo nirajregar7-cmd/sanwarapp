@@ -1733,3 +1733,24 @@ export const insertSanwarDiscountCardSchema = createInsertSchema(sanwarDiscountC
 
 export type SanwarDiscountCard = typeof sanwarDiscountCards.$inferSelect;
 export type InsertSanwarDiscountCard = z.infer<typeof insertSanwarDiscountCardSchema>;
+
+// Admin Settings - Platform-wide settings controlled by admin
+export const adminSettings = pgTable("admin_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  settingKey: varchar("setting_key", { length: 255 }).notNull().unique(), // e.g., 'shopkeeper_booking_emails_enabled'
+  settingValue: text("setting_value").notNull(), // Store as JSON string for flexibility
+  description: text("description"), // What this setting controls
+  updatedBy: varchar("updated_by").references(() => users.id), // Which admin updated it
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Admin Settings schema and types
+export const insertAdminSettingSchema = createInsertSchema(adminSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type AdminSetting = typeof adminSettings.$inferSelect;
+export type InsertAdminSetting = z.infer<typeof insertAdminSettingSchema>;

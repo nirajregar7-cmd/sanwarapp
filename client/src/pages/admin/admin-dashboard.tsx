@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { 
   Users, 
   Building2, 
@@ -14,10 +16,13 @@ import {
   Clock,
   BarChart3,
   FileText,
-  Settings
+  Settings,
+  Mail
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 interface DashboardStats {
   totalCustomers: number;
@@ -28,9 +33,44 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const { toast } = useToast();
+  
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/admin/dashboard"],
     retry: false,
+  });
+
+  // Fetch admin settings
+  const { data: settings } = useQuery<any[]>({
+    queryKey: ["/api/admin/settings"],
+    retry: false,
+  });
+
+  // Get shopkeeper emails setting
+  const shopkeeperEmailsSetting = settings?.find(
+    (s) => s.settingKey === 'shopkeeper_booking_emails_enabled'
+  );
+  const shopkeeperEmailsEnabled = shopkeeperEmailsSetting?.settingValue === 'true';
+
+  // Mutation to update settings
+  const updateSettingMutation = useMutation({
+    mutationFn: async ({ settingKey, settingValue }: { settingKey: string; settingValue: string }) => {
+      return await apiRequest('PUT', `/api/admin/settings/${settingKey}`, { settingValue });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      toast({
+        title: "Settings Updated",
+        description: "Email notification settings have been updated successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update settings",
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading) {
@@ -158,6 +198,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="actions">Quick Actions</TabsTrigger>
             <TabsTrigger value="pending">Pending Reviews</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="actions" className="space-y-6">
@@ -246,6 +287,66 @@ export default function AdminDashboard() {
                   <Button variant="outline" disabled>
                     View Full Analytics
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Settings className="h-5 w-5" />
+                  <span>Platform Settings</span>
+                </CardTitle>
+                <CardDescription>
+                  Control system-wide settings and notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Email Notifications Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center space-x-2">
+                    <Mail className="h-5 w-5" />
+                    <span>Email Notifications</span>
+                  </h3>
+                  
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label htmlFor="shopkeeper-emails" className="text-base font-medium">
+                          Shopkeeper Booking Notifications
+                        </Label>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          When enabled, salon owners will receive email notifications for new bookings. 
+                          Turn off to stop sending booking emails to shopkeepers.
+                        </p>
+                      </div>
+                      <Switch
+                        id="shopkeeper-emails"
+                        checked={shopkeeperEmailsEnabled}
+                        onCheckedChange={(checked) => {
+                          updateSettingMutation.mutate({
+                            settingKey: 'shopkeeper_booking_emails_enabled',
+                            settingValue: checked ? 'true' : 'false',
+                          });
+                        }}
+                        disabled={updateSettingMutation.isPending}
+                        data-testid="toggle-shopkeeper-emails"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 text-sm">
+                      <div className={`w-2 h-2 rounded-full ${shopkeeperEmailsEnabled ? 'bg-green-500' : 'bg-gray-400'}`} />
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Status: {shopkeeperEmailsEnabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {updateSettingMutation.isPending && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Updating settings...</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

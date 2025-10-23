@@ -299,14 +299,22 @@ export async function sendBookingNotificationEmails(bookingId: string): Promise<
       html: generateCustomerConfirmationEmail(bookingData),
     });
 
-    // Send shopkeeper notification email (if salon owner has email)
+    // Send shopkeeper notification email (if enabled in admin settings and salon owner has email)
     let shopkeeperEmailSent = false;
-    if (bookingData.salonEmail) {
+    
+    // Check if shopkeeper booking emails are enabled
+    const shopkeeperEmailsSetting = await storage.getAdminSetting('shopkeeper_booking_emails_enabled');
+    const shopkeeperEmailsEnabled = shopkeeperEmailsSetting?.settingValue === 'true';
+    
+    if (shopkeeperEmailsEnabled && bookingData.salonEmail) {
       shopkeeperEmailSent = await sendEmail({
         to: bookingData.salonEmail,
         subject: `🔔 New Booking - ${bookingData.customerName} | Sanwar`,
         html: generateShopkeeperNotificationEmail(bookingData),
       });
+      console.log(`📧 Shopkeeper email sent to ${bookingData.salonEmail}`);
+    } else if (!shopkeeperEmailsEnabled) {
+      console.log('⚠️ Shopkeeper booking emails are disabled by admin');
     } else {
       console.warn('⚠️ Salon owner email not found, shopkeeper notification not sent');
     }

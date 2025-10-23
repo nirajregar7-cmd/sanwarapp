@@ -268,6 +268,11 @@ export interface IStorage {
   createScheduleTemplate(template: any): Promise<any>;
   getScheduleTemplates(salonId: string): Promise<any[]>;
   deleteScheduleTemplate(templateId: string): Promise<void>;
+
+  // Admin settings operations
+  getAdminSettings(): Promise<any[]>;
+  getAdminSetting(settingKey: string): Promise<any | undefined>;
+  updateAdminSetting(settingKey: string, settingValue: string, updatedBy: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2325,6 +2330,46 @@ export class DatabaseStorage implements IStorage {
   // Access to db for the smart scheduling service
   get db() {
     return db;
+  }
+
+  // Admin settings operations
+  async getAdminSettings(): Promise<any[]> {
+    const { adminSettings } = await import('@shared/schema');
+    return db.select().from(adminSettings);
+  }
+
+  async getAdminSetting(settingKey: string): Promise<any | undefined> {
+    const { adminSettings } = await import('@shared/schema');
+    const [setting] = await db.select().from(adminSettings).where(eq(adminSettings.settingKey, settingKey));
+    return setting;
+  }
+
+  async updateAdminSetting(settingKey: string, settingValue: string, updatedBy: string): Promise<any> {
+    const { adminSettings } = await import('@shared/schema');
+    const existingSetting = await this.getAdminSetting(settingKey);
+    
+    if (existingSetting) {
+      const [updated] = await db
+        .update(adminSettings)
+        .set({ 
+          settingValue, 
+          updatedBy,
+          updatedAt: new Date() 
+        })
+        .where(eq(adminSettings.settingKey, settingKey))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(adminSettings)
+        .values({ 
+          settingKey, 
+          settingValue, 
+          updatedBy 
+        })
+        .returning();
+      return created;
+    }
   }
 }
 
