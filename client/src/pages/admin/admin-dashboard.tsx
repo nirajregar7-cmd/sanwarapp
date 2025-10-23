@@ -147,7 +147,7 @@ function AnalyticsContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{analytics.summary.totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₹{Number(analytics.summary.totalRevenue || 0).toFixed(2)}</div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Confirmation fees collected
             </p>
@@ -161,7 +161,7 @@ function AnalyticsContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{analytics.summary.avgBookingValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₹{Number(analytics.summary.avgBookingValue || 0).toFixed(2)}</div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Per booking average
             </p>
@@ -190,7 +190,7 @@ function AnalyticsContent() {
                       {item.count} bookings
                     </span>
                     <span className="text-sm font-semibold">
-                      {((item.count / analytics.summary.totalBookings) * 100).toFixed(1)}%
+                      {analytics.summary.totalBookings > 0 ? ((item.count / analytics.summary.totalBookings) * 100).toFixed(1) : '0'}%
                     </span>
                   </div>
                 </div>
@@ -214,7 +214,7 @@ function AnalyticsContent() {
                   </span>
                   <div className="flex items-center space-x-4">
                     <span className="text-sm font-semibold">{item.count} bookings</span>
-                    <span className="text-sm text-green-600 dark:text-green-400">₹{item.revenue.toFixed(0)}</span>
+                    <span className="text-sm text-green-600 dark:text-green-400">₹{Number(item.revenue || 0).toFixed(0)}</span>
                   </div>
                 </div>
               ))}
@@ -246,7 +246,7 @@ function AnalyticsContent() {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-green-600 dark:text-green-400">
-                    ₹{salon.revenue.toFixed(2)}
+                    ₹{Number(salon.revenue || 0).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Revenue</p>
                 </div>
