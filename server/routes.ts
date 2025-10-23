@@ -7019,9 +7019,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/analytics", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const { days } = req.query;
-      const analytics = await storage.getPlatformAnalytics(days ? parseInt(days as string) : 30);
-      res.json(analytics);
+      const { days = 30 } = req.query;
+      const daysNum = parseInt(days as string);
+      
+      // Calculate date range
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysNum);
+      
+      // Get bookings over time
+      const bookingsOverTime = await db
+        .select({
+          date: sql<string>`DATE(${bookings.createdAt})`,
+          count: sql<number>`count(*)::int`,
+          revenue: sql<number>`coalesce(sum(cast(${bookings.confirmationAmount} as decimal) / 100), 0)`
+        })
+        .from(bookings)
+        .where(sql`${bookings.createdAt} >= ${startDate}`)
+        .groupBy(sql`DATE(${bookings.createdAt})`)
+        .orderBy(sql`DATE(${bookings.createdAt})`);
+      
+      // Get booking status breakdown
+      const bookingsByStatus = await db
+        .select({
+          status: bookings.status,
+          count: sql<number>`count(*)::int`
+        })
+        .from(bookings)
+        .where(sql`${bookings.createdAt} >= ${startDate}`)
+        .groupBy(bookings.status);
+      
+      // Get top performing salons
+      const topSalons = await db
+        .select({
+          salonId: salons.id,
+          salonName: salons.name,
+          bookingCount: sql<number>`count(${bookings.id})::int`,
+          revenue: sql<number>`coalesce(sum(cast(${bookings.confirmationAmount} as decimal) / 100), 0)`
+        })
+        .from(bookings)
+        .innerJoin(salons, eq(bookings.salonId, salons.id))
+        .where(sql`${bookings.createdAt} >= ${startDate}`)
+        .groupBy(salons.id, salons.name)
+        .orderBy(desc(sql`count(${bookings.id})`))
+        .limit(10);
+      
+      // Get user growth
+      const userGrowth = await db
+        .select({
+          date: sql<string>`DATE(${users.createdAt})`,
+          customers: sql<number>`count(*) filter (where ${users.userType} = 'customer')::int`,
+          salonOwners: sql<number>`count(*) filter (where ${users.userType} = 'salon_owner')::int`
+        })
+        .from(users)
+        .where(sql`${users.createdAt} >= ${startDate}`)
+        .groupBy(sql`DATE(${users.createdAt})`)
+        .orderBy(sql`DATE(${users.createdAt})`);
+      
+      // Get summary metrics
+      const [totalStats] = await db
+        .select({
+          totalBookings: sql<number>`count(*)::int`,
+          totalRevenue: sql<number>`coalesce(sum(cast(${bookings.confirmationAmount} as decimal) / 100), 0)`,
+          avgBookingValue: sql<number>`coalesce(avg(cast(${bookings.confirmationAmount} as decimal) / 100), 0)`
+        })
+        .from(bookings)
+        .where(sql`${bookings.createdAt} >= ${startDate}`);
+      
+      res.json({
+        bookingsOverTime,
+        bookingsByStatus,
+        topSalons,
+        userGrowth,
+        summary: totalStats,
+        dateRange: { startDate, endDate, days: daysNum }
+      });
     } catch (error) {
       console.error("Error fetching analytics:", error);
       res.status(500).json({ error: "Failed to fetch analytics" });

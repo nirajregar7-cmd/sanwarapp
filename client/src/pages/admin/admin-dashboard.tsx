@@ -32,6 +32,238 @@ interface DashboardStats {
   totalRevenue: number;
 }
 
+interface AnalyticsData {
+  bookingsOverTime: { date: string; count: number; revenue: number }[];
+  bookingsByStatus: { status: string; count: number }[];
+  topSalons: { salonId: string; salonName: string; bookingCount: number; revenue: number }[];
+  userGrowth: { date: string; customers: number; salonOwners: number }[];
+  summary: { totalBookings: number; totalRevenue: number; avgBookingValue: number };
+  dateRange: { startDate: string; endDate: string; days: number };
+}
+
+function AnalyticsContent() {
+  const [days, setDays] = useState(30);
+  
+  const { data: analytics, isLoading } = useQuery<AnalyticsData>({
+    queryKey: ["/api/admin/analytics", `?days=${days}`],
+    retry: false,
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400">Loading analytics...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!analytics) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            No analytics data available
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const statusColors: Record<string, string> = {
+    'confirmed': 'bg-green-500',
+    'pending': 'bg-yellow-500',
+    'completed': 'bg-blue-500',
+    'cancelled': 'bg-red-500',
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Time Range Selector */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center space-x-2">
+                <BarChart3 className="h-5 w-5" />
+                <span>Platform Analytics</span>
+              </CardTitle>
+              <CardDescription>Last {days} days performance metrics</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={days === 7 ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDays(7)}
+                data-testid="btn-analytics-7days"
+              >
+                7 Days
+              </Button>
+              <Button
+                variant={days === 30 ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDays(30)}
+                data-testid="btn-analytics-30days"
+              >
+                30 Days
+              </Button>
+              <Button
+                variant={days === 90 ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDays(90)}
+                data-testid="btn-analytics-90days"
+              >
+                90 Days
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Total Bookings
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.summary.totalBookings}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              In the last {days} days
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Total Revenue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹{analytics.summary.totalRevenue.toFixed(2)}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Confirmation fees collected
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Avg. Booking Value
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹{analytics.summary.avgBookingValue.toFixed(2)}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Per booking average
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bookings & Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Booking Status Breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Booking Status</CardTitle>
+            <CardDescription>Distribution by status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {analytics.bookingsByStatus.map((item) => (
+                <div key={item.status} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${statusColors[item.status] || 'bg-gray-500'}`} />
+                    <span className="text-sm font-medium capitalize">{item.status}</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {item.count} bookings
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {((item.count / analytics.summary.totalBookings) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Daily Bookings Trend (Simple List) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Daily bookings count</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              {analytics.bookingsOverTime.slice(-10).reverse().map((item) => (
+                <div key={item.date} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm font-semibold">{item.count} bookings</span>
+                    <span className="text-sm text-green-600 dark:text-green-400">₹{item.revenue.toFixed(0)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Performing Salons */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Performing Salons</CardTitle>
+          <CardDescription>Salons with most bookings in the selected period</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {analytics.topSalons.map((salon, index) => (
+              <div key={salon.salonId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-sm">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <p className="font-semibold">{salon.salonName}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {salon.bookingCount} bookings
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-green-600 dark:text-green-400">
+                    ₹{salon.revenue.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Revenue</p>
+                </div>
+              </div>
+            ))}
+            {analytics.topSalons.length === 0 && (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                No salon data available for this period
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { toast } = useToast();
   
@@ -268,28 +500,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5" />
-                  <span>Platform Analytics</span>
-                </CardTitle>
-                <CardDescription>
-                  Detailed insights and performance metrics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">
-                    Advanced analytics dashboard coming soon
-                  </p>
-                  <Button variant="outline" disabled>
-                    View Full Analytics
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <AnalyticsContent />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
