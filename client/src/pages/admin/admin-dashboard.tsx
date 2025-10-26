@@ -20,9 +20,10 @@ import {
   Mail
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { UserCheck } from "lucide-react";
 
 interface DashboardStats {
   totalCustomers: number;
@@ -39,6 +40,120 @@ interface AnalyticsData {
   userGrowth: { date: string; customers: number; salonOwners: number }[];
   summary: { totalBookings: number; totalRevenue: number; avgBookingValue: number };
   dateRange: { startDate: string; endDate: string; days: number };
+}
+
+function CustomerManagementView() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  
+  const { data: customers, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/customers"],
+    retry: false,
+  });
+
+  const handleImpersonate = (userId: string) => {
+    setLocation(`/admin/impersonate/${userId}`);
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400">Loading customers...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const customerList = customers || [];
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center space-x-2">
+                <Users className="h-5 w-5" />
+                <span>Customer Management</span>
+              </CardTitle>
+              <CardDescription>View and manage all customer accounts</CardDescription>
+            </div>
+            <Badge variant="secondary">
+              {customerList.length} customers
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {customerList.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <p className="text-gray-500 dark:text-gray-400">No customers found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-gray-200 dark:border-gray-700">
+                  <tr className="text-left text-sm font-medium text-gray-600 dark:text-gray-400">
+                    <th className="pb-3 px-2">Customer</th>
+                    <th className="pb-3 px-2">Email</th>
+                    <th className="pb-3 px-2">Phone</th>
+                    <th className="pb-3 px-2">Joined</th>
+                    <th className="pb-3 px-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {customerList.map((customer: any) => (
+                    <tr key={customer.id} className="text-sm hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="py-4 px-2">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {customer.firstName} {customer.lastName}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            ID: {customer.id.substring(0, 8)}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="py-4 px-2">
+                        <p className="text-gray-900 dark:text-white">{customer.email}</p>
+                      </td>
+                      <td className="py-4 px-2">
+                        <p className="text-gray-900 dark:text-white">
+                          {customer.phone || 'N/A'}
+                        </p>
+                      </td>
+                      <td className="py-4 px-2 text-gray-500 dark:text-gray-400">
+                        {new Date(customer.createdAt).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </td>
+                      <td className="py-4 px-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleImpersonate(customer.id)}
+                          data-testid={`btn-impersonate-${customer.id}`}
+                        >
+                          <UserCheck className="h-4 w-4 mr-2" />
+                          Login as Customer
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function AllBookingsView() {
@@ -606,6 +721,7 @@ export default function AdminDashboard() {
         <Tabs defaultValue="actions" className="space-y-6">
           <TabsList>
             <TabsTrigger value="actions">Quick Actions</TabsTrigger>
+            <TabsTrigger value="customers">Customers</TabsTrigger>
             <TabsTrigger value="bookings">All Bookings</TabsTrigger>
             <TabsTrigger value="pending">Pending Reviews</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -642,6 +758,10 @@ export default function AdminDashboard() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="customers" className="space-y-6">
+            <CustomerManagementView />
           </TabsContent>
 
           <TabsContent value="bookings" className="space-y-6">

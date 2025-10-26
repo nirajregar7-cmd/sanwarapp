@@ -7100,6 +7100,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all customers for admin
+  app.get("/api/admin/customers", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { limit = 100, offset = 0 } = req.query;
+      
+      const allCustomers = await db
+        .select()
+        .from(users)
+        .where(eq(users.userType, 'customer'))
+        .orderBy(desc(users.createdAt))
+        .limit(parseInt(limit as string))
+        .offset(parseInt(offset as string));
+      
+      res.json(allCustomers);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      res.status(500).json({ error: "Failed to fetch customers" });
+    }
+  });
+
   // Get all bookings for admin with full details
   app.get("/api/admin/bookings", isAuthenticated, isAdmin, async (req, res) => {
     try {
@@ -7202,9 +7222,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
       
-      // Only allow impersonating salon owners
-      if (targetUser.userType !== 'salon_owner') {
-        return res.status(400).json({ error: "Can only impersonate salon owners" });
+      // Prevent impersonating other admins
+      if (targetUser.userType === 'admin') {
+        return res.status(400).json({ error: "Cannot impersonate admin users" });
       }
       
       // Store original admin user in session
@@ -7219,7 +7239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: targetUser.id  // Passport expects just the user ID here
       };
       
-      console.log(`[ADMIN IMPERSONATION] Admin ${adminUser.email} is now impersonating ${targetUser.email}`);
+      console.log(`[ADMIN IMPERSONATION] Admin ${adminUser.email} is now impersonating ${targetUser.email} (${targetUser.userType})`);
       
       res.json({ 
         success: true, 

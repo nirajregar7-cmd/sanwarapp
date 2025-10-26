@@ -55,9 +55,13 @@ export default function ImpersonatePage({}: ImpersonatePageProps) {
           description: `You are now logged in as ${data.targetUser.firstName} ${data.targetUser.lastName}`,
         });
 
-        // Redirect to salon owner dashboard after 2 seconds
+        // Redirect to appropriate dashboard based on user type
+        const redirectPath = data.targetUser.userType === 'salon_owner' 
+          ? '/shopkeeper/dashboard' 
+          : '/user/dashboard';
+        
         setTimeout(() => {
-          setLocation("/shopkeeper/dashboard");
+          setLocation(redirectPath);
         }, 2000);
       } else {
         throw new Error(data.message || "Failed to impersonate user");
@@ -83,7 +87,7 @@ export default function ImpersonatePage({}: ImpersonatePageProps) {
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
             <h2 className="text-lg font-semibold mb-2">Starting Impersonation</h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Switching to salon owner account...
+              Switching to user account...
             </p>
           </CardContent>
         </Card>
@@ -101,7 +105,7 @@ export default function ImpersonatePage({}: ImpersonatePageProps) {
               Impersonation Failed
             </CardTitle>
             <CardDescription>
-              Unable to access the salon owner's account
+              Unable to access the user's account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -149,10 +153,15 @@ export default function ImpersonatePage({}: ImpersonatePageProps) {
               </p>
             </div>
             <p className="text-sm text-gray-500 mb-4">
-              Redirecting to salon dashboard...
+              Redirecting to dashboard...
             </p>
             <Button
-              onClick={() => setLocation("/shopkeeper/dashboard")}
+              onClick={() => {
+                const redirectPath = targetUser.userType === 'salon_owner' 
+                  ? '/shopkeeper/dashboard' 
+                  : '/user/dashboard';
+                setLocation(redirectPath);
+              }}
               className="w-full"
             >
               Go to Dashboard Now
