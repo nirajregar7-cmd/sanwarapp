@@ -1046,14 +1046,14 @@ function UpcomingFeaturesSection() {
                   <div
                     key={video.id}
                     className={`absolute transition-all duration-500 ease-out ${
-                      isCenter ? 'z-20 scale-100 opacity-100' : 'z-10 scale-75 opacity-50'
+                      isCenter ? 'z-20 scale-100 opacity-100' : 'z-10 scale-75 opacity-40'
                     }`}
                     style={{
                       transform: `translateX(${
-                        isCenter ? '0%' : isLeft ? '-85%' : '85%'
+                        isCenter ? '0%' : isLeft ? '-95%' : '95%'
                       })`,
-                      width: '70%',
-                      maxWidth: '900px',
+                      width: isCenter ? '85%' : '70%',
+                      maxWidth: isCenter ? '1000px' : '800px',
                     }}
                   >
                     <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
@@ -1091,7 +1091,7 @@ function UpcomingFeaturesSection() {
             </div>
             
             {/* Spacer to maintain height */}
-            <div className="aspect-video opacity-0" style={{ width: '70%', maxWidth: '900px', margin: '0 auto' }} />
+            <div className="aspect-video opacity-0" style={{ width: '85%', maxWidth: '1000px', margin: '0 auto' }} />
           </div>
 
           {/* Navigation Arrows */}
