@@ -70,30 +70,35 @@ export function ImpersonationBanner() {
   }
 
   return (
-    <div className="bg-yellow-500 text-black px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50">
-      <div className="container mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <AlertTriangle className="h-5 w-5" />
-          <span className="font-semibold">
-            Admin Mode: You are viewing as another user
-          </span>
-          {originalAdmin && (
-            <span className="text-sm opacity-90">
-              (Logged in as: {originalAdmin.email})
+    <>
+      <div className="bg-yellow-500 text-black px-4 py-3 shadow-lg fixed top-0 left-0 right-0 z-[9999] border-b-2 border-yellow-600">
+        <div className="container mx-auto flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5" />
+            <span className="font-semibold">
+              Admin Mode: You are viewing as another user
             </span>
-          )}
+            {originalAdmin && (
+              <span className="text-sm opacity-90">
+                (Logged in as: {originalAdmin.email})
+              </span>
+            )}
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={exitImpersonation}
+            disabled={exitingImpersonation}
+            data-testid="btn-exit-impersonation"
+            className="bg-white hover:bg-gray-100 text-black font-semibold"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            {exitingImpersonation ? 'Exiting...' : 'Return to Admin'}
+          </Button>
         </div>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={exitImpersonation}
-          disabled={exitingImpersonation}
-          data-testid="btn-exit-impersonation"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          {exitingImpersonation ? 'Exiting...' : 'Return to Admin'}
-        </Button>
       </div>
-    </div>
+      {/* Spacer to push content down */}
+      <div className="h-[60px]" />
+    </>
   );
 }
