@@ -606,9 +606,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Upcoming Features Section */}
-      <UpcomingFeaturesSection />
-
       {/* Available Services Section */}
       <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -714,6 +711,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Upcoming Features Section */}
+      <UpcomingFeaturesSection />
 
       {/* Virtual Try-On Section */}
       <section className="py-16 bg-gradient-to-br from-purple-50 to-pink-50">
