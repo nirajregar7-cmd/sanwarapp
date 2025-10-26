@@ -1008,15 +1008,11 @@ function UpcomingFeaturesSection() {
   const activeVideos = videos?.filter((v: any) => v.isActive) || [];
 
   const nextSlide = () => {
-    if (currentIndex < activeVideos.length - 2) {
-      setCurrentIndex((prev) => prev + 1);
-    }
+    setCurrentIndex((prev) => (prev + 1) % activeVideos.length);
   };
 
   const prevSlide = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-    }
+    setCurrentIndex((prev) => (prev - 1 + activeVideos.length) % activeVideos.length);
   };
 
   if (!activeVideos.length) return null;
@@ -1034,59 +1030,76 @@ function UpcomingFeaturesSection() {
         </div>
 
         <div className="relative">
-          {/* Carousel Container - Show 2 Videos */}
-          <div className="overflow-hidden">
-            <div 
-              className="flex transition-transform duration-500 ease-out gap-6"
-              style={{ 
-                transform: `translateX(-${currentIndex * (50 + 1.5)}%)`,
-              }}
-            >
-              {activeVideos.map((video: any, index: number) => (
-                <div
-                  key={video.id}
-                  className="flex-shrink-0"
-                  style={{ width: 'calc(50% - 12px)' }}
-                >
-                  <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
-                    <video
-                      src={video.videoUrl}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                      data-testid={`video-${video.id}`}
-                    />
-                    
-                    {/* Video Overlay Info */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-                      <h3 className="text-white text-2xl font-bold mb-2">{video.title}</h3>
-                      {video.description && (
-                        <p className="text-gray-200 text-sm">{video.description}</p>
+          {/* Carousel Container with Center Focus and Side Peeks */}
+          <div className="overflow-hidden px-16">
+            <div className="flex items-center justify-center">
+              {activeVideos.map((video: any, index: number) => {
+                const offset = index - currentIndex;
+                const isCenter = offset === 0;
+                const isLeft = offset === -1 || (currentIndex === 0 && index === activeVideos.length - 1);
+                const isRight = offset === 1 || (currentIndex === activeVideos.length - 1 && index === 0);
+                const isVisible = isCenter || isLeft || isRight;
+
+                if (!isVisible) return null;
+
+                return (
+                  <div
+                    key={video.id}
+                    className={`absolute transition-all duration-500 ease-out ${
+                      isCenter ? 'z-20 scale-100 opacity-100' : 'z-10 scale-75 opacity-50'
+                    }`}
+                    style={{
+                      transform: `translateX(${
+                        isCenter ? '0%' : isLeft ? '-85%' : '85%'
+                      })`,
+                      width: '70%',
+                      maxWidth: '900px',
+                    }}
+                  >
+                    <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
+                      <video
+                        src={video.videoUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover"
+                        data-testid={`video-${video.id}`}
+                      />
+                      
+                      {/* Video Overlay Info - Only show on center video */}
+                      {isCenter && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                          <h3 className="text-white text-2xl font-bold mb-2">{video.title}</h3>
+                          {video.description && (
+                            <p className="text-gray-200 text-sm">{video.description}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Play Indicator - Only on center video */}
+                      {isCenter && (
+                        <div className="absolute top-4 right-4 z-20 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                          <span>LIVE</span>
+                        </div>
                       )}
                     </div>
-
-                    {/* Play Indicator */}
-                    <div className="absolute top-4 right-4 z-20 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                      <span>LIVE</span>
-                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+            
+            {/* Spacer to maintain height */}
+            <div className="aspect-video opacity-0" style={{ width: '70%', maxWidth: '900px', margin: '0 auto' }} />
           </div>
 
           {/* Navigation Arrows */}
-          {activeVideos.length > 2 && (
+          {activeVideos.length > 1 && (
             <>
               <button
                 onClick={prevSlide}
-                disabled={currentIndex === 0}
-                className={`absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group ${
-                  currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
                 data-testid="btn-prev-video"
                 aria-label="Previous video"
               >
@@ -1094,10 +1107,7 @@ function UpcomingFeaturesSection() {
               </button>
               <button
                 onClick={nextSlide}
-                disabled={currentIndex >= activeVideos.length - 2}
-                className={`absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group ${
-                  currentIndex >= activeVideos.length - 2 ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
                 data-testid="btn-next-video"
                 aria-label="Next video"
               >
@@ -1107,9 +1117,9 @@ function UpcomingFeaturesSection() {
           )}
 
           {/* Video Indicators */}
-          {activeVideos.length > 2 && (
+          {activeVideos.length > 1 && (
             <div className="flex justify-center space-x-2 mt-6">
-              {Array.from({ length: activeVideos.length - 1 }).map((_, index: number) => (
+              {activeVideos.map((_, index: number) => (
                 <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
@@ -1119,7 +1129,7 @@ function UpcomingFeaturesSection() {
                       : 'bg-gray-300 w-2 hover:bg-gray-400'
                   }`}
                   data-testid={`indicator-${index}`}
-                  aria-label={`Go to slide ${index + 1}`}
+                  aria-label={`Go to video ${index + 1}`}
                 />
               ))}
             </div>
