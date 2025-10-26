@@ -1029,10 +1029,10 @@ function UpcomingFeaturesSection() {
           </p>
         </div>
 
-        <div className="relative">
+        <div className="relative" style={{ minHeight: '400px' }}>
           {/* Carousel Container with Center Focus and Side Peeks */}
-          <div className="overflow-hidden px-16">
-            <div className="flex items-center justify-center">
+          <div className="overflow-hidden">
+            <div className="relative flex items-center justify-center" style={{ height: '500px' }}>
               {activeVideos.map((video: any, index: number) => {
                 const offset = index - currentIndex;
                 const isCenter = offset === 0;
@@ -1089,9 +1089,6 @@ function UpcomingFeaturesSection() {
                 );
               })}
             </div>
-            
-            {/* Spacer to maintain height */}
-            <div className="aspect-video opacity-0" style={{ width: '85%', maxWidth: '1000px', margin: '0 auto' }} />
           </div>
 
           {/* Navigation Arrows */}
