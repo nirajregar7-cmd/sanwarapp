@@ -18,7 +18,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs, sanwarDiscountCards } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos } from "@shared/schema";
 import { sendBookingConfirmationNotification, sendSalonOwnerBookingNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection, sendDiscountCardEmail } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -7299,6 +7299,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error exiting impersonation:", error);
       res.status(500).json({ error: "Failed to exit impersonation" });
+    }
+  });
+
+  // Upcoming Feature Videos Management - Admin only
+  
+  // Get all upcoming feature videos (public)
+  app.get("/api/upcoming-features", async (req, res) => {
+    try {
+      const videos = await db
+        .select()
+        .from(upcomingFeatureVideos)
+        .where(eq(upcomingFeatureVideos.isActive, true))
+        .orderBy(asc(upcomingFeatureVideos.order));
+      
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching upcoming feature videos:", error);
+      res.status(500).json({ error: "Failed to fetch videos" });
+    }
+  });
+
+  // Get all videos for admin (including inactive)
+  app.get("/api/admin/upcoming-features", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const videos = await db
+        .select()
+        .from(upcomingFeatureVideos)
+        .orderBy(asc(upcomingFeatureVideos.order));
+      
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching upcoming feature videos:", error);
+      res.status(500).json({ error: "Failed to fetch videos" });
+    }
+  });
+
+  // Add new video
+  app.post("/api/admin/upcoming-features", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const videoData = insertUpcomingFeatureVideoSchema.parse(req.body);
+      
+      const [video] = await db
+        .insert(upcomingFeatureVideos)
+        .values({
+          ...videoData,
+          createdBy: req.user.id,
+        })
+        .returning();
+      
+      res.json(video);
+    } catch (error) {
+      console.error("Error creating upcoming feature video:", error);
+      res.status(500).json({ error: "Failed to create video" });
+    }
+  });
+
+  // Update video
+  app.put("/api/admin/upcoming-features/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const videoData = req.body;
+      
+      const [updated] = await db
+        .update(upcomingFeatureVideos)
+        .set({
+          ...videoData,
+          updatedAt: new Date(),
+        })
+        .where(eq(upcomingFeatureVideos.id, id))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Video not found" });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating upcoming feature video:", error);
+      res.status(500).json({ error: "Failed to update video" });
+    }
+  });
+
+  // Delete video
+  app.delete("/api/admin/upcoming-features/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      await db
+        .delete(upcomingFeatureVideos)
+        .where(eq(upcomingFeatureVideos.id, id));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting upcoming feature video:", error);
+      res.status(500).json({ error: "Failed to delete video" });
     }
   });
 
