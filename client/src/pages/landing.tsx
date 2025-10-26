@@ -1029,64 +1029,74 @@ function UpcomingFeaturesSection() {
           </p>
         </div>
 
-        <div className="relative max-w-5xl mx-auto">
-          {/* Video Carousel */}
-          <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
-            {activeVideos.map((video: any, index: number) => (
-              <div
-                key={video.id}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                  index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                }`}
-              >
-                <video
-                  src={video.videoUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                  data-testid={`video-${video.id}`}
-                />
-                
-                {/* Video Overlay Info */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-                  <h3 className="text-white text-2xl font-bold mb-2">{video.title}</h3>
-                  {video.description && (
-                    <p className="text-gray-200 text-sm">{video.description}</p>
-                  )}
+        <div className="relative">
+          {/* Carousel Container with Peek Effect */}
+          <div className="overflow-hidden">
+            <div 
+              className="flex transition-transform duration-500 ease-out"
+              style={{ 
+                transform: `translateX(calc(-${currentIndex * 100}% + ${currentIndex * 4}rem))`,
+              }}
+            >
+              {activeVideos.map((video: any, index: number) => (
+                <div
+                  key={video.id}
+                  className="flex-shrink-0 px-8"
+                  style={{ width: 'calc(100% - 16rem)' }}
+                >
+                  <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
+                    <video
+                      src={video.videoUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                      data-testid={`video-${video.id}`}
+                    />
+                    
+                    {/* Video Overlay Info */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                      <h3 className="text-white text-2xl font-bold mb-2">{video.title}</h3>
+                      {video.description && (
+                        <p className="text-gray-200 text-sm">{video.description}</p>
+                      )}
+                    </div>
+
+                    {/* Play Indicator */}
+                    {index === currentIndex && (
+                      <div className="absolute top-4 right-4 z-20 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        <span>LIVE</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-
-            {/* Navigation Arrows */}
-            {activeVideos.length > 1 && (
-              <>
-                <button
-                  onClick={prevSlide}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
-                  data-testid="btn-prev-video"
-                  aria-label="Previous video"
-                >
-                  <ChevronLeft className="h-6 w-6 text-gray-800 group-hover:text-purple-600" />
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
-                  data-testid="btn-next-video"
-                  aria-label="Next video"
-                >
-                  <ChevronRight className="h-6 w-6 text-gray-800 group-hover:text-purple-600" />
-                </button>
-              </>
-            )}
-
-            {/* Play Indicator */}
-            <div className="absolute top-4 right-4 z-20 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              <span>LIVE</span>
+              ))}
             </div>
           </div>
+
+          {/* Navigation Arrows */}
+          {activeVideos.length > 1 && (
+            <>
+              <button
+                onClick={prevSlide}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
+                data-testid="btn-prev-video"
+                aria-label="Previous video"
+              >
+                <ChevronLeft className="h-6 w-6 text-gray-800 group-hover:text-purple-600" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
+                data-testid="btn-next-video"
+                aria-label="Next video"
+              >
+                <ChevronRight className="h-6 w-6 text-gray-800 group-hover:text-purple-600" />
+              </button>
+            </>
+          )}
 
           {/* Video Indicators */}
           {activeVideos.length > 1 && (
