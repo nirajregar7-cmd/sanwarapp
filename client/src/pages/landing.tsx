@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee, Gift, Navigation, Menu, X } from "lucide-react";
+import { Search, MapPin, Star, Clock, Users, Scissors, Calendar, Shield, Smartphone, CheckCircle, TrendingUp, IndianRupee, Gift, Navigation, Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
@@ -606,6 +606,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Upcoming Features Section */}
+      <UpcomingFeaturesSection />
+
       {/* Available Services Section */}
       <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -987,5 +990,119 @@ export default function Landing() {
       </footer>
 
     </div>
+  );
+}
+
+function UpcomingFeaturesSection() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const { data: videos } = useQuery<any[]>({
+    queryKey: ["/api/upcoming-features"],
+    retry: false,
+  });
+
+  const activeVideos = videos?.filter((v: any) => v.isActive) || [];
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % activeVideos.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + activeVideos.length) % activeVideos.length);
+  };
+
+  if (!activeVideos.length) return null;
+
+  return (
+    <section className="py-16 bg-gradient-to-br from-purple-50 to-blue-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            Upcoming Features
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Experience the future of beauty services with our innovative features
+          </p>
+        </div>
+
+        <div className="relative max-w-5xl mx-auto">
+          {/* Video Carousel */}
+          <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
+            {activeVideos.map((video: any, index: number) => (
+              <div
+                key={video.id}
+                className={`absolute inset-0 transition-opacity duration-500 ${
+                  index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                }`}
+              >
+                <video
+                  src={video.videoUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                  data-testid={`video-${video.id}`}
+                />
+                
+                {/* Video Overlay Info */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                  <h3 className="text-white text-2xl font-bold mb-2">{video.title}</h3>
+                  {video.description && (
+                    <p className="text-gray-200 text-sm">{video.description}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Navigation Arrows */}
+            {activeVideos.length > 1 && (
+              <>
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
+                  data-testid="btn-prev-video"
+                  aria-label="Previous video"
+                >
+                  <ChevronLeft className="h-6 w-6 text-gray-800 group-hover:text-purple-600" />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
+                  data-testid="btn-next-video"
+                  aria-label="Next video"
+                >
+                  <ChevronRight className="h-6 w-6 text-gray-800 group-hover:text-purple-600" />
+                </button>
+              </>
+            )}
+
+            {/* Play Indicator */}
+            <div className="absolute top-4 right-4 z-20 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+              <span>LIVE</span>
+            </div>
+          </div>
+
+          {/* Video Indicators */}
+          {activeVideos.length > 1 && (
+            <div className="flex justify-center space-x-2 mt-6">
+              {activeVideos.map((_, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    index === currentIndex 
+                      ? 'bg-purple-600 w-8' 
+                      : 'bg-gray-300 w-2 hover:bg-gray-400'
+                  }`}
+                  data-testid={`indicator-${index}`}
+                  aria-label={`Go to video ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
