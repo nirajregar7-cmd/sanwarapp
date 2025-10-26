@@ -10,6 +10,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { MobileInstallButton } from "@/components/MobileInstallButton";
 import { AppClerkProvider } from "@/lib/clerk-provider";
 import { LocationProvider } from "@/contexts/LocationContext";
+import { ImpersonationBanner } from "@/components/ImpersonationBanner";
 
 import Layout from "@/components/Layout";
 
@@ -103,9 +104,11 @@ function Router() {
   }
 
   return (
-    <Switch>
-      {/* Authentication pages */}
-      <Route path="/auth" component={AuthPage} />
+    <>
+      <ImpersonationBanner />
+      <Switch>
+        {/* Authentication pages */}
+        <Route path="/auth" component={AuthPage} />
 
 
 
@@ -497,7 +500,8 @@ function Router() {
           <NotFound />
         </Layout>
       </Route>
-    </Switch>
+      </Switch>
+    </>
   );
 }
 
