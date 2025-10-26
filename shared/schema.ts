@@ -1754,3 +1754,27 @@ export const insertAdminSettingSchema = createInsertSchema(adminSettings).omit({
 
 export type AdminSetting = typeof adminSettings.$inferSelect;
 export type InsertAdminSetting = z.infer<typeof insertAdminSettingSchema>;
+
+// Upcoming Feature Videos - Videos displayed on homepage
+export const upcomingFeatureVideos = pgTable("upcoming_feature_videos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  videoUrl: varchar("video_url").notNull(), // URL to uploaded video in object storage
+  thumbnailUrl: varchar("thumbnail_url"), // Optional thumbnail image
+  order: integer("order").default(0), // Display order (lower number = shown first)
+  isActive: boolean("is_active").default(true), // Whether to show on homepage
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Upcoming Feature Videos schema and types
+export const insertUpcomingFeatureVideoSchema = createInsertSchema(upcomingFeatureVideos).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type UpcomingFeatureVideo = typeof upcomingFeatureVideos.$inferSelect;
+export type InsertUpcomingFeatureVideo = z.infer<typeof insertUpcomingFeatureVideoSchema>;
