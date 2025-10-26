@@ -68,7 +68,7 @@ function UpcomingFeatureVideosView() {
 
   const deleteMutation = useMutation({
     mutationFn: async (videoId: string) => {
-      return await apiRequest(`/api/admin/upcoming-features/${videoId}`, "DELETE");
+      return await apiRequest("DELETE", `/api/admin/upcoming-features/${videoId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/upcoming-features"] });
@@ -1037,9 +1037,9 @@ function VideoDialog({ isOpen, onClose, video }: { isOpen: boolean; onClose: () 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       if (video?.id) {
-        return await apiRequest(`/api/admin/upcoming-features/${video.id}`, "PUT", data);
+        return await apiRequest("PUT", `/api/admin/upcoming-features/${video.id}`, data);
       } else {
-        return await apiRequest("/api/admin/upcoming-features", "POST", data);
+        return await apiRequest("POST", "/api/admin/upcoming-features", data);
       }
     },
     onSuccess: () => {
