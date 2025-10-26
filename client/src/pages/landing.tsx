@@ -997,6 +997,11 @@ function UpcomingFeaturesSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { data: videos } = useQuery<any[]>({
     queryKey: ["/api/upcoming-features"],
+    queryFn: async () => {
+      const response = await fetch("/api/upcoming-features");
+      if (!response.ok) throw new Error("Failed to fetch videos");
+      return response.json();
+    },
     retry: false,
   });
 

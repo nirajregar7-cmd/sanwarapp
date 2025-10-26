@@ -56,6 +56,13 @@ function UpcomingFeatureVideosView() {
 
   const { data: videos, isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/upcoming-features"],
+    queryFn: async () => {
+      const response = await fetch("/api/admin/upcoming-features", {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch videos");
+      return response.json();
+    },
     retry: false,
   });
 
