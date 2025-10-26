@@ -306,6 +306,13 @@ export async function sendBookingNotificationEmails(bookingId: string): Promise<
     const shopkeeperEmailsSetting = await storage.getAdminSetting('shopkeeper_booking_emails_enabled');
     const shopkeeperEmailsEnabled = shopkeeperEmailsSetting?.settingValue === 'true';
     
+    console.log(`🔧 Shopkeeper email setting check:`, {
+      settingExists: !!shopkeeperEmailsSetting,
+      settingValue: shopkeeperEmailsSetting?.settingValue,
+      isEnabled: shopkeeperEmailsEnabled,
+      hasSalonEmail: !!bookingData.salonEmail
+    });
+    
     if (shopkeeperEmailsEnabled && bookingData.salonEmail) {
       shopkeeperEmailSent = await sendEmail({
         to: bookingData.salonEmail,
@@ -314,7 +321,7 @@ export async function sendBookingNotificationEmails(bookingId: string): Promise<
       });
       console.log(`📧 Shopkeeper email sent to ${bookingData.salonEmail}`);
     } else if (!shopkeeperEmailsEnabled) {
-      console.log('⚠️ Shopkeeper booking emails are disabled by admin');
+      console.log('⚠️ Shopkeeper booking emails are DISABLED by admin - No email sent to shopkeeper');
     } else {
       console.warn('⚠️ Salon owner email not found, shopkeeper notification not sent');
     }
