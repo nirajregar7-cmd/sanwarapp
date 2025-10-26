@@ -1008,11 +1008,15 @@ function UpcomingFeaturesSection() {
   const activeVideos = videos?.filter((v: any) => v.isActive) || [];
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % activeVideos.length);
+    if (currentIndex < activeVideos.length - 2) {
+      setCurrentIndex((prev) => prev + 1);
+    }
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + activeVideos.length) % activeVideos.length);
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+    }
   };
 
   if (!activeVideos.length) return null;
@@ -1030,19 +1034,19 @@ function UpcomingFeaturesSection() {
         </div>
 
         <div className="relative">
-          {/* Carousel Container with Peek Effect */}
+          {/* Carousel Container - Show 2 Videos */}
           <div className="overflow-hidden">
             <div 
-              className="flex transition-transform duration-500 ease-out"
+              className="flex transition-transform duration-500 ease-out gap-6"
               style={{ 
-                transform: `translateX(calc(-${currentIndex * 100}% + ${currentIndex * 4}rem))`,
+                transform: `translateX(-${currentIndex * (50 + 1.5)}%)`,
               }}
             >
               {activeVideos.map((video: any, index: number) => (
                 <div
                   key={video.id}
-                  className="flex-shrink-0 px-8"
-                  style={{ width: 'calc(100% - 16rem)' }}
+                  className="flex-shrink-0"
+                  style={{ width: 'calc(50% - 12px)' }}
                 >
                   <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
                     <video
@@ -1064,12 +1068,10 @@ function UpcomingFeaturesSection() {
                     </div>
 
                     {/* Play Indicator */}
-                    {index === currentIndex && (
-                      <div className="absolute top-4 right-4 z-20 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
-                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                        <span>LIVE</span>
-                      </div>
-                    )}
+                    <div className="absolute top-4 right-4 z-20 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                      <span>LIVE</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1077,11 +1079,14 @@ function UpcomingFeaturesSection() {
           </div>
 
           {/* Navigation Arrows */}
-          {activeVideos.length > 1 && (
+          {activeVideos.length > 2 && (
             <>
               <button
                 onClick={prevSlide}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
+                disabled={currentIndex === 0}
+                className={`absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group ${
+                  currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
                 data-testid="btn-prev-video"
                 aria-label="Previous video"
               >
@@ -1089,7 +1094,10 @@ function UpcomingFeaturesSection() {
               </button>
               <button
                 onClick={nextSlide}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group"
+                disabled={currentIndex >= activeVideos.length - 2}
+                className={`absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-300 group ${
+                  currentIndex >= activeVideos.length - 2 ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
                 data-testid="btn-next-video"
                 aria-label="Next video"
               >
@@ -1099,9 +1107,9 @@ function UpcomingFeaturesSection() {
           )}
 
           {/* Video Indicators */}
-          {activeVideos.length > 1 && (
+          {activeVideos.length > 2 && (
             <div className="flex justify-center space-x-2 mt-6">
-              {activeVideos.map((_, index: number) => (
+              {Array.from({ length: activeVideos.length - 1 }).map((_, index: number) => (
                 <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
@@ -1111,7 +1119,7 @@ function UpcomingFeaturesSection() {
                       : 'bg-gray-300 w-2 hover:bg-gray-400'
                   }`}
                   data-testid={`indicator-${index}`}
-                  aria-label={`Go to video ${index + 1}`}
+                  aria-label={`Go to slide ${index + 1}`}
                 />
               ))}
             </div>
