@@ -568,14 +568,16 @@ export default function Landing() {
       {/* Local SEO Near Me Section */}
       <section className="py-12 sm:py-16 bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              Best Salon Near Me
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
-              Find top-rated beauty salons near you. Instant booking, verified reviews, professional services.
-            </p>
-          </div>
+          <FadeInSection direction="up" delay={100}>
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+                Best Salon Near Me
+              </h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
+                Find top-rated beauty salons near you. Instant booking, verified reviews, professional services.
+              </p>
+            </div>
+          </FadeInSection>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {[
@@ -586,15 +588,17 @@ export default function Landing() {
               { title: "Facial Near Me", desc: "Professional skin care and facial treatments", icon: Shield },
               { title: "Beauty Salon Near Me", desc: "Complete beauty services and treatments", icon: CheckCircle }
             ].map((service, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
-                <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
-                    <service.icon className="h-5 w-5 text-white" />
+              <FadeInSection key={index} direction="up" delay={index * 100}>
+                <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group cursor-pointer hover-lift">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                      <service.icon className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">{service.title}</h3>
                   </div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">{service.title}</h3>
+                  <p className="text-gray-600 text-sm">{service.desc}</p>
                 </div>
-                <p className="text-gray-600 text-sm">{service.desc}</p>
-              </div>
+              </FadeInSection>
             ))}
           </div>
 
@@ -616,14 +620,16 @@ export default function Landing() {
       {/* Available Services Section */}
       <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              Available Services
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
-              Discover a wide range of beauty and grooming services at your fingertips
-            </p>
-          </div>
+          <FadeInSection direction="up" delay={100}>
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+                Available Services
+              </h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto px-4">
+                Discover a wide range of beauty and grooming services at your fingertips
+              </p>
+            </div>
+          </FadeInSection>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
             {[
@@ -634,12 +640,14 @@ export default function Landing() {
               { icon: Shield, name: "Spa & Massage", color: "bg-indigo-100 text-indigo-600" },
               { icon: Smartphone, name: "Manicure & Pedicure", color: "bg-yellow-100 text-yellow-600" },
             ].map((service, index) => (
-              <div key={index} className="text-center group cursor-pointer">
-                <div className={`mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full ${service.color} flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform`}>
-                  <service.icon className="h-6 w-6 sm:h-8 sm:w-8" />
+              <FadeInSection key={index} direction="up" delay={index * 80}>
+                <div className="text-center group cursor-pointer">
+                  <div className={`mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full ${service.color} flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform`}>
+                    <service.icon className="h-6 w-6 sm:h-8 sm:w-8" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">{service.name}</h3>
                 </div>
-                <h3 className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">{service.name}</h3>
-              </div>
+              </FadeInSection>
             ))}
           </div>
         </div>
@@ -725,7 +733,9 @@ export default function Landing() {
       {/* Virtual Try-On Section */}
       <section className="py-16 bg-gradient-to-br from-purple-50 to-pink-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <VirtualTryOn />
+          <FadeInSection direction="up" delay={100}>
+            <VirtualTryOn />
+          </FadeInSection>
         </div>
       </section>
 
