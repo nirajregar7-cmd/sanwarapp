@@ -16,6 +16,8 @@ import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import LocationBasedSalonFilter from "@/components/LocationBasedSalonFilter";
 import { useLocation } from "@/contexts/LocationContext";
 import { VirtualTryOn } from "@/components/VirtualTryOn";
+import { TypewriterEffect } from "@/components/TypewriterEffect";
+import { FadeInSection } from "@/components/FadeInSection";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -315,45 +317,50 @@ export default function Landing() {
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="mb-6 sm:mb-8">
-            <div className="flex items-center justify-center mb-4 sm:mb-6">
+            <div className="flex items-center justify-center mb-4 sm:mb-6 animate-fade-in">
               <img 
                 src={sanwarLogo} 
                 alt="Sanwar - Smart Salon Booking Platform" 
-                className="h-16 w-auto sm:h-20 md:h-24 lg:h-32 rounded-xl shadow-lg"
+                className="h-16 w-auto sm:h-20 md:h-24 lg:h-32 rounded-xl shadow-lg hover:scale-105 transition-transform duration-300"
               />
             </div>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-3 sm:mb-4 opacity-95 font-medium">
-              {t('hero.title')}
-            </p>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-85 px-4 max-w-3xl mx-auto">
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl mb-3 sm:mb-4 opacity-95 font-medium min-h-[2em]">
+              <TypewriterEffect 
+                text={t('hero.title')}
+                delay={500}
+                speed={80}
+                className="font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"
+              />
+            </h1>
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-85 px-4 max-w-3xl mx-auto animate-fade-in-up">
               {t('hero.subtitle')}
             </p>
           </div>
 
           {/* Platform Statistics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12 max-w-4xl mx-auto">
-            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md">
+            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md animate-bounce-in animation-delay-200 hover-lift">
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">😊</div>
                 <div className="text-sm sm:text-base font-bold text-gray-900 mb-1">Many Happy</div>
                 <div className="text-xs sm:text-xs text-gray-700 font-medium">Customers</div>
               </div>
             </div>
-            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md">
+            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md animate-bounce-in animation-delay-400 hover-lift">
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">🏠</div>
                 <div className="text-sm sm:text-base font-bold text-gray-900 mb-1">Multiple Partner</div>
                 <div className="text-xs sm:text-xs text-gray-700 font-medium">Salons</div>
               </div>
             </div>
-            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md">
+            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md animate-bounce-in animation-delay-600 hover-lift">
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">📅</div>
                 <div className="text-sm sm:text-base font-bold text-gray-900 mb-1">Many Bookings</div>
                 <div className="text-xs sm:text-xs text-gray-700 font-medium">Already</div>
               </div>
             </div>
-            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md">
+            <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-white/90 transition-all duration-300 group hover:scale-105 shadow-md animate-bounce-in animation-delay-800 hover-lift">
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">✨</div>
                 <div className="text-sm sm:text-base font-bold text-gray-900 mb-1">Wide Range of</div>
