@@ -1095,11 +1095,11 @@ function UpcomingFeaturesSection() {
                       <video
                         src={video.videoUrl}
                         autoPlay
-                        loop
                         muted
                         playsInline
                         className="w-full h-full object-cover"
                         data-testid={`video-${video.id}`}
+                        onEnded={isCenter ? nextSlide : undefined}
                       />
                       
                       {/* Video Overlay Info - Only show on center video */}
