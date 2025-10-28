@@ -732,14 +732,16 @@ export default function Landing() {
       {/* How It Works Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              How Sanwar Works
-            </h2>
-            <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-              Simple steps to book your perfect salon experience
-            </p>
-          </div>
+          <FadeInSection direction="up" delay={100}>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                How Sanwar Works
+              </h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+                Simple steps to book your perfect salon experience
+              </p>
+            </div>
+          </FadeInSection>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -762,18 +764,20 @@ export default function Landing() {
                 icon: CheckCircle
               }
             ].map((item, index) => (
-              <div key={index} className="text-center">
-                <div className="relative mb-6">
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{backgroundColor: 'hsl(248.0645, 92.8571%, 61.1765%)'}}>
-                    <item.icon className="h-8 w-8 text-white" />
+              <FadeInSection key={index} direction="up" delay={index * 200}>
+                <div className="text-center hover-lift">
+                  <div className="relative mb-6">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{backgroundColor: 'hsl(248.0645, 92.8571%, 61.1765%)'}}>
+                      <item.icon className="h-8 w-8 text-white" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{backgroundColor: 'hsl(328.1818, 84.8485%, 60.5882%)'}}>
+                      {item.step}
+                    </div>
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{backgroundColor: 'hsl(328.1818, 84.8485%, 60.5882%)'}}>
-                    {item.step}
-                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
+                  <p className="text-gray-700">{item.description}</p>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-gray-700">{item.description}</p>
-              </div>
+              </FadeInSection>
             ))}
           </div>
         </div>
@@ -782,14 +786,16 @@ export default function Landing() {
       {/* Comprehensive Features Explanation Section */}
       <section className="py-16 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Complete Platform Features
-            </h2>
-            <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-              Everything you need to know about how Sanwar works for customers
-            </p>
-          </div>
+          <FadeInSection direction="up" delay={100}>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Complete Platform Features
+              </h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+                Everything you need to know about how Sanwar works for customers
+              </p>
+            </div>
+          </FadeInSection>
 
           <div className="max-w-3xl mx-auto">
             
@@ -881,9 +887,10 @@ export default function Landing() {
           </div>
 
           {/* Key Benefits Section */}
-          <div className="mt-16 text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-8">Why Choose Sanwar?</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <FadeInSection direction="up" delay={200}>
+            <div className="mt-16 text-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-8">Why Choose Sanwar?</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-md">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="h-6 w-6 text-blue-600" />
@@ -917,6 +924,7 @@ export default function Landing() {
               </div>
             </div>
           </div>
+          </FadeInSection>
         </div>
       </section>
 
@@ -927,16 +935,23 @@ export default function Landing() {
         {/* Background decorations */}
         <div className="absolute inset-0 bg-white/10"></div>
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-white/20 rounded-full blur-xl"></div>
-          <div className="absolute bottom-10 right-10 w-32 h-32 bg-blue-200/30 rounded-full blur-2xl"></div>
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white/20 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-blue-200/30 rounded-full blur-2xl animate-pulse"></div>
         </div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
-            Ready to Transform Your Beauty Experience?
-          </h2>
-          <p className="text-xl mb-8 text-gray-700">
-            Join thousands of satisfied customers and partner salons on Sanwar
-          </p>
+        <FadeInSection direction="up" delay={100}>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 min-h-[3em]">
+              <TypewriterEffect 
+                text="Ready to Transform Your Beauty Experience?"
+                delay={300}
+                speed={80}
+                loop={true}
+                pauseAfterComplete={3000}
+              />
+            </h2>
+            <p className="text-xl mb-8 text-gray-700 animate-fade-in-up animation-delay-400">
+              Join thousands of satisfied customers and partner salons on Sanwar
+            </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
@@ -956,6 +971,7 @@ export default function Landing() {
             </Button>
           </div>
         </div>
+        </FadeInSection>
       </section>
 
       {/* Footer */}
@@ -1027,14 +1043,16 @@ function UpcomingFeaturesSection() {
   return (
     <section className="py-16 bg-gradient-to-br from-purple-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Upcoming Features
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Experience the future of beauty services with our innovative features
-          </p>
-        </div>
+        <FadeInSection direction="up" delay={100}>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Upcoming Features
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Experience the future of beauty services with our innovative features
+            </p>
+          </div>
+        </FadeInSection>
 
         <div className="relative" style={{ minHeight: '400px' }}>
           {/* Carousel Container with Center Focus and Side Peeks */}
