@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Scissors, Sparkles, Users, Heart, Clock, Shield, CheckCircle, Menu, X } from "lucide-react";
+import { ArrowLeft, Scissors, Sparkles, Users, Heart, Clock, Shield, CheckCircle, Menu, X, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -54,41 +54,51 @@ export default function Services() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
       {/* Navigation */}
-      <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+      <nav className="bg-white shadow-lg sticky top-0 z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             {/* Logo and Brand */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-gray-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                S
+            <Link href="/" className="flex items-center space-x-3 group cursor-pointer" data-testid="link-logo">
+              <div className="relative">
+                <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600 text-white rounded-xl w-12 h-12 flex items-center justify-center font-bold text-xl shadow-lg transform group-hover:scale-110 transition-all duration-300 group-hover:rotate-6">
+                  <Scissors className="h-6 w-6" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
               </div>
-              <span className="text-xl font-bold text-gray-900">Sanwar</span>
-            </div>
+              <div>
+                <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:via-pink-600 group-hover:to-blue-700 transition-all duration-300">
+                  Sanwar
+                </span>
+                <p className="text-xs text-gray-500 font-medium -mt-1">Smart Salon Booking</p>
+              </div>
+            </Link>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-home">
+            <div className="hidden md:flex items-center space-x-1">
+              <Link href="/" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-home">
                 Home
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
-              <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-services">
+              <Link href="/services" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-services">
                 Services
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
-              <Link href="/features" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-features">
-                Features
-              </Link>
-              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-about">
+              <Link href="/about" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-about">
                 About Us
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
-              <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors font-medium" data-testid="link-contact">
+              <Link href="/contact" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-contact">
                 Contact
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
               {isAuthenticated ? (
-                <Link href="/dashboard" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium" data-testid="link-dashboard">
+                <Link href="/dashboard" className="ml-4 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-2.5 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold" data-testid="link-dashboard">
                   Dashboard
                 </Link>
               ) : (
-                <Link href="/auth" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium" data-testid="link-login">
-                  Login
+                <Link href="/auth" className="ml-4 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-2.5 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold flex items-center space-x-2" data-testid="link-login">
+                  <span>Login / Register</span>
+                  <ChevronRight className="h-4 w-4" />
                 </Link>
               )}
             </div>
@@ -109,11 +119,11 @@ export default function Services() {
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden">
-              <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+            <div className="md:hidden animate-fade-in-up">
+              <div className="px-2 pt-2 pb-3 space-y-2 bg-gradient-to-br from-white to-purple-50 border-t border-gray-200 shadow-inner">
                 <Link 
                   href="/" 
-                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="link-home-mobile"
                 >
@@ -121,23 +131,15 @@ export default function Services() {
                 </Link>
                 <Link 
                   href="/services" 
-                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="link-services-mobile"
                 >
                   Services
                 </Link>
                 <Link 
-                  href="/features" 
-                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="link-features-mobile"
-                >
-                  Features
-                </Link>
-                <Link 
                   href="/about" 
-                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="link-about-mobile"
                 >
@@ -145,7 +147,7 @@ export default function Services() {
                 </Link>
                 <Link 
                   href="/contact" 
-                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                  className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="link-contact-mobile"
                 >
@@ -154,7 +156,7 @@ export default function Services() {
                 {isAuthenticated ? (
                   <Link 
                     href="/dashboard" 
-                    className="block px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md hover:from-purple-700 hover:to-blue-700 transition-all font-medium mx-3 mt-3 text-center"
+                    className="block px-4 py-3 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-semibold mx-2 mt-2 text-center"
                     onClick={() => setMobileMenuOpen(false)}
                     data-testid="link-dashboard-mobile"
                   >
@@ -163,11 +165,11 @@ export default function Services() {
                 ) : (
                   <Link 
                     href="/auth" 
-                    className="block px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md hover:from-purple-700 hover:to-blue-700 transition-all font-medium mx-3 mt-3 text-center"
+                    className="block px-4 py-3 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-semibold mx-2 mt-2 text-center"
                     onClick={() => setMobileMenuOpen(false)}
                     data-testid="link-login-mobile"
                   >
-                    Login
+                    Login / Register
                   </Link>
                 )}
               </div>
