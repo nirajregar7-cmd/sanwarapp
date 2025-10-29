@@ -224,10 +224,6 @@ export default function Landing() {
                 Services
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
-              <Link href="/features" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-features">
-                Features
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
-              </Link>
               <Link href="/about" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-about">
                 About Us
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
@@ -281,14 +277,6 @@ export default function Landing() {
                   data-testid="link-services-mobile"
                 >
                   Services
-                </Link>
-                <Link 
-                  href="/features" 
-                  className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="link-features-mobile"
-                >
-                  Features
                 </Link>
                 <Link 
                   href="/about" 
