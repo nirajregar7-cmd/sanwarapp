@@ -333,25 +333,29 @@ export default function SalonDiscovery() {
             )}
           </div>
 
-          {/* Salon Grid */}
+          {/* Salon Grid with Scrolling */}
           {salonsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Card key={index} className="overflow-hidden animate-pulse">
-                  <div className="aspect-video bg-gray-300"></div>
-                  <CardContent className="p-4">
-                    <div className="h-6 bg-gray-300 rounded mb-2"></div>
-                    <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="max-h-[900px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Card key={index} className="overflow-hidden animate-pulse">
+                    <div className="aspect-video bg-gray-300"></div>
+                    <CardContent className="p-4">
+                      <div className="h-6 bg-gray-300 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           ) : salons && salons.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {salons.map((salon) => (
-                <SalonCard key={salon.id} salon={salon as any} />
-              ))}
+            <div className="max-h-[900px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {salons.map((salon) => (
+                  <SalonCard key={salon.id} salon={salon as any} />
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-12">
