@@ -585,6 +585,31 @@ export default function SalonManagement() {
                       Approve Salon
                     </Button>
                   )}
+                  {salonProfile && salonProfile.verificationStatus === 'approved' && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        if (!actionNotes.trim()) {
+                          toast({
+                            title: "Notes Required",
+                            description: "Please provide rejection notes to explain why this approved salon is being rejected.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        rejectMutation.mutate({ 
+                          salonId: viewingProfile, 
+                          notes: actionNotes 
+                        });
+                        setViewingProfile(null);
+                      }}
+                      disabled={rejectMutation.isPending}
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Reject Salon
+                    </Button>
+                  )}
                 </div>
               </div>
 
