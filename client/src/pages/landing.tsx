@@ -176,14 +176,31 @@ export default function Landing() {
     },
   });
 
-  // Fetch ALL salons for landing page (no location filtering on homepage)
+  // Fetch top-rated salons (filtered by location if available, all India if denied)
   const { data: topSalons, isLoading: salonsLoading } = useQuery<Salon[]>({
-    queryKey: ["/api/salons/featured"],
+    queryKey: [
+      "/api/salons/featured", 
+      userLocation?.lat, 
+      userLocation?.lng, 
+      searchRadius,
+      localStorage.getItem('sanwar_permission_denied')
+    ],
     queryFn: async () => {
-      // Landing page always shows ALL salons regardless of location
-      // Location filtering is only used in the SalonDiscovery page
-      const url = "/api/salons/featured";
-      console.log('Landing page - fetching all salons (no location filter)');
+      let url = "/api/salons/featured";
+      const permissionDenied = localStorage.getItem('sanwar_permission_denied') === 'true';
+      
+      // If user denied location permission, show all salons across India
+      // If user has location, use it for radius filtering
+      if (userLocation && !permissionDenied) {
+        url += `?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=${searchRadius}`;
+        console.log('Fetching salons within radius:', searchRadius);
+      } else if (permissionDenied) {
+        // Show all salons across India without location filter
+        console.log('Location permission denied - showing all salons across India');
+      } else {
+        // No location and no denial - show all salons (default)
+        console.log('No location available - showing all salons');
+      }
       
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch salons");
