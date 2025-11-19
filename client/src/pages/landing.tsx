@@ -28,17 +28,33 @@ export default function Landing() {
   const [searchRadius, setSearchRadius] = useState(30);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const salonScrollRef = useRef<HTMLDivElement>(null);
+  const topRowScrollRef = useRef<HTMLDivElement>(null);
+  const bottomRowScrollRef = useRef<HTMLDivElement>(null);
   
-  // Scroll functions for salon carousel
-  const scrollSalons = (direction: 'left' | 'right') => {
-    if (salonScrollRef.current) {
+  // Scroll functions for top row
+  const scrollTopRow = (direction: 'left' | 'right') => {
+    if (topRowScrollRef.current) {
       const scrollAmount = 370; // Approximate width of one salon card + gap
       const newScrollPosition = direction === 'left' 
-        ? salonScrollRef.current.scrollLeft - scrollAmount 
-        : salonScrollRef.current.scrollLeft + scrollAmount;
+        ? topRowScrollRef.current.scrollLeft - scrollAmount 
+        : topRowScrollRef.current.scrollLeft + scrollAmount;
       
-      salonScrollRef.current.scrollTo({
+      topRowScrollRef.current.scrollTo({
+        left: newScrollPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Scroll functions for bottom row
+  const scrollBottomRow = (direction: 'left' | 'right') => {
+    if (bottomRowScrollRef.current) {
+      const scrollAmount = 370; // Approximate width of one salon card + gap
+      const newScrollPosition = direction === 'left' 
+        ? bottomRowScrollRef.current.scrollLeft - scrollAmount 
+        : bottomRowScrollRef.current.scrollLeft + scrollAmount;
+      
+      bottomRowScrollRef.current.scrollTo({
         left: newScrollPosition,
         behavior: 'smooth'
       });
@@ -704,51 +720,139 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="relative group">
-            {/* Left Arrow Button */}
-            <button
-              onClick={() => scrollSalons('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -ml-5"
-              aria-label="Scroll left"
-              data-testid="button-scroll-left"
-            >
-              <ChevronLeft className="h-6 w-6 text-purple-600" />
-            </button>
-
-            {/* Right Arrow Button */}
-            <button
-              onClick={() => scrollSalons('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -mr-5"
-              aria-label="Scroll right"
-              data-testid="button-scroll-right"
-            >
-              <ChevronRight className="h-6 w-6 text-purple-600" />
-            </button>
-
+          <div className="space-y-6">
             {salonsLoading ? (
-              // Loading skeleton for salons
-              <div ref={salonScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
-                <div className="grid grid-rows-2 grid-flow-col auto-cols-[minmax(300px,350px)] gap-4 sm:gap-6">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <Card key={index} className="overflow-hidden animate-pulse">
-                      <div className="aspect-video bg-gray-300"></div>
-                      <CardContent className="p-4">
-                        <div className="h-6 bg-gray-300 rounded mb-2"></div>
-                        <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-                        <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-                      </CardContent>
-                    </Card>
-                  ))}
+              <>
+                {/* Top Row Loading */}
+                <div className="relative group">
+                  <button
+                    onClick={() => scrollTopRow('left')}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -ml-5"
+                    aria-label="Scroll top row left"
+                    data-testid="button-scroll-top-left"
+                  >
+                    <ChevronLeft className="h-6 w-6 text-purple-600" />
+                  </button>
+                  <button
+                    onClick={() => scrollTopRow('right')}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -mr-5"
+                    aria-label="Scroll top row right"
+                    data-testid="button-scroll-top-right"
+                  >
+                    <ChevronRight className="h-6 w-6 text-purple-600" />
+                  </button>
+                  <div ref={topRowScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
+                    <div className="flex gap-4 sm:gap-6">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <Card key={index} className="overflow-hidden animate-pulse min-w-[300px] sm:min-w-[350px]">
+                          <div className="aspect-video bg-gray-300"></div>
+                          <CardContent className="p-4">
+                            <div className="h-6 bg-gray-300 rounded mb-2"></div>
+                            <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+                {/* Bottom Row Loading */}
+                <div className="relative group">
+                  <button
+                    onClick={() => scrollBottomRow('left')}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -ml-5"
+                    aria-label="Scroll bottom row left"
+                    data-testid="button-scroll-bottom-left"
+                  >
+                    <ChevronLeft className="h-6 w-6 text-purple-600" />
+                  </button>
+                  <button
+                    onClick={() => scrollBottomRow('right')}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -mr-5"
+                    aria-label="Scroll bottom row right"
+                    data-testid="button-scroll-bottom-right"
+                  >
+                    <ChevronRight className="h-6 w-6 text-purple-600" />
+                  </button>
+                  <div ref={bottomRowScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
+                    <div className="flex gap-4 sm:gap-6">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <Card key={index} className="overflow-hidden animate-pulse min-w-[300px] sm:min-w-[350px]">
+                          <div className="aspect-video bg-gray-300"></div>
+                          <CardContent className="p-4">
+                            <div className="h-6 bg-gray-300 rounded mb-2"></div>
+                            <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
             ) : topSalons && topSalons.length > 0 ? (
-              <div ref={salonScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
-                <div className="grid grid-rows-2 grid-flow-col auto-cols-[minmax(300px,350px)] gap-4 sm:gap-6">
-                  {topSalons.map((salon) => (
-                    <SalonCard key={salon.id} salon={salon as any} />
-                  ))}
+              <>
+                {/* Top Row */}
+                <div className="relative group">
+                  <button
+                    onClick={() => scrollTopRow('left')}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -ml-5"
+                    aria-label="Scroll top row left"
+                    data-testid="button-scroll-top-left"
+                  >
+                    <ChevronLeft className="h-6 w-6 text-purple-600" />
+                  </button>
+                  <button
+                    onClick={() => scrollTopRow('right')}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -mr-5"
+                    aria-label="Scroll top row right"
+                    data-testid="button-scroll-top-right"
+                  >
+                    <ChevronRight className="h-6 w-6 text-purple-600" />
+                  </button>
+                  <div ref={topRowScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
+                    <div className="flex gap-4 sm:gap-6">
+                      {topSalons.slice(0, Math.ceil(topSalons.length / 2)).map((salon) => (
+                        <div key={salon.id} className="min-w-[300px] sm:min-w-[350px]">
+                          <SalonCard salon={salon as any} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+                {/* Bottom Row */}
+                {topSalons.length > 1 && (
+                  <div className="relative group">
+                    <button
+                      onClick={() => scrollBottomRow('left')}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -ml-5"
+                      aria-label="Scroll bottom row left"
+                      data-testid="button-scroll-bottom-left"
+                    >
+                      <ChevronLeft className="h-6 w-6 text-purple-600" />
+                    </button>
+                    <button
+                      onClick={() => scrollBottomRow('right')}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -mr-5"
+                      aria-label="Scroll bottom row right"
+                      data-testid="button-scroll-bottom-right"
+                    >
+                      <ChevronRight className="h-6 w-6 text-purple-600" />
+                    </button>
+                    <div ref={bottomRowScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
+                      <div className="flex gap-4 sm:gap-6">
+                        {topSalons.slice(Math.ceil(topSalons.length / 2)).map((salon) => (
+                          <div key={salon.id} className="min-w-[300px] sm:min-w-[350px]">
+                            <SalonCard salon={salon as any} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               // No salons found state
               <div className="col-span-full text-center py-12">
