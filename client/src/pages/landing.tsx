@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import SalonCard from "@/components/SalonCard";
 import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import LocationBasedSalonFilter from "@/components/LocationBasedSalonFilter";
@@ -28,6 +28,22 @@ export default function Landing() {
   const [searchRadius, setSearchRadius] = useState(30);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const salonScrollRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll functions for salon carousel
+  const scrollSalons = (direction: 'left' | 'right') => {
+    if (salonScrollRef.current) {
+      const scrollAmount = 370; // Approximate width of one salon card + gap
+      const newScrollPosition = direction === 'left' 
+        ? salonScrollRef.current.scrollLeft - scrollAmount 
+        : salonScrollRef.current.scrollLeft + scrollAmount;
+      
+      salonScrollRef.current.scrollTo({
+        left: newScrollPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
   
   // Use the new LocationContext for unified location management
   const { 
@@ -688,10 +704,30 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="relative">
+          <div className="relative group">
+            {/* Left Arrow Button */}
+            <button
+              onClick={() => scrollSalons('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -ml-5"
+              aria-label="Scroll left"
+              data-testid="button-scroll-left"
+            >
+              <ChevronLeft className="h-6 w-6 text-purple-600" />
+            </button>
+
+            {/* Right Arrow Button */}
+            <button
+              onClick={() => scrollSalons('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110 -mr-5"
+              aria-label="Scroll right"
+              data-testid="button-scroll-right"
+            >
+              <ChevronRight className="h-6 w-6 text-purple-600" />
+            </button>
+
             {salonsLoading ? (
               // Loading skeleton for salons
-              <div className="overflow-x-auto pb-4 custom-scrollbar">
+              <div ref={salonScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
                 <div className="grid grid-rows-2 grid-flow-col auto-cols-[minmax(300px,350px)] gap-4 sm:gap-6">
                   {Array.from({ length: 6 }).map((_, index) => (
                     <Card key={index} className="overflow-hidden animate-pulse">
@@ -706,7 +742,7 @@ export default function Landing() {
                 </div>
               </div>
             ) : topSalons && topSalons.length > 0 ? (
-              <div className="overflow-x-auto pb-4 custom-scrollbar">
+              <div ref={salonScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
                 <div className="grid grid-rows-2 grid-flow-col auto-cols-[minmax(300px,350px)] gap-4 sm:gap-6">
                   {topSalons.map((salon) => (
                     <SalonCard key={salon.id} salon={salon as any} />
