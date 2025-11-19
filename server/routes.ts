@@ -511,10 +511,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Limit to 6 salons
-      const limitedSalons = featuredSalons.slice(0, 6);
-      
-      res.json(limitedSalons);
+      // Return all featured salons (no limit)
+      res.json(featuredSalons);
     } catch (error) {
       console.error("Error fetching featured salons:", error);
       res.status(500).json({ message: "Failed to fetch featured salons" });
