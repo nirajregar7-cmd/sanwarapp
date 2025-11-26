@@ -955,7 +955,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(services, eq(bookings.serviceId, services.id))
       .leftJoin(staff, eq(bookings.staffId, staff.id))
       .where(eq(bookings.salonId, salonId))
-      .orderBy(desc(bookings.createdAt));
+      .orderBy(asc(bookings.date), asc(bookings.startTime));
 
     // Transform flat results back to nested structure for API compatibility
     const transformedResults = bookingsWithDetails.map(booking => ({
