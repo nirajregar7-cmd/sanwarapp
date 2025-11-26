@@ -2867,11 +2867,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Legacy booking endpoint (now redirects to payment flow)
+  // Direct booking endpoint (no payment required)
   app.post('/api/bookings', isAuthenticated, async (req: any, res) => {
-    return res.status(400).json({
-      message: "Direct booking not allowed. Please use payment flow: /api/bookings/create-payment-order then /api/bookings/verify-payment"
-    });
+    try {
+      const userId = req.user?.id;
+      const { salonId, serviceIds, timeSlotId, date, staffId, referralCode } = req.body;
+
+      // Validate required fields
+      if (!salonId || !serviceIds || !Array.isArray(serviceIds) || serviceIds.length === 0 || !timeSlotId || !date) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Check if time slot is available
+      const [existingBooking] = await db.select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.timeSlotId, timeSlotId),
+            eq(bookings.date, date)
+          )
+        );
+
+      if (existingBooking) {
+        return res.status(400).json({ message: "Time slot is no longer available" });
+      }
+
+      // Get time slot details
+      const [timeSlot] = await db.select()
+        .from(timeSlots)
+        .where(eq(timeSlots.id, timeSlotId));
+
+      if (!timeSlot) {
+        return res.status(400).json({ message: "Time slot not found" });
+      }
+
+      // Get service details for all selected services
+      const serviceDetails = await db.select()
+        .from(services)
+        .where(inArray(services.id, serviceIds));
+
+      if (serviceDetails.length !== serviceIds.length) {
+        return res.status(400).json({ message: "One or more services not found" });
+      }
+
+      // Calculate total amount
+      const totalAmount = serviceDetails.reduce((sum, svc) => sum + parseFloat(svc.price.toString()), 0);
+
+      // Create booking
+      const [booking] = await db.insert(bookings).values({
+        customerId: userId,
+        salonId,
+        serviceId: serviceIds[0], // Primary service
+        staffId: staffId || null,
+        timeSlotId,
+        date,
+        startTime: timeSlot.startTime,
+        endTime: timeSlot.endTime,
+        totalAmount: totalAmount.toString(),
+        confirmationAmount: '0',
+        paymentStatus: 'completed',
+        status: 'confirmed',
+        notes: `Direct booking - ${serviceDetails.length} service(s)`
+      }).returning();
+
+      // Mark time slot as unavailable
+      await db.execute(sql`
+        UPDATE time_slots 
+        SET is_available = false 
+        WHERE id = ${timeSlotId}
+      `);
+
+      // Send notifications
+      await sendBookingConfirmationNotification(booking.id);
+      await sendSalonOwnerBookingNotification(booking.id);
+
+      res.status(201).json({
+        ...booking,
+        message: "Booking created successfully!",
+        services: serviceDetails.length
+      });
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      res.status(500).json({ message: "Failed to create booking" });
+    }
   });
 
   // Owner-specific endpoints
