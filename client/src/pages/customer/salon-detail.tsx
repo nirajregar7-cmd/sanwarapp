@@ -31,14 +31,6 @@ import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { CustomerSalonMap } from "@/components/CustomerSalonMap";
 import { EmergencyBookingBanner } from "@/components/EmergencyBookingBanner";
 import { ServiceSpecificOffers } from "@/components/ServiceSpecificOffers";
-import { loadCashfreeSDK } from "@/lib/payment";
-
-// Declare Cashfree types for window
-declare global {
-  interface Window {
-    Cashfree: any;
-  }
-}
 
 const bookingSchema = z.object({
   serviceIds: z.array(z.string()).min(1, "Please select at least one service"),
@@ -438,11 +430,9 @@ export default function SalonDetail() {
         throw new Error("Please log in to book an appointment");
       }
 
-      // Step 1: Create payment order for multiple services
-      // For now, we'll use the first service for payment order creation
-      // and handle multiple services in the booking creation
+      // Direct booking without payment
       const primaryServiceId = data.serviceIds[0];
-      console.log('[BOOKING] Creating payment order with:', {
+      console.log('[BOOKING] Creating booking with:', {
         salonId,
         serviceId: primaryServiceId,
         staffId: data.staffId || null,
@@ -451,106 +441,28 @@ export default function SalonDetail() {
         additionalServices: data.serviceIds.slice(1),
       });
       
-      const orderResponse = await apiRequest("POST", "/api/bookings/create-payment-order", {
+      const bookingResponse = await apiRequest("POST", "/api/bookings", {
         salonId,
-        serviceId: primaryServiceId,
+        serviceIds: data.serviceIds,
         staffId: data.staffId || null,
         timeSlotId: data.timeSlotId,
         date: data.date.toISOString().split('T')[0],
         referralCode: appliedReferralCode?.code || null,
-        // Include all services for total calculation
-        additionalServices: data.serviceIds.slice(1),
       });
 
-      const orderData = await orderResponse.json();
-      console.log("Order data received:", orderData);
+      const bookingData = await bookingResponse.json();
+      console.log("Booking created:", bookingData);
       
-      // Remove payment adjustment notification
-      
-      // Handle free bookings (when referral code covers full amount OR user has free credits)
-      if (orderData.isFreeBooking || orderData.freeBooking) {
-        let endpoint = "/api/bookings/create-free";
-        let payload: any = {
-          salonId,
-          serviceId: primaryServiceId, // Use primary service for free booking
-          staffId: data.staffId || null,
-          timeSlotId: data.timeSlotId,
-          date: data.date.toISOString().split('T')[0],
-          // Include additional services if multiple selected
-          additionalServices: data.serviceIds.length > 1 ? data.serviceIds.slice(1) : undefined,
-        };
-
-        // Handle referral code free booking
-        if (orderData.isFreeBooking && orderData.referralCodeData) {
-          payload.referralCodeData = orderData.referralCodeData;
-        }
-        
-        // Handle free credit booking
-        if (orderData.freeBooking && orderData.creditUsed) {
-          endpoint = "/api/bookings/complete-free-credit";
-          payload = {
-            bookingData: orderData.bookingData,
-            creditUsed: orderData.creditUsed,
-          };
-        }
-        
-        const freeBookingResponse = await apiRequest("POST", endpoint, payload);
-        const freeBookingData = await freeBookingResponse.json();
-        
-        if (!freeBookingResponse.ok) {
-          throw new Error(freeBookingData.message || "Failed to create free booking");
-        }
-        
-        return freeBookingData;
+      if (!bookingResponse.ok) {
+        throw new Error(bookingData.message || "Failed to create booking");
       }
       
-      // Step 2: Initialize Cashfree payment
-      return new Promise(async (resolve, reject) => {
-        try {
-          // Load Cashfree SDK if not already loaded
-          if (!window.Cashfree) {
-            await loadCashfreeSDK();
-          }
-          
-          const cashfree = window.Cashfree({
-            mode: process.env.NODE_ENV === 'production' ? 'production' : 'production' // Always use production for production keys
-          });
-
-          const checkoutOptions = {
-            paymentSessionId: orderData.paymentSessionId,
-            redirectTarget: '_self', // Use _self for better mobile compatibility
-            theme: {
-              color: '#8B5CF6',
-              backgroundColor: '#ffffff'
-            }
-          };
-
-          // Open Cashfree checkout - this will redirect to payment callback
-          const result = await cashfree.checkout(checkoutOptions);
-          
-          if (result.error) {
-            console.error('Cashfree payment error:', result.error);
-            reject(new Error(result.error.message || 'Payment failed'));
-            return;
-          }
-          
-          // For redirect mode, we don't get result.paymentDetails
-          // The payment callback page will handle verification
-          console.log('Payment initiated, redirecting to payment gateway...');
-          resolve({ redirected: true });
-        } catch (error) {
-          console.error('Cashfree payment initialization failed:', error);
-          reject(new Error(error instanceof Error ? error.message : 'Payment initialization failed'));
-        }
-      });
+      return bookingData;
     },
     onSuccess: (result) => {
-      const isFreebook = result?.referralCodeUsed;
       toast({
-        title: isFreebook ? "Free Booking Confirmed!" : "Booking Confirmed!",
-        description: isFreebook 
-          ? `Your appointment has been booked for free using referral code ${result.referralCodeUsed}!`
-          : "Your appointment has been successfully booked and payment received. You'll receive a confirmation shortly.",
+        title: "Appointment Booked!",
+        description: "Your appointment has been successfully booked. You'll receive a confirmation shortly.",
       });
       setBookingDialogOpen(false);
       setAppliedReferralCode(null); // Reset referral code
@@ -2091,24 +2003,8 @@ export default function SalonDetail() {
                                   <>
                                     <Separator className="my-2" />
                                     <div className="flex justify-between text-green-600">
-                                      <span>Referral Discount:</span>
-                                      <span>
-                                        {appliedReferralCode.discountType === 'free' 
-                                          ? 'FREE BOOKING' 
-                                          : appliedReferralCode.discountType === 'percentage'
-                                          ? `${appliedReferralCode.discountValue}% OFF`
-                                          : `₹${appliedReferralCode.discountValue} OFF`
-                                        }
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between font-semibold">
-                                      <span>Final Amount:</span>
-                                      <span>
-                                        {appliedReferralCode.discountType === 'free' 
-                                          ? '₹0 (FREE)' 
-                                          : '₹10 (Confirmation)'
-                                        }
-                                      </span>
+                                      <span>Applied Referral Code:</span>
+                                      <span>{appliedReferralCode.code}</span>
                                     </div>
                                   </>
                                 )}
@@ -2125,19 +2021,11 @@ export default function SalonDetail() {
                               ? (
                                   <span className="flex items-center justify-center gap-2">
                                     <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                    Processing...
+                                    Booking...
                                   </span>
                                 )
-                              : appliedReferralCode?.discountType === 'free'
-                              ? "Book for FREE!"
-                              : (rescheduleBookingId ? "Reschedule Booking" : "Pay Confirmation Fee")}
+                              : (rescheduleBookingId ? "Reschedule Booking" : "Book Appointment")}
                           </Button>
-                          
-                          {bookingMutation.isPending && (
-                            <div className="text-xs text-gray-500 text-center mt-2">
-                              Please wait while we process your payment. This may take up to 2 minutes.
-                            </div>
-                          )}
                         </form>
                       </Form>
                     </DialogContent>
