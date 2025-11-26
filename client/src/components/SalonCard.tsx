@@ -157,15 +157,16 @@ export default function SalonCard({ salon }: SalonCardProps) {
             </div>
           </div>
           
-          <p className="text-gray-600 mb-3 line-clamp-2">
+          <p className="text-gray-600 mb-2 line-clamp-1 text-sm">
             <MapPin className="h-4 w-4 inline mr-1" />
             {salon.address}
-            {salon.distance && (
-              <span className="ml-2 text-sm text-blue-600 font-medium">
-                {salon.distance < 1 ? `${(salon.distance * 1000).toFixed(0)}m` : `${salon.distance.toFixed(1)}km`} away
-              </span>
-            )}
           </p>
+          
+          {salon.distance && (
+            <p className="text-sm text-blue-600 font-medium mb-3">
+              {salon.distance < 1 ? `${(salon.distance * 1000).toFixed(0)}m away` : `${salon.distance.toFixed(1)}km away`}
+            </p>
+          )}
           
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
