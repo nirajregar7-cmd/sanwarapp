@@ -180,14 +180,6 @@ export default function SalonCard({ salon }: SalonCardProps) {
             )}
           </div>
 
-          {/* Confirmation Fee Display */}
-          <div className="flex items-center justify-between mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-            <span className="text-sm font-medium text-blue-900">Confirmation Fee:</span>
-            <span className="text-sm font-bold text-blue-700">
-              {formatConfirmationFee(salon.confirmationAmount || 300)}
-            </span>
-          </div>
-          
           {/* Services Preview - would need to fetch services for each salon */}
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">

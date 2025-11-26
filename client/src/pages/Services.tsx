@@ -263,7 +263,7 @@ export default function Services() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Select your preferred service, choose a convenient time slot, and book instantly with just a ₹3 confirmation fee.
+                  Select your preferred service, choose a convenient time slot, and book instantly with no charges.
                 </p>
               </CardContent>
             </Card>
@@ -292,17 +292,12 @@ export default function Services() {
             </CardHeader>
             <CardContent className="text-center">
               <div className="mb-6">
-                <div className="text-3xl font-bold text-purple-600 mb-2">₹3</div>
-                <div className="text-lg text-gray-600">Confirmation Fee (Online)</div>
-                <div className="text-sm text-gray-500">Paid once per booking, regardless of number of services</div>
-              </div>
-              <div className="mb-6">
                 <div className="text-2xl font-semibold text-gray-700 mb-2">Service Fees</div>
                 <div className="text-gray-600">Paid directly at the salon according to their pricing</div>
               </div>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Our minimal confirmation fee ensures your booking is secured while keeping costs transparent. 
-                Service prices are set by individual salons and clearly displayed before booking.
+                Book your appointments completely free! Service prices are set by individual salons and clearly displayed before booking. 
+                Pay directly at the salon for the services you receive.
               </p>
             </CardContent>
           </Card>

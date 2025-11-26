@@ -144,16 +144,11 @@ export default function Map({ salons, userLocation, ownedSalonId, onSalonClick, 
             ${salon.name} ${isOwnedSalon ? '(Your Salon)' : ''}
           </h3>
           <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280; line-height: 1.4;">${salon.address}</p>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-            <div style="display: flex; align-items: center;">
-              <span style="color: #f59e0b; margin-right: 4px;">⭐</span>
-              <span style="font-size: 14px; color: #374151;">
-                ${salon.averageRating ? Number(salon.averageRating).toFixed(1) : 'New'}
-              </span>
-            </div>
-            <div style="color: ${isOwnedSalon ? '#dc2626' : '#10b981'}; font-weight: bold; font-size: 14px;">
-              ₹${salon.confirmationAmount || 0}
-            </div>
+          <div style="display: flex; align-items: center;">
+            <span style="color: #f59e0b; margin-right: 4px;">⭐</span>
+            <span style="font-size: 14px; color: #374151;">
+              ${salon.averageRating ? Number(salon.averageRating).toFixed(1) : 'New'}
+            </span>
           </div>
         </div>
       `;
