@@ -35,6 +35,122 @@ interface GroupedBooking extends BookingWithDetails {
   allBookingIds: string[];
   groupStatus: string;
 }
+
+// BookingCard component for displaying individual bookings in tabs
+function BookingCard({ 
+  booking, 
+  completeBooking, 
+  updateBookingStatusMutation 
+}: { 
+  booking: GroupedBooking; 
+  completeBooking: (id: string) => void;
+  updateBookingStatusMutation: { isPending: boolean };
+}) {
+  return (
+    <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+      <div className="flex items-start space-x-4 flex-1">
+        <div className="flex-shrink-0">
+          {booking.isWalkIn ? (
+            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+              <User className="h-6 w-6 text-gray-500" />
+            </div>
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <User className="h-6 w-6 text-primary" />
+            </div>
+          )}
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="font-medium text-gray-900">
+                {booking.isWalkIn 
+                  ? booking.walkInCustomerName 
+                  : booking.customer?.name || 'Customer'
+                }
+              </p>
+              <p className="text-sm text-gray-500">
+                Booking #{booking.id.slice(0, 8)}
+              </p>
+            </div>
+            <Badge 
+              variant={
+                booking.groupStatus === 'confirmed' ? 'default' :
+                booking.groupStatus === 'completed' ? 'secondary' :
+                booking.groupStatus.includes('cancelled') ? 'destructive' : 'outline'
+              }
+            >
+              {booking.groupStatus}
+            </Badge>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm text-gray-600">
+            <div>
+              <span className="font-medium">Service{booking.servicesCount > 1 ? 's' : ''}:</span>{' '}
+              {booking.servicesList ? 
+                booking.servicesList.join(', ') + 
+                (booking.servicesCount > 1 ? ` (${booking.servicesCount} services)` : '') :
+                (booking.service?.name || 'Service')
+              }
+            </div>
+            <div>
+              <span className="font-medium">Appointment:</span> {booking.date}
+              <div className="text-xs text-gray-500 mt-1">
+                Booked: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric' 
+                }) : 'Unknown'}
+              </div>
+            </div>
+            <div>
+              <span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}
+            </div>
+            <div>
+              <span className="font-medium">Amount:</span> ₹{booking.totalGroupAmount || booking.totalAmount}
+            </div>
+            <div>
+              <span className="font-medium">Payment:</span> 
+              <Badge variant="outline" className="ml-1">
+                {booking.paymentStatus || 'Pending'}
+              </Badge>
+            </div>
+          </div>
+          {booking.isWalkIn && booking.walkInCustomerPhone && (
+            <p className="text-sm text-gray-500 mt-1">
+              Phone: {booking.walkInCustomerPhone}
+            </p>
+          )}
+          {!booking.isWalkIn && booking.customer?.phone && (
+            <p className="text-sm text-gray-500 mt-1">
+              Phone: {booking.customer.phone}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex space-x-2 ml-4">
+        <Button variant="outline" size="sm">
+          <Eye className="h-4 w-4" />
+        </Button>
+        {booking.status === 'confirmed' && (
+          <Button 
+            size="sm" 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => completeBooking(booking.id)}
+            disabled={updateBookingStatusMutation.isPending}
+          >
+            Mark Complete
+          </Button>
+        )}
+        {booking.status === 'completed' && (
+          <Badge variant="secondary" className="px-3 py-1">
+            Service Completed
+          </Badge>
+        )}
+      </div>
+    </div>
+  );
+}
+
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
@@ -2229,7 +2345,7 @@ export default function OwnerDashboard() {
                 </Card>
               </div>
 
-              {/* All Bookings */}
+              {/* All Bookings with Tabs */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -2246,136 +2362,144 @@ export default function OwnerDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {bookingsLoading ? (
-                    <div className="space-y-4">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
-                      ))}
-                    </div>
-                  ) : bookings.length > 0 ? (
-                    <div className="space-y-4">
-                      {bookings.map((booking) => (
-                        <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-                          <div className="flex items-start space-x-4 flex-1">
-                            {/* Customer Profile Picture */}
-                            <div className="flex-shrink-0">
-                              {booking.isWalkIn ? (
-                                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                                  <User className="h-6 w-6 text-gray-500" />
-                                </div>
-                              ) : booking.customer?.id ? (
-                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <User className="h-6 w-6 text-primary" />
-                                </div>
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <User className="h-6 w-6 text-primary" />
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Booking Details */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-2">
-                                <div>
-                                  <p className="font-medium text-gray-900">
-                                    {booking.isWalkIn 
-                                      ? booking.walkInCustomerName 
-                                      : booking.customer?.name || 'Customer'
-                                    }
-                                  </p>
-                                  <p className="text-sm text-gray-500">
-                                    Booking #{booking.id.slice(0, 8)}
-                                  </p>
-                                </div>
-                                <Badge 
-                                  variant={
-                                    booking.groupStatus === 'confirmed' ? 'default' :
-                                    booking.groupStatus === 'completed' ? 'secondary' :
-                                    booking.groupStatus.includes('cancelled') ? 'destructive' : 'outline'
-                                  }
-                                >
-                                  {booking.groupStatus}
-                                </Badge>
-                              </div>
-                              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm text-gray-600">
-                                <div>
-                                  <span className="font-medium">Service{booking.servicesCount > 1 ? 's' : ''}:</span> 
-                                  {booking.servicesList ? 
-                                    booking.servicesList.join(', ') + 
-                                    (booking.servicesCount > 1 ? ` (${booking.servicesCount} services)` : '') :
-                                    (booking.service?.name || 'Service')
-                                  }
-                                </div>
-                                <div>
-                                  <span className="font-medium">Appointment:</span> {booking.date}
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    Booked: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { 
-                                      month: 'short', 
-                                      day: 'numeric' 
-                                    }) : 'Unknown'}
-                                  </div>
-                                </div>
-                                <div>
-                                  <span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Amount:</span> ₹{booking.totalGroupAmount || booking.totalAmount}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Payment:</span> 
-                                  <Badge variant="outline" className="ml-1">
-                                    {booking.paymentStatus || 'Pending'}
-                                  </Badge>
-                                </div>
-                              </div>
-                              {booking.isWalkIn && booking.walkInCustomerPhone && (
-                                <p className="text-sm text-gray-500 mt-1">
-                                  Phone: {booking.walkInCustomerPhone}
-                                </p>
-                              )}
-                              {!booking.isWalkIn && booking.customer?.phone && (
-                                <p className="text-sm text-gray-500 mt-1">
-                                  Phone: {booking.customer.phone}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex space-x-2 ml-4">
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            {booking.status === 'confirmed' && (
-                              <Button 
-                                size="sm" 
-                                className="bg-blue-600 hover:bg-blue-700"
-                                onClick={() => completeBooking(booking.id)}
-                                disabled={updateBookingStatusMutation.isPending}
-                              >
-                                Mark Complete
-                              </Button>
-                            )}
-                            {booking.status === 'completed' && (
-                              <Badge variant="secondary" className="px-3 py-1">
-                                Service Completed
-                              </Badge>
-                            )}
-                          </div>
+                  <Tabs defaultValue="today" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 mb-4">
+                      <TabsTrigger value="today" className="text-sm">
+                        Today ({bookings.filter(b => {
+                          const today = new Date().toISOString().split('T')[0];
+                          return b.date === today;
+                        }).length})
+                      </TabsTrigger>
+                      <TabsTrigger value="tomorrow" className="text-sm">
+                        Tomorrow ({bookings.filter(b => {
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          return b.date === tomorrow.toISOString().split('T')[0];
+                        }).length})
+                      </TabsTrigger>
+                      <TabsTrigger value="upcoming" className="text-sm">
+                        Upcoming ({bookings.filter(b => {
+                          const dayAfterTomorrow = new Date();
+                          dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+                          return b.date >= dayAfterTomorrow.toISOString().split('T')[0];
+                        }).length})
+                      </TabsTrigger>
+                      <TabsTrigger value="previous" className="text-sm">
+                        Previous ({bookings.filter(b => {
+                          const today = new Date().toISOString().split('T')[0];
+                          return b.date < today;
+                        }).length})
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    {/* Today's Bookings */}
+                    <TabsContent value="today">
+                      {bookingsLoading ? (
+                        <div className="space-y-4">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h3>
-                      <p className="text-gray-600 mb-6">Customers will appear here once they book your services.</p>
-                      <div className="space-y-2 text-sm text-gray-500">
-                        <p>• Make sure your services are listed with competitive pricing</p>
-                        <p>• Add attractive salon photos and descriptions</p>
-                        <p>• Configure your working hours and time slots</p>
-                      </div>
-                    </div>
-                  )}
+                      ) : (() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        const todayBookings = bookings.filter(b => b.date === today);
+                        return todayBookings.length > 0 ? (
+                          <div className="space-y-4">
+                            {todayBookings.map((booking) => (
+                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} updateBookingStatusMutation={updateBookingStatusMutation} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>No bookings for today</p>
+                          </div>
+                        );
+                      })()}
+                    </TabsContent>
+                    
+                    {/* Tomorrow's Bookings */}
+                    <TabsContent value="tomorrow">
+                      {bookingsLoading ? (
+                        <div className="space-y-4">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                          ))}
+                        </div>
+                      ) : (() => {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                        const tomorrowBookings = bookings.filter(b => b.date === tomorrowStr);
+                        return tomorrowBookings.length > 0 ? (
+                          <div className="space-y-4">
+                            {tomorrowBookings.map((booking) => (
+                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} updateBookingStatusMutation={updateBookingStatusMutation} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>No bookings for tomorrow</p>
+                          </div>
+                        );
+                      })()}
+                    </TabsContent>
+                    
+                    {/* Upcoming Bookings (beyond tomorrow) */}
+                    <TabsContent value="upcoming">
+                      {bookingsLoading ? (
+                        <div className="space-y-4">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                          ))}
+                        </div>
+                      ) : (() => {
+                        const dayAfterTomorrow = new Date();
+                        dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+                        const dayAfterTomorrowStr = dayAfterTomorrow.toISOString().split('T')[0];
+                        const upcomingBookings = bookings.filter(b => b.date >= dayAfterTomorrowStr);
+                        return upcomingBookings.length > 0 ? (
+                          <div className="space-y-4">
+                            {upcomingBookings.map((booking) => (
+                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} updateBookingStatusMutation={updateBookingStatusMutation} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>No upcoming bookings</p>
+                          </div>
+                        );
+                      })()}
+                    </TabsContent>
+                    
+                    {/* Previous Bookings */}
+                    <TabsContent value="previous">
+                      {bookingsLoading ? (
+                        <div className="space-y-4">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                          ))}
+                        </div>
+                      ) : (() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        const previousBookings = bookings.filter(b => b.date < today);
+                        return previousBookings.length > 0 ? (
+                          <div className="space-y-4">
+                            {previousBookings.map((booking) => (
+                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} updateBookingStatusMutation={updateBookingStatusMutation} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>No previous bookings</p>
+                          </div>
+                        );
+                      })()}
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
 
