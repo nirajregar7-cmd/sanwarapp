@@ -1714,26 +1714,13 @@ export default function SalonDetail() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 p-4 sm:p-6">
-                {!isAuthenticated ? (
-                  <div className="text-center py-4 sm:py-6">
-                    <p className="text-gray-600 mb-4 text-sm sm:text-base">Please log in to book an appointment</p>
-                    <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => navigate(`/auth?redirect=${window.location.pathname}`)}
-                      data-testid="button-login-to-book"
-                    >
+                <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg">
                       <Crown className="h-4 w-4 mr-2" />
                       Book an Luxury
                     </Button>
-                  </div>
-                ) : (
-                  <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg">
-                        <Crown className="h-4 w-4 mr-2" />
-                        Book an Luxury
-                      </Button>
-                    </DialogTrigger>
+                  </DialogTrigger>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>
@@ -2012,25 +1999,37 @@ export default function SalonDetail() {
                             </div>
                           )}
 
-                          <Button 
-                            type="submit" 
-                            className="w-full" 
-                            disabled={bookingMutation.isPending}
-                          >
-                            {bookingMutation.isPending 
-                              ? (
-                                  <span className="flex items-center justify-center gap-2">
-                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                    Booking...
-                                  </span>
-                                )
-                              : (rescheduleBookingId ? "Reschedule Booking" : "Book Appointment")}
-                          </Button>
+                          {!isAuthenticated ? (
+                            <Button 
+                              type="button"
+                              className="w-full bg-primary hover:bg-primary/90" 
+                              onClick={() => {
+                                setBookingDialogOpen(false);
+                                navigate(`/auth?redirect=${window.location.pathname}`);
+                              }}
+                            >
+                              Login to Confirm Booking
+                            </Button>
+                          ) : (
+                            <Button 
+                              type="submit" 
+                              className="w-full" 
+                              disabled={bookingMutation.isPending}
+                            >
+                              {bookingMutation.isPending 
+                                ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                      Booking...
+                                    </span>
+                                  )
+                                : (rescheduleBookingId ? "Reschedule Booking" : "Book Appointment")}
+                            </Button>
+                          )}
                         </form>
                       </Form>
                     </DialogContent>
                   </Dialog>
-                )}
               </CardContent>
             </Card>
 
