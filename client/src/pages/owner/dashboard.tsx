@@ -154,7 +154,7 @@ function BookingCard({
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { OnboardingWalkthrough } from "@/components/OnboardingWalkthrough";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { WorkingHoursForm } from "@/components/WorkingHoursForm";
 import { ReplyForm } from "@/components/ReplyForm";
 import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
@@ -2283,6 +2283,92 @@ export default function OwnerDashboard() {
             </TabsContent>
 
             <TabsContent value="bookings" className="space-y-6">
+              {/* Queue Management */}
+              <Card className="border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center text-lg">
+                    <Clock className="h-5 w-5 mr-2 text-orange-600" />
+                    Queue Management
+                    <Badge variant="outline" className="ml-2 bg-orange-100 text-orange-700 border-orange-300">
+                      Live
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Update wait time for walk-in customers. This will be displayed on your salon card.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-sm font-medium text-gray-700">Next customer in:</span>
+                    {[5, 10, 15, 20, 30, 45, 60].map((mins) => (
+                      <Button
+                        key={mins}
+                        variant={salon?.queueWaitTime === mins ? "default" : "outline"}
+                        size="sm"
+                        className={salon?.queueWaitTime === mins 
+                          ? "bg-orange-600 hover:bg-orange-700" 
+                          : "hover:bg-orange-100 hover:border-orange-300"
+                        }
+                        onClick={async () => {
+                          try {
+                            await apiRequest('/api/owner/salon/queue', {
+                              method: 'PUT',
+                              body: JSON.stringify({ queueWaitTime: mins })
+                            });
+                            queryClient.invalidateQueries({ queryKey: ['/api/owner/salon'] });
+                            toast({
+                              title: "Queue Updated",
+                              description: `Wait time set to ${mins} minutes`,
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to update queue status",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                      >
+                        {mins} min
+                      </Button>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 border-red-300 hover:bg-red-50"
+                      onClick={async () => {
+                        try {
+                          await apiRequest('/api/owner/salon/queue', {
+                            method: 'DELETE'
+                          });
+                          queryClient.invalidateQueries({ queryKey: ['/api/owner/salon'] });
+                          toast({
+                            title: "Queue Cleared",
+                            description: "Wait time has been cleared",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to clear queue status",
+                            variant: "destructive"
+                          });
+                        }
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                  {salon?.queueWaitTime && (
+                    <div className="mt-3 p-2 bg-orange-100 rounded-lg flex items-center">
+                      <Clock className="h-4 w-4 text-orange-600 mr-2" />
+                      <span className="text-sm text-orange-800">
+                        Currently showing: <strong>{salon.queueWaitTime} min wait</strong> on your salon card
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Booking Stats */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card>
