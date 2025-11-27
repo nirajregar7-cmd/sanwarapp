@@ -109,6 +109,10 @@ export const salons = pgTable("salons", {
   rejectedAt: timestamp("rejected_at"),
   rejectedBy: varchar("rejected_by").references(() => users.id),
   rejectionReason: text("rejection_reason"),
+  // Queue management for walk-in customers
+  queueWaitTime: integer("queue_wait_time"), // Wait time in minutes (5, 10, 15, 20, 30, etc.)
+  queueUpdatedAt: timestamp("queue_updated_at"), // When the queue was last updated
+  queueMessage: varchar("queue_message", { length: 100 }), // Optional custom message like "Shop is busy"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
