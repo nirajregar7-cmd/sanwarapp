@@ -2311,10 +2311,7 @@ export default function OwnerDashboard() {
                         }
                         onClick={async () => {
                           try {
-                            await apiRequest('/api/owner/salon/queue', {
-                              method: 'PUT',
-                              body: JSON.stringify({ queueWaitTime: mins })
-                            });
+                            await apiRequest('PUT', '/api/owner/salon/queue', { queueWaitTime: mins });
                             queryClient.invalidateQueries({ queryKey: ['/api/owner/salon'] });
                             toast({
                               title: "Queue Updated",
@@ -2338,9 +2335,7 @@ export default function OwnerDashboard() {
                       className="text-red-600 border-red-300 hover:bg-red-50"
                       onClick={async () => {
                         try {
-                          await apiRequest('/api/owner/salon/queue', {
-                            method: 'DELETE'
-                          });
+                          await apiRequest('DELETE', '/api/owner/salon/queue');
                           queryClient.invalidateQueries({ queryKey: ['/api/owner/salon'] });
                           toast({
                             title: "Queue Cleared",
