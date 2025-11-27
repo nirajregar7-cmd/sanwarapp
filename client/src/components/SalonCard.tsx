@@ -180,6 +180,18 @@ export default function SalonCard({ salon }: SalonCardProps) {
               </Badge>
             )}
           </div>
+          
+          {/* Queue Wait Time Display */}
+          {salon.queueWaitTime && (
+            <div className="mb-4 p-2 bg-gradient-to-r from-orange-100 to-amber-100 border border-orange-200 rounded-lg animate-pulse">
+              <div className="flex items-center justify-center text-orange-700">
+                <Clock className="h-4 w-4 mr-2 animate-spin" style={{ animationDuration: '3s' }} />
+                <span className="text-sm font-semibold">
+                  Next slot in ~{salon.queueWaitTime} min
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Services Preview - would need to fetch services for each salon */}
           <div className="flex flex-wrap gap-2 mb-4">
