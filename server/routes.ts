@@ -2973,6 +2973,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update queue status for salon owner
+  app.put('/api/owner/salon/queue', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { queueWaitTime, queueMessage } = req.body;
+      
+      // Get owner's salon
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Update queue status
+      const [updatedSalon] = await db.update(salons)
+        .set({
+          queueWaitTime: queueWaitTime !== undefined ? queueWaitTime : null,
+          queueMessage: queueMessage || null,
+          queueUpdatedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(salons.id, salon.id))
+        .returning();
+      
+      res.json({ 
+        message: "Queue status updated successfully",
+        queueWaitTime: updatedSalon.queueWaitTime,
+        queueMessage: updatedSalon.queueMessage,
+        queueUpdatedAt: updatedSalon.queueUpdatedAt
+      });
+    } catch (error) {
+      console.error("Error updating queue status:", error);
+      res.status(500).json({ message: "Failed to update queue status" });
+    }
+  });
+
+  // Clear queue status (reset to no wait time)
+  app.delete('/api/owner/salon/queue', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Get owner's salon
+      const [salon] = await db.select()
+        .from(salons)
+        .where(eq(salons.ownerId, userId));
+      
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+      
+      // Clear queue status
+      await db.update(salons)
+        .set({
+          queueWaitTime: null,
+          queueMessage: null,
+          queueUpdatedAt: null,
+          updatedAt: new Date()
+        })
+        .where(eq(salons.id, salon.id));
+      
+      res.json({ message: "Queue status cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing queue status:", error);
+      res.status(500).json({ message: "Failed to clear queue status" });
+    }
+  });
+
   // Create salon
   app.post('/api/salons', isAuthenticated, async (req: any, res) => {
     try {
