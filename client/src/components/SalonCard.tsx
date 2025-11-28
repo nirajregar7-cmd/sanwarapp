@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,42 @@ interface SalonCardProps {
 }
 
 export default function SalonCard({ salon }: SalonCardProps) {
+  // Countdown timer for queue wait time
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  
+  useEffect(() => {
+    if (salon.queueWaitTime) {
+      // Initialize with full time in seconds
+      const initialSeconds = salon.queueWaitTime * 60;
+      setTimeRemaining(initialSeconds);
+      
+      const interval = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            // Reset to full time when countdown finishes
+            return initialSeconds;
+          }
+          
+          // When we reach halfway, reset to full time to create urgency
+          const halfwayPoint = initialSeconds / 2;
+          if (prev <= halfwayPoint) {
+            return initialSeconds;
+          }
+          
+          return prev - 1;
+        });
+      }, 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [salon.queueWaitTime]);
+  
+  // Format seconds to MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
   // Fetch salon offers
   const { data: offers = [], isLoading, error } = useQuery<SalonOffer[]>({
     queryKey: [`/api/salons/${salon.id}/offers`],
@@ -181,8 +218,8 @@ export default function SalonCard({ salon }: SalonCardProps) {
             )}
           </div>
           
-          {/* Queue Wait Time Display with Urgency */}
-          {salon.queueWaitTime && (
+          {/* Queue Wait Time Display with Urgency and Countdown */}
+          {salon.queueWaitTime && timeRemaining > 0 && (
             <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-400 rounded-lg relative overflow-hidden">
               {/* Pulsing background animation */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-100 to-amber-100 animate-pulse opacity-50"></div>
@@ -190,8 +227,8 @@ export default function SalonCard({ salon }: SalonCardProps) {
               <div className="relative flex items-center justify-between">
                 <div className="flex items-center text-orange-700">
                   <Clock className="h-4 w-4 mr-2 animate-pulse" />
-                  <span className="text-sm font-bold">
-                    Next slot in ~{salon.queueWaitTime} min
+                  <span className="text-base font-bold tabular-nums">
+                    Next slot in {formatTime(timeRemaining)}
                   </span>
                 </div>
                 <span className="text-xs font-bold text-orange-600 bg-orange-200 px-2 py-1 rounded-full animate-pulse">
