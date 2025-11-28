@@ -1046,7 +1046,7 @@ export default function Landing() {
                           .map((salon) => (
                             <div
                               key={salon.id}
-                              className="w-[240px] sm:w-[280px] flex-shrink-0"
+                              className="w-[280px] sm:w-[280px] flex-shrink-0"
                             >
                               <SalonCard salon={salon as any} />
                             </div>
