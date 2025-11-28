@@ -171,11 +171,11 @@ export default function SalonCard({ salon }: SalonCardProps) {
           <img 
             src={salon.primaryImageUrl || salon.imageUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"} 
             alt={salon.name} 
-            className="w-full h-48 object-cover transition-transform duration-200 group-hover:scale-105"
+            className="w-full h-36 object-cover transition-transform duration-200 group-hover:scale-105"
           />
           {bestOffer && (
-            <div className="absolute top-3 left-3">
-              <Badge className="bg-green-500 text-white font-semibold px-3 py-1">
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-green-500 text-white font-semibold px-2 py-0.5 text-xs">
                 <Percent className="h-3 w-3 mr-1" />
                 {getOfferText(bestOffer)}
               </Badge>
@@ -183,9 +183,9 @@ export default function SalonCard({ salon }: SalonCardProps) {
           )}
         </div>
         
-        <CardContent className="p-6 flex-1 flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary transition-colors">{salon.name}</h3>
+        <CardContent className="p-4 flex-1 flex flex-col">
+          <div className="flex items-center justify-between mb-1.5">
+            <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors">{salon.name}</h3>
             <div className="flex items-center text-yellow-500">
               <Star className="h-4 w-4 fill-current" />
               <span className="ml-1 text-gray-600">
@@ -194,18 +194,18 @@ export default function SalonCard({ salon }: SalonCardProps) {
             </div>
           </div>
           
-          <p className="text-gray-600 mb-2 line-clamp-1 text-sm">
-            <MapPin className="h-4 w-4 inline mr-1" />
+          <p className="text-gray-600 mb-1.5 line-clamp-1 text-xs">
+            <MapPin className="h-3 w-3 inline mr-1" />
             {salon.address}
           </p>
           
           {salon.distance && (
-            <p className="text-sm text-blue-600 font-medium mb-3">
+            <p className="text-xs text-blue-600 font-medium mb-2">
               {salon.distance < 1 ? `${(salon.distance * 1000).toFixed(0)}m away` : `${salon.distance.toFixed(1)}km away`}
             </p>
           )}
           
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center">
               <Clock className="h-4 w-4 text-gray-400 mr-2" />
               <span className={`text-sm font-medium ${getStatusColor()}`}>{status}</span>
@@ -220,18 +220,18 @@ export default function SalonCard({ salon }: SalonCardProps) {
           
           {/* Queue Wait Time Display with Urgency and Countdown */}
           {salon.queueWaitTime && timeRemaining > 0 && (
-            <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-400 rounded-lg relative overflow-hidden">
+            <div className="mb-2 p-2 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-400 rounded-lg relative overflow-hidden">
               {/* Pulsing background animation */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-100 to-amber-100 animate-pulse opacity-50"></div>
               
               <div className="relative flex items-center justify-between">
                 <div className="flex items-center text-orange-700">
-                  <Clock className="h-4 w-4 mr-2 animate-pulse" />
-                  <span className="text-base font-bold tabular-nums">
+                  <Clock className="h-3 w-3 mr-1.5 animate-pulse" />
+                  <span className="text-sm font-bold tabular-nums">
                     Next slot in {formatTime(timeRemaining)}
                   </span>
                 </div>
-                <span className="text-xs font-bold text-orange-600 bg-orange-200 px-2 py-1 rounded-full animate-pulse">
+                <span className="text-[10px] font-bold text-orange-600 bg-orange-200 px-1.5 py-0.5 rounded-full animate-pulse">
                   BOOK NOW
                 </span>
               </div>
@@ -239,27 +239,27 @@ export default function SalonCard({ salon }: SalonCardProps) {
           )}
 
           {/* Services Preview - would need to fetch services for each salon */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full">
               Haircut
             </span>
-            <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+            <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full">
               Styling
             </span>
-            <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+            <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full">
               Color
             </span>
           </div>
           
           {/* Offer section with consistent height */}
-          <div className="mb-3 h-16 flex items-center">
+          <div className="mb-2 h-10 flex items-center">
             {bestOffer ? (
-              <div className="w-full p-2 bg-green-50 border border-green-200 rounded-lg">
+              <div className="w-full p-1.5 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center text-green-700">
-                  <Percent className="h-4 w-4 mr-1" />
-                  <span className="text-sm font-medium">{bestOffer.title}</span>
+                  <Percent className="h-3 w-3 mr-1" />
+                  <span className="text-xs font-medium">{bestOffer.title}</span>
                 </div>
-                <p className="text-xs text-green-600 mt-1">
+                <p className="text-[10px] text-green-600">
                   Save {getOfferText(bestOffer)} on services
                 </p>
               </div>
@@ -270,7 +270,7 @@ export default function SalonCard({ salon }: SalonCardProps) {
           
           <div className="mt-auto">
             <Button 
-              className="w-full bg-primary hover:bg-primary/90 group-hover:bg-primary/80 group-hover:scale-105 transition-all duration-200 group-hover:shadow-lg"
+              className="w-full bg-primary hover:bg-primary/90 group-hover:bg-primary/80 group-hover:scale-105 transition-all duration-200 group-hover:shadow-lg text-sm py-2"
               data-testid={`button-book-salon-${salon.id}`}
             >
               {bestOffer ? `Book with ${getOfferText(bestOffer)}` : "View Details & Book"}
