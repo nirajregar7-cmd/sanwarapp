@@ -336,8 +336,8 @@ export default function SalonDiscovery() {
           {/* Salon Grid with Scrolling */}
           {salonsLoading ? (
             <div className="max-h-[900px] overflow-y-auto pr-2 custom-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, index) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {Array.from({ length: 8 }).map((_, index) => (
                   <Card key={index} className="overflow-hidden animate-pulse">
                     <div className="aspect-video bg-gray-300"></div>
                     <CardContent className="p-4">
@@ -351,7 +351,7 @@ export default function SalonDiscovery() {
             </div>
           ) : salons && salons.length > 0 ? (
             <div className="max-h-[900px] overflow-y-auto pr-2 custom-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {salons.map((salon) => (
                   <SalonCard key={salon.id} salon={salon as any} />
                 ))}

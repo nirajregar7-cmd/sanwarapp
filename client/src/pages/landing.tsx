@@ -814,7 +814,7 @@ export default function Landing() {
                   <div ref={topRowScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
                     <div className="flex gap-4 sm:gap-6">
                       {topSalons.slice(0, Math.ceil(topSalons.length / 2)).map((salon) => (
-                        <div key={salon.id} className="w-[300px] sm:w-[350px] flex-shrink-0">
+                        <div key={salon.id} className="w-[240px] sm:w-[280px] flex-shrink-0">
                           <SalonCard salon={salon as any} />
                         </div>
                       ))}
@@ -844,7 +844,7 @@ export default function Landing() {
                     <div ref={bottomRowScrollRef} className="overflow-x-auto pb-4 custom-scrollbar scroll-smooth">
                       <div className="flex gap-4 sm:gap-6">
                         {topSalons.slice(Math.ceil(topSalons.length / 2)).map((salon) => (
-                          <div key={salon.id} className="w-[300px] sm:w-[350px] flex-shrink-0">
+                          <div key={salon.id} className="w-[240px] sm:w-[280px] flex-shrink-0">
                             <SalonCard salon={salon as any} />
                           </div>
                         ))}
