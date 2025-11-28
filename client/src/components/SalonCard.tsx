@@ -181,13 +181,21 @@ export default function SalonCard({ salon }: SalonCardProps) {
             )}
           </div>
           
-          {/* Queue Wait Time Display */}
+          {/* Queue Wait Time Display with Urgency */}
           {salon.queueWaitTime && (
-            <div className="mb-4 p-2 bg-gradient-to-r from-orange-100 to-amber-100 border border-orange-200 rounded-lg animate-pulse">
-              <div className="flex items-center justify-center text-orange-700">
-                <Clock className="h-4 w-4 mr-2 animate-spin" style={{ animationDuration: '3s' }} />
-                <span className="text-sm font-semibold">
-                  Next slot in ~{salon.queueWaitTime} min
+            <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-400 rounded-lg relative overflow-hidden">
+              {/* Pulsing background animation */}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-100 to-amber-100 animate-pulse opacity-50"></div>
+              
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center text-orange-700">
+                  <Clock className="h-4 w-4 mr-2 animate-pulse" />
+                  <span className="text-sm font-bold">
+                    Next slot in ~{salon.queueWaitTime} min
+                  </span>
+                </div>
+                <span className="text-xs font-bold text-orange-600 bg-orange-200 px-2 py-1 rounded-full animate-pulse">
+                  BOOK NOW
                 </span>
               </div>
             </div>
