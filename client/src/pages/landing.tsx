@@ -1000,7 +1000,7 @@ export default function Landing() {
                   </button>
                   <div
                     ref={topRowScrollRef}
-                    className="overflow-x-auto overflow-y-visible py-6 custom-scrollbar scroll-smooth"
+                    className="overflow-x-auto overflow-y-visible pt-6 pb-6 px-2 custom-scrollbar scroll-smooth"
                   >
                     <div className="flex gap-4 sm:gap-6">
                       {topSalons
@@ -1038,7 +1038,7 @@ export default function Landing() {
                     </button>
                     <div
                       ref={bottomRowScrollRef}
-                      className="overflow-x-auto overflow-y-visible py-6 custom-scrollbar scroll-smooth"
+                      className="overflow-x-auto overflow-y-visible pt-6 pb-6 px-2 custom-scrollbar scroll-smooth"
                     >
                       <div className="flex gap-4 sm:gap-6">
                         {topSalons
