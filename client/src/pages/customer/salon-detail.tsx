@@ -16,7 +16,7 @@ import {
   ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown, Building2, MessageSquare, Edit, Trash2, Navigation
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -64,6 +64,9 @@ export default function SalonDetail() {
   const [selectedStaffBio, setSelectedStaffBio] = useState<Staff | null>(null);
   const [expandedFaqs, setExpandedFaqs] = useState<Set<string>>(new Set());
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
+  
+  // Ref to track if we've already processed the pending booking
+  const hasProcessedPendingBooking = useRef(false);
   
   // Toggle FAQ expansion
   const toggleFaqExpansion = (faqId: string) => {
@@ -694,14 +697,20 @@ export default function SalonDetail() {
 
   // Auto-submit pending booking after login/signup
   useEffect(() => {
-    if (isAuthenticated && salonId) {
+    if (isAuthenticated && salonId && !hasProcessedPendingBooking.current) {
       const pendingBookingStr = localStorage.getItem('pendingBooking');
       if (pendingBookingStr) {
+        // Mark as processed and clear localStorage IMMEDIATELY to prevent duplicate submissions
+        hasProcessedPendingBooking.current = true;
+        localStorage.removeItem('pendingBooking');
+        
         try {
           const pendingBooking = JSON.parse(pendingBookingStr);
           
           // Check if this pending booking is for the current salon
           if (pendingBooking.salonId === salonId) {
+            console.log('[AUTO-BOOKING] Processing pending booking:', pendingBooking);
+            
             // Set form values and submit automatically
             const bookingData: BookingFormData = {
               serviceIds: pendingBooking.serviceIds,
@@ -724,16 +733,16 @@ export default function SalonDetail() {
             // Open booking dialog and submit automatically after a brief delay
             setBookingDialogOpen(true);
             setTimeout(() => {
+              console.log('[AUTO-BOOKING] Submitting booking mutation');
               bookingMutation.mutate(bookingData);
             }, 500);
           }
         } catch (error) {
           console.error('Failed to process pending booking:', error);
-          localStorage.removeItem('pendingBooking');
         }
       }
     }
-  }, [isAuthenticated, salonId, form, bookingMutation]);
+  }, [isAuthenticated, salonId]);
 
   if (salonLoading) {
     return (
