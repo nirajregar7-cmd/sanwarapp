@@ -468,6 +468,9 @@ export default function SalonDetail() {
       setAppliedReferralCode(null); // Reset referral code
       form.reset();
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonId}/time-slots`] });
+      
+      // Clear pending booking data from localStorage
+      localStorage.removeItem('pendingBooking');
     },
     onError: (error: Error) => {
       console.error("Booking mutation error:", error);
@@ -688,6 +691,49 @@ export default function SalonDetail() {
       });
     }
   };
+
+  // Auto-submit pending booking after login/signup
+  useEffect(() => {
+    if (isAuthenticated && salonId) {
+      const pendingBookingStr = localStorage.getItem('pendingBooking');
+      if (pendingBookingStr) {
+        try {
+          const pendingBooking = JSON.parse(pendingBookingStr);
+          
+          // Check if this pending booking is for the current salon
+          if (pendingBooking.salonId === salonId) {
+            // Set form values and submit automatically
+            const bookingData: BookingFormData = {
+              serviceIds: pendingBooking.serviceIds,
+              staffId: pendingBooking.staffId || undefined,
+              date: new Date(pendingBooking.date),
+              timeSlotId: pendingBooking.timeSlotId,
+            };
+            
+            // Update form values
+            form.setValue('serviceIds', bookingData.serviceIds);
+            form.setValue('staffId', bookingData.staffId || '');
+            form.setValue('date', bookingData.date);
+            form.setValue('timeSlotId', bookingData.timeSlotId);
+            
+            // Set referral code if exists
+            if (pendingBooking.referralCode) {
+              setAppliedReferralCode({ code: pendingBooking.referralCode });
+            }
+            
+            // Open booking dialog and submit automatically after a brief delay
+            setBookingDialogOpen(true);
+            setTimeout(() => {
+              bookingMutation.mutate(bookingData);
+            }, 500);
+          }
+        } catch (error) {
+          console.error('Failed to process pending booking:', error);
+          localStorage.removeItem('pendingBooking');
+        }
+      }
+    }
+  }, [isAuthenticated, salonId, form, bookingMutation]);
 
   if (salonLoading) {
     return (
@@ -2004,6 +2050,18 @@ export default function SalonDetail() {
                               type="button"
                               className="w-full bg-primary hover:bg-primary/90" 
                               onClick={() => {
+                                // Save booking details to localStorage before redirecting to login
+                                const formData = form.getValues();
+                                const pendingBooking = {
+                                  salonId,
+                                  serviceIds: formData.serviceIds,
+                                  staffId: formData.staffId || null,
+                                  timeSlotId: formData.timeSlotId,
+                                  date: formData.date.toISOString(),
+                                  referralCode: appliedReferralCode?.code || null,
+                                };
+                                localStorage.setItem('pendingBooking', JSON.stringify(pendingBooking));
+                                
                                 setBookingDialogOpen(false);
                                 navigate(`/auth?redirect=${window.location.pathname}`);
                               }}
