@@ -68,6 +68,13 @@ export default function SalonDetail() {
   // Ref to track if we've already processed the pending booking
   const hasProcessedPendingBooking = useRef(false);
   
+  // State for next slot countdown timer
+  const [nextSlotCountdown, setNextSlotCountdown] = useState<{
+    minutes: number;
+    seconds: number;
+    slotTime: string;
+  } | null>(null);
+  
   // Toggle FAQ expansion
   const toggleFaqExpansion = (faqId: string) => {
     setExpandedFaqs(prev => {
@@ -744,6 +751,94 @@ export default function SalonDetail() {
     }
   }, [isAuthenticated, salonId]);
 
+  // Calculate and update countdown for next available slot
+  useEffect(() => {
+    // Get current date in IST
+    const now = new Date();
+    const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const todayDateStr = istNow.toISOString().split('T')[0];
+    
+    // Function to find next available slot
+    const findNextSlot = () => {
+      if (!timeSlots || timeSlots.length === 0) {
+        setNextSlotCountdown(null);
+        return;
+      }
+      
+      // Get current time in minutes since midnight (IST)
+      const currentMinutes = istNow.getHours() * 60 + istNow.getMinutes();
+      
+      // Find the next available slot that's in the future
+      const nextSlot = timeSlots.find((slot: TimeSlot) => {
+        if (!slot.isAvailable) return false;
+        
+        // Parse slot time (format: "HH:MM" or "HH:MM:SS")
+        const [hours, minutes] = slot.startTime.split(':').map(Number);
+        const slotMinutes = hours * 60 + minutes;
+        
+        return slotMinutes > currentMinutes;
+      });
+      
+      if (nextSlot) {
+        // Calculate time difference
+        const [hours, minutes] = nextSlot.startTime.split(':').map(Number);
+        const slotMinutes = hours * 60 + minutes;
+        const diffMinutes = slotMinutes - currentMinutes;
+        
+        return {
+          totalSeconds: diffMinutes * 60,
+          slotTime: nextSlot.startTime
+        };
+      }
+      
+      return null;
+    };
+    
+    // Initial calculation
+    const nextSlotData = findNextSlot();
+    if (!nextSlotData) {
+      setNextSlotCountdown(null);
+      return;
+    }
+    
+    let remainingSeconds = nextSlotData.totalSeconds;
+    
+    // Update countdown every second
+    const interval = setInterval(() => {
+      remainingSeconds -= 1;
+      
+      if (remainingSeconds <= 0) {
+        // Recalculate next slot when countdown reaches zero
+        const newNextSlotData = findNextSlot();
+        if (newNextSlotData) {
+          remainingSeconds = newNextSlotData.totalSeconds;
+          setNextSlotCountdown({
+            minutes: Math.floor(remainingSeconds / 60),
+            seconds: remainingSeconds % 60,
+            slotTime: newNextSlotData.slotTime
+          });
+        } else {
+          setNextSlotCountdown(null);
+        }
+      } else {
+        setNextSlotCountdown({
+          minutes: Math.floor(remainingSeconds / 60),
+          seconds: remainingSeconds % 60,
+          slotTime: nextSlotData.slotTime
+        });
+      }
+    }, 1000);
+    
+    // Set initial countdown
+    setNextSlotCountdown({
+      minutes: Math.floor(remainingSeconds / 60),
+      seconds: remainingSeconds % 60,
+      slotTime: nextSlotData.slotTime
+    });
+    
+    return () => clearInterval(interval);
+  }, [timeSlots, selectedDate]);
+
   if (salonLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -819,6 +914,43 @@ export default function SalonDetail() {
           </div>
         </div>
       </div>
+
+      {/* Next Slot Countdown Banner */}
+      {nextSlotCountdown && (
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-b-2 border-orange-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-orange-200">
+                  <Clock className="h-5 w-5 text-orange-600 animate-pulse" />
+                  <span className="font-semibold text-orange-900">
+                    Next slot in {nextSlotCountdown.minutes}:{nextSlotCountdown.seconds.toString().padStart(2, '0')}
+                  </span>
+                </div>
+                <span className="text-sm text-gray-700 hidden sm:block">
+                  Available at <span className="font-semibold text-orange-700">{nextSlotCountdown.slotTime}</span>
+                </span>
+              </div>
+              <Button 
+                onClick={() => {
+                  setBookingDialogOpen(true);
+                  // Scroll to booking section
+                  setTimeout(() => {
+                    const bookingSection = document.querySelector('[data-testid="book-appointment-section"]');
+                    if (bookingSection) {
+                      bookingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }, 100);
+                }}
+                className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all"
+                data-testid="countdown-book-now"
+              >
+                BOOK NOW
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 lg:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
