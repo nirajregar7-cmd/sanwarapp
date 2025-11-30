@@ -73,6 +73,7 @@ export default function SalonDetail() {
     minutes: number;
     seconds: number;
     slotTime: string;
+    date: 'today' | 'tomorrow';
   } | null>(null);
   
   // Toggle FAQ expansion
@@ -310,6 +311,22 @@ export default function SalonDetail() {
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     },
+  });
+
+  // Fetch tomorrow's time slots for countdown banner (when today has no future slots)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const { data: tomorrowTimeSlots = [] } = useQuery({
+    queryKey: [`/api/salons/${resolvedSalonId}/time-slots-tomorrow`, tomorrow.toISOString().split('T')[0]],
+    enabled: !!resolvedSalonId && !!salon,
+    queryFn: async (): Promise<TimeSlot[]> => {
+      const dateStr = tomorrow.toISOString().split('T')[0];
+      const url = `/api/salons/${salonId}/time-slots?date=${dateStr}`;
+      const response = await apiRequest("GET", url);
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
   // Fetch salon like status for authenticated customers - optimized
@@ -756,39 +773,55 @@ export default function SalonDetail() {
     // Get current date in IST
     const now = new Date();
     const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-    const todayDateStr = istNow.toISOString().split('T')[0];
     
     // Function to find next available slot
     const findNextSlot = () => {
-      if (!timeSlots || timeSlots.length === 0) {
-        setNextSlotCountdown(null);
-        return;
-      }
-      
       // Get current time in minutes since midnight (IST)
       const currentMinutes = istNow.getHours() * 60 + istNow.getMinutes();
       
-      // Find the next available slot that's in the future
-      const nextSlot = timeSlots.find((slot: TimeSlot) => {
-        if (!slot.isAvailable) return false;
+      // First, try to find next slot for today
+      if (timeSlots && timeSlots.length > 0) {
+        const nextSlot = timeSlots.find((slot: TimeSlot) => {
+          if (!slot.isAvailable) return false;
+          
+          // Parse slot time (format: "HH:MM" or "HH:MM:SS")
+          const [hours, minutes] = slot.startTime.split(':').map(Number);
+          const slotMinutes = hours * 60 + minutes;
+          
+          return slotMinutes > currentMinutes;
+        });
         
-        // Parse slot time (format: "HH:MM" or "HH:MM:SS")
-        const [hours, minutes] = slot.startTime.split(':').map(Number);
-        const slotMinutes = hours * 60 + minutes;
-        
-        return slotMinutes > currentMinutes;
-      });
+        if (nextSlot) {
+          // Calculate time difference
+          const [hours, minutes] = nextSlot.startTime.split(':').map(Number);
+          const slotMinutes = hours * 60 + minutes;
+          const diffMinutes = slotMinutes - currentMinutes;
+          
+          return {
+            totalSeconds: diffMinutes * 60,
+            slotTime: nextSlot.startTime,
+            date: 'today'
+          };
+        }
+      }
       
-      if (nextSlot) {
-        // Calculate time difference
-        const [hours, minutes] = nextSlot.startTime.split(':').map(Number);
-        const slotMinutes = hours * 60 + minutes;
-        const diffMinutes = slotMinutes - currentMinutes;
+      // If no slots today, check tomorrow's first available slot
+      if (tomorrowTimeSlots && tomorrowTimeSlots.length > 0) {
+        const firstTomorrowSlot = tomorrowTimeSlots.find((slot: TimeSlot) => slot.isAvailable);
         
-        return {
-          totalSeconds: diffMinutes * 60,
-          slotTime: nextSlot.startTime
-        };
+        if (firstTomorrowSlot) {
+          // Calculate time until midnight + slot time
+          const [hours, minutes] = firstTomorrowSlot.startTime.split(':').map(Number);
+          const slotMinutes = hours * 60 + minutes;
+          const minutesUntilMidnight = 24 * 60 - currentMinutes;
+          const diffMinutes = minutesUntilMidnight + slotMinutes;
+          
+          return {
+            totalSeconds: diffMinutes * 60,
+            slotTime: firstTomorrowSlot.startTime,
+            date: 'tomorrow'
+          };
+        }
       }
       
       return null;
@@ -815,7 +848,8 @@ export default function SalonDetail() {
           setNextSlotCountdown({
             minutes: Math.floor(remainingSeconds / 60),
             seconds: remainingSeconds % 60,
-            slotTime: newNextSlotData.slotTime
+            slotTime: newNextSlotData.slotTime,
+            date: newNextSlotData.date
           });
         } else {
           setNextSlotCountdown(null);
@@ -824,7 +858,8 @@ export default function SalonDetail() {
         setNextSlotCountdown({
           minutes: Math.floor(remainingSeconds / 60),
           seconds: remainingSeconds % 60,
-          slotTime: nextSlotData.slotTime
+          slotTime: nextSlotData.slotTime,
+          date: nextSlotData.date
         });
       }
     }, 1000);
@@ -833,11 +868,12 @@ export default function SalonDetail() {
     setNextSlotCountdown({
       minutes: Math.floor(remainingSeconds / 60),
       seconds: remainingSeconds % 60,
-      slotTime: nextSlotData.slotTime
+      slotTime: nextSlotData.slotTime,
+      date: nextSlotData.date
     });
     
     return () => clearInterval(interval);
-  }, [timeSlots, selectedDate]);
+  }, [timeSlots, tomorrowTimeSlots, selectedDate]);
 
   if (salonLoading) {
     return (
@@ -924,11 +960,15 @@ export default function SalonDetail() {
                 <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-orange-200">
                   <Clock className="h-5 w-5 text-orange-600 animate-pulse" />
                   <span className="font-semibold text-orange-900">
-                    Next slot in {nextSlotCountdown.minutes}:{nextSlotCountdown.seconds.toString().padStart(2, '0')}
+                    {nextSlotCountdown.date === 'today' ? (
+                      <>Next slot in {nextSlotCountdown.minutes}:{nextSlotCountdown.seconds.toString().padStart(2, '0')}</>
+                    ) : (
+                      <>Next slot in {Math.floor(nextSlotCountdown.minutes / 60)}h {nextSlotCountdown.minutes % 60}m</>
+                    )}
                   </span>
                 </div>
                 <span className="text-sm text-gray-700 hidden sm:block">
-                  Available at <span className="font-semibold text-orange-700">{nextSlotCountdown.slotTime}</span>
+                  Available {nextSlotCountdown.date === 'tomorrow' && 'tomorrow '}at <span className="font-semibold text-orange-700">{nextSlotCountdown.slotTime}</span>
                 </span>
               </div>
               <Button 
