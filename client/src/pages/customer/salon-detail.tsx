@@ -162,10 +162,17 @@ export default function SalonDetail() {
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
-  // Fetch staff slot counts - optimized refresh
+  // Fetch staff slot counts filtered by selected date - optimized refresh
   const { data: staffSlotCounts = {} } = useQuery<Record<string, number>>({
-    queryKey: [`/api/salons/${resolvedSalonId}/public-staff-slot-counts`],
-    enabled: !!resolvedSalonId && !!salon,
+    queryKey: [`/api/salons/${resolvedSalonId}/public-staff-slot-counts`, selectedDate?.toISOString().split('T')[0]],
+    enabled: !!resolvedSalonId && !!salon && !!selectedDate,
+    queryFn: async () => {
+      if (!selectedDate) return {};
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const url = `/api/salons/${salonId}/public-staff-slot-counts?date=${dateStr}`;
+      const response = await apiRequest("GET", url);
+      return await response.json();
+    },
     refetchInterval: 60000, // Reduced to 60 seconds to improve performance
     staleTime: 30 * 1000, // 30 seconds cache
   });

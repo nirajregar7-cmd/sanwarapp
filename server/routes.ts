@@ -4918,6 +4918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/salons/:salonId/public-staff-slot-counts", async (req, res) => {
     try {
       const { salonId } = req.params;
+      const { date } = req.query;
       
       // Get all active staff members for this salon
       const staffMembers = await db.select()
@@ -4928,17 +4929,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const slotCounts: Record<string, number> = {};
       
       for (const staffMember of staffMembers) {
+        const conditions = [
+          eq(timeSlots.salonId, salonId),
+          eq(timeSlots.staffId, staffMember.id),
+          eq(timeSlots.isAvailable, true)
+        ];
+        
+        // If date is provided, filter for that specific date only
+        // Otherwise, count all future/today slots
+        if (date && typeof date === 'string') {
+          conditions.push(eq(timeSlots.date, date));
+        } else {
+          conditions.push(gte(timeSlots.date, new Date().toISOString().split('T')[0]));
+        }
+        
         const [countResult] = await db
           .select({ count: count() })
           .from(timeSlots)
-          .where(
-            and(
-              eq(timeSlots.salonId, salonId),
-              eq(timeSlots.staffId, staffMember.id),
-              eq(timeSlots.isAvailable, true),
-              gte(timeSlots.date, new Date().toISOString().split('T')[0]) // Only future/today slots
-            )
-          );
+          .where(and(...conditions));
         
         slotCounts[staffMember.id] = countResult?.count || 0;
       }
