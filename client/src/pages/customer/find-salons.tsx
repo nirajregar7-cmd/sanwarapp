@@ -15,6 +15,8 @@ export default function FindSalons() {
   const [, setRoute] = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [salonNameSearch, setSalonNameSearch] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [citySearch, setCitySearch] = useState("");
   const [minRating, setMinRating] = useState<string>("any");
   const [maxPrice, setMaxPrice] = useState<string>("any");
   const { locationPreference, requestLocationOnce } = useLocation();
@@ -53,6 +55,16 @@ export default function FindSalons() {
   const filteredSalons = allSalons.filter((salon) => {
     // Filter by salon name search
     if (salonNameSearch && !salon.name.toLowerCase().includes(salonNameSearch.toLowerCase())) {
+      return false;
+    }
+
+    // Filter by location search (address-based)
+    if (locationSearch && !salon.address.toLowerCase().includes(locationSearch.toLowerCase())) {
+      return false;
+    }
+
+    // Filter by city/area search (address-based)
+    if (citySearch && !salon.address.toLowerCase().includes(citySearch.toLowerCase())) {
       return false;
     }
 
@@ -111,6 +123,8 @@ export default function FindSalons() {
 
   const clearFilters = () => {
     setSalonNameSearch("");
+    setLocationSearch("");
+    setCitySearch("");
     setMinRating("any");
     setMaxPrice("any");
   };
@@ -245,6 +259,76 @@ export default function FindSalons() {
           </CardContent>
         </Card>
 
+        {/* FIND SALONS NEAR YOU - LOCATION SEARCH */}
+        <Card className="mb-6 shadow-lg border-purple-100">
+          <CardContent className="p-6">
+            <h2 className="text-2xl font-bold mb-2">Find Salons Near You</h2>
+            <p className="text-gray-600 mb-6">Discover and book appointments at the best salons in your area</p>
+
+            {/* Location Search Section */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="h-5 w-5 text-gray-700" />
+                <h3 className="text-base font-semibold">Location Search</h3>
+              </div>
+              <div className="flex gap-2 mb-2">
+                <div className="relative flex-1">
+                  <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    className="pl-12 h-12 rounded-xl border-2 border-gray-200 focus:border-purple-500 transition-colors"
+                    placeholder="Search location (e.g., Connaught Place, Delhi)"
+                    value={locationSearch}
+                    onChange={(e) => setLocationSearch(e.target.value)}
+                    data-testid="input-location-search"
+                  />
+                </div>
+                <Button
+                  onClick={() => setRoute('/discover')}
+                  className="h-12 px-6 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
+                  data-testid="button-location-search"
+                >
+                  Search
+                </Button>
+                <Button
+                  onClick={requestLocationOnce}
+                  className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2"
+                  data-testid="button-use-my-location"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Use My Location
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">Search for a specific area or use your current location to find nearby salons</p>
+
+              {/* City/Area Search */}
+              <div className="mb-3">
+                <p className="text-sm font-medium text-gray-700 mb-2">Or search by city/area name</p>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    className="pl-12 h-12 rounded-xl border-2 border-gray-200 focus:border-purple-500 transition-colors"
+                    placeholder="e.g., Chennai, Trichy, Anna Nagar..."
+                    value={citySearch}
+                    onChange={(e) => setCitySearch(e.target.value)}
+                    data-testid="input-city-search"
+                  />
+                </div>
+              </div>
+
+              {/* Current Location Display */}
+              {locationPreference?.lat && locationPreference?.lng && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-700">Your Current Location</span>
+                  <span className="text-xs text-gray-600 ml-auto">
+                    Within {locationPreference.radius || 30}km radius
+                  </span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* SEARCH & FILTER SALONS */}
         <Card className="mb-6 shadow-lg border-purple-100">
           <CardContent className="p-6">
@@ -253,7 +337,7 @@ export default function FindSalons() {
               <h2 className="text-xl font-bold">Search & Filter Salons</h2>
             </div>
 
-            {/* Search Input */}
+            {/* Salon Name Search */}
             <div className="mb-4">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -321,6 +405,42 @@ export default function FindSalons() {
             </div>
           </CardContent>
         </Card>
+
+        {/* AVAILABLE SALONS - FILTERED RESULTS */}
+        <section className="mb-6" aria-label="Available salons">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">
+              Available Salons
+            </h2>
+          </div>
+
+          {filteredSalons.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
+              {filteredSalons.map((salon) => (
+                <SalonCard key={salon.id} salon={salon} />
+              ))}
+            </div>
+          ) : (
+            <Card className="border-2 border-gray-200">
+              <CardContent className="p-12 text-center">
+                <Search className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  No salons found
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Try adjusting your filters or search criteria
+                </p>
+                <Button
+                  onClick={clearFilters}
+                  variant="outline"
+                  data-testid="button-clear-all-filters"
+                >
+                  Clear All Filters
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </section>
 
         {/* LOCATION-BASED NEARBY SALONS */}
         {locationPreference?.lat && locationPreference?.lng && locationBasedSalons.length > 0 && (
