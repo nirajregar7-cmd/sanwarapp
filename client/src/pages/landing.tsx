@@ -37,6 +37,7 @@ import { useLocation } from "@/contexts/LocationContext";
 import { VirtualTryOn } from "@/components/VirtualTryOn";
 import { TypewriterEffect } from "@/components/TypewriterEffect";
 import { FadeInSection } from "@/components/FadeInSection";
+import { InstallPWA } from "@/components/InstallPWA";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -1675,5 +1676,9 @@ function UpcomingFeaturesSection() {
         </div>
       </div>
     </section>
+
+      {/* PWA Install Prompt */}
+      <InstallPWA />
+    </div>
   );
 }
