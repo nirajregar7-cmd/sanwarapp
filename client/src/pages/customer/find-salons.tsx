@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Search, Star, MapPin, Scissors, Palette, Sparkles, HandMetal, Waves, Crown, ShoppingBag, Users } from "lucide-react";
+import { Search, Scissors, Palette, Sparkles, HandMetal, Waves, Crown, ShoppingBag, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import type { Salon } from "@/../../shared/schema";
+import SalonCard from "@/components/SalonCard";
 
 export default function FindSalons() {
   const [, setLocation] = useLocation();
@@ -172,51 +173,11 @@ export default function FindSalons() {
 
         {/* TOP RATED SALONS */}
         <section className="mb-6" aria-label="Top salons">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-            Top Rated Salons Near You
-          </h2>
+          <h2 className="text-xl font-bold mb-4">⭐ Top Rated Salons Near You</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
-            {featuredSalons.slice(0, 3).map((salon) => (
-              <Card 
-                key={salon.id} 
-                className="overflow-hidden hover:shadow-xl transition-all cursor-pointer border-0 shadow-md"
-                onClick={() => setLocation(`/salon/${salon.id}`)}
-                role="listitem"
-                data-testid={`card-salon-${salon.id}`}
-              >
-                <div className="aspect-[16/9] overflow-hidden">
-                  <img 
-                    src={salon.imageUrl || "https://images.unsplash.com/photo-1556228720-63f9d4ff7d97?auto=format&fit=crop&w=800&q=60"} 
-                    alt={salon.name}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-base mb-2">{salon.name}</h3>
-                  <div className="flex justify-between items-center text-sm text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                      {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "4.8"} ★
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {salon.address.split(',').pop()?.trim() || 'Near you'}
-                    </span>
-                  </div>
-                  <Button 
-                    className="w-full mt-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-bold"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLocation(`/salon/${salon.id}`);
-                    }}
-                    data-testid={`button-book-${salon.id}`}
-                  >
-                    Book Now
-                  </Button>
-                </CardContent>
-              </Card>
+            {featuredSalons.slice(0, 6).map((salon) => (
+              <SalonCard key={salon.id} salon={salon} />
             ))}
           </div>
         </section>
