@@ -130,11 +130,11 @@ export default function FindSalons() {
                   <div className="flex justify-between items-center text-sm text-gray-600">
                     <span className="flex items-center gap-1">
                       <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                      {salon.rating || "4.8"} ★
+                      {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "4.8"} ★
                     </span>
                     <span className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      {salon.city}
+                      {salon.address.split(',').pop()?.trim() || 'Near you'}
                     </span>
                   </div>
                   <Button 
