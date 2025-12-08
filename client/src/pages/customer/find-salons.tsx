@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useLocation as useRouter, Link } from "wouter";
-import { Search, Scissors, Palette, Sparkles, HandMetal, Waves, Crown, ShoppingBag, Users, MapPin, ChevronRight } from "lucide-react";
+import { Search, Scissors, Palette, Sparkles, HandMetal, Waves, Crown, ShoppingBag, Users, MapPin, ChevronRight, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import type { Salon } from "@/../../shared/schema";
 import SalonCard from "@/components/SalonCard";
@@ -13,6 +14,9 @@ import { useAuth } from "@/hooks/useAuth";
 export default function FindSalons() {
   const [, setRoute] = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [salonNameSearch, setSalonNameSearch] = useState("");
+  const [minRating, setMinRating] = useState<string>("any");
+  const [maxPrice, setMaxPrice] = useState<string>("any");
   const { locationPreference, requestLocationOnce } = useLocation();
   const { isAuthenticated } = useAuth();
 
@@ -20,6 +24,12 @@ export default function FindSalons() {
   const { data: featuredSalons = [] } = useQuery<Salon[]>({
     queryKey: ['/api/salons/featured'],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+
+  // Fetch all salons
+  const { data: allSalons = [] } = useQuery<Salon[]>({
+    queryKey: ['/api/salons'],
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch nearby salons based on location
@@ -38,6 +48,69 @@ export default function FindSalons() {
     enabled: !!locationPreference?.lat && !!locationPreference?.lng,
     staleTime: 2 * 60 * 1000, // 2 minutes cache
   });
+
+  // Filter salons based on search and filters
+  const filteredSalons = allSalons.filter((salon) => {
+    // Filter by salon name search
+    if (salonNameSearch && !salon.name.toLowerCase().includes(salonNameSearch.toLowerCase())) {
+      return false;
+    }
+
+    // Filter by minimum rating
+    if (minRating !== "any") {
+      const minRatingValue = parseFloat(minRating);
+      const salonRating = salon.averageRating || 0;
+      if (salonRating < minRatingValue) {
+        return false;
+      }
+    }
+
+    // Filter by maximum price (based on minimum service price)
+    if (maxPrice !== "any") {
+      const maxPriceValue = parseInt(maxPrice);
+      // We don't have service prices in the salon object, so we'll skip this for now
+      // In a real app, you'd need to fetch services or have price range in salon data
+    }
+
+    // Filter by location if location preference is set
+    if (locationPreference?.lat && locationPreference?.lng) {
+      // Check if salon is within radius
+      const distance = calculateDistance(
+        locationPreference.lat,
+        locationPreference.lng,
+        salon.latitude,
+        salon.longitude
+      );
+      if (distance > (locationPreference.radius || 30)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Helper function to calculate distance between two points (Haversine formula)
+  function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Earth's radius in km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function toRad(value: number): number {
+    return (value * Math.PI) / 180;
+  }
+
+  const clearFilters = () => {
+    setSalonNameSearch("");
+    setMinRating("any");
+    setMaxPrice("any");
+  };
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -168,6 +241,145 @@ export default function FindSalons() {
             </div>
           </CardContent>
         </Card>
+
+        {/* LOCATION ACCESS STATUS */}
+        {locationPreference?.denied && (
+          <Card className="mb-6 bg-red-50 border-red-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-red-700">
+                  <MapPin className="h-5 w-5" />
+                  <span className="font-medium">Location access denied by user</span>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={requestLocationOnce}
+                  className="text-red-700 border-red-300 hover:bg-red-100"
+                  data-testid="button-try-again-location"
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* SEARCH & FILTER SALONS */}
+        <Card className="mb-6 shadow-lg border-purple-100">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="h-5 w-5 text-purple-600" />
+              <h2 className="text-xl font-bold">Search & Filter Salons</h2>
+            </div>
+
+            {/* Search Input */}
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  className="pl-12 h-12 rounded-xl border-2 border-purple-200 focus:border-purple-500 transition-colors"
+                  placeholder="Search salon names..."
+                  value={salonNameSearch}
+                  onChange={(e) => setSalonNameSearch(e.target.value)}
+                  data-testid="input-search-salon-names"
+                />
+              </div>
+            </div>
+
+            {/* Filter Dropdowns */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {/* Minimum Rating */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Minimum Rating
+                </label>
+                <Select value={minRating} onValueChange={setMinRating}>
+                  <SelectTrigger className="h-12 border-2 border-gray-200" data-testid="select-min-rating">
+                    <SelectValue placeholder="Any Rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any Rating</SelectItem>
+                    <SelectItem value="4.5">4.5+ Stars</SelectItem>
+                    <SelectItem value="4.0">4.0+ Stars</SelectItem>
+                    <SelectItem value="3.5">3.5+ Stars</SelectItem>
+                    <SelectItem value="3.0">3.0+ Stars</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Maximum Price */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Maximum Price
+                </label>
+                <Select value={maxPrice} onValueChange={setMaxPrice}>
+                  <SelectTrigger className="h-12 border-2 border-gray-200" data-testid="select-max-price">
+                    <SelectValue placeholder="Any Price" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any Price</SelectItem>
+                    <SelectItem value="500">Under ₹500</SelectItem>
+                    <SelectItem value="1000">Under ₹1000</SelectItem>
+                    <SelectItem value="1500">Under ₹1500</SelectItem>
+                    <SelectItem value="2000">Under ₹2000</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                onClick={clearFilters}
+                className="text-gray-600 hover:text-purple-600"
+                data-testid="button-clear-filters"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* AVAILABLE SALONS */}
+        <section className="mb-6" aria-label="Available salons">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">
+              Available Salons
+              <span className="ml-3 text-lg font-normal text-gray-600">
+                {filteredSalons.length} {filteredSalons.length === 1 ? 'salon' : 'salons'} found
+              </span>
+            </h2>
+          </div>
+
+          {filteredSalons.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
+              {filteredSalons.map((salon) => (
+                <SalonCard key={salon.id} salon={salon} />
+              ))}
+            </div>
+          ) : (
+            <Card className="border-2 border-gray-200">
+              <CardContent className="p-12 text-center">
+                <Search className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  No salons found
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Try adjusting your filters or search criteria
+                </p>
+                <Button
+                  onClick={clearFilters}
+                  variant="outline"
+                  data-testid="button-clear-all-filters"
+                >
+                  Clear All Filters
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </section>
 
         {/* LOCATION-BASED NEARBY SALONS */}
         {locationPreference?.lat && locationPreference?.lng && locationBasedSalons.length > 0 && (
