@@ -191,37 +191,60 @@ export default function FindSalons() {
         </Card>
 
         {/* TOP RATED SALONS */}
-        <section className="mb-6" aria-label="Top salons">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">⭐ Top Rated Salons Near You</h2>
+        <section className="mb-8" aria-label="Top salons">
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-bold mb-2">Top Rated Salons</h2>
+            <p className="text-gray-600 text-sm">
+              Book instantly with verified partner salons offering premium beauty services
+            </p>
             {searchQuery.trim() && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-purple-600 font-medium mt-2">
                 {filteredFeaturedSalons.length} salon{filteredFeaturedSalons.length !== 1 ? 's' : ''} found
               </p>
             )}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
-            {filteredFeaturedSalons.length > 0 ? (
-              filteredFeaturedSalons.map((salon) => (
-                <SalonCard key={salon.id} salon={salon} />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <Search className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                <p className="text-gray-600 text-lg font-medium mb-2">No salons found</p>
-                <p className="text-gray-500 text-sm">
-                  Try a different search term or{' '}
-                  <button 
-                    onClick={() => setSearchQuery('')}
-                    className="text-purple-600 hover:underline font-medium"
-                  >
-                    clear your search
-                  </button>
-                </p>
+          {filteredFeaturedSalons.length > 0 ? (
+            <div className="space-y-4">
+              {/* First Row - Horizontal Scroll */}
+              <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-gray-100">
+                <div className="flex gap-4 min-w-max px-1">
+                  {filteredFeaturedSalons.slice(0, Math.ceil(filteredFeaturedSalons.length / 2)).map((salon) => (
+                    <div key={salon.id} className="w-[320px] flex-shrink-0">
+                      <SalonCard salon={salon} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
+              
+              {/* Second Row - Horizontal Scroll */}
+              {filteredFeaturedSalons.length > Math.ceil(filteredFeaturedSalons.length / 2) && (
+                <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-gray-100">
+                  <div className="flex gap-4 min-w-max px-1">
+                    {filteredFeaturedSalons.slice(Math.ceil(filteredFeaturedSalons.length / 2)).map((salon) => (
+                      <div key={salon.id} className="w-[320px] flex-shrink-0">
+                        <SalonCard salon={salon} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Search className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+              <p className="text-gray-600 text-lg font-medium mb-2">No salons found</p>
+              <p className="text-gray-500 text-sm">
+                Try a different search term or{' '}
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="text-purple-600 hover:underline font-medium"
+                >
+                  clear your search
+                </button>
+              </p>
+            </div>
+          )}
         </section>
 
         {/* SERVICES */}
