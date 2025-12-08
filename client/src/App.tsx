@@ -16,6 +16,7 @@ import Layout from "@/components/Layout";
 
 // Pages
 import Landing from "@/pages/landing";
+import FindSalons from "@/pages/customer/find-salons";
 import SalonDiscovery from "@/pages/SalonDiscovery";
 import AuthPage from "@/pages/auth";
 
@@ -167,7 +168,8 @@ function Router() {
       {!user || !isAuthenticated ? (
         <>
           {/* Home page for non-authenticated users */}
-          <Route path="/" component={Landing} />
+          <Route path="/" component={FindSalons} />
+          <Route path="/landing" component={Landing} />
           <Route path="/discover" component={SalonDiscovery} />
         </>
       ) : (user as any)?.userType ? (
