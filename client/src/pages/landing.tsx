@@ -1675,6 +1675,5 @@ function UpcomingFeaturesSection() {
         </div>
       </div>
     </section>
-    </div>
   );
 }
