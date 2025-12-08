@@ -347,9 +347,6 @@ export default function FindSalons() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold">
               Available Salons
-              <span className="ml-3 text-lg font-normal text-gray-600">
-                {filteredSalons.length} {filteredSalons.length === 1 ? 'salon' : 'salons'} found
-              </span>
             </h2>
           </div>
 
