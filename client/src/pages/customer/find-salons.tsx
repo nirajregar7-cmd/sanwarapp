@@ -59,6 +59,74 @@ export default function FindSalons() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50/30 to-gray-50">
+      {/* NAVIGATION BAR */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setLocation('/')}>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-400 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                S
+              </div>
+              <div>
+                <div className="text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
+                  Sanwar
+                </div>
+                <div className="text-xs text-gray-600">Smart Salon Booking</div>
+              </div>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center gap-8">
+              <button 
+                onClick={() => setLocation('/')}
+                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
+                data-testid="nav-home"
+              >
+                Home
+              </button>
+              <button 
+                onClick={() => setLocation('/salons')}
+                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
+                data-testid="nav-all-salons"
+              >
+                All Salons
+              </button>
+              <button 
+                onClick={() => setLocation('/discover')}
+                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
+                data-testid="nav-location-search"
+              >
+                Find Near You
+              </button>
+              <button 
+                onClick={() => setLocation('/about')}
+                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
+                data-testid="nav-about"
+              >
+                About
+              </button>
+              <button 
+                onClick={() => setLocation('/contact')}
+                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
+                data-testid="nav-contact"
+              >
+                Contact
+              </button>
+            </div>
+
+            {/* Login/Register Button */}
+            <Button 
+              onClick={() => setLocation('/auth')}
+              className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-6 py-2 rounded-full font-semibold shadow-md"
+              data-testid="button-login-register"
+            >
+              Login / Register →
+            </Button>
+          </div>
+        </div>
+      </nav>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         {/* HERO */}
