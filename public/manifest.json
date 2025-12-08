@@ -1,31 +1,25 @@
 {
-  "name": "Sanwar - Smart Salon Booking",
+  "name": "Sanwar",
   "short_name": "Sanwar",
   "description": "Smart salon booking platform for seamless appointments",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#A855F7",
   "theme_color": "#8B5CF6",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon.jpg",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/favicon.jpg",
+      "src": "/icon-512x512.png",
       "sizes": "512x512", 
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ],
   "categories": ["lifestyle", "business"],
