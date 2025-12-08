@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useLocation as useRouter } from "wouter";
-import { Search, Scissors, Palette, Sparkles, HandMetal, Waves, Crown, ShoppingBag, Users, MapPin } from "lucide-react";
+import { useLocation as useRouter, Link } from "wouter";
+import { Search, Scissors, Palette, Sparkles, HandMetal, Waves, Crown, ShoppingBag, Users, MapPin, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,11 +8,13 @@ import { useQuery } from "@tanstack/react-query";
 import type { Salon } from "@/../../shared/schema";
 import SalonCard from "@/components/SalonCard";
 import { useLocation } from "@/contexts/LocationContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function FindSalons() {
   const [, setRoute] = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const { locationPreference, requestLocationOnce } = useLocation();
+  const { isAuthenticated } = useAuth();
 
   // Fetch featured salons for top rated section
   const { data: featuredSalons = [] } = useQuery<Salon[]>({
@@ -80,62 +82,54 @@ export default function FindSalons() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50/30 to-gray-50">
       {/* NAVIGATION BAR */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <nav className="bg-white shadow-lg sticky top-0 z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setRoute('/')}>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-md">
-                <Scissors className="h-6 w-6" />
+          <div className="flex justify-between items-center h-20">
+            {/* Logo and Brand */}
+            <Link href="/" className="flex items-center space-x-3 group cursor-pointer" data-testid="link-logo">
+              <div className="relative">
+                <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600 text-white rounded-xl w-12 h-12 flex items-center justify-center font-bold text-xl shadow-lg transform group-hover:scale-110 transition-all duration-300 group-hover:rotate-6">
+                  <Scissors className="h-6 w-6" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
               </div>
               <div>
-                <div className="text-xl font-bold text-purple-600">
+                <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:via-pink-600 group-hover:to-blue-700 transition-all duration-300">
                   Sanwar
-                </div>
-                <div className="text-xs text-gray-600">Smart Salon Booking</div>
+                </span>
+                <p className="text-xs text-gray-500 font-medium -mt-1">Smart Salon Booking</p>
               </div>
-            </div>
+            </Link>
 
-            {/* Navigation Links */}
-            <div className="hidden md:flex items-center gap-8">
-              <button 
-                onClick={() => setRoute('/')}
-                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
-                data-testid="nav-home"
-              >
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center space-x-1">
+              <Link href="/" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-home">
                 Home
-              </button>
-              <button 
-                onClick={() => setRoute('/services')}
-                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
-                data-testid="nav-services"
-              >
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+              <Link href="/services" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-services">
                 Services
-              </button>
-              <button 
-                onClick={() => setRoute('/about')}
-                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
-                data-testid="nav-about"
-              >
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+              <Link href="/about" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-about">
                 About Us
-              </button>
-              <button 
-                onClick={() => setRoute('/contact')}
-                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
-                data-testid="nav-contact"
-              >
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+              <Link href="/contact" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-contact">
                 Contact
-              </button>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+              {isAuthenticated ? (
+                <Link href="/dashboard" className="ml-4 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-2.5 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold" data-testid="link-dashboard">
+                  Dashboard
+                </Link>
+              ) : (
+                <Link href="/auth" className="ml-4 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-2.5 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold flex items-center space-x-2" data-testid="link-login">
+                  <span>Login / Register</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
-
-            {/* Login/Register Button */}
-            <Button 
-              onClick={() => setRoute('/auth')}
-              className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-6 py-2 rounded-full font-semibold shadow-md"
-              data-testid="button-login-register"
-            >
-              Login / Register →
-            </Button>
           </div>
         </div>
       </nav>
