@@ -443,6 +443,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Nearby salons endpoint (location-based discovery)
+  app.get('/api/salons/nearby', async (req, res) => {
+    try {
+      const { lat, lng, radius = '30' } = req.query;
+      
+      // Require location parameters
+      if (!lat || !lng || typeof lat !== 'string' || typeof lng !== 'string') {
+        return res.status(400).json({ message: "Location parameters (lat, lng) are required" });
+      }
+      
+      const userLat = parseFloat(lat);
+      const userLng = parseFloat(lng);
+      const searchRadius = parseFloat(typeof radius === 'string' ? radius : '30');
+      
+      if (isNaN(userLat) || isNaN(userLng)) {
+        return res.status(400).json({ message: "Invalid location parameters" });
+      }
+      
+      // Fetch only approved salons with their primary media
+      const allSalons = await db.select({
+        salon: salons,
+        primaryMedia: salonMedia
+      })
+        .from(salons)
+        .leftJoin(salonMedia, and(
+          eq(salonMedia.salonId, salons.id),
+          eq(salonMedia.isActive, true),
+          eq(salonMedia.isPrimary, true)
+        ))
+        .where(
+          and(
+            eq(salons.isActive, true),
+            or(
+              eq(salons.verificationStatus, 'approved'),
+              eq(salons.verificationStatus, 'pending')
+            )
+          )
+        );
+      
+      // Calculate distance for all salons
+      const salonsWithDistance = allSalons
+        .filter(row => row.salon.latitude && row.salon.longitude)
+        .map(row => {
+          const salonLat = parseFloat(row.salon.latitude!);
+          const salonLng = parseFloat(row.salon.longitude!);
+          
+          // Calculate distance using Haversine formula
+          const R = 6371; // Earth's radius in kilometers
+          const dLat = (salonLat - userLat) * Math.PI / 180;
+          const dLng = (salonLng - userLng) * Math.PI / 180;
+          const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(userLat * Math.PI / 180) * Math.cos(salonLat * Math.PI / 180) * 
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          const distance = R * c;
+          
+          return {
+            ...row.salon,
+            primaryImageUrl: row.primaryMedia?.fileUrl || null,
+            distance
+          };
+        })
+        .filter(salon => salon.distance <= searchRadius)
+        .sort((a, b) => a.distance - b.distance); // Sort by distance
+      
+      res.json(salonsWithDistance);
+    } catch (error) {
+      console.error("Error fetching nearby salons:", error);
+      res.status(500).json({ message: "Failed to fetch nearby salons" });
+    }
+  });
+
   // Featured salons endpoint (real data only)
   app.get('/api/salons/featured', async (req, res) => {
     try {
