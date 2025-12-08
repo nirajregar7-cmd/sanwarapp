@@ -66,12 +66,10 @@ export default function FindSalons() {
     setIsRequestingLocation(true);
     try {
       await requestLocationOnce();
-      // Give it a moment to get the location and update the preference
+      // Location will automatically update and show nearby salons
       setTimeout(() => {
         setIsRequestingLocation(false);
-        // Navigate to discover page to show location-based salons
-        setRoute("/discover");
-      }, 1500);
+      }, 1000);
     } catch (error) {
       console.error("Failed to get location:", error);
       setIsRequestingLocation(false);
@@ -225,8 +223,8 @@ export default function FindSalons() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex-1"></div>
                 <div className="flex-1 text-center">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                    Find the Best Salons Near You — Book Instantly
+                  <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent">
+                    India's Smart Salon Booking Platform
                   </h1>
                 </div>
                 <div className="flex-1 flex justify-end">
@@ -253,8 +251,7 @@ export default function FindSalons() {
               </div>
 
               <p className="text-gray-700 text-sm mb-4 text-center font-medium">
-                Like Zomato for Salons • Real-time slots like IRCTC • Instant
-                confirmations
+                Like Zomato for Salons • Real-time slots like IRCTC • Instant confirmations
               </p>
               <div className="mb-4 flex items-center justify-center gap-4 flex-wrap">
                 <div className="flex items-center gap-2 text-sm font-medium text-purple-700 bg-purple-50 px-4 py-2 rounded-full border border-purple-200">
