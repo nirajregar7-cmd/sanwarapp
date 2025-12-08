@@ -19,6 +19,7 @@ export default function FindSalons() {
   const [citySearch, setCitySearch] = useState("");
   const [minRating, setMinRating] = useState<string>("any");
   const [maxPrice, setMaxPrice] = useState<string>("any");
+  const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const { locationPreference, requestLocationOnce } = useLocation();
   const { isAuthenticated } = useAuth();
 
@@ -127,6 +128,22 @@ export default function FindSalons() {
     setCitySearch("");
     setMinRating("any");
     setMaxPrice("any");
+  };
+
+  const handleUseMyLocation = async () => {
+    setIsRequestingLocation(true);
+    try {
+      await requestLocationOnce();
+      // Give it a moment to get the location and update the preference
+      setTimeout(() => {
+        setIsRequestingLocation(false);
+        // Navigate to discover page to show location-based salons
+        setRoute('/discover');
+      }, 1500);
+    } catch (error) {
+      console.error('Failed to get location:', error);
+      setIsRequestingLocation(false);
+    }
   };
 
   const handleSearch = () => {
@@ -290,12 +307,22 @@ export default function FindSalons() {
                   Search
                 </Button>
                 <Button
-                  onClick={requestLocationOnce}
-                  className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2"
+                  onClick={handleUseMyLocation}
+                  disabled={isRequestingLocation}
+                  className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   data-testid="button-use-my-location"
                 >
-                  <MapPin className="h-4 w-4" />
-                  Use My Location
+                  {isRequestingLocation ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      Getting Location...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="h-4 w-4" />
+                      Use My Location
+                    </>
+                  )}
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mb-4">Search for a specific area or use your current location to find nearby salons</p>
