@@ -219,35 +219,11 @@ export default function FindSalons() {
         <Card className="mb-6 shadow-lg border-0 bg-white/95 backdrop-blur">
           <CardContent className="p-6">
             <div className="w-full">
-              {/* Header with Allow Location button */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex-1"></div>
-                <div className="flex-1 text-center">
-                  <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent">
-                    India's Smart Salon Booking Platform
-                  </h1>
-                </div>
-                <div className="flex-1 flex justify-end">
-                  <Button
-                    onClick={handleUseMyLocation}
-                    disabled={isRequestingLocation}
-                    variant="outline"
-                    className="h-10 px-4 rounded-xl border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    data-testid="button-allow-location"
-                  >
-                    {isRequestingLocation ? (
-                      <>
-                        <div className="animate-spin h-4 w-4 border-2 border-purple-700 border-t-transparent rounded-full" />
-                        Getting...
-                      </>
-                    ) : (
-                      <>
-                        <MapPin className="h-4 w-4" />
-                        Allow Location
-                      </>
-                    )}
-                  </Button>
-                </div>
+              {/* Header */}
+              <div className="text-center mb-3">
+                <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent">
+                  India's Smart Salon Booking Platform
+                </h1>
               </div>
 
               <p className="text-gray-700 text-sm mb-4 text-center font-medium">
