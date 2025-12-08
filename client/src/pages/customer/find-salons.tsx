@@ -59,7 +59,7 @@ export default function FindSalons() {
     // Filter by minimum rating
     if (minRating !== "any") {
       const minRatingValue = parseFloat(minRating);
-      const salonRating = salon.averageRating || 0;
+      const salonRating = typeof salon.averageRating === 'number' ? salon.averageRating : parseFloat(String(salon.averageRating || 0));
       if (salonRating < minRatingValue) {
         return false;
       }
@@ -73,13 +73,16 @@ export default function FindSalons() {
     }
 
     // Filter by location if location preference is set
-    if (locationPreference?.lat && locationPreference?.lng) {
+    if (locationPreference?.lat && locationPreference?.lng && salon.latitude && salon.longitude) {
       // Check if salon is within radius
+      const salonLat = typeof salon.latitude === 'number' ? salon.latitude : parseFloat(String(salon.latitude));
+      const salonLng = typeof salon.longitude === 'number' ? salon.longitude : parseFloat(String(salon.longitude));
+      
       const distance = calculateDistance(
         locationPreference.lat,
         locationPreference.lng,
-        salon.latitude,
-        salon.longitude
+        salonLat,
+        salonLng
       );
       if (distance > (locationPreference.radius || 30)) {
         return false;
@@ -242,29 +245,6 @@ export default function FindSalons() {
           </CardContent>
         </Card>
 
-        {/* LOCATION ACCESS STATUS */}
-        {locationPreference?.denied && (
-          <Card className="mb-6 bg-red-50 border-red-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-red-700">
-                  <MapPin className="h-5 w-5" />
-                  <span className="font-medium">Location access denied by user</span>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={requestLocationOnce}
-                  className="text-red-700 border-red-300 hover:bg-red-100"
-                  data-testid="button-try-again-location"
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* SEARCH & FILTER SALONS */}
         <Card className="mb-6 shadow-lg border-purple-100">
           <CardContent className="p-6">
@@ -341,42 +321,6 @@ export default function FindSalons() {
             </div>
           </CardContent>
         </Card>
-
-        {/* AVAILABLE SALONS */}
-        <section className="mb-6" aria-label="Available salons">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">
-              Available Salons
-            </h2>
-          </div>
-
-          {filteredSalons.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
-              {filteredSalons.map((salon) => (
-                <SalonCard key={salon.id} salon={salon} />
-              ))}
-            </div>
-          ) : (
-            <Card className="border-2 border-gray-200">
-              <CardContent className="p-12 text-center">
-                <Search className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  No salons found
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  Try adjusting your filters or search criteria
-                </p>
-                <Button
-                  onClick={clearFilters}
-                  variant="outline"
-                  data-testid="button-clear-all-filters"
-                >
-                  Clear All Filters
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </section>
 
         {/* LOCATION-BASED NEARBY SALONS */}
         {locationPreference?.lat && locationPreference?.lng && locationBasedSalons.length > 0 && (
