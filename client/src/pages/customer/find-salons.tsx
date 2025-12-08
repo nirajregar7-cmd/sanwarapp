@@ -1,16 +1,18 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
-import { Search, Scissors, Palette, Sparkles, HandMetal, Waves, Crown, ShoppingBag, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useLocation as useRouter } from "wouter";
+import { Search, Scissors, Palette, Sparkles, HandMetal, Waves, Crown, ShoppingBag, Users, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import type { Salon } from "@/../../shared/schema";
 import SalonCard from "@/components/SalonCard";
+import { useLocation } from "@/contexts/LocationContext";
 
 export default function FindSalons() {
-  const [, setLocation] = useLocation();
+  const [, setRoute] = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const { locationPreference, requestLocationOnce } = useLocation();
 
   // Fetch featured salons for top rated section
   const { data: featuredSalons = [] } = useQuery<Salon[]>({
@@ -18,11 +20,28 @@ export default function FindSalons() {
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
+  // Fetch nearby salons based on location
+  const { data: locationBasedSalons = [], isLoading: locationLoading } = useQuery<Salon[]>({
+    queryKey: ['/api/salons/nearby', locationPreference?.lat, locationPreference?.lng, locationPreference?.radius],
+    queryFn: async () => {
+      if (!locationPreference?.lat || !locationPreference?.lng) {
+        return [];
+      }
+      const response = await fetch(
+        `/api/salons/nearby?lat=${locationPreference.lat}&lng=${locationPreference.lng}&radius=${locationPreference.radius || 30}`
+      );
+      if (!response.ok) return [];
+      return await response.json();
+    },
+    enabled: !!locationPreference?.lat && !!locationPreference?.lng,
+    staleTime: 2 * 60 * 1000, // 2 minutes cache
+  });
+
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      setLocation(`/salons?search=${encodeURIComponent(searchQuery)}`);
+      setRoute(`/salons?search=${encodeURIComponent(searchQuery)}`);
     } else {
-      setLocation('/salons');
+      setRoute('/salons');
     }
   };
 
@@ -65,12 +84,12 @@ export default function FindSalons() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setLocation('/')}>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-400 flex items-center justify-center text-white font-bold text-xl shadow-md">
-                S
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setRoute('/')}>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-md">
+                <Scissors className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
+                <div className="text-xl font-bold text-purple-600">
                   Sanwar
                 </div>
                 <div className="text-xs text-gray-600">Smart Salon Booking</div>
@@ -80,35 +99,28 @@ export default function FindSalons() {
             {/* Navigation Links */}
             <div className="hidden md:flex items-center gap-8">
               <button 
-                onClick={() => setLocation('/')}
+                onClick={() => setRoute('/')}
                 className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
                 data-testid="nav-home"
               >
                 Home
               </button>
               <button 
-                onClick={() => setLocation('/salons')}
+                onClick={() => setRoute('/services')}
                 className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
-                data-testid="nav-all-salons"
+                data-testid="nav-services"
               >
-                All Salons
+                Services
               </button>
               <button 
-                onClick={() => setLocation('/discover')}
-                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
-                data-testid="nav-location-search"
-              >
-                Find Near You
-              </button>
-              <button 
-                onClick={() => setLocation('/about')}
+                onClick={() => setRoute('/about')}
                 className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
                 data-testid="nav-about"
               >
-                About
+                About Us
               </button>
               <button 
-                onClick={() => setLocation('/contact')}
+                onClick={() => setRoute('/contact')}
                 className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
                 data-testid="nav-contact"
               >
@@ -118,7 +130,7 @@ export default function FindSalons() {
 
             {/* Login/Register Button */}
             <Button 
-              onClick={() => setLocation('/auth')}
+              onClick={() => setRoute('/auth')}
               className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-6 py-2 rounded-full font-semibold shadow-md"
               data-testid="button-login-register"
             >
@@ -133,43 +145,84 @@ export default function FindSalons() {
         {/* HERO */}
         <Card className="mb-6 shadow-lg border-0 bg-white/95 backdrop-blur">
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="flex items-center">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-600 to-purple-400 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-                  S
-                </div>
-              </div>
-              
-              <div className="flex-1 w-full">
-                <h1 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  Find the Best Salons Near You — Book Instantly
-                </h1>
-                <p className="text-gray-600 text-sm mb-4">
-                  Compare prices, reviews & offers. Save time — skip the wait.
-                </p>
+            <div className="w-full">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Find the Best Salons Near You — Book Instantly
+              </h1>
+              <p className="text-gray-600 text-sm mb-4">
+                Like Zomato for Salons • Real-time slots like IRCTC • Instant confirmations
+              </p>
                 
-                <div className="flex gap-3" role="search" aria-label="Search salons">
-                  <Input
-                    className="flex-1 h-12 px-4 rounded-xl border-gray-200 bg-blue-50/50 focus:bg-white transition-colors"
-                    placeholder="Search salons near me (e.g., 'haircut, beard, facial')"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    data-testid="input-search-salons"
-                  />
-                  <Button 
-                    onClick={handleSearch}
-                    className="h-12 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 font-bold shadow-md"
-                    data-testid="button-search"
-                  >
-                    <Search className="h-5 w-5 mr-2" />
-                    Find
-                  </Button>
-                </div>
+              <div className="flex gap-3" role="search" aria-label="Search salons">
+                <Input
+                  className="flex-1 h-12 px-4 rounded-xl border-gray-200 bg-blue-50/50 focus:bg-white transition-colors"
+                  placeholder="Search salons near me (e.g., 'haircut, beard, facial')"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  data-testid="input-search-salons"
+                />
+                <Button 
+                  onClick={handleSearch}
+                  className="h-12 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 font-bold shadow-md"
+                  data-testid="button-search"
+                >
+                  <Search className="h-5 w-5 mr-2" />
+                  Find
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* LOCATION-BASED NEARBY SALONS */}
+        {locationPreference?.lat && locationPreference?.lng && locationBasedSalons.length > 0 && (
+          <section className="mb-6" aria-label="Nearby salons">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-green-600" />
+                Showing salons within {locationPreference.radius || 30}km of your location
+              </h2>
+              <Button 
+                variant="outline"
+                onClick={() => setRoute('/discover')}
+                className="text-sm"
+                data-testid="button-view-all-nearby"
+              >
+                View All Nearby
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
+              {locationBasedSalons.slice(0, 3).map((salon) => (
+                <SalonCard key={salon.id} salon={salon} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* FIND NEAR YOU BUTTON (if no location) */}
+        {(!locationPreference?.lat || !locationPreference?.lng) && (
+          <section className="mb-6">
+            <Card className="border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
+              <CardContent className="p-6 text-center">
+                <MapPin className="h-12 w-12 mx-auto mb-3 text-purple-600" />
+                <h3 className="text-xl font-bold mb-2">Find Salons Near You</h3>
+                <p className="text-gray-600 mb-4">
+                  Enable location to discover salons within 30km radius
+                </p>
+                <Button 
+                  onClick={requestLocationOnce}
+                  className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600"
+                  data-testid="button-enable-location"
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Enable Location
+                </Button>
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         {/* TOP RATED SALONS */}
         <section className="mb-6" aria-label="Top salons">
@@ -240,7 +293,7 @@ export default function FindSalons() {
               <Button 
                 variant="outline" 
                 className="font-semibold"
-                onClick={() => setLocation('/auth')}
+                onClick={() => setRoute('/auth')}
                 data-testid="button-register-salon"
               >
                 Register Your Salon
