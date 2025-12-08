@@ -141,9 +141,23 @@ export default function FindSalons() {
               <h1 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                 Find the Best Salons Near You — Book Instantly
               </h1>
-              <p className="text-gray-600 text-sm mb-4">
+              <p className="text-gray-600 text-sm mb-2">
                 Like Zomato for Salons • Real-time slots like IRCTC • Instant confirmations
               </p>
+              <div className="mb-4 flex items-center justify-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2 text-sm font-medium text-purple-700 bg-purple-50 px-4 py-2 rounded-full border border-purple-200">
+                  <span className="text-purple-600">💰</span>
+                  <span>Compare prices</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm font-medium text-blue-700 bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
+                  <span className="text-blue-600">⭐</span>
+                  <span>Reviews & offers</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm font-medium text-green-700 bg-green-50 px-4 py-2 rounded-full border border-green-200">
+                  <span className="text-green-600">⚡</span>
+                  <span>Save time — skip the wait</span>
+                </div>
+              </div>
                 
               <div className="flex gap-3" role="search" aria-label="Search salons">
                 <Input
