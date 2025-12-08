@@ -2068,7 +2068,14 @@ export default function SalonDetail() {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="any">Any available staff</SelectItem>
+                                    <SelectItem value="any">
+                                      <div className="flex items-center justify-between w-full">
+                                        <span>Any available staff</span>
+                                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full ml-2">
+                                          {Object.values(staffSlotCounts).reduce((sum, count) => sum + count, 0)} slots
+                                        </span>
+                                      </div>
+                                    </SelectItem>
                                     {staff
                                       .filter(member => member.isActive)
                                       .map((member) => (

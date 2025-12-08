@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sanwar — Smart Salon Booking</title>
+<style>
+  :root{
+    --bg:#f7f8fb;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --accent:#6f4cff; /* purple */
+    --accent-2:#ff6b6b; /* coral */
+    --radius:14px;
+    --shadow: 0 6px 20px rgba(20,20,40,0.06);
+    --gap:16px;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color:#0f1724;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,#fbfdff 0%,var(--bg) 100%);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:20px;
+  }
+
+  /* container */
+  .wrap{
+    max-width:980px;
+    margin:0 auto;
+  }
+
+  /* HERO */
+  .hero{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+    display:flex;
+    gap:16px;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .hero-left{flex:1}
+  .logo{
+    width:56px;height:56px;border-radius:12px;
+    background:linear-gradient(135deg,var(--accent),#b45ff6);
+    display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;
+    margin-right:12px;
+  }
+  .headline{
+    font-size:18px;font-weight:700;margin:0 0 6px 0;
+  }
+  .sub{color:var(--muted);font-size:13px;margin:0 0 12px 0;}
+  .search-row{display:flex;gap:10px}
+  .search{
+    flex:1;border-radius:12px;padding:12px 14px;border:1px solid #e8eaf2;background:#fafbff;
+    outline:none;font-size:14px;
+  }
+  .btn-primary{
+    background:linear-gradient(180deg,var(--accent),#5a2cff);
+    color:white;padding:12px 14px;border-radius:12px;border:0;font-weight:700;
+    display:inline-flex;gap:10px;align-items:center;
+  }
+
+  /* Top salons */
+  .section{margin-bottom:18px}
+  .section-title{font-weight:700;margin:0 0 10px 0;font-size:16px}
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+  }
+  .card{
+    background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--shadow);
+  }
+  .card img{width:100%;height:92px;object-fit:cover;border-radius:8px;margin-bottom:8px}
+  .card h4{margin:0;font-size:14px}
+  .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-top:6px}
+  .book-btn{display:inline-block;margin-top:10px;background:#06b6d4;color:white;padding:8px 10px;border-radius:10px;font-weight:700;text-decoration:none;font-size:13px}
+
+  /* services grid */
+  .services-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .service{
+    background:linear-gradient(180deg,#fff,#fbfbff);
+    border-radius:12px;padding:10px;text-align:center;font-size:13px;box-shadow:0 6px 18px rgba(20,20,40,0.03);
+  }
+  .service svg{width:28px;height:28px;margin-bottom:6px;display:block;margin-left:auto;margin-right:auto}
+
+  /* why sanwar */
+  .why{display:flex;gap:12px;flex-wrap:wrap}
+  .pill{
+    flex:1;
+    background:var(--card);padding:12px;border-radius:12px;box-shadow:var(--shadow);
+    min-width:180px;
+  }
+  .pill h5{margin:0 0 8px 0;font-size:14px}
+  .pill p{margin:0;color:var(--muted);font-size:13px}
+
+  /* small cards row */
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .small{
+    flex:1;min-width:220px;background:var(--card);padding:12px;border-radius:12px;box-shadow:var(--shadow)
+  }
+  .small h5{margin:0 0 8px 0}
+  .small p{margin:0;color:var(--muted);font-size:13px}
+
+  /* footer */
+  footer{margin-top:22px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+  /* responsive */
+  @media (max-width:900px){
+    .cards{grid-template-columns:repeat(2,1fr)}
+    .services-grid{grid-template-columns:repeat(4,1fr)}
+  }
+  @media (max-width:600px){
+    body{padding:12px}
+    .hero{flex-direction:column;align-items:flex-start}
+    .cards{grid-template-columns:1fr}
+    .services-grid{grid-template-columns:repeat(4,1fr);gap:8px}
+    .why{flex-direction:column}
+    .row{flex-direction:column}
+  }
+
+  /* small utilities */
+  .muted{color:var(--muted)}
+  .badge{display:inline-block;background:#f1f5f9;color:#0f1724;padding:6px 10px;border-radius:999px;font-weight:600;font-size:12px}
+  .green{background:#e6fffa;color:#065f46;padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- HERO -->
+    <header class="hero" role="banner" aria-label="Sanwar hero">
+      <div style="display:flex;align-items:center">
+        <div class="logo">S</div>
+      </div>
+      <div class="hero-left">
+        <p class="headline">Find the Best Salons Near You — Book Instantly</p>
+        <p class="sub">Compare prices, reviews & offers. Save time — skip the wait.</p>
+
+        <div class="search-row" role="search" aria-label="Search salons">
+          <input class="search" id="searchInput" placeholder="Search salons near me (e.g., 'haircut, beard, facial')" />
+          <button class="btn-primary" id="findBtn">Find</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- TOP SALONS -->
+    <section class="section" aria-label="Top salons">
+      <h3 class="section-title">⭐ Top Rated Salons Near You</h3>
+      <div class="cards" role="list">
+        <article class="card" role="listitem" aria-label="Top salon 1">
+          <img src="https://images.unsplash.com/photo-1556228720-63f9d4ff7d97?auto=format&fit=crop&w=800&q=60" alt="Salon interior"/>
+          <h4>Comfort Luxury Men Salon</h4>
+          <div class="meta"><span>4.9 ★</span><span>2.1 km</span></div>
+          <a class="book-btn" href="#">Book Now</a>
+        </article>
+
+        <article class="card" role="listitem" aria-label="Top salon 2">
+          <img src="https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=800&q=60" alt="Salon interior"/>
+          <h4>Legend's Unisex Salon</h4>
+          <div class="meta"><span>4.8 ★</span><span>1.2 km</span></div>
+          <a class="book-btn" href="#">Book Now</a>
+        </article>
+
+        <article class="card" role="listitem" aria-label="Top salon 3">
+          <img src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=60" alt="Salon interior"/>
+          <h4>Sanwar Demo Salon</h4>
+          <div class="meta"><span>4.8 ★</span><span>0.8 km</span></div>
+          <a class="book-btn" href="#">Book Now</a>
+        </article>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="section" aria-label="Services">
+      <h3 class="section-title">Services You Can Book</h3>
+      <div class="services-grid" role="list">
+        <div class="service" role="listitem"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14" stroke="#6f4cff" stroke-width="2" stroke-linecap="round"/></svg><div>Haircut</div></div>
+        <div class="service" role="listitem"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke="#ff6b6b" stroke-width="2" fill="none"/></svg><div>Beard Trim</div></div>
+        <div class="service" role="listitem"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" stroke="#06b6d4" stroke-width="2" fill="none"/></svg><div>Facial</div></div>
+        <div class="service" role="listitem"><svg viewBox="0 0 24 24"><path d="M6 18h12" stroke="#8b5cf6" stroke-width="2"/></svg><div>Hair Color</div></div>
+        <div class="service" role="listitem"><svg viewBox="0 0 24 24"><path d="M12 2v20" stroke="#f59e0b" stroke-width="2"/></svg><div>Spa & Massage</div></div>
+        <div class="service" role="listitem"><svg viewBox="0 0 24 24"><path d="M4 12h16" stroke="#10b981" stroke-width="2"/></svg><div>Bridal Makeup</div></div>
+        <div class="service" role="listitem"><svg viewBox="0 0 24 24"><path d="M12 6v12" stroke="#ef4444" stroke-width="2"/></svg><div>Nails</div></div>
+        <div class="service" role="listitem"><svg viewBox="0 0 24 24"><path d="M3 12h18" stroke="#7c3aed" stroke-width="2"/></svg><div>Men's Grooming</div></div>
+      </div>
+    </section>
+
+    <!-- WHY SANWAR -->
+    <section class="section" aria-label="Why Sanwar">
+      <h3 class="section-title">Why People Love Sanwar</h3>
+      <div class="why">
+        <div class="pill"><h5>Save Time — Book Smart</h5><p>No more waiting. Pick a slot and walk in when your service starts.</p></div>
+        <div class="pill"><h5>Verified Reviews & Prices</h5><p>Transparent pricing and real reviews so you choose with confidence.</p></div>
+        <div class="pill"><h5>Trusted by Local Salons</h5><p>Easy salon management for owners and better traffic from our platform.</p></div>
+      </div>
+    </section>
+
+    <!-- small cards: AI try-on & Salon owner CTA -->
+    <div class="row section" aria-label="Extras">
+      <div class="small">
+        <h5>🔮 AI Try-On — Coming Soon</h5>
+        <p class="muted">Preview hairstyles on your photo and choose before you arrive. Small beta available for select salons.</p>
+      </div>
+
+      <div class="small">
+        <h5>🏪 For Salon Owners</h5>
+        <p class="muted">List your salon, manage bookings, loyalty, QR discounts & messaging. Quick setup — no coding.</p>
+        <div style="margin-top:10px">
+          <a class="badge" href="#">Register Your Salon</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <footer>
+      <div>© <strong>Sanwar</strong> — Digitalizing India’s Salon Industry</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a class="muted" href="#">About</a>
+        <a class="muted" href="#">Contact</a>
+        <a class="muted" href="#">Privacy</a>
+      </div>
+    </footer>
+
+  </div>
+
+<script>
+  // small demo interaction: focus search on load and handle Find click
+  document.getElementById('searchInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') document.getElementById('findBtn').click();
+  });
+  document.getElementById('findBtn').addEventListener('click', function(){
+    const q = document.getElementById('searchInput').value.trim();
+    if(!q){
+      document.getElementById('searchInput').focus();
+      return;
+    }
+    // in real app, redirect to search results
+    alert('Search: ' + q + '\\n(Replace this with actual search results page)');
+  });
+</script>
+</body>
+</html>
