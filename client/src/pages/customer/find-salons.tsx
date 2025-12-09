@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Filter,
   X,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ export default function FindSalons() {
   const [, setRoute] = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { locationPreference, requestLocationOnce, showLocationDialog, setShowLocationDialog, denyLocationPermission } = useLocation();
   const { isAuthenticated } = useAuth();
 
@@ -211,7 +213,80 @@ export default function FindSalons() {
                 </Link>
               )}
             </div>
+
+            {/* Mobile Hamburger Menu Button */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              data-testid="button-mobile-menu"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6 text-gray-700" />
+              ) : (
+                <Menu className="h-6 w-6 text-gray-700" />
+              )}
+            </button>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-100 py-4 px-4 bg-white">
+              <div className="flex flex-col space-y-3">
+                <Link
+                  href="/"
+                  className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-semibold"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="mobile-link-home"
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/services"
+                  className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-semibold"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="mobile-link-services"
+                >
+                  Services
+                </Link>
+                <Link
+                  href="/about"
+                  className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-semibold"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="mobile-link-about"
+                >
+                  About Us
+                </Link>
+                <Link
+                  href="/contact"
+                  className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-semibold"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="mobile-link-contact"
+                >
+                  Contact
+                </Link>
+                {isAuthenticated ? (
+                  <Link
+                    href="/dashboard"
+                    className="mx-4 mt-2 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-3 rounded-full text-center font-semibold"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="mobile-link-dashboard"
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth"
+                    className="mx-4 mt-2 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-3 rounded-full text-center font-semibold"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="mobile-link-login"
+                  >
+                    Login / Register
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
