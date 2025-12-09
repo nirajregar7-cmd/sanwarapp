@@ -48,9 +48,9 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </Link>
               
-              {/* Navigation Links */}
-              {isAuthenticated && !isMobile && (
-                <nav className="flex items-center space-x-2 lg:space-x-4">
+              {/* Navigation Links - Hidden on mobile, shown on larger screens */}
+              {isAuthenticated && (
+                <nav className="hidden lg:flex items-center space-x-2 lg:space-x-4">
                   <Link 
                     href="/" 
                     className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors px-2 lg:px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
