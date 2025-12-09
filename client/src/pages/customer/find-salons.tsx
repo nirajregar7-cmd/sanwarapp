@@ -66,10 +66,11 @@ export default function FindSalons() {
     setIsRequestingLocation(true);
     try {
       await requestLocationOnce();
-      // Location will automatically update and show nearby salons
+      // Navigate to salon discovery page after getting location
       setTimeout(() => {
         setIsRequestingLocation(false);
-      }, 1000);
+        setRoute("/salons");
+      }, 500);
     } catch (error) {
       console.error("Failed to get location:", error);
       setIsRequestingLocation(false);
