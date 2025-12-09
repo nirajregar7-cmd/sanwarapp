@@ -2317,35 +2317,6 @@ export default function SalonDetail() {
               </CardContent>
             </Card>
 
-            {/* Working Hours */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Working Hours</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {hoursLoading ? (
-                  <div className="space-y-2">
-                    {Array.from({ length: 7 }).map((_, i) => (
-                      <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                    ))}
-                  </div>
-                ) : workingHours.length > 0 ? (
-                  <div className="space-y-2 text-sm">
-                    {formatWorkingHoursForDisplay().map((dayInfo, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span>{dayInfo.day}</span>
-                        <span className={dayInfo.isOpen ? 'text-gray-600' : 'text-red-500'}>
-                          {dayInfo.hours}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-600">Hours not specified</p>
-                )}
-              </CardContent>
-            </Card>
-
             {/* Service-Specific Offers Section - New Enhanced Display */}
             {Array.isArray(offers) && offers.length > 0 && (
               <ServiceSpecificOffers offers={offers} services={services} />
