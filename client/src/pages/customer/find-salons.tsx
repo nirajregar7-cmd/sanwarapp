@@ -32,6 +32,7 @@ import SalonCard from "@/components/SalonCard";
 import { useLocation } from "@/contexts/LocationContext";
 import { useAuth } from "@/hooks/useAuth";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
+import { TypewriterEffect } from "@/components/TypewriterEffect";
 
 export default function FindSalons() {
   const [, setRoute] = useRouter();
@@ -298,7 +299,12 @@ export default function FindSalons() {
               {/* Header */}
               <div className="text-center mb-3">
                 <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent">
-                  India's Smart Salon Booking Platform
+                  <TypewriterEffect 
+                    text="India's Smart Salon Booking Platform" 
+                    speed={80}
+                    pauseAfterComplete={3000}
+                    loop={true}
+                  />
                 </h1>
               </div>
 
