@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -239,6 +240,7 @@ export default function OwnerDashboard() {
   const [tempImageUrl, setTempImageUrl] = useState<string>("");
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
+  const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [exitingImpersonation, setExitingImpersonation] = useState(false);
@@ -1015,6 +1017,28 @@ export default function OwnerDashboard() {
       });
       setStaffDialogOpen(false);
       setEditingItem(null);
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/staff`] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Staff delete mutation
+  const deleteStaffMutation = useMutation({
+    mutationFn: async (staffId: string) => {
+      return apiRequest("DELETE", `/api/staff/${staffId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Staff Deleted",
+        description: "The staff member has been removed from your salon.",
+      });
+      setStaffToDelete(null);
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/staff`] });
     },
     onError: (error: Error) => {
@@ -2188,13 +2212,23 @@ export default function OwnerDashboard() {
                               )}
                             </div>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditStaff(member)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditStaff(member)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setStaffToDelete(member)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -3765,6 +3799,28 @@ export default function OwnerDashboard() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Staff Delete Confirmation Dialog */}
+      <AlertDialog open={!!staffToDelete} onOpenChange={(open) => !open && setStaffToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Staff Member</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{staffToDelete?.name}</strong>? This action cannot be undone. All their bookings and time slots will also be affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setStaffToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => staffToDelete && deleteStaffMutation.mutate(staffToDelete.id)}
+              className="bg-red-500 hover:bg-red-600"
+              disabled={deleteStaffMutation.isPending}
+            >
+              {deleteStaffMutation.isPending ? "Deleting..." : "Delete Staff"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Gallery Form Dialog */}
       <Dialog open={galleryDialogOpen} onOpenChange={setGalleryDialogOpen}>
