@@ -2216,6 +2216,7 @@ export default function OwnerDashboard() {
                             <Button
                               variant="outline"
                               size="sm"
+                              type="button"
                               onClick={() => handleEditStaff(member)}
                             >
                               <Edit className="h-4 w-4" />
@@ -2223,6 +2224,7 @@ export default function OwnerDashboard() {
                             <Button
                               variant="outline"
                               size="sm"
+                              type="button"
                               onClick={() => setStaffToDelete(member)}
                               className="text-red-500 hover:text-red-700 hover:bg-red-50"
                             >
