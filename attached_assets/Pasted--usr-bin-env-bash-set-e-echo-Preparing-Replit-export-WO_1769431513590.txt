@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+set -e
+
+echo "== Preparing Replit export =="
+WORKDIR="$(pwd)"
+echo "Working dir: $WORKDIR"
+
+# 1) Create a Node script to dump Replit DB to replit_dump.json
+cat > dump-replit.js <<'JS'
+import fs from 'fs';
+
+const dbUrl = process.env.REPLIT_DB_URL;
+if (!dbUrl) {
+  console.error('ERROR: REPLIT_DB_URL environment variable is not set.');
+  console.error('Set REPLIT_DB_URL in Replit Secrets or run this in the Replit environment.');
+  process.exit(1);
+}
+
+async function dump() {
+  console.log('Listing keys from Replit DB...');
+  const listRes = await fetch(`${dbUrl}/v0/`);
+  if (!listRes.ok) {
+    throw new Error('Failed to list keys: ' + listRes.status + ' ' + listRes.statusText);
+  }
+  const keysText = await listRes.text();
+  const keys = keysText.split('\\n').map(k => k.trim()).filter(Boolean);
+  console.log('Found', keys.length, 'keys. Fetching values...');
+  const out = {};
+  for (const key of keys) {
+    try {
+      const r = await fetch(`${dbUrl}/v0/${encodeURIComponent(key)}`);
+      if (!r.ok) {
+        console.warn('  Warning: failed to fetch key', key, r.status);
+        out[key] = null;
+        continue;
+      }
+      out[key] = await r.text();
+    } catch (err) {
+      console.error('  Error fetching key', key, err);
+      out[key] = null;
+    }
+  }
+  fs.writeFileSync('replit_dump.json', JSON.stringify(out, null, 2), 'utf8');
+  console.log('Wrote replit_dump.json with', keys.length, 'keys');
+}
+
+dump().catch(e => {
+  console.error('Dump failed:', e);
+  process.exit(1);
+});
+JS
+
+# 2) Run the node script (node in Replit supports fetch in modern runtimes)
+echo "Running Replit DB dump (node dump-replit.js)..."
+node dump-replit.js || {
+  echo "Node DB dump failed. If Node fetch isn't available, try 'npx tsx dump-replit.js' or install node-fetch and retry."
+}
+
+# 3) Archive upload / asset folders (if present). Try zip first, fallback to tar.
+ARCHIVE_NAME="export_uploads.zip"
+if command -v zip > /dev/null 2>&1; then
+  echo "Creating $ARCHIVE_NAME for uploads/attached_assets/public if present..."
+  zip -r "$ARCHIVE_NAME" uploads attached_assets public 2>/dev/null || echo "No upload folders found or zip encountered an error (ignored)."
+else
+  echo "zip not found, creating tar.gz instead..."
+  ARCHIVE_NAME="export_uploads.tar.gz"
+  tar -czf "$ARCHIVE_NAME" uploads attached_assets public 2>/dev/null || echo "No upload folders found or tar encountered an error (ignored)."
+fi
+
+# 4) Create a small env dump for specific variables (edit the list below as needed).
+# WARNING: This file contains secrets if those env vars are set. Download securely and delete afterwards.
+ENV_FILE="env_dump.txt"
+echo "Writing selected env vars to $ENV_FILE (sensitive — delete after download) ..."
+echo "== ENV DUMP ==" > "$ENV_FILE"
+# Add or remove env var names below as desired
+VARS_TO_DUMP=(
+  "REPLIT_DB_URL"
+  "CLERK_SECRET_KEY"
+  "SESSION_SECRET"
+  "CASHFREE_APP_ID"
+  "CASHFREE_SECRET_KEY"
+  "TWILIO_ACCOUNT_SID"
+  "TWILIO_AUTH_TOKEN"
+  "GMAIL_USER"
+  "GMAIL_APP_PASSWORD"
+)
+for v in "${VARS_TO_DUMP[@]}"; do
+  val="${!v}"
+  if [ -z "$val" ]; then
+    echo "$v=__NOT_SET__" >> "$ENV_FILE"
+  else
+    echo "$v=$val" >> "$ENV_FILE"
+  fi
+done
+
+# 5) Package some useful repo files (optional)
+echo "Creating project_files.tar.gz (package.json, server, client, attached_assets if present)"
+tar -czf project_files.tar.gz package.json package-lock.json server client attached_assets 2>/dev/null || echo "project packaging: some files may be missing (ignored)."
+
+# 6) Show output summary
+echo
+echo "=== Export complete ==="
+ls -lah replit_dump.json || true
+ls -lah "$ARCHIVE_NAME" || true
+ls -lah "$ENV_FILE" || true
+ls -lah project_files.tar.gz || true
+echo
+echo "Files produced (download them from the Replit Files sidebar):"
+echo " - replit_dump.json            # Replit DB export (key -> value)"
+echo " - $ARCHIVE_NAME              # uploads / attached_assets / public (if present)"
+echo " - env_dump.txt               # selected env vars (contains secrets if set)"
+echo " - project_files.tar.gz       # optional project snapshot"
+echo
+echo "IMPORTANT:"
+echo " - After you download these files, delete 'env_dump.txt' from Replit to avoid leaking secrets."
+echo " - If you want me to import these into Neon, upload the downloaded files here or tell me where you placed them."
+echo
+echo "Done."
