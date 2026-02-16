@@ -1782,3 +1782,23 @@ export const insertUpcomingFeatureVideoSchema = createInsertSchema(upcomingFeatu
 
 export type UpcomingFeatureVideo = typeof upcomingFeatureVideos.$inferSelect;
 export type InsertUpcomingFeatureVideo = z.infer<typeof insertUpcomingFeatureVideoSchema>;
+
+// Customer-Salon Chat Messages
+export const salonChats = pgTable("salon_chats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  senderType: varchar("sender_type", { enum: ["customer", "owner"] }).notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSalonChatSchema = createInsertSchema(salonChats).omit({
+  id: true,
+  createdAt: true,
+  isRead: true,
+});
+
+export type SalonChat = typeof salonChats.$inferSelect;
+export type InsertSalonChat = z.infer<typeof insertSalonChatSchema>;
