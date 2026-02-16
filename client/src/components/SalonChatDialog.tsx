@@ -57,12 +57,18 @@ export function SalonChatDialog({ salonId, salonName }: SalonChatDialogProps) {
     }
   }, [open, salonId, user?.id]);
 
-  if (!isAuthenticated) return null;
+  const handleChatClick = () => {
+    if (!isAuthenticated) {
+      window.location.href = `/auth?redirect=${window.location.pathname}`;
+      return;
+    }
+    setOpen(true);
+  };
 
   return (
     <>
       <Button
-        onClick={() => setOpen(true)}
+        onClick={handleChatClick}
         className="fixed bottom-24 right-4 z-40 rounded-full w-14 h-14 shadow-lg bg-purple-600 hover:bg-purple-700 p-0"
         title="Chat with salon"
       >

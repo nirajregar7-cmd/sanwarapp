@@ -857,7 +857,7 @@ export default function SalonDetail() {
             minutes: Math.floor(remainingSeconds / 60),
             seconds: remainingSeconds % 60,
             slotTime: newNextSlotData.slotTime,
-            date: newNextSlotData.date
+            date: newNextSlotData.date as 'today' | 'tomorrow'
           });
         } else {
           setNextSlotCountdown(null);
@@ -867,7 +867,7 @@ export default function SalonDetail() {
           minutes: Math.floor(remainingSeconds / 60),
           seconds: remainingSeconds % 60,
           slotTime: nextSlotData.slotTime,
-          date: nextSlotData.date
+          date: nextSlotData.date as 'today' | 'tomorrow'
         });
       }
     }, 1000);
@@ -877,7 +877,7 @@ export default function SalonDetail() {
       minutes: Math.floor(remainingSeconds / 60),
       seconds: remainingSeconds % 60,
       slotTime: nextSlotData.slotTime,
-      date: nextSlotData.date
+      date: nextSlotData.date as 'today' | 'tomorrow'
     });
     
     return () => clearInterval(interval);
