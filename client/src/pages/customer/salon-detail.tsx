@@ -28,6 +28,7 @@ import { ReviewPhotoGallery } from "@/components/ReviewPhotoGallery";
 import { ReviewForm } from "./review-form";
 import { ReplyForm } from "@/components/ReplyForm";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
+import { SalonChatDialog } from "@/components/SalonChatDialog";
 import { CustomerSalonMap } from "@/components/CustomerSalonMap";
 import { EmergencyBookingBanner } from "@/components/EmergencyBookingBanner";
 import { ServiceSpecificOffers } from "@/components/ServiceSpecificOffers";
@@ -2563,6 +2564,9 @@ export default function SalonDetail() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Chat with Salon */}
+      {salon && <SalonChatDialog salonId={salon.id} salonName={salon.name} />}
 
       {/* Mobile Sticky Book Appointment Button */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-gray-200 p-4 shadow-lg">

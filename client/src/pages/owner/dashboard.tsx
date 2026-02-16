@@ -16,7 +16,7 @@ import {
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
   CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play, 
-  HelpCircle, Edit2, Palette, Tags, Mail, LogOut, Shield, Gift
+  HelpCircle, Edit2, Palette, Tags, Mail, LogOut, Shield, Gift, Send, MessageCircle, ArrowLeft
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -459,7 +459,40 @@ export default function OwnerDashboard() {
   const { data: brandMessages = [], isLoading: messagesLoading } = useQuery<any[]>({
     queryKey: ['/api/owner/messages'],
     enabled: isAuthenticated && !!salon?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutes cache - messages change more frequently
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Fetch customer conversations
+  const { data: customerConversations = [], isLoading: conversationsLoading } = useQuery<any[]>({
+    queryKey: [`/api/salons/${salon?.id}/conversations`],
+    enabled: isAuthenticated && !!salon?.id,
+    refetchInterval: 15000,
+  });
+
+  const [selectedChatCustomer, setSelectedChatCustomer] = useState<any>(null);
+  const [chatReplyMessage, setChatReplyMessage] = useState("");
+
+  const { data: chatMessages = [], isLoading: chatMessagesLoading } = useQuery<any[]>({
+    queryKey: ['/api/salons', salon?.id, 'chat', selectedChatCustomer?.customer_id],
+    queryFn: async () => {
+      if (!salon?.id || !selectedChatCustomer?.customer_id) return [];
+      const res = await fetch(`/api/salons/${salon.id}/chat/${selectedChatCustomer.customer_id}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!salon?.id && !!selectedChatCustomer?.customer_id,
+    refetchInterval: selectedChatCustomer ? 5000 : false,
+  });
+
+  const chatReplyMutation = useMutation({
+    mutationFn: async ({ customerId, message }: { customerId: string; message: string }) => {
+      return apiRequest("POST", `/api/salons/${salon?.id}/chat`, { message, customerId });
+    },
+    onSuccess: () => {
+      setChatReplyMessage("");
+      queryClient.invalidateQueries({ queryKey: ['/api/salons', salon?.id, 'chat', selectedChatCustomer?.customer_id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/conversations`] });
+    },
   });
 
   // Fetch working hours data
@@ -2813,15 +2846,127 @@ export default function OwnerDashboard() {
             </TabsContent>
 
             <TabsContent value="messages" className="space-y-6">
+              {/* Customer Conversations */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5 text-purple-600" />
+                    Customer Messages
+                    {customerConversations.filter((c: any) => c.unread_count > 0).length > 0 && (
+                      <Badge variant="destructive" className="ml-2">
+                        {customerConversations.reduce((sum: number, c: any) => sum + (c.unread_count || 0), 0)} new
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">Messages from customers about your salon</p>
+                </CardHeader>
+                <CardContent>
+                  {conversationsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : selectedChatCustomer ? (
+                    <div>
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedChatCustomer(null)} className="mb-3">
+                        <ArrowLeft className="h-4 w-4 mr-1" /> Back to conversations
+                      </Button>
+                      <div className="border rounded-lg p-3 mb-3 bg-gray-50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                            {selectedChatCustomer.customer_image ? (
+                              <img src={selectedChatCustomer.customer_image} alt="" className="w-8 h-8 rounded-full object-cover" />
+                            ) : (
+                              <User className="h-4 w-4 text-purple-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{selectedChatCustomer.customer_name || 'Customer'}</p>
+                            <p className="text-xs text-gray-500">{selectedChatCustomer.customer_email}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto space-y-3 p-3 bg-gray-50 rounded-lg mb-3">
+                        {chatMessagesLoading ? (
+                          <div className="text-center py-4 text-gray-500">Loading...</div>
+                        ) : chatMessages.length === 0 ? (
+                          <div className="text-center py-4 text-gray-500">No messages yet</div>
+                        ) : (
+                          chatMessages.map((msg: any) => (
+                            <div key={msg.id} className={`flex ${msg.senderType === 'owner' ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+                                msg.senderType === 'owner'
+                                  ? 'bg-purple-600 text-white rounded-br-md'
+                                  : 'bg-white text-gray-900 border rounded-bl-md shadow-sm'
+                              }`}>
+                                <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                                <p className={`text-xs mt-1 ${msg.senderType === 'owner' ? 'text-purple-200' : 'text-gray-400'}`}>
+                                  {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        if (chatReplyMessage.trim() && selectedChatCustomer) {
+                          chatReplyMutation.mutate({ customerId: selectedChatCustomer.customer_id, message: chatReplyMessage });
+                        }
+                      }} className="flex gap-2">
+                        <Input value={chatReplyMessage} onChange={(e: any) => setChatReplyMessage(e.target.value)} placeholder="Type your reply..." className="flex-1" disabled={chatReplyMutation.isPending} />
+                        <Button type="submit" size="sm" disabled={!chatReplyMessage.trim() || chatReplyMutation.isPending} className="bg-purple-600 hover:bg-purple-700">
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </form>
+                    </div>
+                  ) : customerConversations.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">No customer messages yet</p>
+                      <p className="text-sm text-gray-400">When customers message you, conversations will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {customerConversations.map((conv: any) => (
+                        <div key={conv.customer_id} onClick={() => {
+                          setSelectedChatCustomer(conv);
+                          if (salon?.id) {
+                            fetch(`/api/salons/${salon.id}/chat/${conv.customer_id}/read`, { method: 'PUT', credentials: 'include' })
+                              .then(() => queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon.id}/conversations`] }));
+                          }
+                        }} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors border ${conv.unread_count > 0 ? 'bg-purple-50 border-purple-200' : 'border-gray-200'}`}>
+                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            {conv.customer_image ? (
+                              <img src={conv.customer_image} alt="" className="w-10 h-10 rounded-full object-cover" />
+                            ) : (
+                              <User className="h-5 w-5 text-purple-600" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium text-sm truncate">{conv.customer_name || 'Customer'}</p>
+                              <span className="text-xs text-gray-400">{conv.last_message_at ? new Date(conv.last_message_at).toLocaleDateString() : ''}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 truncate">{conv.last_sender_type === 'owner' ? 'You: ' : ''}{conv.last_message}</p>
+                          </div>
+                          {conv.unread_count > 0 && (
+                            <Badge variant="destructive" className="flex-shrink-0">{conv.unread_count}</Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Brand Messages */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <MessageSquare className="h-5 w-5 mr-2" />
                     Brand Messages
                   </CardTitle>
-                  <p className="text-sm text-gray-600">
-                    Messages from your brand owner
-                  </p>
+                  <p className="text-sm text-gray-600">Messages from your brand owner</p>
                 </CardHeader>
                 <CardContent>
                   {messagesLoading ? (
