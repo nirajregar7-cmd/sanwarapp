@@ -10998,7 +10998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sc.message as last_message,
           sc.sender_type as last_sender_type,
           sc.created_at as last_message_at,
-          u.name as customer_name,
+          CONCAT(u.first_name, ' ', u.last_name) as customer_name,
           u.email as customer_email,
           u.profile_image_url as customer_image,
           (SELECT COUNT(*) FROM salon_chats WHERE salon_id = ${salonId} AND customer_id = sc.customer_id AND is_read = false AND sender_type = 'customer')::int as unread_count
