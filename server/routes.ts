@@ -18,7 +18,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos, salonChats } from "@shared/schema";
 import { sendBookingConfirmationNotification, sendSalonOwnerBookingNotification } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection, sendDiscountCardEmail } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -10902,6 +10902,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error in AI chat:', error);
       res.status(500).json({ error: 'Failed to get chat response' });
+    }
+  });
+
+  // ============ CUSTOMER-SALON CHAT ROUTES ============
+
+  // Send a message (customer or owner)
+  app.post('/api/salons/:salonId/chat', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+      const { message, customerId } = req.body;
+
+      if (!message || !message.trim()) {
+        return res.status(400).json({ message: "Message cannot be empty" });
+      }
+
+      const salon = await storage.getSalonById(salonId);
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+
+      let senderType: 'customer' | 'owner';
+      let actualCustomerId: string;
+
+      if (salon.ownerId === userId) {
+        senderType = 'owner';
+        actualCustomerId = customerId;
+        if (!actualCustomerId) {
+          return res.status(400).json({ message: "customerId is required for owner replies" });
+        }
+      } else {
+        senderType = 'customer';
+        actualCustomerId = userId;
+      }
+
+      const [newMsg] = await db.insert(salonChats).values({
+        salonId,
+        customerId: actualCustomerId,
+        senderType,
+        message: message.trim(),
+      }).returning();
+
+      res.json(newMsg);
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Get chat messages for a specific customer-salon conversation
+  app.get('/api/salons/:salonId/chat/:customerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId, customerId } = req.params;
+
+      const salon = await storage.getSalonById(salonId);
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+
+      if (userId !== customerId && userId !== salon.ownerId) {
+        return res.status(403).json({ message: "Not authorized to view these messages" });
+      }
+
+      const messages = await db.select()
+        .from(salonChats)
+        .where(and(
+          eq(salonChats.salonId, salonId),
+          eq(salonChats.customerId, customerId)
+        ))
+        .orderBy(asc(salonChats.createdAt));
+
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching chat messages:', error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Get all customer conversations for a salon (owner dashboard)
+  app.get('/api/salons/:salonId/conversations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId } = req.params;
+
+      const salon = await storage.getSalonById(salonId);
+      if (!salon || salon.ownerId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const conversations = await db.execute(sql`
+        SELECT DISTINCT ON (sc.customer_id) 
+          sc.customer_id,
+          sc.message as last_message,
+          sc.sender_type as last_sender_type,
+          sc.created_at as last_message_at,
+          u.name as customer_name,
+          u.email as customer_email,
+          u.profile_image_url as customer_image,
+          (SELECT COUNT(*) FROM salon_chats WHERE salon_id = ${salonId} AND customer_id = sc.customer_id AND is_read = false AND sender_type = 'customer')::int as unread_count
+        FROM salon_chats sc
+        JOIN users u ON u.id = sc.customer_id
+        WHERE sc.salon_id = ${salonId}
+        ORDER BY sc.customer_id, sc.created_at DESC
+      `);
+
+      res.json(conversations.rows || conversations);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  // Mark messages as read
+  app.put('/api/salons/:salonId/chat/:customerId/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { salonId, customerId } = req.params;
+
+      const salon = await storage.getSalonById(salonId);
+      if (!salon) {
+        return res.status(404).json({ message: "Salon not found" });
+      }
+
+      const markSenderType = salon.ownerId === userId ? 'customer' : 'owner';
+
+      await db.update(salonChats)
+        .set({ isRead: true })
+        .where(and(
+          eq(salonChats.salonId, salonId),
+          eq(salonChats.customerId, customerId),
+          eq(salonChats.senderType, markSenderType),
+          eq(salonChats.isRead, false)
+        ));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+      res.status(500).json({ message: "Failed to mark messages as read" });
     }
   });
 
