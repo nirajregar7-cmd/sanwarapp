@@ -222,12 +222,12 @@ export default function CustomerHome() {
         </div>
       </section>
 
-      {/* Virtual Try-On Section */}
+     /* {/* Virtual Try-On Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-purple-50 to-pink-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <VirtualTryOn />
         </div>
-      </section>
+      </section> */
 
       {/* Featured Salons */}
       <section className="py-8 sm:py-12 lg:py-16" data-testid="featured-salons">
