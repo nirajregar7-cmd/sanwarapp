@@ -25,7 +25,6 @@ import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import { useLocation } from "@/contexts/LocationContext";
 import SalonCard from "@/components/SalonCard";
 import { VirtualTryOn } from "@/components/VirtualTryOn";
-
 export default function CustomerHome() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,7 +101,7 @@ export default function CustomerHome() {
     if (query) {
       window.location.href = `/discover?location=${encodeURIComponent(query)}`;
     } else {
-      window.location.href = '/discover';
+      window.location.href = "/discover";
     }
   };
 
@@ -131,11 +130,11 @@ export default function CustomerHome() {
                   placeholder="Enter your location"
                   value={searchQuery || ""}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                   className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
                 />
               </div>
-              <Button 
+              <Button
                 className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 text-sm sm:text-base flex items-center"
                 onClick={handleSearch}
               >
@@ -206,11 +205,11 @@ export default function CustomerHome() {
                 placeholder="Enter your location"
                 value={searchQuery || ""}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                 className="w-full text-gray-700 text-sm sm:text-lg bg-transparent border-none outline-none focus:ring-0"
               />
             </div>
-            <Button 
+            <Button
               className="bg-primary text-white px-6 sm:px-8 py-2 sm:py-3 hover:bg-primary/90 rounded-lg font-semibold text-sm sm:text-base flex items-center"
               onClick={handleSearch}
             >
@@ -222,12 +221,12 @@ export default function CustomerHome() {
         </div>
       </section>
 
-     /* {/* Virtual Try-On Section */}
+      {/* Virtual Try-On Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-purple-50 to-pink-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <VirtualTryOn />
         </div>
-      </section> */
+      </section>
 
       {/* Featured Salons */}
       <section className="py-8 sm:py-12 lg:py-16" data-testid="featured-salons">
@@ -293,7 +292,6 @@ export default function CustomerHome() {
           onSkip={skipOnboarding}
         />
       )}
-
     </div>
   );
 }

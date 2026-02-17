@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -8,12 +9,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import {
   MapPin,
+  Navigation,
+  Filter,
   Search,
+  Map as MapIcon,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import Map from "@/components/Map";
+import LocationSearch from "@/components/LocationSearch";
 import SalonCard from "@/components/SalonCard";
+import { useAuth } from "@/hooks/useAuth";
 import type { Salon } from "@shared/schema";
 
 interface SalonWithDistance extends Salon {
@@ -21,6 +29,7 @@ interface SalonWithDistance extends Salon {
 }
 
 export default function SalonSearchPage() {
+  const { user } = useAuth();
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
@@ -30,6 +39,7 @@ export default function SalonSearchPage() {
   const [sortBy, setSortBy] = useState<"distance" | "rating" | "price">(
     "distance",
   );
+  const [showMap, setShowMap] = useState(false);
   const [searchFilters, setSearchFilters] = useState({
     name: "",
     location: "",
@@ -46,10 +56,17 @@ export default function SalonSearchPage() {
     }
   }, []);
 
+  // Get user's salon if they are a salon owner
+  const { data: userSalon } = useQuery({
+    queryKey: ["/api/user/salon"],
+    enabled: !!user && user.userType === "salon_owner",
+  });
+
   // Fetch salons based on location
   const {
     data: salons,
     isLoading,
+    refetch,
   } = useQuery<SalonWithDistance[]>({
     queryKey: [
       "/api/salons/search",
@@ -152,8 +169,20 @@ export default function SalonSearchPage() {
     return sorted;
   }, [salons, sortBy, userLocation]);
 
+  const handleLocationSelect = (location: {
+    lat: number;
+    lng: number;
+    address?: string;
+  }) => {
+    setUserLocation(location);
+    setSearchFilters((prev) => ({ ...prev, location: "" }));
+  };
+
+  const handleSalonClick = (salon: Salon) => {
+    window.location.href = `/salon/${salon.id}`;
+  };
+
   useEffect(() => {
-    // Try to get user's location on page load
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -165,7 +194,6 @@ export default function SalonSearchPage() {
         },
         (error) => {
           console.log("Geolocation not available:", error);
-          // Continue without location - show all salons
         },
       );
     }
@@ -173,58 +201,226 @@ export default function SalonSearchPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
-        {/* Compact Search Bar */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Salon name..."
-              value={searchFilters.name}
-              onChange={(e) =>
-                setSearchFilters((prev) => ({
-                  ...prev,
-                  name: e.target.value,
-                }))
-              }
-              className="pl-10 h-11 bg-white border-gray-200 text-primary placeholder:text-primary/60"
-            />
-          </div>
-
-          <div className="relative flex-1">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Chennai, Trichy, etc..."
-              value={searchFilters.location}
-              onChange={(e) =>
-                setSearchFilters((prev) => ({
-                  ...prev,
-                  location: e.target.value,
-                }))
-              }
-              className="pl-10 h-11 bg-white border-gray-200"
-            />
-          </div>
-
-          <Select
-            value={sortBy}
-            onValueChange={(value: any) => setSortBy(value)}
-          >
-            <SelectTrigger className="w-full sm:w-[160px] h-11 bg-white border-gray-200">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="distance">Distance</SelectItem>
-              <SelectItem value="rating">Rating</SelectItem>
-              <SelectItem value="price">Price</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Find Salons Near You
+          </h1>
+          <p className="text-gray-600">
+            Discover and book appointments at the best salons in your area
+          </p>
         </div>
+
+        {/* Location Search */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              Location Search
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LocationSearch onLocationSelect={handleLocationSelect} />
+
+            <div className="mt-4">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Or search by city/area name
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="e.g., Chennai, Trichy, Anna Nagar..."
+                    value={searchFilters.location}
+                    onChange={(e) => {
+                      setSearchFilters((prev) => ({
+                        ...prev,
+                        location: e.target.value,
+                      }));
+                      if (e.target.value) {
+                        setUserLocation(null);
+                      }
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+                <Button
+                  onClick={() =>
+                    setSearchFilters((prev) => ({ ...prev, location: "" }))
+                  }
+                  variant="outline"
+                  size="sm"
+                  className="px-3"
+                >
+                  Clear
+                </Button>
+              </div>
+
+              {searchFilters.location && (
+                <div className="mt-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <Search className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      Searching for salons in: {searchFilters.location}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {userLocation && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <Navigation className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {userLocation.address || "Current Location Selected"}
+                  </span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Filters and Controls */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Filter className="h-5 w-5 text-primary" />
+                Filters & View
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant={showMap ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowMap(!showMap)}
+                  className="flex items-center gap-2"
+                >
+                  <MapIcon className="h-4 w-4" />
+                  {showMap ? "Hide Map" : "Show Map"}
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Search by name
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Salon name..."
+                    value={searchFilters.name}
+                    onChange={(e) =>
+                      setSearchFilters((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Search by city/area
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Chennai, Trichy, etc..."
+                    value={searchFilters.location}
+                    onChange={(e) =>
+                      setSearchFilters((prev) => ({
+                        ...prev,
+                        location: e.target.value,
+                      }))
+                    }
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Sort by
+                </label>
+                <Select
+                  value={sortBy}
+                  onValueChange={(value: any) => setSortBy(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="distance">Distance</SelectItem>
+                    <SelectItem value="rating">Rating</SelectItem>
+                    <SelectItem value="price">Price</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {userLocation && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Search Radius: {searchRadius[0]} km
+                  </label>
+                  <Slider
+                    value={searchRadius}
+                    onValueChange={setSearchRadius}
+                    max={50}
+                    min={1}
+                    step={1}
+                    className="mt-2"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Min Rating: {searchFilters.minRating}⭐
+                </label>
+                <Slider
+                  value={[searchFilters.minRating]}
+                  onValueChange={(value) =>
+                    setSearchFilters((prev) => ({
+                      ...prev,
+                      minRating: value[0],
+                    }))
+                  }
+                  max={5}
+                  min={0}
+                  step={0.5}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Map View */}
+        {showMap && (
+          <Card className="mb-6">
+            <CardContent className="p-0">
+              <Map
+                salons={sortedSalons || []}
+                userLocation={userLocation || undefined}
+                ownedSalonId={userSalon?.id}
+                onSalonClick={handleSalonClick}
+                height="500px"
+                className="rounded-lg"
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Results */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
           {isLoading ? (
-            // Loading skeleton
             Array.from({ length: 6 }).map((_, index) => (
               <Card key={index} className="animate-pulse h-full flex flex-col">
                 <div className="h-48 bg-gray-300 rounded-t-lg"></div>
@@ -258,6 +454,9 @@ export default function SalonSearchPage() {
                   ? "No salons found in your selected area. Try increasing the search radius or changing your location."
                   : "Try searching for a specific location to find nearby salons."}
               </p>
+              {!userLocation && (
+                <Button onClick={() => refetch()}>Show All Salons</Button>
+              )}
             </div>
           )}
         </div>
