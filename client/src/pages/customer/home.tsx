@@ -24,7 +24,6 @@ import OffersDisplayCard from "@/components/OffersDisplayCard";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import { useLocation } from "@/contexts/LocationContext";
 import SalonCard from "@/components/SalonCard";
-import { VirtualTryOn } from "@/components/VirtualTryOn";
 export default function CustomerHome() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -218,13 +217,6 @@ export default function CustomerHome() {
               <span className="sm:hidden">Find</span>
             </Button>
           </div>
-        </div>
-      </section>
-
-      {/* Virtual Try-On Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-purple-50 to-pink-50">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
-          <VirtualTryOn />
         </div>
       </section>
 
