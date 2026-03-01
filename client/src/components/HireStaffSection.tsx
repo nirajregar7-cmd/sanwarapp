@@ -209,6 +209,20 @@ export default function HireStaffSection() {
                   <span className="text-xs">{availability.label}</span>
                 </div>
 
+                {/* Portfolio Photos */}
+                {pro.portfolioImages && pro.portfolioImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-1.5 mb-4">
+                    {pro.portfolioImages.slice(0, 3).map((img, i) => (
+                      <img
+                        key={i}
+                        src={img}
+                        alt={`Work ${i + 1}`}
+                        className="w-full h-16 object-cover rounded-lg border border-gray-100"
+                      />
+                    ))}
+                  </div>
+                )}
+
                 {/* Contact Button */}
                 <Button
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all"

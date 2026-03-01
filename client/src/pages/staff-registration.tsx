@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,10 @@ import {
   Sparkles,
   IndianRupee,
   ImageIcon,
+  Camera,
+  Upload,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -75,7 +79,54 @@ type FormData = {
   employmentType: string;
   willingToRelocate: boolean;
   bio: string;
+  profileImageUrl: string;
+  portfolioImages: string[];
 };
+
+async function uploadPhoto(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/staff-registrations/upload-photo", {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Upload failed");
+  }
+  const data = await res.json();
+  return data.url as string;
+}
+
+function PhotoPreview({
+  src,
+  onRemove,
+  label,
+}: {
+  src: string;
+  onRemove: () => void;
+  label?: string;
+}) {
+  return (
+    <div className="relative group">
+      <img
+        src={src}
+        alt={label || "Preview"}
+        className="w-full h-36 object-cover rounded-xl border-2 border-blue-200"
+      />
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+      {label && (
+        <p className="text-xs text-center text-gray-500 mt-1 truncate">{label}</p>
+      )}
+    </div>
+  );
+}
 
 export default function StaffRegistration() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -84,6 +135,14 @@ export default function StaffRegistration() {
   const [, navigate] = useLocation();
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+  const workingPhotosInputRef = useRef<HTMLInputElement>(null);
+
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string>("");
+  const [workingPhotoPreviews, setWorkingPhotoPreviews] = useState<string[]>([]);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [uploadingWorking, setUploadingWorking] = useState(false);
 
   const [form, setForm] = useState<FormData>({
     fullName: "",
@@ -101,6 +160,8 @@ export default function StaffRegistration() {
     employmentType: "",
     willingToRelocate: false,
     bio: "",
+    profileImageUrl: "",
+    portfolioImages: [],
   });
 
   const submitMutation = useMutation({
@@ -129,6 +190,66 @@ export default function StaffRegistration() {
       skills: prev.skills.includes(skill)
         ? prev.skills.filter((s) => s !== skill)
         : [...prev.skills, skill],
+    }));
+  };
+
+  const handleProfilePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const localPreview = URL.createObjectURL(file);
+    setProfilePhotoPreview(localPreview);
+    setUploadingProfile(true);
+
+    try {
+      const url = await uploadPhoto(file);
+      update("profileImageUrl", url);
+      toast({ title: "Profile photo uploaded!" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      setProfilePhotoPreview("");
+    } finally {
+      setUploadingProfile(false);
+    }
+  };
+
+  const handleWorkingPhotosSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const remaining = 3 - form.portfolioImages.length;
+    const toUpload = files.slice(0, remaining);
+
+    if (toUpload.length === 0) {
+      toast({ title: "Max 3 work photos allowed", variant: "destructive" });
+      return;
+    }
+
+    setUploadingWorking(true);
+
+    for (const file of toUpload) {
+      const localPreview = URL.createObjectURL(file);
+      setWorkingPhotoPreviews((prev) => [...prev, localPreview]);
+      try {
+        const url = await uploadPhoto(file);
+        setForm((prev) => ({ ...prev, portfolioImages: [...prev.portfolioImages, url] }));
+      } catch (err: any) {
+        toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+        setWorkingPhotoPreviews((prev) => prev.slice(0, -1));
+      }
+    }
+
+    setUploadingWorking(false);
+    if (toUpload.length > 0) {
+      toast({ title: `${toUpload.length} work photo(s) uploaded!` });
+    }
+  };
+
+  const removeWorkingPhoto = (index: number) => {
+    setWorkingPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+    setForm((prev) => ({
+      ...prev,
+      portfolioImages: prev.portfolioImages.filter((_, i) => i !== index),
     }));
   };
 
@@ -170,6 +291,8 @@ export default function StaffRegistration() {
       employmentType: form.employmentType || null,
       willingToRelocate: form.willingToRelocate,
       bio: form.bio || null,
+      profileImageUrl: form.profileImageUrl || null,
+      portfolioImages: form.portfolioImages.length > 0 ? form.portfolioImages : null,
     });
   };
 
@@ -309,6 +432,69 @@ export default function StaffRegistration() {
             {step === 0 && (
               <div className="space-y-5">
                 <h2 className="text-xl font-bold text-gray-800">Basic Information</h2>
+
+                {/* Profile Photo Upload */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Profile Photo</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      {profilePhotoPreview ? (
+                        <div className="relative">
+                          <img
+                            src={profilePhotoPreview}
+                            alt="Profile"
+                            className="w-20 h-20 rounded-full object-cover border-4 border-blue-200 shadow"
+                          />
+                          {uploadingProfile && (
+                            <div className="absolute inset-0 bg-white/70 rounded-full flex items-center justify-center">
+                              <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProfilePhotoPreview("");
+                              update("profileImageUrl", "");
+                            }}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 border-4 border-dashed border-blue-300 flex items-center justify-center cursor-pointer hover:border-blue-500 transition-colors"
+                          onClick={() => profilePhotoInputRef.current?.click()}>
+                          {uploadingProfile
+                            ? <Loader2 className="h-6 w-6 text-blue-500 animate-spin" />
+                            : <Camera className="h-6 w-6 text-blue-400" />
+                          }
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => profilePhotoInputRef.current?.click()}
+                        disabled={uploadingProfile}
+                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Upload className="h-3.5 w-3.5 mr-1.5" />
+                        {profilePhotoPreview ? "Change Photo" : "Upload Photo"}
+                      </Button>
+                      <p className="text-xs text-gray-400 mt-1">JPG, PNG or WebP · Max 5MB</p>
+                    </div>
+                    <input
+                      ref={profilePhotoInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleProfilePhotoSelect}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Full Name *</Label>
@@ -502,10 +688,70 @@ export default function StaffRegistration() {
 
             {/* Step 4: Portfolio */}
             {step === 3 && (
-              <div className="space-y-5">
+              <div className="space-y-6">
                 <h2 className="text-xl font-bold text-gray-800">Portfolio & Bio</h2>
+
+                {/* Work Photos */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Short Professional Bio (max 150 words)</Label>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Work Photos <span className="text-gray-400 font-normal">(up to 3)</span>
+                  </Label>
+
+                  {workingPhotoPreviews.length > 0 && (
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      {workingPhotoPreviews.map((src, i) => (
+                        <PhotoPreview
+                          key={i}
+                          src={src}
+                          onRemove={() => removeWorkingPhoto(i)}
+                          label={`Work ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {workingPhotoPreviews.length < 3 && (
+                    <button
+                      type="button"
+                      onClick={() => workingPhotosInputRef.current?.click()}
+                      disabled={uploadingWorking}
+                      className="w-full border-2 border-dashed border-blue-300 rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {uploadingWorking ? (
+                        <div className="flex flex-col items-center gap-2 text-blue-500">
+                          <Loader2 className="h-7 w-7 animate-spin" />
+                          <span className="text-sm font-medium">Uploading...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 text-blue-400">
+                          <Upload className="h-7 w-7" />
+                          <span className="text-sm font-medium text-blue-600">
+                            Click to add work photos
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            Show your best work · JPG, PNG · Max 5MB each
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                  )}
+
+                  <input
+                    ref={workingPhotosInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    className="hidden"
+                    onChange={handleWorkingPhotosSelect}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {workingPhotoPreviews.length}/3 photos uploaded
+                  </p>
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Short Professional Bio <span className="text-gray-400 font-normal">(max 150 words)</span></Label>
                   <Textarea
                     placeholder="Tell salon owners about your experience, specialties, and what makes you stand out..."
                     value={form.bio}
@@ -518,26 +764,29 @@ export default function StaffRegistration() {
                   </p>
                 </div>
 
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <p className="text-sm text-blue-700 font-medium">📸 Portfolio Photos</p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    After submitting, you can share your work photos with interested salon owners directly.
-                    Portfolio image upload coming soon!
-                  </p>
-                </div>
-
                 {/* Summary */}
                 <div className="p-4 bg-gray-50 rounded-xl border">
                   <h3 className="text-sm font-bold text-gray-700 mb-3">Profile Summary</h3>
+                  <div className="flex items-center gap-3 mb-3">
+                    {profilePhotoPreview ? (
+                      <img src={profilePhotoPreview} className="w-12 h-12 rounded-full object-cover border-2 border-blue-200" alt="Profile" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                        {form.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-semibold text-gray-900">{form.fullName}</p>
+                      <p className="text-sm text-gray-500">{form.role} · {form.area}, {form.city}</p>
+                    </div>
+                  </div>
                   <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Name:</span> {form.fullName}</p>
-                    <p><span className="font-medium">Role:</span> {form.role}</p>
-                    <p><span className="font-medium">Location:</span> {form.area}, {form.city}</p>
                     <p><span className="font-medium">Experience:</span> {form.experience || 0} years</p>
                     <p><span className="font-medium">Skills:</span> {form.skills.join(", ") || "None selected"}</p>
                     {form.expectedSalary && (
                       <p><span className="font-medium">Expected Salary:</span> ₹{parseInt(form.expectedSalary).toLocaleString("en-IN")}/month</p>
                     )}
+                    <p><span className="font-medium">Work photos:</span> {workingPhotoPreviews.length} uploaded</p>
                   </div>
                 </div>
               </div>
@@ -562,10 +811,14 @@ export default function StaffRegistration() {
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={submitMutation.isPending}
+                  disabled={submitMutation.isPending || uploadingProfile || uploadingWorking}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 rounded-full hover:shadow-lg transition-all"
                 >
-                  {submitMutation.isPending ? "Submitting..." : "Submit Profile 🚀"}
+                  {submitMutation.isPending ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
+                  ) : (
+                    "Submit Profile 🚀"
+                  )}
                 </Button>
               )}
             </div>

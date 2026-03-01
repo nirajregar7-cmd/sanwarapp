@@ -11044,6 +11044,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public photo upload for staff registrations (no auth required)
+  app.post('/api/staff-registrations/upload-photo', upload.single('file'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      if (req.file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ error: "File too large. Max 5MB allowed." });
+      }
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ error: "Only JPEG, PNG and WebP images are allowed." });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const { randomUUID } = await import('crypto');
+      const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
+      const filename = `${randomUUID()}.${fileExtension}`;
+
+      const privateDir = objectStorageService.getPrivateObjectDir();
+      const fullPath = `${privateDir}/staff-photos/${filename}`;
+
+      let path = fullPath.startsWith("/") ? fullPath : `/${fullPath}`;
+      const pathParts = path.split("/");
+      if (pathParts.length < 3) throw new Error("Invalid path");
+
+      const bucketName = pathParts[1];
+      const objectName = pathParts.slice(2).join("/");
+
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+
+      await file.save(req.file.buffer, {
+        metadata: { contentType: req.file.mimetype },
+        validation: false,
+      });
+
+      try {
+        await objectStorageService.trySetObjectEntityAclPolicy(
+          `/objects/staff-photos/${filename}`,
+          { owner: "public", visibility: "public" }
+        );
+      } catch (_) {}
+
+      const objectPath = `/objects/staff-photos/${filename}`;
+      res.json({ url: objectPath, filename });
+    } catch (error) {
+      console.error("Error uploading staff photo:", error);
+      res.status(500).json({ error: "Failed to upload photo" });
+    }
+  });
+
   // Staff Registration routes
   app.post('/api/staff-registrations', async (req: any, res) => {
     try {
