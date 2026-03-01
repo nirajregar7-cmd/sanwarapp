@@ -1492,7 +1492,18 @@ export default function OwnerDashboard() {
                   </TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
-                  <TabsTrigger value="hire-staff" className="text-xs py-3">🔥 Hire Staff</TabsTrigger>
+                  <TabsTrigger
+                    value="hire-staff"
+                    className="text-xs py-3 relative"
+                    disabled={salon?.verificationStatus !== 'approved'}
+                    onClick={(e) => {
+                      if (salon?.verificationStatus !== 'approved') {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    {salon?.verificationStatus !== 'approved' ? '🔒' : '🔥'} Hire Staff
+                  </TabsTrigger>
                   <TabsTrigger value="settings" className="text-xs py-3" data-testid="settings-tab">Settings</TabsTrigger>
                 </TabsList>
               </div>
@@ -1509,7 +1520,13 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="offers" className="text-sm">Offers</TabsTrigger>
                   <TabsTrigger value="faqs" className="text-sm">FAQs</TabsTrigger>
                   <TabsTrigger value="reviews" className="text-sm">Reviews</TabsTrigger>
-                  <TabsTrigger value="hire-staff" className="text-sm text-blue-600 font-semibold">🔥 Hire Staff</TabsTrigger>
+                  <TabsTrigger
+                    value="hire-staff"
+                    className={`text-sm font-semibold ${salon?.verificationStatus === 'approved' ? 'text-blue-600' : 'text-gray-400 opacity-60'}`}
+                    disabled={salon?.verificationStatus !== 'approved'}
+                  >
+                    {salon?.verificationStatus !== 'approved' ? '🔒' : '🔥'} Hire Staff
+                  </TabsTrigger>
                   <TabsTrigger value="messages" className="text-sm relative">
                     Messages
                     {brandMessages.filter(msg => !msg.isRead).length > 0 && (
@@ -3158,7 +3175,24 @@ export default function OwnerDashboard() {
 
             {/* Hire Salon Staff Tab */}
             <TabsContent value="hire-staff" className="space-y-6">
-              <HireStaffSection />
+              {salon?.verificationStatus === 'approved' ? (
+                <HireStaffSection />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-24 text-center">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-5 text-4xl">
+                    🔒
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Verification Required</h3>
+                  <p className="text-gray-500 max-w-sm mb-6 text-sm leading-relaxed">
+                    The Hire Staff feature is only available to verified salons. Get your salon verified to browse and contact salon professionals.
+                  </p>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-3 text-amber-800 text-sm font-medium">
+                    {salon?.verificationStatus === 'pending'
+                      ? '⏳ Your verification is under review. We\'ll unlock this once approved.'
+                      : '📋 Submit your salon details for verification to unlock this feature.'}
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-6">
