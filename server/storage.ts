@@ -32,6 +32,7 @@ import {
   staffHolidays,
   staffTimeSlots,
   scheduleTemplates,
+  staffRegistrations,
   type User,
   type UpsertUser,
   type Salon,
@@ -273,6 +274,11 @@ export interface IStorage {
   getAdminSettings(): Promise<any[]>;
   getAdminSetting(settingKey: string): Promise<any | undefined>;
   updateAdminSetting(settingKey: string, settingValue: string, updatedBy: string): Promise<any>;
+
+  // Staff registration operations
+  createStaffRegistration(data: any): Promise<any>;
+  getAllStaffRegistrations(): Promise<any[]>;
+  getStaffRegistrationById(id: string): Promise<any | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2361,6 +2367,26 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // Staff registration operations
+  async createStaffRegistration(data: any): Promise<any> {
+    const { nanoid } = await import('nanoid');
+    const id = nanoid();
+    const [created] = await db
+      .insert(staffRegistrations)
+      .values({ ...data, id })
+      .returning();
+    return created;
+  }
+
+  async getAllStaffRegistrations(): Promise<any[]> {
+    return db.select().from(staffRegistrations).orderBy(desc(staffRegistrations.createdAt));
+  }
+
+  async getStaffRegistrationById(id: string): Promise<any | undefined> {
+    const [reg] = await db.select().from(staffRegistrations).where(eq(staffRegistrations.id, id));
+    return reg;
   }
 }
 

@@ -1802,3 +1802,36 @@ export const insertSalonChatSchema = createInsertSchema(salonChats).omit({
 
 export type SalonChat = typeof salonChats.$inferSelect;
 export type InsertSalonChat = z.infer<typeof insertSalonChatSchema>;
+
+// Salon Staff Registrations - for professionals seeking salon jobs
+export const staffRegistrations = pgTable("staff_registrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fullName: varchar("full_name", { length: 255 }).notNull(),
+  mobile: varchar("mobile", { length: 20 }).notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  area: varchar("area", { length: 100 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(),
+  headline: varchar("headline", { length: 255 }),
+  experience: integer("experience").default(0),
+  gender: varchar("gender", { length: 20 }),
+  comfortableWith: varchar("comfortable_with", { length: 50 }),
+  currentlyWorking: varchar("currently_working", { length: 100 }),
+  skills: text("skills").array(),
+  expectedSalary: integer("expected_salary"),
+  employmentType: varchar("employment_type", { length: 20 }),
+  willingToRelocate: boolean("willing_to_relocate").default(false),
+  bio: text("bio"),
+  profileImageUrl: varchar("profile_image_url"),
+  portfolioImages: text("portfolio_images").array(),
+  isVerified: boolean("is_verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertStaffRegistrationSchema = createInsertSchema(staffRegistrations).omit({
+  id: true,
+  createdAt: true,
+  isVerified: true,
+});
+
+export type StaffRegistration = typeof staffRegistrations.$inferSelect;
+export type InsertStaffRegistration = z.infer<typeof insertStaffRegistrationSchema>;

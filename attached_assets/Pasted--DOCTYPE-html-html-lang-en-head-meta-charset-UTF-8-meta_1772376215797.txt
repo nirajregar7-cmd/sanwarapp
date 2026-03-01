@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanwar | Professional Registration</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
+
+body{
+  background:linear-gradient(135deg,#eef2ff,#f8f9ff);
+  display:flex;
+  justify-content:center;
+  padding:40px 20px;
+}
+
+.container{
+  width:100%;
+  max-width:750px;
+  background:white;
+  padding:40px;
+  border-radius:20px;
+  box-shadow:0 25px 60px rgba(59,130,246,0.15);
+  position:relative;
+}
+
+.container::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  height:6px;
+  width:100%;
+  border-radius:20px 20px 0 0;
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6);
+}
+
+h1{
+  text-align:center;
+  font-size:26px;
+  margin-bottom:5px;
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.subtitle{
+  text-align:center;
+  font-size:14px;
+  color:#666;
+  margin-bottom:25px;
+}
+
+/* Progress Bar */
+
+.progress-bar{
+  height:8px;
+  background:#e5e7eb;
+  border-radius:10px;
+  overflow:hidden;
+  margin-bottom:30px;
+}
+
+.progress{
+  height:100%;
+  width:25%;
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6);
+  transition:0.4s;
+}
+
+/* Steps */
+
+.form-step{
+  display:none;
+  animation:fade 0.4s ease;
+}
+
+.form-step.active{
+  display:block;
+}
+
+@keyframes fade{
+  from{opacity:0;transform:translateX(10px);}
+  to{opacity:1;transform:translateX(0);}
+}
+
+input, select, textarea{
+  width:100%;
+  padding:14px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  margin-bottom:18px;
+  font-size:14px;
+}
+
+input:focus, select:focus, textarea:focus{
+  outline:none;
+  border-color:#3b82f6;
+  box-shadow:0 0 0 3px rgba(59,130,246,0.1);
+}
+
+.skills{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+button{
+  padding:12px 25px;
+  border:none;
+  border-radius:30px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.next-btn{
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6);
+  color:white;
+}
+
+.prev-btn{
+  background:#f3f4f6;
+}
+
+.btn-group{
+  display:flex;
+  justify-content:space-between;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>Sanwar</h1>
+<p class="subtitle">Create Your Professional Salon Card</p>
+
+<div class="progress-bar">
+  <div class="progress" id="progress"></div>
+</div>
+
+<form>
+
+<!-- STEP 1 -->
+<div class="form-step active">
+  <h3>Basic Information</h3>
+  <input type="text" placeholder="Full Name" required>
+  <input type="tel" placeholder="Mobile Number" required>
+  <input type="text" placeholder="City" required>
+  <input type="text" placeholder="Area / Locality" required>
+
+  <div class="btn-group">
+    <span></span>
+    <button type="button" class="next-btn" onclick="nextStep()">Next</button>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="form-step">
+  <h3>Professional Identity</h3>
+  <input type="text" placeholder="Professional Headline (Senior Hair Stylist | 6 Years Experience)" required>
+
+  <select required>
+    <option value="">Select Role</option>
+    <option>Barber</option>
+    <option>Hair Stylist</option>
+    <option>Beautician</option>
+    <option>Makeup Artist</option>
+    <option>Nail Technician</option>
+    <option>Helper</option>
+  </select>
+
+  <input type="number" placeholder="Total Experience (Years)">
+
+  <select>
+    <option value="">Comfortable With</option>
+    <option>Male Clients</option>
+    <option>Female Clients</option>
+    <option>Unisex</option>
+  </select>
+
+  <div class="btn-group">
+    <button type="button" class="prev-btn" onclick="prevStep()">Back</button>
+    <button type="button" class="next-btn" onclick="nextStep()">Next</button>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="form-step">
+  <h3>Skills & Preference</h3>
+
+  <div class="skills">
+    <label><input type="checkbox"> Haircut</label>
+    <label><input type="checkbox"> Fade Specialist</label>
+    <label><input type="checkbox"> Beard Styling</label>
+    <label><input type="checkbox"> Hair Color</label>
+    <label><input type="checkbox"> Facial</label>
+    <label><input type="checkbox"> Waxing</label>
+  </div>
+
+  <input type="number" placeholder="Expected Monthly Salary (₹)">
+
+  <select>
+    <option value="">Currently Working?</option>
+    <option>Available Immediately</option>
+    <option>Currently Working – Open to Better Offer</option>
+    <option>Serving Notice Period</option>
+  </select>
+
+  <div class="btn-group">
+    <button type="button" class="prev-btn" onclick="prevStep()">Back</button>
+    <button type="button" class="next-btn" onclick="nextStep()">Next</button>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="form-step">
+  <h3>Portfolio</h3>
+  <textarea rows="4" placeholder="Short Professional Bio"></textarea>
+
+  <label>Upload Profile Photo</label>
+  <input type="file" accept="image/*">
+
+  <label>Upload Work Photos</label>
+  <input type="file" multiple>
+
+  <div class="btn-group">
+    <button type="button" class="prev-btn" onclick="prevStep()">Back</button>
+    <button type="submit" class="next-btn">Submit Profile</button>
+  </div>
+</div>
+
+</form>
+</div>
+
+<script>
+let currentStep = 0;
+const steps = document.querySelectorAll(".form-step");
+const progress = document.getElementById("progress");
+
+function showStep(step){
+  steps.forEach((s,i)=>{
+    s.classList.toggle("active", i === step);
+  });
+  progress.style.width = ((step + 1)/steps.length)*100 + "%";
+}
+
+function nextStep(){
+  if(currentStep < steps.length - 1){
+    currentStep++;
+    showStep(currentStep);
+  }
+}
+
+function prevStep(){
+  if(currentStep > 0){
+    currentStep--;
+    showStep(currentStep);
+  }
+}
+</script>
+
+</body>
+</html>

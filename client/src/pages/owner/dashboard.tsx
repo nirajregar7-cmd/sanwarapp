@@ -159,6 +159,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { WorkingHoursForm } from "@/components/WorkingHoursForm";
 import { ReplyForm } from "@/components/ReplyForm";
 import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
+import HireStaffSection from "@/components/HireStaffSection";
 
 const salonSchema = z.object({
   name: z.string().min(1, "Salon name is required"),
@@ -1490,14 +1491,15 @@ export default function OwnerDashboard() {
                     )}
                   </TabsTrigger>
                 </TabsList>
-                <TabsList className="grid w-full grid-cols-1 gap-1 h-auto p-1 mt-1">
+                <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
+                  <TabsTrigger value="hire-staff" className="text-xs py-3">🔥 Hire Staff</TabsTrigger>
                   <TabsTrigger value="settings" className="text-xs py-3" data-testid="settings-tab">Settings</TabsTrigger>
                 </TabsList>
               </div>
               
               {/* Desktop Tab Navigation */}
               <div className="hidden sm:block">
-                <TabsList className="grid w-full grid-cols-11 gap-1">
+                <TabsList className="grid w-full grid-cols-12 gap-1">
                   <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
                   <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
                   <TabsTrigger value="categories" className="text-sm">Categories</TabsTrigger>
@@ -1507,6 +1509,7 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="offers" className="text-sm">Offers</TabsTrigger>
                   <TabsTrigger value="faqs" className="text-sm">FAQs</TabsTrigger>
                   <TabsTrigger value="reviews" className="text-sm">Reviews</TabsTrigger>
+                  <TabsTrigger value="hire-staff" className="text-sm text-blue-600 font-semibold">🔥 Hire Staff</TabsTrigger>
                   <TabsTrigger value="messages" className="text-sm relative">
                     Messages
                     {brandMessages.filter(msg => !msg.isRead).length > 0 && (
@@ -3151,6 +3154,11 @@ export default function OwnerDashboard() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Hire Salon Staff Tab */}
+            <TabsContent value="hire-staff" className="space-y-6">
+              <HireStaffSection />
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-6">

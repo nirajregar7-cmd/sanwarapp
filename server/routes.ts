@@ -11044,6 +11044,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Staff Registration routes
+  app.post('/api/staff-registrations', async (req: any, res) => {
+    try {
+      const data = req.body;
+      if (!data.fullName || !data.mobile || !data.city || !data.area || !data.role) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      const registration = await storage.createStaffRegistration(data);
+      res.status(201).json(registration);
+    } catch (error) {
+      console.error('Error creating staff registration:', error);
+      res.status(500).json({ message: "Failed to submit registration" });
+    }
+  });
+
+  app.get('/api/staff-registrations', isAuthenticated, async (req: any, res) => {
+    try {
+      const registrations = await storage.getAllStaffRegistrations();
+      res.json(registrations);
+    } catch (error) {
+      console.error('Error fetching staff registrations:', error);
+      res.status(500).json({ message: "Failed to fetch staff registrations" });
+    }
+  });
+
   // Register smart scheduling routes
   const { registerSmartSchedulingRoutes } = await import('./smart-scheduling-routes');
   registerSmartSchedulingRoutes(app);

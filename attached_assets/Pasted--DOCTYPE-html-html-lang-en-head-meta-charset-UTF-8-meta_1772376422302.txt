@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanwar | Professional Profiles</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
+
+body{
+  background:linear-gradient(135deg,#eef2ff,#f8f9ff);
+  padding:40px;
+}
+
+.page-title{
+  text-align:center;
+  font-size:28px;
+  margin-bottom:40px;
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+/* CARD GRID */
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:30px;
+}
+
+/* PROFILE CARD */
+
+.card{
+  background:white;
+  border-radius:20px;
+  padding:25px;
+  box-shadow:0 20px 50px rgba(59,130,246,0.15);
+  transition:0.3s;
+  position:relative;
+}
+
+.card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 25px 70px rgba(59,130,246,0.25);
+}
+
+/* Verification badge */
+
+.verified{
+  position:absolute;
+  top:15px;
+  right:15px;
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6);
+  color:white;
+  font-size:12px;
+  padding:5px 10px;
+  border-radius:20px;
+}
+
+/* Profile top */
+
+.profile-top{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  margin-bottom:15px;
+}
+
+.profile-img{
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  background:#ddd;
+  background-image:url('https://i.pravatar.cc/150?img=12');
+  background-size:cover;
+  background-position:center;
+}
+
+.name{
+  font-size:18px;
+  font-weight:600;
+}
+
+.headline{
+  font-size:13px;
+  color:#666;
+}
+
+/* Stats */
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin:15px 0;
+  font-size:13px;
+  color:#444;
+}
+
+.stat span{
+  display:block;
+  font-weight:600;
+  font-size:15px;
+}
+
+/* Skills */
+
+.skills{
+  margin:15px 0;
+}
+
+.skill-tag{
+  display:inline-block;
+  background:#eef2ff;
+  color:#3b82f6;
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:12px;
+  margin:4px 4px 0 0;
+}
+
+/* Availability */
+
+.status{
+  font-size:13px;
+  margin:10px 0;
+}
+
+.available{
+  color:green;
+  font-weight:600;
+}
+
+.working{
+  color:#eab308;
+  font-weight:600;
+}
+
+/* Button */
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:30px;
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:translateY(-3px);
+  box-shadow:0 12px 30px rgba(59,130,246,0.3);
+}
+
+</style>
+</head>
+<body>
+
+<h1 class="page-title">Salon Professionals on Sanwar</h1>
+
+<div class="grid">
+
+  <!-- CARD 1 -->
+
+  <div class="card">
+    <div class="verified">✔ Verified</div>
+
+    <div class="profile-top">
+      <div class="profile-img"></div>
+      <div>
+        <div class="name">Rahul Verma</div>
+        <div class="headline">Senior Hair Stylist | 6 Years Experience</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span>6+</span>
+        Years Exp
+      </div>
+      <div class="stat">
+        <span>₹25k</span>
+        Expected
+      </div>
+      <div class="stat">
+        <span>Unisex</span>
+        Clients
+      </div>
+    </div>
+
+    <div class="skills">
+      <span class="skill-tag">Haircut</span>
+      <span class="skill-tag">Fade Specialist</span>
+      <span class="skill-tag">Beard Styling</span>
+      <span class="skill-tag">Hair Color</span>
+    </div>
+
+    <div class="status available">
+      Available Immediately
+    </div>
+
+    <button>Contact Professional</button>
+  </div>
+
+  <!-- CARD 2 -->
+
+  <div class="card">
+    <div class="profile-top">
+      <div class="profile-img" style="background-image:url('https://i.pravatar.cc/150?img=47');"></div>
+      <div>
+        <div class="name">Sneha Sharma</div>
+        <div class="headline">Beautician | Bridal & Skin Expert</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span>4+</span>
+        Years Exp
+      </div>
+      <div class="stat">
+        <span>₹30k</span>
+        Expected
+      </div>
+      <div class="stat">
+        <span>Female</span>
+        Clients
+      </div>
+    </div>
+
+    <div class="skills">
+      <span class="skill-tag">Facial</span>
+      <span class="skill-tag">Waxing</span>
+      <span class="skill-tag">Makeup</span>
+      <span class="skill-tag">Bridal Styling</span>
+    </div>
+
+    <div class="status working">
+      Currently Working – Open to Better Offer
+    </div>
+
+    <button>Contact Professional</button>
+  </div>
+
+</div>
+
+</body>
+</html>
