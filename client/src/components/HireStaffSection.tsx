@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -52,14 +53,16 @@ function Lightbox({
   const prev = () => setIdx((i) => (i - 1 + images.length) % images.length);
   const next = () => setIdx((i) => (i + 1) % images.length);
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
+      className="fixed inset-0 bg-black/95 flex items-center justify-center"
+      style={{ zIndex: 9999 }}
       onClick={onClose}
     >
       <button
         onClick={onClose}
         className="absolute top-4 right-4 text-white bg-white/20 rounded-full p-2 hover:bg-white/30 transition"
+        style={{ zIndex: 10000 }}
       >
         <X className="h-6 w-6" />
       </button>
@@ -68,13 +71,15 @@ function Lightbox({
         <>
           <button
             onClick={(e) => { e.stopPropagation(); prev(); }}
-            className="absolute left-4 text-white bg-white/20 rounded-full p-2 hover:bg-white/30 transition"
+            className="absolute left-4 text-white bg-white/20 rounded-full p-3 hover:bg-white/30 transition"
+            style={{ zIndex: 10000 }}
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); next(); }}
-            className="absolute right-4 text-white bg-white/20 rounded-full p-2 hover:bg-white/30 transition"
+            className="absolute right-16 text-white bg-white/20 rounded-full p-3 hover:bg-white/30 transition"
+            style={{ zIndex: 10000 }}
           >
             <ChevronRight className="h-6 w-6" />
           </button>
@@ -88,10 +93,11 @@ function Lightbox({
         onClick={(e) => e.stopPropagation()}
       />
 
-      <div className="absolute bottom-4 text-white/60 text-sm">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm" style={{ zIndex: 10000 }}>
         {idx + 1} / {images.length}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
