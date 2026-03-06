@@ -5507,6 +5507,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status, paymentId, paymentStatus, suggestedDate, suggestedTime, ownerNote } = req.body;
       await storage.updateBookingStatus(req.params.id, status, paymentId, paymentStatus, suggestedDate, suggestedTime, ownerNote);
       res.json({ message: "Booking status updated" });
+
+      // Send email notifications to customer (async, non-blocking)
+      try {
+        const { sendOwnerConfirmedEmail, sendOwnerDeclinedEmail, sendOwnerSuggestionEmail } = await import('./booking-notifications');
+        if (status === 'confirmed') {
+          sendOwnerConfirmedEmail(req.params.id).then(sent =>
+            console.log(`📧 Booking confirmed email sent: ${sent}`)
+          );
+        } else if (status === 'cancelled') {
+          sendOwnerDeclinedEmail(req.params.id).then(sent =>
+            console.log(`📧 Booking declined email sent: ${sent}`)
+          );
+        } else if (status === 'owner_suggested' && suggestedDate && suggestedTime) {
+          sendOwnerSuggestionEmail(req.params.id, suggestedDate, suggestedTime, ownerNote).then(sent =>
+            console.log(`📧 Booking suggestion email sent: ${sent}`)
+          );
+        }
+      } catch (emailErr) {
+        console.error('Email notification error (non-critical):', emailErr);
+      }
     } catch (error) {
       console.error("Error updating booking status:", error);
       res.status(500).json({ message: "Failed to update booking status" });

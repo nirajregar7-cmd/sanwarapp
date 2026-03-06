@@ -201,6 +201,19 @@ function BookingCard({
               >
                 ⏰ Reschedule
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50 w-full"
+                onClick={() => {
+                  if (confirm("Cancel this confirmed booking?")) {
+                    updateBookingStatusMutation.mutate({ bookingId: booking.id, status: "cancelled" });
+                  }
+                }}
+                disabled={updateBookingStatusMutation.isPending}
+              >
+                ✕ Cancel
+              </Button>
             </>
           )}
           {booking.status === 'completed' && (

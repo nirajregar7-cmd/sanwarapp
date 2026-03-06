@@ -281,6 +281,54 @@ function generateShopkeeperNotificationEmail(data: BookingEmailData): string {
   `;
 }
 
+// Send email when owner CONFIRMS a booking
+export async function sendOwnerConfirmedEmail(bookingId: string): Promise<boolean> {
+  try {
+    const data = await getBookingEmailData(bookingId);
+    if (!data || !data.customerEmail) return false;
+    return await sendEmail({
+      to: data.customerEmail,
+      subject: `✅ Booking Confirmed - ${data.salonName} | Sanwar`,
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f5f5f5}.container{max-width:600px;margin:0 auto;background:white;border-radius:8px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.1)}.header{background:linear-gradient(135deg,#4caf50,#2e7d32);color:white;padding:30px 20px;text-align:center}.content{padding:30px 20px}.details{background:#f8f9fa;border-radius:8px;padding:20px;margin:20px 0}.row{display:flex;justify-content:space-between;margin:8px 0;padding:8px 0;border-bottom:1px solid #eee}.label{font-weight:600;color:#495057}.footer{background:#f8f9fa;padding:20px;text-align:center;color:#6c757d;font-size:14px}</style></head><body><div class="container"><div class="header"><h1>✅ Booking Confirmed!</h1><p>Your appointment has been confirmed by the salon</p></div><div class="content"><p>Hi ${data.customerName},</p><p>Great news! <strong>${data.salonName}</strong> has confirmed your appointment.</p><div class="details"><div class="row"><span class="label">Service</span><span>${data.serviceName}</span></div><div class="row"><span class="label">Date</span><span>${data.date}</span></div><div class="row"><span class="label">Time</span><span>${data.startTime} - ${data.endTime}</span></div><div class="row"><span class="label">Salon</span><span>${data.salonName}</span></div>${data.salonAddress ? `<div class="row"><span class="label">Address</span><span>${data.salonAddress}</span></div>` : ''}${data.salonPhone ? `<div class="row"><span class="label">Phone</span><span>${data.salonPhone}</span></div>` : ''}</div><p>Please arrive 5 minutes before your appointment. We look forward to seeing you!</p></div><div class="footer"><p>© Sanwar - Your Salon Booking Platform</p></div></div></body></html>`,
+    });
+  } catch (e) {
+    console.error('Error sending owner confirmed email:', e);
+    return false;
+  }
+}
+
+// Send email when owner DECLINES / cancels a booking
+export async function sendOwnerDeclinedEmail(bookingId: string): Promise<boolean> {
+  try {
+    const data = await getBookingEmailData(bookingId);
+    if (!data || !data.customerEmail) return false;
+    return await sendEmail({
+      to: data.customerEmail,
+      subject: `❌ Booking Cancelled - ${data.salonName} | Sanwar`,
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f5f5f5}.container{max-width:600px;margin:0 auto;background:white;border-radius:8px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.1)}.header{background:linear-gradient(135deg,#f44336,#c62828);color:white;padding:30px 20px;text-align:center}.content{padding:30px 20px}.details{background:#f8f9fa;border-radius:8px;padding:20px;margin:20px 0}.row{display:flex;justify-content:space-between;margin:8px 0;padding:8px 0;border-bottom:1px solid #eee}.label{font-weight:600;color:#495057}.footer{background:#f8f9fa;padding:20px;text-align:center;color:#6c757d;font-size:14px}</style></head><body><div class="container"><div class="header"><h1>❌ Booking Cancelled</h1><p>Your appointment has been cancelled by the salon</p></div><div class="content"><p>Hi ${data.customerName},</p><p>We're sorry to inform you that <strong>${data.salonName}</strong> has cancelled your appointment.</p><div class="details"><div class="row"><span class="label">Service</span><span>${data.serviceName}</span></div><div class="row"><span class="label">Date</span><span>${data.date}</span></div><div class="row"><span class="label">Time</span><span>${data.startTime} - ${data.endTime}</span></div></div><p>You can book a new appointment at your convenience through the Sanwar app.</p></div><div class="footer"><p>© Sanwar - Your Salon Booking Platform</p></div></div></body></html>`,
+    });
+  } catch (e) {
+    console.error('Error sending owner declined email:', e);
+    return false;
+  }
+}
+
+// Send email when owner SUGGESTS a new time
+export async function sendOwnerSuggestionEmail(bookingId: string, suggestedDate: string, suggestedTime: string, ownerNote?: string): Promise<boolean> {
+  try {
+    const data = await getBookingEmailData(bookingId);
+    if (!data || !data.customerEmail) return false;
+    return await sendEmail({
+      to: data.customerEmail,
+      subject: `⏰ New Time Suggested - ${data.salonName} | Sanwar`,
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f5f5f5}.container{max-width:600px;margin:0 auto;background:white;border-radius:8px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.1)}.header{background:linear-gradient(135deg,#ff9800,#e65100);color:white;padding:30px 20px;text-align:center}.content{padding:30px 20px}.details{background:#f8f9fa;border-radius:8px;padding:20px;margin:20px 0}.row{display:flex;justify-content:space-between;margin:8px 0;padding:8px 0;border-bottom:1px solid #eee}.label{font-weight:600;color:#495057}.suggestion-box{background:#fff3e0;border-left:4px solid #ff9800;padding:15px;margin:20px 0;border-radius:4px}.footer{background:#f8f9fa;padding:20px;text-align:center;color:#6c757d;font-size:14px}</style></head><body><div class="container"><div class="header"><h1>⏰ New Time Suggested</h1><p>The salon has proposed a new appointment time</p></div><div class="content"><p>Hi ${data.customerName},</p><p><strong>${data.salonName}</strong> cannot accommodate your original booking but is suggesting a new time:</p><div class="suggestion-box"><h3 style="margin:0 0 10px;color:#e65100">Suggested Appointment</h3><p style="margin:4px 0"><strong>Date:</strong> ${suggestedDate}</p><p style="margin:4px 0"><strong>Time:</strong> ${suggestedTime}</p>${ownerNote ? `<p style="margin:8px 0 0;color:#555"><em>Note from salon: ${ownerNote}</em></p>` : ''}</div><div class="details"><div class="row"><span class="label">Service</span><span>${data.serviceName}</span></div><div class="row"><span class="label">Original Date</span><span>${data.date}</span></div><div class="row"><span class="label">Salon</span><span>${data.salonName}</span></div></div><p>Please open the <strong>Sanwar app</strong> to <strong>Accept</strong> or <strong>Decline</strong> this suggestion.</p></div><div class="footer"><p>© Sanwar - Your Salon Booking Platform</p></div></div></body></html>`,
+    });
+  } catch (e) {
+    console.error('Error sending owner suggestion email:', e);
+    return false;
+  }
+}
+
 // Send booking confirmation emails to both customer and shopkeeper
 export async function sendBookingNotificationEmails(bookingId: string): Promise<{ customerSent: boolean, shopkeeperSent: boolean }> {
   try {
