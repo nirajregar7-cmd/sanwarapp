@@ -871,6 +871,9 @@ export class DatabaseStorage implements IStorage {
         walkInCustomerName: bookings.walkInCustomerName,
         walkInCustomerPhone: bookings.walkInCustomerPhone,
         notes: bookings.notes,
+        suggestedDate: bookings.suggestedDate,
+        suggestedTime: bookings.suggestedTime,
+        ownerNote: bookings.ownerNote,
         // Salon details - flatten instead of nested
         salonId_joined: salons.id,
         salonName: salons.name,
@@ -941,6 +944,9 @@ export class DatabaseStorage implements IStorage {
         walkInCustomerName: bookings.walkInCustomerName,
         walkInCustomerPhone: bookings.walkInCustomerPhone,
         notes: bookings.notes,
+        suggestedDate: bookings.suggestedDate,
+        suggestedTime: bookings.suggestedTime,
+        ownerNote: bookings.ownerNote,
         // Customer details - flatten instead of nested
         customerId_joined: users.id,
         customerFirstName: users.firstName,

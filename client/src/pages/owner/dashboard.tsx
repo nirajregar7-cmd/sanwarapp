@@ -94,7 +94,7 @@ function BookingCard({
               {booking.groupStatus === 'owner_suggested' ? '⏰ Time Suggested' : booking.groupStatus}
             </Badge>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm text-gray-600">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm text-gray-600">
             <div>
               <span className="font-medium">Service{booking.servicesCount > 1 ? 's' : ''}:</span>{' '}
               {booking.servicesList ? 
@@ -105,15 +105,23 @@ function BookingCard({
             </div>
             <div>
               <span className="font-medium">Appointment:</span> {booking.date}
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 mt-0.5">
                 Booked: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Unknown'}
               </div>
             </div>
             <div><span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}</div>
             <div><span className="font-medium">Amount:</span> ₹{booking.totalGroupAmount || booking.totalAmount}</div>
             <div>
-              <span className="font-medium">Payment:</span> 
+              <span className="font-medium">Payment:</span>
               <Badge variant="outline" className="ml-1">{booking.paymentStatus || 'Pending'}</Badge>
+            </div>
+            <div>
+              <span className="font-medium">Stylist:</span>{' '}
+              {booking.staff?.name ? (
+                <span className="text-blue-600 font-medium">{booking.staff.name}</span>
+              ) : (
+                <span className="text-gray-400 italic">Any available</span>
+              )}
             </div>
           </div>
           {(booking.isWalkIn ? booking.walkInCustomerPhone : booking.customer?.phone) && (
@@ -131,12 +139,12 @@ function BookingCard({
           )}
         </div>
 
-        <div className="flex flex-col gap-2 ml-2">
+        <div className="flex flex-col gap-2 ml-2 min-w-[120px]">
           {booking.status === 'pending' && (
             <>
               <Button 
                 size="sm" 
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white w-full"
                 onClick={() => confirmBooking(booking.id)}
                 disabled={updateBookingStatusMutation.isPending}
               >
@@ -145,25 +153,58 @@ function BookingCard({
               <Button 
                 size="sm" 
                 variant="outline"
-                className="border-orange-400 text-orange-600 hover:bg-orange-50"
-                onClick={() => setShowSuggest(true)}
+                className="border-orange-400 text-orange-600 hover:bg-orange-50 w-full"
+                onClick={() => setShowSuggest(!showSuggest)}
               >
                 ⏰ Suggest Time
               </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50 w-full"
+                onClick={() => {
+                  if (confirm("Decline this booking request?")) {
+                    updateBookingStatusMutation.mutate({ bookingId: booking.id, status: "cancelled" });
+                  }
+                }}
+                disabled={updateBookingStatusMutation.isPending}
+              >
+                ✕ Decline
+              </Button>
             </>
           )}
-          {booking.status === 'confirmed' && (
+          {booking.status === 'owner_suggested' && (
             <Button 
               size="sm" 
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={() => completeBooking(booking.id)}
-              disabled={updateBookingStatusMutation.isPending}
+              variant="outline"
+              className="border-orange-400 text-orange-600 hover:bg-orange-50 w-full"
+              onClick={() => setShowSuggest(!showSuggest)}
             >
-              Mark Complete
+              ✏️ Edit Suggestion
             </Button>
           )}
+          {booking.status === 'confirmed' && (
+            <>
+              <Button 
+                size="sm" 
+                className="bg-blue-600 hover:bg-blue-700 w-full"
+                onClick={() => completeBooking(booking.id)}
+                disabled={updateBookingStatusMutation.isPending}
+              >
+                Mark Complete
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-orange-400 text-orange-600 hover:bg-orange-50 w-full"
+                onClick={() => setShowSuggest(!showSuggest)}
+              >
+                ⏰ Reschedule
+              </Button>
+            </>
+          )}
           {booking.status === 'completed' && (
-            <Badge variant="secondary" className="px-3 py-1">Done</Badge>
+            <Badge variant="secondary" className="px-3 py-1 text-center">✓ Done</Badge>
           )}
         </div>
       </div>
