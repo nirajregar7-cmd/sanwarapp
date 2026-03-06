@@ -1827,17 +1827,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         createdBookings.push(booking);
         
-        // Send booking confirmation notification for each booking
-        await sendBookingConfirmationNotification(booking.id);
-        
-        // Send notification to salon owner about new booking
-        await sendSalonOwnerBookingNotification(booking.id);
+        // Notify salon owner about new booking request
+        sendSalonOwnerBookingNotification(booking.id).catch(e =>
+          console.error('Owner notification error:', e)
+        );
       }
       
       // Return all created bookings
       res.status(201).json({
         bookings: createdBookings,
-        message: `${createdBookings.length} booking(s) created successfully! Please pay at the salon.`,
+        message: `Booking request sent! Awaiting salon confirmation.`,
         totalServices: createdBookings.length
       });
     } catch (error) {
@@ -2986,7 +2985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate total amount
       const totalAmount = serviceDetails.reduce((sum, svc) => sum + parseFloat(svc.price.toString()), 0);
 
-      // Create booking
+      // Create booking - starts as pending until salon owner confirms
       const [booking] = await db.insert(bookings).values({
         customerId: userId,
         salonId,
@@ -2998,8 +2997,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endTime: timeSlot.endTime,
         totalAmount: totalAmount.toString(),
         confirmationAmount: '0',
-        paymentStatus: 'completed',
-        status: 'confirmed',
+        paymentStatus: 'pending',
+        status: 'pending',
         notes: `Direct booking - ${serviceDetails.length} service(s)`
       }).returning();
 
@@ -3010,13 +3009,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE id = ${timeSlotId}
       `);
 
-      // Send notifications
-      await sendBookingConfirmationNotification(booking.id);
-      await sendSalonOwnerBookingNotification(booking.id);
+      // Notify salon owner about new booking request (async, non-blocking)
+      sendSalonOwnerBookingNotification(booking.id).catch(e =>
+        console.error('Owner notification error:', e)
+      );
 
       res.status(201).json({
         ...booking,
-        message: "Booking created successfully!",
+        message: "Booking request sent! Awaiting salon confirmation.",
         services: serviceDetails.length
       });
     } catch (error) {

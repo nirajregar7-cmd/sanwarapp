@@ -212,7 +212,7 @@ export default function CustomerBookings() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "confirmed": return "Confirmed";
-      case "pending": return "Pending";
+      case "pending": return "⏳ Awaiting Confirmation";
       case "completed": return "Completed";
       case "cancelled": return "Cancelled";
       case "owner_suggested": return "⏰ New Time Suggested";
@@ -292,6 +292,14 @@ export default function CustomerBookings() {
                   </Badge>
                 </div>
                 
+                {/* Pending awaiting confirmation banner */}
+                {(booking as any).status === "pending" && (
+                  <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-center gap-2 text-sm text-yellow-800">
+                    <Clock className="h-4 w-4 flex-shrink-0 text-yellow-600" />
+                    <span>Your booking request has been sent. Waiting for the salon to confirm your appointment.</span>
+                  </div>
+                )}
+
                 {/* Owner suggested time banner */}
                 {(booking as any).status === "owner_suggested" && (booking as any).suggestedDate && (
                   <div className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-4">

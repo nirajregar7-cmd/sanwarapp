@@ -393,8 +393,8 @@ export default function SalonDetail() {
     },
     onSuccess: () => {
       toast({
-        title: "Booking Confirmed!",
-        description: "Your appointment is booked! Please pay the full service amount when you visit the salon.",
+        title: "Booking Request Sent!",
+        description: "Your request has been sent to the salon. You'll be notified once the salon confirms your appointment.",
       });
       
       setBookingDialogOpen(false);
@@ -438,8 +438,8 @@ export default function SalonDetail() {
       const result = await response.json();
       
       toast({
-        title: "Booking Confirmed!",
-        description: "Your appointment is booked! Please pay the full service amount when you visit the salon.",
+        title: "Booking Request Sent!",
+        description: "Your request has been sent to the salon. You'll be notified once the salon confirms your appointment.",
       });
       
       setBookingDialogOpen(false);
@@ -496,8 +496,8 @@ export default function SalonDetail() {
     },
     onSuccess: (result) => {
       toast({
-        title: "Appointment Booked!",
-        description: "Your appointment has been successfully booked. You'll receive a confirmation shortly.",
+        title: "Booking Request Sent!",
+        description: "Your request is pending salon confirmation. You'll get an email once the salon confirms.",
       });
       setBookingDialogOpen(false);
       setAppliedReferralCode(null); // Reset referral code
