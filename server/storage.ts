@@ -142,7 +142,7 @@ export interface IStorage {
   getBookingsBySalon(salonId: string): Promise<Booking[]>;
   getWalkInBookingsBySalon(salonId: string): Promise<Booking[]>;
   getBookingById(id: string): Promise<Booking | undefined>;
-  updateBookingStatus(id: string, status: string, paymentId?: string, paymentStatus?: string): Promise<void>;
+  updateBookingStatus(id: string, status: string, paymentId?: string, paymentStatus?: string, suggestedDate?: string, suggestedTime?: string, ownerNote?: string): Promise<void>;
 
   // Review operations
   createReview(review: InsertReview): Promise<Review>;
@@ -997,11 +997,17 @@ export class DatabaseStorage implements IStorage {
     id: string, 
     status: string, 
     paymentId?: string, 
-    paymentStatus?: string
+    paymentStatus?: string,
+    suggestedDate?: string,
+    suggestedTime?: string,
+    ownerNote?: string
   ): Promise<void> {
     const updateData: any = { status, updatedAt: new Date() };
     if (paymentId) updateData.paymentId = paymentId;
     if (paymentStatus) updateData.paymentStatus = paymentStatus;
+    if (suggestedDate !== undefined) updateData.suggestedDate = suggestedDate;
+    if (suggestedTime !== undefined) updateData.suggestedTime = suggestedTime;
+    if (ownerNote !== undefined) updateData.ownerNote = ownerNote;
 
     await db.update(bookings).set(updateData).where(eq(bookings.id, id));
   }

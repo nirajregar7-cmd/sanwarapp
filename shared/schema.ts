@@ -207,7 +207,10 @@ export const bookings = pgTable("bookings", {
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   confirmationAmount: decimal("confirmation_amount", { precision: 10, scale: 2 }).default("0"),
   referralCode: varchar("referral_code", { length: 50 }),
-  status: varchar("status", { enum: ["pending", "confirmed", "completed", "cancelled", "no_show"] }).default("pending"),
+  status: varchar("status", { enum: ["pending", "confirmed", "completed", "cancelled", "no_show", "owner_suggested"] }).default("pending"),
+  suggestedDate: varchar("suggested_date", { length: 10 }),
+  suggestedTime: varchar("suggested_time", { length: 5 }),
+  ownerNote: text("owner_note"),
   paymentId: varchar("payment_id"),
   paymentStatus: varchar("payment_status", { enum: ["pending", "completed", "failed"] }).default("pending"),
   // Walk-in booking fields

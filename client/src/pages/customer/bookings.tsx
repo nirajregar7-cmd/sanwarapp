@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, Clock, MapPin, Star, Heart } from "lucide-react";
+import { Calendar, Clock, MapPin, Star, Heart, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import type { BookingWithDetails } from "@shared/schema";
 
 // Extended type for grouped bookings
@@ -109,17 +109,27 @@ export default function CustomerBookings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/my"] });
+      toast({ title: "Booking cancelled", description: "Your booking has been cancelled successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Cancellation failed", description: error.message || "Failed to cancel booking", variant: "destructive" });
+    },
+  });
+
+  // Respond to owner's suggested time
+  const respondSuggestionMutation = useMutation({
+    mutationFn: async ({ bookingId, action }: { bookingId: string; action: "accept" | "decline" }) => {
+      return await apiRequest("PATCH", `/api/bookings/${bookingId}/respond`, { action });
+    },
+    onSuccess: (_, { action }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings/my"] });
       toast({
-        title: "Booking cancelled",
-        description: "Your booking has been cancelled successfully",
+        title: action === "accept" ? "Time accepted!" : "Booking declined",
+        description: action === "accept" ? "Your appointment has been confirmed with the new time." : "The booking has been cancelled.",
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Cancellation failed",
-        description: error.message || "Failed to cancel booking",
-        variant: "destructive",
-      });
+      toast({ title: "Failed to respond", description: error.message, variant: "destructive" });
     },
   });
 
@@ -190,31 +200,23 @@ export default function CustomerBookings() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "confirmed":
-        return "bg-accent text-white";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "completed":
-        return "bg-gray-100 text-gray-700";
-      case "cancelled":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+      case "confirmed": return "bg-accent text-white";
+      case "pending": return "bg-yellow-100 text-yellow-800";
+      case "completed": return "bg-gray-100 text-gray-700";
+      case "cancelled": return "bg-red-100 text-red-700";
+      case "owner_suggested": return "bg-orange-100 text-orange-800";
+      default: return "bg-gray-100 text-gray-700";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "confirmed":
-        return "Confirmed";
-      case "pending":
-        return "Pending";
-      case "completed":
-        return "Completed";
-      case "cancelled":
-        return "Cancelled";
-      default:
-        return status;
+      case "confirmed": return "Confirmed";
+      case "pending": return "Pending";
+      case "completed": return "Completed";
+      case "cancelled": return "Cancelled";
+      case "owner_suggested": return "⏰ New Time Suggested";
+      default: return status;
     }
   };
 
@@ -290,6 +292,52 @@ export default function CustomerBookings() {
                   </Badge>
                 </div>
                 
+                {/* Owner suggested time banner */}
+                {(booking as any).status === "owner_suggested" && (booking as any).suggestedDate && (
+                  <div className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-orange-800 text-sm mb-1">Salon suggested a new time</p>
+                        <div className="flex flex-wrap gap-3 text-sm text-orange-700 mb-2">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {new Date((booking as any).suggestedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {(booking as any).suggestedTime}
+                          </span>
+                        </div>
+                        {(booking as any).ownerNote && (
+                          <p className="text-xs text-orange-600 italic mb-3">"{(booking as any).ownerNote}"</p>
+                        )}
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => respondSuggestionMutation.mutate({ bookingId: booking.id, action: "accept" })}
+                            disabled={respondSuggestionMutation.isPending}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-300 text-red-600 hover:bg-red-50"
+                            onClick={() => respondSuggestionMutation.mutate({ bookingId: booking.id, action: "decline" })}
+                            disabled={respondSuggestionMutation.isPending}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Decline
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
@@ -338,7 +386,7 @@ export default function CustomerBookings() {
                         <Star className="h-4 w-4 mr-1" />
                         Rate & Review
                       </Button>
-                    ) : booking.status === "confirmed" || booking.status === "pending" ? (
+                    ) : (booking.status === "confirmed" || booking.status === "pending") ? (
                       <>
                         <Button 
                           variant="outline" 

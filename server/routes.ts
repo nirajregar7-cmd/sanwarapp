@@ -5504,12 +5504,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/bookings/:id/status", isAuthenticated, async (req: any, res) => {
     try {
-      const { status, paymentId, paymentStatus } = req.body;
-      await storage.updateBookingStatus(req.params.id, status, paymentId, paymentStatus);
+      const { status, paymentId, paymentStatus, suggestedDate, suggestedTime, ownerNote } = req.body;
+      await storage.updateBookingStatus(req.params.id, status, paymentId, paymentStatus, suggestedDate, suggestedTime, ownerNote);
       res.json({ message: "Booking status updated" });
     } catch (error) {
       console.error("Error updating booking status:", error);
       res.status(500).json({ message: "Failed to update booking status" });
+    }
+  });
+
+  // Customer responds to owner's suggested time (accept → confirmed, decline → cancelled)
+  app.patch("/api/bookings/:id/respond", isAuthenticated, async (req: any, res) => {
+    try {
+      const { action } = req.body; // "accept" or "decline"
+      if (!["accept", "decline"].includes(action)) {
+        return res.status(400).json({ message: "Invalid action" });
+      }
+      const booking = await storage.getBookingById(req.params.id);
+      if (!booking) return res.status(404).json({ message: "Booking not found" });
+      if (booking.customerId !== req.user.id) return res.status(403).json({ message: "Forbidden" });
+
+      if (action === "accept") {
+        // Move suggested date/time into the actual appointment slot
+        const updateData: any = { status: "confirmed", updatedAt: new Date() };
+        if (booking.suggestedDate) updateData.date = booking.suggestedDate;
+        if (booking.suggestedTime) {
+          updateData.startTime = booking.suggestedTime;
+        }
+        await storage.updateBookingStatus(req.params.id, "confirmed", undefined, undefined, null as any, null as any, null as any);
+        // Also apply suggested date/time as the new appointment
+        const { db } = await import("./db");
+        const { bookings: bookingsTable } = await import("../shared/schema");
+        const { eq } = await import("drizzle-orm");
+        await db.update(bookingsTable).set({
+          date: booking.suggestedDate ?? booking.date,
+          startTime: booking.suggestedTime ?? booking.startTime,
+          suggestedDate: null,
+          suggestedTime: null,
+          ownerNote: null,
+        }).where(eq(bookingsTable.id, req.params.id));
+      } else {
+        await storage.updateBookingStatus(req.params.id, "cancelled");
+      }
+
+      res.json({ message: action === "accept" ? "Booking confirmed with new time" : "Booking declined" });
+    } catch (error) {
+      console.error("Error responding to booking suggestion:", error);
+      res.status(500).json({ message: "Failed to respond to booking" });
     }
   });
 

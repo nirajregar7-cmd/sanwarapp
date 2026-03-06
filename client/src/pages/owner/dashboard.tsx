@@ -41,15 +41,24 @@ interface GroupedBooking extends BookingWithDetails {
 function BookingCard({ 
   booking, 
   completeBooking, 
+  confirmBooking,
+  suggestTime,
   updateBookingStatusMutation 
 }: { 
   booking: GroupedBooking; 
   completeBooking: (id: string) => void;
+  confirmBooking: (id: string) => void;
+  suggestTime: (id: string, date: string, time: string, note: string) => void;
   updateBookingStatusMutation: { isPending: boolean };
 }) {
+  const [showSuggest, setShowSuggest] = useState(false);
+  const [suggestDate, setSuggestDate] = useState(booking.date || "");
+  const [suggestTimeVal, setSuggestTimeVal] = useState(booking.startTime || "");
+  const [suggestNote, setSuggestNote] = useState("");
+
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-      <div className="flex items-start space-x-4 flex-1">
+    <div className="flex flex-col p-4 border rounded-lg hover:shadow-md transition-shadow gap-3">
+      <div className="flex items-start space-x-4">
         <div className="flex-shrink-0">
           {booking.isWalkIn ? (
             <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
@@ -71,18 +80,18 @@ function BookingCard({
                   : booking.customer?.name || 'Customer'
                 }
               </p>
-              <p className="text-sm text-gray-500">
-                Booking #{booking.id.slice(0, 8)}
-              </p>
+              <p className="text-sm text-gray-500">Booking #{booking.id.slice(0, 8)}</p>
             </div>
             <Badge 
               variant={
                 booking.groupStatus === 'confirmed' ? 'default' :
                 booking.groupStatus === 'completed' ? 'secondary' :
+                booking.groupStatus === 'owner_suggested' ? 'outline' :
                 booking.groupStatus.includes('cancelled') ? 'destructive' : 'outline'
               }
+              className={booking.groupStatus === 'owner_suggested' ? 'border-orange-400 text-orange-600' : ''}
             >
-              {booking.groupStatus}
+              {booking.groupStatus === 'owner_suggested' ? '⏰ Time Suggested' : booking.groupStatus}
             </Badge>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm text-gray-600">
@@ -97,57 +106,119 @@ function BookingCard({
             <div>
               <span className="font-medium">Appointment:</span> {booking.date}
               <div className="text-xs text-gray-500 mt-1">
-                Booked: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric' 
-                }) : 'Unknown'}
+                Booked: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Unknown'}
               </div>
             </div>
-            <div>
-              <span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}
-            </div>
-            <div>
-              <span className="font-medium">Amount:</span> ₹{booking.totalGroupAmount || booking.totalAmount}
-            </div>
+            <div><span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}</div>
+            <div><span className="font-medium">Amount:</span> ₹{booking.totalGroupAmount || booking.totalAmount}</div>
             <div>
               <span className="font-medium">Payment:</span> 
-              <Badge variant="outline" className="ml-1">
-                {booking.paymentStatus || 'Pending'}
-              </Badge>
+              <Badge variant="outline" className="ml-1">{booking.paymentStatus || 'Pending'}</Badge>
             </div>
           </div>
-          {booking.isWalkIn && booking.walkInCustomerPhone && (
+          {(booking.isWalkIn ? booking.walkInCustomerPhone : booking.customer?.phone) && (
             <p className="text-sm text-gray-500 mt-1">
-              Phone: {booking.walkInCustomerPhone}
+              Phone: {booking.isWalkIn ? booking.walkInCustomerPhone : booking.customer?.phone}
             </p>
           )}
-          {!booking.isWalkIn && booking.customer?.phone && (
-            <p className="text-sm text-gray-500 mt-1">
-              Phone: {booking.customer.phone}
-            </p>
+          {/* Show customer's response to suggestion */}
+          {(booking as any).suggestedDate && (
+            <div className="mt-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 text-sm text-orange-800">
+              ⏰ You suggested: <strong>{(booking as any).suggestedDate}</strong> at <strong>{(booking as any).suggestedTime}</strong>
+              {(booking as any).ownerNote && <span className="block text-xs mt-0.5">Note: {(booking as any).ownerNote}</span>}
+              <span className="block text-xs text-orange-500 mt-0.5">Waiting for customer to accept or decline</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2 ml-2">
+          {booking.status === 'pending' && (
+            <>
+              <Button 
+                size="sm" 
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => confirmBooking(booking.id)}
+                disabled={updateBookingStatusMutation.isPending}
+              >
+                ✓ Confirm
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-orange-400 text-orange-600 hover:bg-orange-50"
+                onClick={() => setShowSuggest(true)}
+              >
+                ⏰ Suggest Time
+              </Button>
+            </>
+          )}
+          {booking.status === 'confirmed' && (
+            <Button 
+              size="sm" 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => completeBooking(booking.id)}
+              disabled={updateBookingStatusMutation.isPending}
+            >
+              Mark Complete
+            </Button>
+          )}
+          {booking.status === 'completed' && (
+            <Badge variant="secondary" className="px-3 py-1">Done</Badge>
           )}
         </div>
       </div>
-      <div className="flex space-x-2 ml-4">
-        <Button variant="outline" size="sm">
-          <Eye className="h-4 w-4" />
-        </Button>
-        {booking.status === 'confirmed' && (
-          <Button 
-            size="sm" 
-            className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => completeBooking(booking.id)}
-            disabled={updateBookingStatusMutation.isPending}
-          >
-            Mark Complete
-          </Button>
-        )}
-        {booking.status === 'completed' && (
-          <Badge variant="secondary" className="px-3 py-1">
-            Service Completed
-          </Badge>
-        )}
-      </div>
+
+      {/* Suggest Time inline form */}
+      {showSuggest && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 space-y-3">
+          <p className="text-sm font-semibold text-orange-800">Suggest an alternative time</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-600 font-medium mb-1 block">New Date</label>
+              <input
+                type="date"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-300 outline-none"
+                value={suggestDate}
+                onChange={e => setSuggestDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600 font-medium mb-1 block">New Time</label>
+              <input
+                type="time"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-300 outline-none"
+                value={suggestTimeVal}
+                onChange={e => setSuggestTimeVal(e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-gray-600 font-medium mb-1 block">Message to customer (optional)</label>
+            <textarea
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-300 outline-none resize-none"
+              rows={2}
+              placeholder="e.g. Your requested slot is unavailable, this time works better for us."
+              value={suggestNote}
+              onChange={e => setSuggestNote(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+              onClick={() => {
+                if (!suggestDate || !suggestTimeVal) return;
+                suggestTime(booking.id, suggestDate, suggestTimeVal, suggestNote);
+                setShowSuggest(false);
+              }}
+              disabled={!suggestDate || !suggestTimeVal || updateBookingStatusMutation.isPending}
+            >
+              Send Suggestion
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowSuggest(false)}>Cancel</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1133,12 +1204,12 @@ export default function OwnerDashboard() {
 
   // Update booking status mutations
   const updateBookingStatusMutation = useMutation({
-    mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
-      return apiRequest("PATCH", `/api/bookings/${bookingId}/status`, { status });
+    mutationFn: async ({ bookingId, status, suggestedDate, suggestedTime, ownerNote }: { bookingId: string; status: string; suggestedDate?: string; suggestedTime?: string; ownerNote?: string }) => {
+      return apiRequest("PUT", `/api/bookings/${bookingId}/status`, { status, suggestedDate, suggestedTime, ownerNote });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/owner/bookings"] });
-      toast({ title: "Booking status updated successfully" });
+      toast({ title: "Booking updated successfully" });
     },
     onError: (error: any) => {
       toast({ 
@@ -1159,6 +1230,10 @@ export default function OwnerDashboard() {
 
   const completeBooking = (bookingId: string) => {
     updateBookingStatusMutation.mutate({ bookingId, status: "completed" });
+  };
+
+  const suggestBookingTime = (bookingId: string, date: string, time: string, note: string) => {
+    updateBookingStatusMutation.mutate({ bookingId, status: "owner_suggested", suggestedDate: date, suggestedTime: time, ownerNote: note || undefined });
   };
 
   if (!isAuthenticated) {
@@ -2576,7 +2651,7 @@ export default function OwnerDashboard() {
                         return todayBookings.length > 0 ? (
                           <div className="space-y-4">
                             {todayBookings.map((booking) => (
-                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} updateBookingStatusMutation={updateBookingStatusMutation} />
+                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} confirmBooking={confirmBooking} suggestTime={suggestBookingTime} updateBookingStatusMutation={updateBookingStatusMutation} />
                             ))}
                           </div>
                         ) : (
@@ -2604,7 +2679,7 @@ export default function OwnerDashboard() {
                         return tomorrowBookings.length > 0 ? (
                           <div className="space-y-4">
                             {tomorrowBookings.map((booking) => (
-                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} updateBookingStatusMutation={updateBookingStatusMutation} />
+                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} confirmBooking={confirmBooking} suggestTime={suggestBookingTime} updateBookingStatusMutation={updateBookingStatusMutation} />
                             ))}
                           </div>
                         ) : (
@@ -2632,7 +2707,7 @@ export default function OwnerDashboard() {
                         return upcomingBookings.length > 0 ? (
                           <div className="space-y-4">
                             {upcomingBookings.map((booking) => (
-                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} updateBookingStatusMutation={updateBookingStatusMutation} />
+                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} confirmBooking={confirmBooking} suggestTime={suggestBookingTime} updateBookingStatusMutation={updateBookingStatusMutation} />
                             ))}
                           </div>
                         ) : (
@@ -2658,7 +2733,7 @@ export default function OwnerDashboard() {
                         return previousBookings.length > 0 ? (
                           <div className="space-y-4">
                             {previousBookings.map((booking) => (
-                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} updateBookingStatusMutation={updateBookingStatusMutation} />
+                              <BookingCard key={booking.id} booking={booking} completeBooking={completeBooking} confirmBooking={confirmBooking} suggestTime={suggestBookingTime} updateBookingStatusMutation={updateBookingStatusMutation} />
                             ))}
                           </div>
                         ) : (
