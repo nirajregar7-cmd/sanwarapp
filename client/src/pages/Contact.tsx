@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Phone, MapPin, Clock, MessageSquare, Users, HelpCircle, Menu, X, Scissors, ChevronRight } from "lucide-react";
-import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
+import sanwarLogo from "@/assets/sanwar-logo.png";
 import { SiInstagram, SiFacebook, SiX, SiLinkedin } from "react-icons/si";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";

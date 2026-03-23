@@ -12,7 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useTranslation } from "react-i18next";
-import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
+import sanwarLogo from "@/assets/sanwar-logo.png";
 
 interface LayoutProps {
   children: React.ReactNode;

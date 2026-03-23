@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
+import sanwarLogo from "@/assets/sanwar-logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

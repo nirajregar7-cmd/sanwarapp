@@ -28,7 +28,7 @@ import type { PlatformStats, Salon } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import SalonCard from "@/components/SalonCard";
-import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
+import sanwarLogo from "@/assets/sanwar-logo.png";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";

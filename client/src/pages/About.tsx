@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Users, Target, Award, Heart, Menu, X, Scissors, ChevronRight } from "lucide-react";
-import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
+import sanwarLogo from "@/assets/sanwar-logo.png";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 

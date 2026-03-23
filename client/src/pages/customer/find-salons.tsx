@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation as useRouter, Link } from "wouter";
-import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
+import sanwarLogo from "@/assets/sanwar-logo.png";
 import {
   Search,
   Scissors,
