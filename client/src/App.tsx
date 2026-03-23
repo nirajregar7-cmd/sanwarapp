@@ -30,6 +30,7 @@ import NotificationSettingsPage from "@/pages/NotificationSettingsPage";
 import SalonDetail from "@/pages/customer/salon-detail";
 import SalonOffersPage from "@/pages/customer/salon-offers";
 import CustomerBookings from "@/pages/customer/bookings";
+import CustomerMessages from "@/pages/customer/messages";
 import CustomerProfile from "@/pages/customer/customer-profile";
 import ReferEarnPage from "@/pages/customer/refer-earn";
 import SalonSearchPage from "@/pages/customer/salon-search";
@@ -44,6 +45,7 @@ import StaffSchedulePage from "@/pages/owner/staff-schedule";
 import StaffManagement from "@/pages/owner/staff-management";
 import StaffSlotGenerator from "@/pages/owner/staff-slot-generator";
 import AccountDetails from "@/pages/owner/account-details";
+import OwnerMessages from "@/pages/owner/messages";
 import DiscountCustomers from "@/pages/owner/discount-customers";
 import ReferEarn from "@/pages/owner/refer-earn";
 import WalkInBookings from "@/pages/salon-owner/walk-in-bookings";
@@ -255,6 +257,12 @@ function Router() {
                 </Layout>
               </Route>
 
+              <Route path="/customer/messages">
+                <Layout>
+                  <CustomerMessages />
+                </Layout>
+              </Route>
+
               <Route path="/customer/profile">
                 <Layout>
                   <CustomerProfile />
@@ -459,6 +467,11 @@ function Router() {
               <Route path="/owner/media-gallery">
                 <Layout>
                   <MediaGallery />
+                </Layout>
+              </Route>
+              <Route path="/owner/messages">
+                <Layout>
+                  <OwnerMessages />
                 </Layout>
               </Route>
             </>
