@@ -6,13 +6,17 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { getDeviceType } from "@/hooks/usePWA";
 
-const DISMISSED_KEY = "push-prompt-dismissed-at";
-const RE_SHOW_DAYS = 3;
+// Per-user key so different accounts on the same device get their own prompt state
+function promptShownKey(userId: string) {
+  return `push-prompt-shown-${userId}`;
+}
 
-function wasDismissedRecently(): boolean {
-  const t = localStorage.getItem(DISMISSED_KEY);
-  if (!t) return false;
-  return (Date.now() - Number(t)) / 86400000 < RE_SHOW_DAYS;
+function hasBeenShown(userId: string): boolean {
+  return localStorage.getItem(promptShownKey(userId)) === "1";
+}
+
+function markShown(userId: string) {
+  localStorage.setItem(promptShownKey(userId), "1");
 }
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -42,39 +46,53 @@ export function MobilePushPrompt() {
   const device = getDeviceType();
 
   const userType = (user as any)?.userType;
+  const userId = (user as any)?.id as string | undefined;
+
+  // Determine if this user type should see the prompt
+  const isEligible =
+    isAuthenticated &&
+    !!userId &&
+    userType !== "admin" &&
+    userType !== "super_admin";
+
+  // Bottom offset: owners have no bottom-nav, customers do
+  const bottomClass = userType === "salon_owner" ? "bottom-4" : "bottom-20";
 
   useEffect(() => {
-    if (!isAuthenticated || userType === "salon_owner" || userType === "admin" || userType === "super_admin") return;
+    if (!isEligible || !userId) return;
     if (!("Notification" in window)) return;
+
     if (Notification.permission === "granted") {
-      // Already granted — silently ensure SW + subscription registered
+      // Already granted — silently ensure SW + subscription is registered
       autoSubscribeIfNeeded();
       return;
     }
-    if (Notification.permission === "denied") return;
-    if (wasDismissedRecently()) return;
 
-    // Show prompt after a short delay so it doesn't pop immediately
+    if (Notification.permission === "denied") return;
+
+    // Only show once per user per browser
+    if (hasBeenShown(userId)) return;
+
     const timer = setTimeout(() => setVisible(true), 3000);
     return () => clearTimeout(timer);
-  }, [isAuthenticated, userType]);
+  }, [isEligible, userId]);
 
   async function autoSubscribeIfNeeded() {
     try {
       const reg = await getOrRegisterSW();
       if (!reg) return;
       const existing = await reg.pushManager.getSubscription();
-      if (existing) {
-        setSubscribed(true);
-        return;
-      }
+      if (existing) { setSubscribed(true); return; }
       const key = import.meta.env.VITE_VAPID_PUBLIC_KEY;
       if (!key) return;
-      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key) });
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key),
+      });
       await apiRequest("POST", "/api/notifications/subscribe", { subscription: JSON.stringify(sub) });
       setSubscribed(true);
     } catch {
-      // Silent — user likely denied or not supported
+      // Silent
     }
   }
 
@@ -93,23 +111,27 @@ export function MobilePushPrompt() {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(key),
       });
-
       await apiRequest("POST", "/api/notifications/subscribe", { subscription: JSON.stringify(sub) });
       return sub;
     },
     onSuccess: () => {
       setSubscribed(true);
       setVisible(false);
+      if (userId) markShown(userId);
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/settings"] });
     },
     onError: () => {
+      // User denied — mark as shown so we never ask again
+      if (userId) markShown(userId);
       setVisible(false);
     },
   });
 
   const handleEnable = () => {
     if (device === "ios") {
-      const isInstalled = (window.navigator as any).standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+      const isInstalled =
+        (window.navigator as any).standalone === true ||
+        window.matchMedia("(display-mode: standalone)").matches;
       if (!isInstalled) {
         setShowIOSGuide(true);
         return;
@@ -119,16 +141,27 @@ export function MobilePushPrompt() {
   };
 
   const dismiss = () => {
+    // Mark shown so it never appears automatically again
+    if (userId) markShown(userId);
     setVisible(false);
-    localStorage.setItem(DISMISSED_KEY, String(Date.now()));
   };
 
   if (subscribed || !visible) return null;
 
+  const ownerText = {
+    title: "Get instant booking alerts on your phone",
+    body: "Know the moment a customer books, cancels, or messages — just like WhatsApp",
+  };
+  const customerText = {
+    title: "Get booking alerts on your phone",
+    body: "Know instantly when your booking is confirmed, rejected, or rescheduled — just like WhatsApp",
+  };
+  const text = userType === "salon_owner" ? ownerText : customerText;
+
   if (showIOSGuide) {
     return (
-      <div className="fixed bottom-20 left-4 right-4 z-50 bg-white border border-purple-200 rounded-2xl shadow-xl p-5 animate-in slide-in-from-bottom-4">
-        <button onClick={() => setShowIOSGuide(false)} className="absolute top-3 right-3 text-gray-400">
+      <div className={`fixed ${bottomClass} left-4 right-4 z-50 bg-white border border-purple-200 rounded-2xl shadow-xl p-5 animate-in slide-in-from-bottom-4`}>
+        <button onClick={() => { setShowIOSGuide(false); dismiss(); }} className="absolute top-3 right-3 text-gray-400">
           <X className="h-4 w-4" />
         </button>
         <div className="flex items-center gap-3 mb-4">
@@ -151,16 +184,16 @@ export function MobilePushPrompt() {
           </li>
           <li className="flex items-start gap-3 text-sm text-gray-700">
             <span className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
-            <span>Open Sanwar from your home screen, then allow notifications</span>
+            <span>Open Sanwar from your home screen, then allow notifications when asked</span>
           </li>
         </ol>
-        <Button onClick={dismiss} variant="outline" className="w-full mt-4 text-sm">Got it</Button>
+        <Button onClick={dismiss} variant="outline" className="w-full mt-4 text-sm">Got it, I'll do this</Button>
       </div>
     );
   }
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 bg-gradient-to-r from-purple-600 to-purple-700 rounded-2xl shadow-xl p-4 animate-in slide-in-from-bottom-4">
+    <div className={`fixed ${bottomClass} left-4 right-4 z-50 bg-gradient-to-r from-purple-600 to-purple-700 rounded-2xl shadow-xl p-4 animate-in slide-in-from-bottom-4`}>
       <button onClick={dismiss} className="absolute top-3 right-3 text-purple-200 hover:text-white">
         <X className="h-4 w-4" />
       </button>
@@ -169,10 +202,8 @@ export function MobilePushPrompt() {
           <Bell className="h-5 w-5 text-white" />
         </div>
         <div className="flex-1 min-w-0 pr-4">
-          <p className="font-semibold text-white text-sm">Get booking alerts on your phone</p>
-          <p className="text-purple-200 text-xs mt-0.5 leading-relaxed">
-            Receive instant notifications when your booking is confirmed, rejected, or rescheduled — just like WhatsApp
-          </p>
+          <p className="font-semibold text-white text-sm">{text.title}</p>
+          <p className="text-purple-200 text-xs mt-0.5 leading-relaxed">{text.body}</p>
           <div className="flex gap-2 mt-3">
             <Button
               size="sm"
@@ -181,6 +212,14 @@ export function MobilePushPrompt() {
               className="bg-white text-purple-700 hover:bg-purple-50 font-semibold text-xs h-8 px-4"
             >
               {subscribeMutation.isPending ? "Enabling..." : "Enable Notifications"}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={dismiss}
+              className="text-purple-200 hover:text-white hover:bg-white/10 text-xs h-8 px-3"
+            >
+              Not now
             </Button>
           </div>
         </div>
