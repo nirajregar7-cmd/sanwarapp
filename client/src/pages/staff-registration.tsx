@@ -341,7 +341,7 @@ export default function StaffRegistration() {
                 <img
                   src={sanwarLogo}
                   alt="Sanwar"
-                  className="w-12 h-12 rounded-xl object-cover shadow-md transform group-hover:scale-110 transition-all"
+                  className="w-11 h-11 object-contain transform group-hover:scale-110 transition-all"
                 />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
               </div>
