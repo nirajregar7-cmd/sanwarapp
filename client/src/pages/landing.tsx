@@ -1447,9 +1447,9 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 text-2xl font-bold mb-4">
-                <Scissors className="h-6 w-6" />
-                <span>Sanwar</span>
+              <div className="flex items-center space-x-2 mb-4">
+                <img src={sanwarLogo} alt="Sanwar" className="w-9 h-9 rounded-xl object-cover" />
+                <span className="text-2xl font-bold">Sanwar</span>
               </div>
               <p className="text-gray-400">
                 India's premier salon booking platform connecting customers with
