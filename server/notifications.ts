@@ -138,7 +138,7 @@ export async function sendWebPushNotification(payload: NotificationPayload) {
     const subscriptions = await db
       .select()
       .from(pushSubscriptions)
-      .where(eq(pushSubscriptions.userId, payload.userId));
+      .where(and(eq(pushSubscriptions.userId, payload.userId), eq(pushSubscriptions.isActive, true)));
 
     if (subscriptions.length === 0) {
       console.log(`No push subscriptions found for user ${payload.userId}`);
@@ -781,7 +781,7 @@ async function getFullBookingDetails(bookingId: string) {
 }
 
 // Helper: send push to all subscriptions of a user
-async function sendPushToUser(userId: string, payload: {
+export async function sendPushToUser(userId: string, payload: {
   title: string;
   body: string;
   tag?: string;
@@ -793,7 +793,7 @@ async function sendPushToUser(userId: string, payload: {
     const subs = await db
       .select()
       .from(pushSubscriptions)
-      .where(eq(pushSubscriptions.userId, userId));
+      .where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.isActive, true)));
 
     for (const sub of subs) {
       if (!sub.endpoint || !sub.p256dhKey || !sub.authKey) continue;

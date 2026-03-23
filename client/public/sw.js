@@ -1,5 +1,5 @@
-// Sanwar PWA Service Worker - v5
-const CACHE_VERSION = 'sanwar-v5';
+// Sanwar PWA Service Worker - v6
+const CACHE_VERSION = 'sanwar-v6';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const API_CACHE = `${CACHE_VERSION}-api`;

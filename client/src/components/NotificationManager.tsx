@@ -221,18 +221,26 @@ export function NotificationManager({ userId }: NotificationManagerProps) {
     },
   });
 
-  // Test notification function
-  const sendTestNotification = () => {
-    if (Notification.permission === 'granted') {
-      new Notification('Sanwar Test Notification', {
-        body: 'This is a test notification from your salon booking app!',
-        icon: '/icon-192x192.png',
-        badge: '/badge-72x72.png',
-        tag: 'test-notification',
-        requireInteraction: false
+  // Test push notification via server (real push through service worker)
+  const testPushMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/notifications/test-push", {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Test Push Sent",
+        description: "A test notification was sent via the server. You should see it shortly.",
       });
-    }
-  };
+    },
+    onError: () => {
+      toast({
+        title: "Test Push Failed",
+        description: "Make sure you have enabled push notifications first.",
+        variant: "destructive",
+      });
+    },
+  });
 
   if (!userId) {
     return (
@@ -284,11 +292,12 @@ export function NotificationManager({ userId }: NotificationManagerProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={sendTestNotification}
+            onClick={() => testPushMutation.mutate()}
+            disabled={testPushMutation.isPending}
             className="flex items-center gap-2"
           >
             <Bell className="h-4 w-4" />
-            Test Notification
+            {testPushMutation.isPending ? "Sending..." : "Test Push"}
           </Button>
         )}
       </div>

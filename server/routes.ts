@@ -112,6 +112,13 @@ function generateTimeSlotsForDate(date: string, openingTime: string, closingTime
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve service worker with no-cache headers so browsers always pick up the latest version
+  app.get('/sw.js', (_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Service-Worker-Allowed', '/');
+    next();
+  });
+
   // Auth middleware
   await setupAuth(app);
   
@@ -1199,21 +1206,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
       const { subscription } = req.body;
-      const subscriptionData = JSON.parse(subscription);
+      const subscriptionData = typeof subscription === 'string' ? JSON.parse(subscription) : subscription;
       
-      // Save push subscription
-      await db.insert(pushSubscriptions).values({
-        userId,
-        endpoint: subscriptionData.endpoint,
-        p256dhKey: subscriptionData.keys.p256dh,
-        authKey: subscriptionData.keys.auth,
-        userAgent: req.headers['user-agent']
-      });
+      const endpoint = subscriptionData.endpoint;
+      const p256dhKey = subscriptionData.keys?.p256dh;
+      const authKey = subscriptionData.keys?.auth;
+
+      if (!endpoint || !p256dhKey || !authKey) {
+        return res.status(400).json({ message: "Invalid subscription data" });
+      }
+
+      // Upsert: check if this endpoint already exists for this user
+      const [existing] = await db.select().from(pushSubscriptions)
+        .where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.endpoint, endpoint)));
+
+      if (existing) {
+        // Reactivate and update keys in case they changed
+        await db.update(pushSubscriptions)
+          .set({ p256dhKey, authKey, isActive: true, userAgent: req.headers['user-agent'] as string })
+          .where(eq(pushSubscriptions.id, existing.id));
+      } else {
+        await db.insert(pushSubscriptions).values({
+          userId,
+          endpoint,
+          p256dhKey,
+          authKey,
+          isActive: true,
+          userAgent: req.headers['user-agent'] as string
+        });
+      }
       
       res.json({ success: true, message: "Push subscription saved" });
     } catch (error) {
       console.error("Error saving push subscription:", error);
       res.status(500).json({ message: "Failed to save push subscription" });
+    }
+  });
+
+  // Test push notification (server sends a real push via webpush)
+  app.post('/api/notifications/test-push', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { sendPushToUser } = await import('./notifications');
+      await sendPushToUser(userId, {
+        title: '🔔 Sanwar Test Push',
+        body: 'Push notifications are working! You\'ll receive booking alerts here.',
+        tag: 'test-push',
+        data: { url: '/notifications' },
+        requireInteraction: false,
+      });
+      res.json({ success: true, message: "Test push sent" });
+    } catch (error) {
+      console.error("Error sending test push:", error);
+      res.status(500).json({ message: "Failed to send test push" });
     }
   });
 
