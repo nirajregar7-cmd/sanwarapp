@@ -2571,25 +2571,14 @@ export default function SalonDetail() {
       {/* Mobile Sticky Book Appointment Button */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-gray-200 p-4 shadow-lg">
         <div className="max-w-md mx-auto">
-          {!isAuthenticated ? (
-            <Button 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
-              onClick={() => navigate(`/auth?redirect=${window.location.pathname}`)}
-              data-testid="button-mobile-login-to-book"
-            >
-              <Crown className="h-4 w-4 mr-2" />
-              Book an Luxury
-            </Button>
-          ) : (
-            <Button 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
-              onClick={() => setBookingDialogOpen(true)}
-              data-testid="button-mobile-book-now"
-            >
-              <Crown className="h-4 w-4 mr-2" />
-              Book an Luxury
-            </Button>
-          )}
+          <Button 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
+            onClick={() => setBookingDialogOpen(true)}
+            data-testid="button-mobile-book-now"
+          >
+            <Crown className="h-4 w-4 mr-2" />
+            Book an Luxury
+          </Button>
         </div>
       </div>
     </div>
