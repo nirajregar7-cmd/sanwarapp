@@ -196,20 +196,14 @@ function Router() {
                 <BrandDashboard />
               </Layout>
             ) : (
-              <Layout>
-                <CustomerHome />
-              </Layout>
+              <FindSalons />
             )}
           </Route>
 
           {/* Dedicated Customer Routes */}
           {(user as any)?.userType === 'customer' && (
             <>
-              <Route path="/customer/home">
-                <Layout>
-                  <CustomerHome />
-                </Layout>
-              </Route>
+              <Route path="/customer/home" component={FindSalons} />
             </>
           )}
 
