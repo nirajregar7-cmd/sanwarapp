@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus, MessageSquare, Package, Crown, Percent, Eye, Camera, Globe } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
+import { MobilePushPrompt } from "./MobilePushPrompt";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -500,6 +501,9 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </footer>
+
+      {/* Mobile push notification prompt — shows for customers who haven't subscribed */}
+      <MobilePushPrompt />
     </div>
   );
 }
