@@ -9,19 +9,38 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+export type DeviceType = 'ios' | 'android' | 'desktop';
+
+export function getDeviceType(): DeviceType {
+  const ua = navigator.userAgent.toLowerCase();
+  if (/ipad|iphone|ipod/.test(ua)) return 'ios';
+  if (/android/.test(ua)) return 'android';
+  return 'desktop';
+}
+
+const DISMISS_KEY = 'pwa-prompt-dismissed-at';
+const REDISPLAY_DAYS = 7;
+
+function wasDismissedRecently(): boolean {
+  const dismissedAt = localStorage.getItem(DISMISS_KEY);
+  if (!dismissedAt) return false;
+  const daysSince = (Date.now() - Number(dismissedAt)) / (1000 * 60 * 60 * 24);
+  return daysSince < REDISPLAY_DAYS;
+}
+
 export function usePWA() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(wasDismissedRecently);
 
   useEffect(() => {
-    // Check if app is already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const isInWebAppiOS = (window.navigator as any).standalone === true;
-    setIsInstalled(isStandalone || isInWebAppiOS);
+    const installed = isStandalone || isInWebAppiOS;
+    setIsInstalled(installed);
 
-    // Always show install option if not already installed
-    if (!isStandalone && !isInWebAppiOS) {
+    if (!installed) {
       setIsInstallable(true);
     }
 
@@ -35,6 +54,7 @@ export function usePWA() {
       setIsInstalled(true);
       setIsInstallable(false);
       setInstallPrompt(null);
+      localStorage.removeItem(DISMISS_KEY);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -46,50 +66,37 @@ export function usePWA() {
     };
   }, []);
 
-  const installApp = async () => {
+  const installApp = async (): Promise<'installed' | 'instructions' | 'dismissed'> => {
     if (installPrompt) {
       try {
         await installPrompt.prompt();
-        const choiceResult = await installPrompt.userChoice;
-        
-        if (choiceResult.outcome === 'accepted') {
+        const { outcome } = await installPrompt.userChoice;
+        if (outcome === 'accepted') {
           setIsInstalled(true);
           setIsInstallable(false);
           setInstallPrompt(null);
-          return true;
+          return 'installed';
         }
-        return false;
-      } catch (error) {
-        console.error('Error installing app:', error);
-        return false;
+        return 'dismissed';
+      } catch {
+        return 'instructions';
       }
-    } else {
-      // Fallback for browsers that don't support beforeinstallprompt
-      showInstallInstructions();
-      return false;
     }
+    return 'instructions';
   };
 
-  const showInstallInstructions = () => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
-    
-    let instructions = '';
-    
-    if (isIOS) {
-      instructions = 'To install: Tap the Share button and select "Add to Home Screen"';
-    } else if (isAndroid) {
-      instructions = 'To install: Tap the menu (⋮) and select "Install app" or "Add to Home screen"';
-    } else {
-      instructions = 'To install: Look for the install icon in your browser address bar, or use browser menu → "Install Sanwar"';
-    }
-    
-    alert(instructions);
+  const dismiss = () => {
+    setIsDismissed(true);
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
   };
 
   return {
     isInstallable,
     isInstalled,
-    installApp
+    isDismissed,
+    installPrompt,
+    installApp,
+    dismiss,
+    deviceType: getDeviceType(),
   };
 }
