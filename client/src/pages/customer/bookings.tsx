@@ -71,7 +71,7 @@ export default function CustomerBookings() {
           servicesList: sorted.map((b) => b.service?.name || "Service"),
           servicesCount: sorted.length,
           totalGroupAmount: sorted.reduce(
-            (sum, b) => sum + (b.totalAmount || 0),
+            (sum, b) => sum + parseFloat(b.totalAmount?.toString() || '0'),
             0
           ),
           allBookingIds: sorted.map((b) => b.id),
@@ -454,7 +454,10 @@ export default function CustomerBookings() {
                   <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                     <div>
                       <span className="text-lg font-bold text-purple-700">
-                        ₹{(booking as any).totalGroupAmount || booking.totalAmount || 0}
+                        ₹{((booking as any).totalGroupAmount > 0
+                          ? (booking as any).totalGroupAmount
+                          : parseFloat(booking.totalAmount?.toString() || '0')
+                        ).toFixed(2)}
                       </span>
                       {(booking as any).servicesCount > 1 && (
                         <span className="text-xs text-gray-400 ml-1">

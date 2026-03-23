@@ -111,7 +111,7 @@ function BookingCard({
         </div>
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Amount</p>
-          <p className="font-medium text-gray-800">₹{booking.totalGroupAmount || booking.totalAmount}</p>
+          <p className="font-medium text-gray-800">₹{((booking.totalGroupAmount > 0 ? booking.totalGroupAmount : parseFloat(booking.totalAmount?.toString() || '0'))).toFixed(2)}</p>
         </div>
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Payment</p>
@@ -541,7 +541,7 @@ export default function OwnerDashboard() {
           ...primaryBooking,
           servicesList: sortedGroup.map(b => b.service?.name || 'Service'),
           servicesCount: sortedGroup.length,
-          totalGroupAmount: sortedGroup.reduce((sum, b) => sum + (b.totalAmount || 0), 0),
+          totalGroupAmount: sortedGroup.reduce((sum, b) => sum + parseFloat(b.totalAmount?.toString() || '0'), 0),
           allBookingIds: sortedGroup.map(b => b.id),
           groupStatus: getGroupStatus(sortedGroup)
         } as GroupedBooking;
@@ -2013,7 +2013,7 @@ export default function OwnerDashboard() {
                           </div>
                           <div className="text-right ml-4">
                             <p className="text-lg font-semibold text-green-600">
-                              ₹{booking.totalAmount}
+                              ₹{parseFloat(booking.totalAmount?.toString() || '0').toFixed(2)}
                             </p>
                             <p className="text-xs text-gray-500">
                               {booking.paymentStatus === 'completed' ? 'Paid' : 'Pending'}
