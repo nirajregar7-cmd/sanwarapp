@@ -39,14 +39,20 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center space-x-6">
               <Link href="/">
-                <div className="flex items-center cursor-pointer group">
+                <div className="flex items-center space-x-2 cursor-pointer group">
                   <div className="relative">
                     <img 
                       src={sanwarLogo} 
                       alt="Sanwar" 
-                      className="h-12 w-12 sm:h-14 sm:w-14 object-contain transform group-hover:scale-110 transition-all duration-300"
+                      className="h-14 w-14 sm:h-16 sm:w-16 object-contain transform group-hover:scale-110 transition-all duration-300"
                     />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                    <div className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div>
+                    <span className="text-xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:via-pink-600 group-hover:to-blue-700 transition-all duration-300">
+                      Sanwar
+                    </span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium -mt-1">Smart Salon Booking</p>
                   </div>
                 </div>
               </Link>

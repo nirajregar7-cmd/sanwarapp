@@ -64,9 +64,9 @@ export default function Services() {
                 <img
                   src={sanwarLogo}
                   alt="Sanwar"
-                  className="w-14 h-14 object-contain transform group-hover:scale-110 transition-all duration-300"
+                  className="w-16 h-16 object-contain transform group-hover:scale-110 transition-all duration-300"
                 />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
               </div>
               <div>
                 <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:via-pink-600 group-hover:to-blue-700 transition-all duration-300">
