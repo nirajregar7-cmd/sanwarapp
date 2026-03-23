@@ -1,6 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,10 +7,25 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, Clock, MapPin, Star, Heart, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Star,
+  Heart,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  User,
+  ChevronRight,
+  Scissors,
+  RotateCcw,
+  Phone,
+} from "lucide-react";
 import type { BookingWithDetails } from "@shared/schema";
+import { useLocation } from "wouter";
+import { Link } from "wouter";
 
-// Extended type for grouped bookings
 interface GroupedBooking extends BookingWithDetails {
   servicesList: string[];
   servicesCount: number;
@@ -19,65 +33,49 @@ interface GroupedBooking extends BookingWithDetails {
   allBookingIds: string[];
   groupStatus: string;
 }
-import { useLocation } from "wouter";
-import { Link } from "wouter";
 
 export default function CustomerBookings() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
 
-  // Group bookings by appointment (same customer, date, time) for multiple services
   const groupBookingsByAppointment = (bookings: BookingWithDetails[]): GroupedBooking[] => {
     const groups = new Map<string, BookingWithDetails[]>();
-    
-    bookings.forEach(booking => {
+    bookings.forEach((booking) => {
       const key = `${booking.date}-${booking.startTime}-${booking.endTime}-${booking.salonId}`;
-      
-      if (!groups.has(key)) {
-        groups.set(key, []);
-      }
+      if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(booking);
     });
-    
-    // Helper function to aggregate status
+
     const getGroupStatus = (group: BookingWithDetails[]): string => {
-      const statuses = group.map(b => b.status);
-      const uniqueStatuses = [...new Set(statuses)];
-      
-      if (uniqueStatuses.length === 1) {
-        return uniqueStatuses[0] || 'unknown';
-      }
-      
-      // Mixed statuses - prioritize based on importance
-      if (statuses.includes('cancelled')) {
-        return 'partially cancelled';
-      }
-      if (statuses.includes('pending')) {
-        return 'pending';
-      }
-      if (statuses.includes('confirmed')) {
-        return 'confirmed';
-      }
-      return 'mixed status';
+      const statuses = group.map((b) => b.status);
+      const unique = [...new Set(statuses)];
+      if (unique.length === 1) return unique[0] || "unknown";
+      if (statuses.includes("cancelled")) return "partially cancelled";
+      if (statuses.includes("pending")) return "pending";
+      if (statuses.includes("confirmed")) return "confirmed";
+      return "mixed status";
     };
-    
-    // Convert groups to array and sort by date/time
+
     return Array.from(groups.values())
-      .map(group => {
-        // Sort services within group and return the primary booking with services list
-        const sortedGroup = group.sort((a, b) => 
-          new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+      .map((group) => {
+        const sorted = group.sort(
+          (a, b) =>
+            new Date(a.createdAt || 0).getTime() -
+            new Date(b.createdAt || 0).getTime()
         );
-        const primaryBooking = sortedGroup[0];
-        
+        const primary = sorted[0];
         return {
-          ...primaryBooking,
-          servicesList: sortedGroup.map(b => b.service?.name || 'Service'),
-          servicesCount: sortedGroup.length,
-          totalGroupAmount: sortedGroup.reduce((sum, b) => sum + (b.totalAmount || 0), 0),
-          allBookingIds: sortedGroup.map(b => b.id),
-          groupStatus: getGroupStatus(sortedGroup)
+          ...primary,
+          servicesList: sorted.map((b) => b.service?.name || "Service"),
+          servicesCount: sorted.length,
+          totalGroupAmount: sorted.reduce(
+            (sum, b) => sum + (b.totalAmount || 0),
+            0
+          ),
+          allBookingIds: sorted.map((b) => b.id),
+          groupStatus: getGroupStatus(sorted),
         } as GroupedBooking;
       })
       .sort((a, b) => {
@@ -92,429 +90,489 @@ export default function CustomerBookings() {
     retry: false,
   });
 
-  // Group the bookings for display
   const bookings = rawBookings ? groupBookingsByAppointment(rawBookings) : [];
 
-  // Fetch liked salons for the customer
-  const { data: likedSalons, isLoading: likedSalonsLoading } = useQuery<any[]>({
-    queryKey: ["/api/customer/liked-salons"],
-    enabled: !!isAuthenticated,
-    retry: false,
-  });
-
-  // Move the cancelBookingMutation hook here, before any early returns
   const cancelBookingMutation = useMutation({
-    mutationFn: async (bookingId: string) => {
-      return await apiRequest("PATCH", `/api/customer/bookings/${bookingId}/cancel`, {});
-    },
+    mutationFn: async (bookingId: string) =>
+      await apiRequest("PATCH", `/api/customer/bookings/${bookingId}/cancel`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/my"] });
-      toast({ title: "Booking cancelled", description: "Your booking has been cancelled successfully" });
+      toast({ title: "Booking cancelled", description: "Your booking has been cancelled." });
     },
-    onError: (error: any) => {
-      toast({ title: "Cancellation failed", description: error.message || "Failed to cancel booking", variant: "destructive" });
+    onError: (err: any) => {
+      toast({ title: "Cancellation failed", description: err.message, variant: "destructive" });
     },
   });
 
-  // Respond to owner's suggested time
   const respondSuggestionMutation = useMutation({
-    mutationFn: async ({ bookingId, action }: { bookingId: string; action: "accept" | "decline" }) => {
-      return await apiRequest("PATCH", `/api/bookings/${bookingId}/respond`, { action });
-    },
+    mutationFn: async ({ bookingId, action }: { bookingId: string; action: "accept" | "decline" }) =>
+      await apiRequest("PATCH", `/api/bookings/${bookingId}/respond`, { action }),
     onSuccess: (_, { action }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/my"] });
       toast({
         title: action === "accept" ? "Time accepted!" : "Booking declined",
-        description: action === "accept" ? "Your appointment has been confirmed with the new time." : "The booking has been cancelled.",
+        description:
+          action === "accept"
+            ? "Your appointment is confirmed with the new time."
+            : "The booking has been cancelled.",
       });
     },
-    onError: (error: any) => {
-      toast({ title: "Failed to respond", description: error.message, variant: "destructive" });
+    onError: (err: any) => {
+      toast({ title: "Failed to respond", description: err.message, variant: "destructive" });
     },
   });
 
-  // Handle unauthorized errors
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
+      toast({ title: "Please log in", description: "Redirecting to login...", variant: "destructive" });
+      setTimeout(() => { window.location.href = "/auth"; }, 500);
     }
   }, [isAuthenticated, authLoading, toast]);
 
   useEffect(() => {
     if (error && isUnauthorizedError(error as Error)) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
+      setTimeout(() => { window.location.href = "/auth"; }, 500);
+    }
+  }, [error]);
+
+  const isUpcomingBooking = (date: string, time: string) =>
+    new Date(`${date} ${time}`) > new Date();
+
+  const upcomingBookings = bookings.filter(
+    (b) =>
+      isUpcomingBooking(b.date || "", b.startTime || "") &&
+      b.groupStatus !== "cancelled" &&
+      b.groupStatus !== "completed"
+  );
+
+  const pastBookings = bookings.filter(
+    (b) =>
+      !isUpcomingBooking(b.date || "", b.startTime || "") ||
+      b.groupStatus === "cancelled" ||
+      b.groupStatus === "completed"
+  );
+
+  const displayed = activeTab === "upcoming" ? upcomingBookings : pastBookings;
+
+  const handleReschedule = (booking: BookingWithDetails) =>
+    setLocation(`/salon/${booking.salonId}?reschedule=${booking.id}`);
+
+  const handleCancel = (booking: BookingWithDetails) => {
+    const dt = new Date(`${booking.date} ${booking.startTime}`);
+    if (booking.status === "completed" || booking.status === "cancelled") {
+      toast({ title: "Cannot cancel", description: `Already ${booking.status}`, variant: "destructive" });
       return;
     }
-  }, [error, toast]);
+    if (dt <= new Date()) {
+      toast({ title: "Cannot cancel", description: "Cannot cancel past bookings", variant: "destructive" });
+      return;
+    }
+    if (confirm("Are you sure you want to cancel this booking?")) {
+      cancelBookingMutation.mutate(booking.id);
+    }
+  };
 
+  const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string }> = {
+    confirmed: { label: "Confirmed", bg: "bg-emerald-100", text: "text-emerald-700", dot: "bg-emerald-500" },
+    pending: { label: "Pending", bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
+    completed: { label: "Completed", bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" },
+    cancelled: { label: "Cancelled", bg: "bg-red-100", text: "text-red-600", dot: "bg-red-400" },
+    owner_suggested: { label: "New Time", bg: "bg-orange-100", text: "text-orange-700", dot: "bg-orange-500" },
+    "partially cancelled": { label: "Partial", bg: "bg-red-50", text: "text-red-500", dot: "bg-red-300" },
+  };
+
+  const getStatusConf = (status: string) =>
+    STATUS_CONFIG[status] || { label: status, bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" };
+
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("en-IN", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+  // Loading state
   if (authLoading || isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="mb-6 sm:mb-8">
-          <Skeleton className="h-6 sm:h-8 w-32 sm:w-48 mb-2" />
-          <Skeleton className="h-3 sm:h-4 w-48 sm:w-64" />
+      <div className="min-h-screen bg-gray-50 pb-20">
+        <div className="bg-gradient-to-br from-purple-700 via-purple-600 to-pink-600 px-4 pt-6 pb-16">
+          <Skeleton className="h-7 w-40 mb-2 bg-white/20" />
+          <Skeleton className="h-4 w-56 bg-white/10" />
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {[1, 2].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="space-y-2">
-                    <Skeleton className="h-5 w-32" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                  <Skeleton className="h-6 w-16" />
-                </div>
-                <div className="space-y-2 mb-4">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-8 w-20" />
-                </div>
-              </CardContent>
-            </Card>
+        <div className="px-4 -mt-8 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm animate-pulse">
+              <div className="flex justify-between mb-3">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-5 w-20" />
+              </div>
+              <Skeleton className="h-4 w-32 mb-4" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
           ))}
         </div>
       </div>
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "confirmed": return "bg-accent text-white";
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      case "completed": return "bg-gray-100 text-gray-700";
-      case "cancelled": return "bg-red-100 text-red-700";
-      case "owner_suggested": return "bg-orange-100 text-orange-800";
-      default: return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "confirmed": return "Confirmed";
-      case "pending": return "⏳ Awaiting Confirmation";
-      case "completed": return "Completed";
-      case "cancelled": return "Cancelled";
-      case "owner_suggested": return "⏰ New Time Suggested";
-      default: return status;
-    }
-  };
-
-  const isUpcoming = (date: string, time: string) => {
-    const bookingDateTime = new Date(`${date} ${time}`);
-    return bookingDateTime > new Date();
-  };
-
-  const handleReschedule = (booking: BookingWithDetails) => {
-    // Navigate to salon detail page with booking data for rescheduling
-    setLocation(`/salon/${booking.salonId}?reschedule=${booking.id}`);
-  };
-
-  const handleCancel = (booking: BookingWithDetails) => {
-    // Check if booking can be cancelled
-    const bookingDateTime = new Date(`${booking.date} ${booking.startTime}`);
-    const now = new Date();
-    
-    if (booking.status === 'completed' || booking.status === 'cancelled') {
-      toast({
-        title: "Cannot cancel",
-        description: `This booking is already ${booking.status}`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (bookingDateTime <= now) {
-      toast({
-        title: "Cannot cancel",
-        description: "Cannot cancel past bookings",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (confirm("Are you sure you want to cancel this booking?")) {
-      cancelBookingMutation.mutate(booking.id);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Bookings</h1>
-          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">Manage your salon appointments</p>
-        </div>
+    <div className="min-h-screen bg-gray-50 pb-24">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-purple-700 via-purple-600 to-pink-600 px-4 pt-6 pb-16">
+        <h1 className="text-white text-xl font-bold mb-1">My Bookings</h1>
+        <p className="text-purple-200 text-sm">
+          {bookings.length} total appointment{bookings.length !== 1 ? "s" : ""}
+        </p>
+      </div>
 
-      {bookings && bookings.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {bookings.map((booking: BookingWithDetails) => (
-            <Card 
-              key={booking.id} 
-              className={`dark:bg-gray-800 dark:border-gray-700 ${isUpcoming(booking.date || '', booking.startTime || '') ? 'border-l-4 border-l-accent' : ''}`}
+      {/* Tab bar */}
+      <div className="px-4 -mt-7">
+        <div className="bg-white rounded-2xl shadow-md flex p-1 gap-1">
+          <button
+            onClick={() => setActiveTab("upcoming")}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === "upcoming"
+                ? "bg-purple-600 text-white shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Upcoming
+            {upcomingBookings.length > 0 && (
+              <span
+                className={`ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full text-xs ${
+                  activeTab === "upcoming" ? "bg-white/30 text-white" : "bg-purple-100 text-purple-700"
+                }`}
+              >
+                {upcomingBookings.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("past")}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === "past"
+                ? "bg-purple-600 text-white shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Past
+            {pastBookings.length > 0 && (
+              <span
+                className={`ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full text-xs ${
+                  activeTab === "past" ? "bg-white/30 text-white" : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {pastBookings.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Booking cards */}
+      <div className="px-4 mt-4 space-y-3">
+        {displayed.length === 0 ? (
+          <div className="bg-white rounded-2xl p-8 text-center shadow-sm mt-4">
+            <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="h-8 w-8 text-purple-300" />
+            </div>
+            <h3 className="text-gray-800 font-semibold mb-1">
+              {activeTab === "upcoming" ? "No upcoming bookings" : "No past bookings"}
+            </h3>
+            <p className="text-gray-500 text-sm mb-5">
+              {activeTab === "upcoming"
+                ? "Book a salon appointment to see it here."
+                : "Your completed and cancelled appointments will appear here."}
+            </p>
+            <Button
+              className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl"
+              onClick={() => setLocation("/")}
             >
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 space-y-2 sm:space-y-0">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
-                      {booking.servicesList ? 
-                        booking.servicesList.join(', ') + 
-                        (booking.servicesCount > 1 ? ` (${booking.servicesCount} services)` : '') :
-                        (booking.service?.name || 'Salon Service')
-                      } #{booking.id.slice(-6)}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">
-                      {booking.salon?.name || 'Salon Booking'}
-                    </p>
-                  </div>
-                  <Badge className={`${getStatusColor(booking.groupStatus || booking.status || '')} flex-shrink-0 self-start`}>
-                    {getStatusText(booking.groupStatus || booking.status || '')}
-                  </Badge>
-                </div>
-                
-                {/* Pending awaiting confirmation banner */}
-                {(booking as any).status === "pending" && (
-                  <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-center gap-2 text-sm text-yellow-800">
-                    <Clock className="h-4 w-4 flex-shrink-0 text-yellow-600" />
-                    <span>Your booking request has been sent. Waiting for the salon to confirm your appointment.</span>
-                  </div>
+              <Scissors className="h-4 w-4 mr-2" />
+              Find Salons
+            </Button>
+          </div>
+        ) : (
+          displayed.map((booking) => {
+            const sc = getStatusConf(booking.groupStatus || booking.status || "");
+            const upcoming = isUpcomingBooking(booking.date || "", booking.startTime || "");
+            const isOwnerSuggested = booking.status === "owner_suggested";
+            const isPending = booking.groupStatus === "pending";
+
+            return (
+              <div
+                key={booking.id}
+                className={`bg-white rounded-2xl shadow-sm border overflow-hidden ${
+                  upcoming && !["cancelled", "completed"].includes(booking.groupStatus)
+                    ? "border-purple-100"
+                    : "border-gray-100"
+                }`}
+              >
+                {/* Top accent strip for upcoming */}
+                {upcoming && !["cancelled", "completed"].includes(booking.groupStatus) && (
+                  <div className="h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
                 )}
 
-                {/* Owner suggested time banner */}
-                {(booking as any).status === "owner_suggested" && (booking as any).suggestedDate && (
-                  <div className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-semibold text-orange-800 text-sm mb-1">Salon suggested a new time</p>
-                        <div className="flex flex-wrap gap-3 text-sm text-orange-700 mb-2">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {new Date((booking as any).suggestedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                <div className="p-4">
+                  {/* Header row */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0 pr-2">
+                      <h3 className="font-bold text-gray-900 text-sm leading-tight">
+                        {(booking as any).servicesList?.join(" + ") ||
+                          booking.service?.name ||
+                          "Salon Service"}
+                      </h3>
+                      <p className="text-xs text-gray-500 mt-0.5 font-medium">
+                        {booking.salon?.name}
+                        <span className="text-gray-300 mx-1">·</span>
+                        <span className="text-gray-400">#{booking.id.slice(-6).toUpperCase()}</span>
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold flex-shrink-0 ${sc.bg} ${sc.text}`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
+                      {sc.label}
+                    </span>
+                  </div>
+
+                  {/* Pending info banner */}
+                  {isPending && (
+                    <div className="mb-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-start gap-2">
+                      <Clock className="h-3.5 w-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-700">
+                        Waiting for the salon to confirm your appointment.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Owner suggested time */}
+                  {isOwnerSuggested && (booking as any).suggestedDate && (
+                    <div className="mb-3 bg-orange-50 border border-orange-200 rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertCircle className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                        <p className="text-xs font-semibold text-orange-800">
+                          Salon suggested a new time
+                        </p>
+                      </div>
+                      <div className="flex gap-3 text-xs text-orange-700 mb-2 ml-6">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date((booking as any).suggestedDate).toLocaleDateString("en-IN", {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {(booking as any).suggestedTime}
+                        </span>
+                      </div>
+                      {(booking as any).ownerNote && (
+                        <p className="text-xs text-orange-600 italic ml-6 mb-2">
+                          "{(booking as any).ownerNote}"
+                        </p>
+                      )}
+                      <div className="flex gap-2 ml-6">
+                        <Button
+                          size="sm"
+                          className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg"
+                          onClick={() =>
+                            respondSuggestionMutation.mutate({ bookingId: booking.id, action: "accept" })
+                          }
+                          disabled={respondSuggestionMutation.isPending}
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" /> Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 border-red-300 text-red-600 hover:bg-red-50 text-xs rounded-lg"
+                          onClick={() =>
+                            respondSuggestionMutation.mutate({ bookingId: booking.id, action: "decline" })
+                          }
+                          disabled={respondSuggestionMutation.isPending}
+                        >
+                          <XCircle className="h-3 w-3 mr-1" /> Decline
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info rows */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <div className="w-6 h-6 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Calendar className="h-3.5 w-3.5 text-purple-500" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-800">{formatDate(booking.date || "")}</span>
+                        {booking.createdAt && (
+                          <span className="text-gray-400 ml-2">
+                            · Booked{" "}
+                            {new Date(booking.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                            })}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {(booking as any).suggestedTime}
-                          </span>
-                        </div>
-                        {(booking as any).ownerNote && (
-                          <p className="text-xs text-orange-600 italic mb-3">"{(booking as any).ownerNote}"</p>
                         )}
-                        <div className="flex gap-2">
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <div className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Clock className="h-3.5 w-3.5 text-blue-500" />
+                      </div>
+                      <span className="font-medium text-gray-800">
+                        {booking.startTime} – {booking.endTime}
+                      </span>
+                    </div>
+
+                    {booking.staff?.name && (
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <div className="w-6 h-6 bg-pink-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <User className="h-3.5 w-3.5 text-pink-500" />
+                        </div>
+                        <span className="font-medium text-gray-800">{booking.staff.name}</span>
+                      </div>
+                    )}
+
+                    {booking.salon?.address && (
+                      <div className="flex items-start gap-2 text-xs text-gray-600">
+                        <div className="w-6 h-6 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <MapPin className="h-3.5 w-3.5 text-green-500" />
+                        </div>
+                        <span className="text-gray-600 leading-snug">{booking.salon.address}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer: price + actions */}
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                    <div>
+                      <span className="text-lg font-bold text-purple-700">
+                        ₹{(booking as any).totalGroupAmount || booking.totalAmount || 0}
+                      </span>
+                      {(booking as any).servicesCount > 1 && (
+                        <span className="text-xs text-gray-400 ml-1">
+                          ({(booking as any).servicesCount} services)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      {booking.groupStatus === "completed" ? (
+                        <Link href={`/salon/${booking.salonId}?review=true`}>
                           <Button
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => respondSuggestionMutation.mutate({ bookingId: booking.id, action: "accept" })}
-                            disabled={respondSuggestionMutation.isPending}
+                            variant="outline"
+                            className="h-8 text-xs rounded-xl border-purple-200 text-purple-700 hover:bg-purple-50"
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Accept
+                            <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+                            Review
+                          </Button>
+                        </Link>
+                      ) : (booking.groupStatus === "confirmed" ||
+                          booking.groupStatus === "pending") &&
+                        upcoming ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs rounded-xl border-gray-200 text-gray-600"
+                            onClick={() => handleReschedule(booking)}
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Reschedule
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-red-300 text-red-600 hover:bg-red-50"
-                            onClick={() => respondSuggestionMutation.mutate({ bookingId: booking.id, action: "decline" })}
-                            disabled={respondSuggestionMutation.isPending}
+                            className="h-8 text-xs rounded-xl border-red-200 text-red-600 hover:bg-red-50"
+                            onClick={() => handleCancel(booking)}
+                            disabled={cancelBookingMutation.isPending}
                           >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Decline
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Cancel
                           </Button>
-                        </div>
-                      </div>
+                        </>
+                      ) : null}
                     </div>
                   </div>
-                )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
 
-                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
-                    <div className="flex flex-col">
-                      <span className="font-medium">
-                        Appointment: {new Date(booking.date).toLocaleDateString('en-US', { 
-                          weekday: 'short',
-                          month: 'short', 
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        Booked on: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric',
-                          year: 'numeric'
-                        }) : 'Unknown'} {booking.createdAt ? 'at ' + new Date(booking.createdAt).toLocaleTimeString('en-US', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        }) : ''}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 text-gray-400 mr-2" />
-                    <span className="font-medium">{booking.startTime} - {booking.endTime}</span>
-                  </div>
-                  {booking.staff?.name && (
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 text-gray-400 mr-2" />
-                      <span>Staff: {booking.staff.name}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 text-gray-400 mr-2" />
-                    <span>{booking.salon?.address || 'Salon Location'}</span>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
-                  <span className="font-semibold text-primary text-lg">₹{booking.totalGroupAmount || booking.totalAmount}</span>
-                  <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
-                    {booking.status === "completed" ? (
-                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                        <Star className="h-4 w-4 mr-1" />
-                        Rate & Review
-                      </Button>
-                    ) : (booking.status === "confirmed" || booking.status === "pending") ? (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full sm:w-auto"
-                          onClick={() => handleReschedule(booking)}
-                        >
-                          Reschedule
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full sm:w-auto text-red-600 hover:text-red-700"
-                          onClick={() => handleCancel(booking)}
-                        >
-                          Cancel
-                        </Button>
-                      </>
-                    ) : null}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Liked Salons */}
+      <LikedSalons />
+    </div>
+  );
+}
+
+function LikedSalons() {
+  const [, setLocation] = useLocation();
+  const { isAuthenticated } = useAuth();
+  const { data: likedSalons, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/customer/liked-salons"],
+    enabled: !!isAuthenticated,
+    retry: false,
+  });
+
+  if (!likedSalons?.length && !isLoading) return null;
+
+  return (
+    <div className="px-4 mt-6">
+      <h2 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+        <Heart className="h-4 w-4 text-red-500 fill-red-400" />
+        Liked Salons
+      </h2>
+      {isLoading ? (
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="w-36 flex-shrink-0 bg-white rounded-2xl h-44 animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Calendar className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No bookings yet</h3>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">You haven't made any salon appointments yet.</p>
-          <Button asChild>
-            <a href="/">Find Salons</a>
-          </Button>
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {likedSalons!.map((salon: any) => (
+            <Link key={salon.id} href={`/salon/${salon.id}`}>
+              <div className="w-36 flex-shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden active:scale-95 transition-transform">
+                <div className="h-24 bg-gradient-to-br from-purple-100 to-pink-100">
+                  {salon.imageUrl ? (
+                    <img
+                      src={salon.imageUrl}
+                      alt={salon.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Scissors className="h-8 w-8 text-purple-300" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-2.5">
+                  <p className="font-semibold text-xs text-gray-900 truncate">{salon.name}</p>
+                  <p className="text-[10px] text-gray-500 truncate mt-0.5">{salon.address}</p>
+                  {salon.averageRating > 0 && (
+                    <div className="flex items-center gap-0.5 mt-1">
+                      <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                      <span className="text-[10px] font-semibold text-gray-600">
+                        {salon.averageRating.toFixed(1)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       )}
-
-      {/* Liked Salons Section */}
-      <div className="mt-8 sm:mt-12">
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-              <Heart className="h-5 w-5 text-red-500 mr-2" />
-              Liked Salons
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {likedSalonsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="space-y-3">
-                    <Skeleton className="h-32 w-full rounded-lg" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
-                ))}
-              </div>
-            ) : likedSalons && likedSalons.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {likedSalons.map((salon: any) => (
-                  <Link key={salon.id} href={`/salon/${salon.id}`}>
-                    <div className="group cursor-pointer bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                      <div className="relative h-32 bg-gray-100">
-                        {salon.imageUrl ? (
-                          <img
-                            src={salon.imageUrl}
-                            alt={salon.name || 'Salon image'}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center">
-                            <span className="text-accent text-lg font-semibold">
-                              {salon.name?.charAt(0) || 'S'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">{salon.name || 'Unknown Salon'}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 truncate mb-2">{salon.address || 'Address not available'}</p>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            {salon.averageRating > 0 && (
-                              <>
-                                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">
-                                  {salon.averageRating.toFixed(1)}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Heart className="h-3 w-3 text-red-500 mr-1" />
-                            <span>{salon.likesCount || 0}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-3">
-                  <Heart className="h-6 w-6 text-gray-400 dark:text-gray-500" />
-                </div>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1">No liked salons yet</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  Start exploring and save your favorite salons
-                </p>
-                <Button variant="outline" size="sm" onClick={() => setLocation("/")}>
-                  Discover Salons
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Users, Target, Award, Heart, Menu, X, Scissors, ChevronRight } from "lucide-react";
+import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -18,9 +19,11 @@ export default function About() {
             {/* Logo and Brand */}
             <Link href="/" className="flex items-center space-x-3 group cursor-pointer" data-testid="link-logo">
               <div className="relative">
-                <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600 text-white rounded-xl w-12 h-12 flex items-center justify-center font-bold text-xl shadow-lg transform group-hover:scale-110 transition-all duration-300 group-hover:rotate-6">
-                  <Scissors className="h-6 w-6" />
-                </div>
+                <img
+                  src={sanwarLogo}
+                  alt="Sanwar"
+                  className="w-12 h-12 rounded-xl object-cover shadow-md transform group-hover:scale-110 transition-all duration-300"
+                />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
               </div>
               <div>
