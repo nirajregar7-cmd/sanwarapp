@@ -39,12 +39,15 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center space-x-6">
               <Link href="/">
-                <div className="flex items-center cursor-pointer">
-                  <img 
-                    src={sanwarLogo} 
-                    alt="Sanwar" 
-                    className="h-9 w-9 sm:h-11 sm:w-11 object-contain"
-                  />
+                <div className="flex items-center cursor-pointer group">
+                  <div className="relative">
+                    <img 
+                      src={sanwarLogo} 
+                      alt="Sanwar" 
+                      className="h-12 w-12 sm:h-14 sm:w-14 object-contain transform group-hover:scale-110 transition-all duration-300"
+                    />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
                 </div>
               </Link>
               
