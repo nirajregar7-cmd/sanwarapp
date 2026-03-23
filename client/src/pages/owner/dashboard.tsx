@@ -49,7 +49,7 @@ function BookingCard({
   completeBooking: (id: string) => void;
   confirmBooking: (id: string) => void;
   suggestTime: (id: string, date: string, time: string, note: string) => void;
-  updateBookingStatusMutation: { isPending: boolean };
+  updateBookingStatusMutation: { isPending: boolean; mutate: (args: { bookingId: string; status: string }) => void };
 }) {
   const [showSuggest, setShowSuggest] = useState(false);
   const [suggestDate, setSuggestDate] = useState(booking.date || "");
@@ -58,168 +58,172 @@ function BookingCard({
 
   return (
     <div className="flex flex-col p-4 border rounded-lg hover:shadow-md transition-shadow gap-3">
-      <div className="flex items-start space-x-4">
+      {/* Header row: avatar + name + status badge */}
+      <div className="flex items-center gap-3">
         <div className="flex-shrink-0">
           {booking.isWalkIn ? (
-            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-              <User className="h-6 w-6 text-gray-500" />
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <User className="h-5 w-5 text-gray-500" />
             </div>
           ) : (
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="h-6 w-6 text-primary" />
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <User className="h-5 w-5 text-primary" />
             </div>
           )}
         </div>
-        
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <p className="font-medium text-gray-900">
-                {booking.isWalkIn 
-                  ? booking.walkInCustomerName 
-                  : booking.customer?.name || 'Customer'
-                }
-              </p>
-              <p className="text-sm text-gray-500">Booking #{booking.id.slice(0, 8)}</p>
-            </div>
-            <Badge 
-              variant={
-                booking.groupStatus === 'confirmed' ? 'default' :
-                booking.groupStatus === 'completed' ? 'secondary' :
-                booking.groupStatus === 'owner_suggested' ? 'outline' :
-                booking.groupStatus.includes('cancelled') ? 'destructive' : 'outline'
-              }
-              className={booking.groupStatus === 'owner_suggested' ? 'border-orange-400 text-orange-600' : ''}
-            >
-              {booking.groupStatus === 'owner_suggested' ? '⏰ Time Suggested' : booking.groupStatus}
-            </Badge>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm text-gray-600">
-            <div>
-              <span className="font-medium">Service{booking.servicesCount > 1 ? 's' : ''}:</span>{' '}
-              {booking.servicesList ? 
-                booking.servicesList.join(', ') + 
-                (booking.servicesCount > 1 ? ` (${booking.servicesCount} services)` : '') :
-                (booking.service?.name || 'Service')
-              }
-            </div>
-            <div>
-              <span className="font-medium">Appointment:</span> {booking.date}
-              <div className="text-xs text-gray-500 mt-0.5">
-                Booked: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Unknown'}
-              </div>
-            </div>
-            <div><span className="font-medium">Time:</span> {booking.startTime} - {booking.endTime}</div>
-            <div><span className="font-medium">Amount:</span> ₹{booking.totalGroupAmount || booking.totalAmount}</div>
-            <div>
-              <span className="font-medium">Payment:</span>
-              <Badge variant="outline" className="ml-1">{booking.paymentStatus || 'Pending'}</Badge>
-            </div>
-            <div>
-              <span className="font-medium">Stylist:</span>{' '}
-              {booking.staff?.name ? (
-                <span className="text-blue-600 font-medium">{booking.staff.name}</span>
-              ) : (
-                <span className="text-gray-400 italic">Any available</span>
-              )}
-            </div>
-          </div>
-          {(booking.isWalkIn ? booking.walkInCustomerPhone : booking.customer?.phone) && (
-            <p className="text-sm text-gray-500 mt-1">
-              Phone: {booking.isWalkIn ? booking.walkInCustomerPhone : booking.customer?.phone}
-            </p>
-          )}
-          {/* Show customer's response to suggestion */}
-          {(booking as any).suggestedDate && (
-            <div className="mt-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 text-sm text-orange-800">
-              ⏰ You suggested: <strong>{(booking as any).suggestedDate}</strong> at <strong>{(booking as any).suggestedTime}</strong>
-              {(booking as any).ownerNote && <span className="block text-xs mt-0.5">Note: {(booking as any).ownerNote}</span>}
-              <span className="block text-xs text-orange-500 mt-0.5">Waiting for customer to accept or decline</span>
-            </div>
-          )}
+          <p className="font-semibold text-gray-900 truncate">
+            {booking.isWalkIn ? booking.walkInCustomerName : booking.customer?.name || 'Customer'}
+          </p>
+          <p className="text-xs text-gray-400">Booking #{booking.id.slice(0, 8)}</p>
         </div>
+        <Badge
+          variant={
+            booking.groupStatus === 'confirmed' ? 'default' :
+            booking.groupStatus === 'completed' ? 'secondary' :
+            booking.groupStatus === 'owner_suggested' ? 'outline' :
+            booking.groupStatus.includes('cancelled') ? 'destructive' : 'outline'
+          }
+          className={`flex-shrink-0 text-xs ${booking.groupStatus === 'owner_suggested' ? 'border-orange-400 text-orange-600' : booking.groupStatus === 'pending' ? 'border-yellow-400 text-yellow-700 bg-yellow-50' : ''}`}
+        >
+          {booking.groupStatus === 'owner_suggested' ? '⏰ Suggested' : booking.groupStatus === 'pending' ? '⏳ Pending' : booking.groupStatus}
+        </Badge>
+      </div>
 
-        <div className="flex flex-col gap-2 ml-2 min-w-[120px]">
-          {booking.status === 'pending' && (
-            <>
-              <Button 
-                size="sm" 
-                className="bg-green-600 hover:bg-green-700 text-white w-full"
-                onClick={() => confirmBooking(booking.id)}
-                disabled={updateBookingStatusMutation.isPending}
-              >
-                ✓ Confirm
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="border-orange-400 text-orange-600 hover:bg-orange-50 w-full"
-                onClick={() => setShowSuggest(!showSuggest)}
-              >
-                ⏰ Suggest Time
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50 w-full"
-                onClick={() => {
-                  if (confirm("Decline this booking request?")) {
-                    updateBookingStatusMutation.mutate({ bookingId: booking.id, status: "cancelled" });
-                  }
-                }}
-                disabled={updateBookingStatusMutation.isPending}
-              >
-                ✕ Decline
-              </Button>
-            </>
-          )}
-          {booking.status === 'owner_suggested' && (
-            <Button 
-              size="sm" 
+      {/* Details grid - 2 columns on all screens */}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm text-gray-700 bg-gray-50 rounded-lg p-3">
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Service</p>
+          <p className="font-medium text-gray-800 text-sm leading-snug">
+            {booking.servicesList
+              ? booking.servicesList.join(', ') + (booking.servicesCount > 1 ? ` (${booking.servicesCount})` : '')
+              : (booking.service?.name || 'Service')}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Date</p>
+          <p className="font-medium text-gray-800">{booking.date}</p>
+          <p className="text-xs text-gray-400">Booked: {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}</p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Time</p>
+          <p className="font-medium text-gray-800">{booking.startTime} – {booking.endTime}</p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Amount</p>
+          <p className="font-medium text-gray-800">₹{booking.totalGroupAmount || booking.totalAmount}</p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Payment</p>
+          <Badge variant="outline" className="text-xs">{booking.paymentStatus || 'Pending'}</Badge>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Stylist</p>
+          {booking.staff?.name
+            ? <p className="font-medium text-blue-600">{booking.staff.name}</p>
+            : <p className="text-gray-400 italic text-xs">Any available</p>}
+        </div>
+        {(booking.isWalkIn ? booking.walkInCustomerPhone : booking.customer?.phone) && (
+          <div className="col-span-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Phone</p>
+            <p className="font-medium text-gray-800">{booking.isWalkIn ? booking.walkInCustomerPhone : booking.customer?.phone}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Suggestion banner */}
+      {(booking as any).suggestedDate && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 text-sm text-orange-800">
+          <p className="font-medium">⏰ You suggested a new time</p>
+          <p className="text-xs mt-0.5"><strong>{(booking as any).suggestedDate}</strong> at <strong>{(booking as any).suggestedTime}</strong></p>
+          {(booking as any).ownerNote && <p className="text-xs mt-0.5 italic">Note: {(booking as any).ownerNote}</p>}
+          <p className="text-xs text-orange-500 mt-0.5">Waiting for customer to accept or decline</p>
+        </div>
+      )}
+
+      {/* Action buttons — full width, stacked or in row */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        {booking.status === 'pending' && (
+          <>
+            <Button
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white flex-1"
+              onClick={() => confirmBooking(booking.id)}
+              disabled={updateBookingStatusMutation.isPending}
+            >
+              ✓ Confirm
+            </Button>
+            <Button
+              size="sm"
               variant="outline"
-              className="border-orange-400 text-orange-600 hover:bg-orange-50 w-full"
+              className="border-orange-400 text-orange-600 hover:bg-orange-50 flex-1"
               onClick={() => setShowSuggest(!showSuggest)}
             >
-              ✏️ Edit Suggestion
+              ⏰ Suggest Time
             </Button>
-          )}
-          {booking.status === 'confirmed' && (
-            <>
-              <Button 
-                size="sm" 
-                className="bg-blue-600 hover:bg-blue-700 w-full"
-                onClick={() => completeBooking(booking.id)}
-                disabled={updateBookingStatusMutation.isPending}
-              >
-                Mark Complete
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-orange-400 text-orange-600 hover:bg-orange-50 w-full"
-                onClick={() => setShowSuggest(!showSuggest)}
-              >
-                ⏰ Reschedule
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50 w-full"
-                onClick={() => {
-                  if (confirm("Cancel this confirmed booking?")) {
-                    updateBookingStatusMutation.mutate({ bookingId: booking.id, status: "cancelled" });
-                  }
-                }}
-                disabled={updateBookingStatusMutation.isPending}
-              >
-                ✕ Cancel
-              </Button>
-            </>
-          )}
-          {booking.status === 'completed' && (
-            <Badge variant="secondary" className="px-3 py-1 text-center">✓ Done</Badge>
-          )}
-        </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-red-300 text-red-600 hover:bg-red-50 flex-1"
+              onClick={() => {
+                if (confirm("Decline this booking request?")) {
+                  updateBookingStatusMutation.mutate({ bookingId: booking.id, status: "cancelled" });
+                }
+              }}
+              disabled={updateBookingStatusMutation.isPending}
+            >
+              ✕ Decline
+            </Button>
+          </>
+        )}
+        {booking.status === 'owner_suggested' && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-orange-400 text-orange-600 hover:bg-orange-50 w-full"
+            onClick={() => setShowSuggest(!showSuggest)}
+          >
+            ✏️ Edit Suggestion
+          </Button>
+        )}
+        {booking.status === 'confirmed' && (
+          <>
+            <Button
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 flex-1"
+              onClick={() => completeBooking(booking.id)}
+              disabled={updateBookingStatusMutation.isPending}
+            >
+              ✓ Mark Complete
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-orange-400 text-orange-600 hover:bg-orange-50 flex-1"
+              onClick={() => setShowSuggest(!showSuggest)}
+            >
+              ⏰ Reschedule
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-red-300 text-red-600 hover:bg-red-50 flex-1"
+              onClick={() => {
+                if (confirm("Cancel this confirmed booking?")) {
+                  updateBookingStatusMutation.mutate({ bookingId: booking.id, status: "cancelled" });
+                }
+              }}
+              disabled={updateBookingStatusMutation.isPending}
+            >
+              ✕ Cancel
+            </Button>
+          </>
+        )}
+        {booking.status === 'completed' && (
+          <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
+            <span className="text-green-500">✓</span> Completed
+          </div>
+        )}
       </div>
 
       {/* Suggest Time inline form */}
@@ -2647,43 +2651,44 @@ export default function OwnerDashboard() {
               {/* All Bookings with Tabs */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    All Bookings
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Filter by Date
+                  <CardTitle className="flex items-center justify-between gap-2">
+                    <span className="text-lg font-bold">All Bookings</span>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="text-xs px-2 sm:px-3">
+                        <Calendar className="h-4 w-4 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Filter by Date</span>
                       </Button>
-                      <Button variant="outline" size="sm">
-                        Export
+                      <Button variant="outline" size="sm" className="text-xs px-2 sm:px-3">
+                        <span className="hidden sm:inline">Export</span>
+                        <span className="sm:hidden">↓</span>
                       </Button>
                     </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="today" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 mb-4">
-                      <TabsTrigger value="today" className="text-sm">
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4 h-auto">
+                      <TabsTrigger value="today" className="text-xs sm:text-sm py-2.5">
                         Today ({bookings.filter(b => {
                           const today = new Date().toISOString().split('T')[0];
                           return b.date === today;
                         }).length})
                       </TabsTrigger>
-                      <TabsTrigger value="tomorrow" className="text-sm">
+                      <TabsTrigger value="tomorrow" className="text-xs sm:text-sm py-2.5">
                         Tomorrow ({bookings.filter(b => {
                           const tomorrow = new Date();
                           tomorrow.setDate(tomorrow.getDate() + 1);
                           return b.date === tomorrow.toISOString().split('T')[0];
                         }).length})
                       </TabsTrigger>
-                      <TabsTrigger value="upcoming" className="text-sm">
+                      <TabsTrigger value="upcoming" className="text-xs sm:text-sm py-2.5">
                         Upcoming ({bookings.filter(b => {
                           const dayAfterTomorrow = new Date();
                           dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
                           return b.date >= dayAfterTomorrow.toISOString().split('T')[0];
                         }).length})
                       </TabsTrigger>
-                      <TabsTrigger value="previous" className="text-sm">
+                      <TabsTrigger value="previous" className="text-xs sm:text-sm py-2.5">
                         Previous ({bookings.filter(b => {
                           const today = new Date().toISOString().split('T')[0];
                           return b.date < today;
