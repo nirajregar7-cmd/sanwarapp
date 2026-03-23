@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
+import sanwarLogo from "@/assets/sanwar-new-logo.jpg";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -336,8 +337,13 @@ export default function StaffRegistration() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <Link href="/" className="flex items-center space-x-3 group cursor-pointer">
-              <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600 text-white rounded-xl w-12 h-12 flex items-center justify-center font-bold shadow-lg transform group-hover:scale-110 transition-all">
-                <Scissors className="h-6 w-6" />
+              <div className="relative">
+                <img
+                  src={sanwarLogo}
+                  alt="Sanwar"
+                  className="w-12 h-12 rounded-xl object-cover shadow-md transform group-hover:scale-110 transition-all"
+                />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
               </div>
               <div>
                 <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent">
