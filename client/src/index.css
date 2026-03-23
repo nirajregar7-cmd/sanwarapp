@@ -449,3 +449,19 @@ button {
   scrollbar-width: thin;
   scrollbar-color: hsl(248.0645 92.8571% 61.1765%) hsl(210 40% 96%);
 }
+
+/* PWA: Safe area support for iOS notch / home indicator */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* PWA: Smooth page transitions, no browser chrome feel */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  overscroll-behavior-y: none;
+}

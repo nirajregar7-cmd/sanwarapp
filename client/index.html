@@ -2,43 +2,57 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
-    <meta name="theme-color" content="#8B5CF6" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover" />
+
+    <!-- PWA: Theme & Display -->
+    <meta name="theme-color" content="#7c3aed" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- PWA: iOS / Safari -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Sanwar" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <link rel="icon" type="image/png" href="/icon-192x192.png" />
+
+    <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192x192.png" />
-    <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Manifest -->
     <link rel="manifest" href="/manifest.json" />
+
+    <!-- Splash screen background matches theme -->
+    <style>
+      html { background-color: #ffffff; }
+      body { margin: 0; background-color: #ffffff; }
+      #root { min-height: 100vh; }
+    </style>
+
     <title>Best Salon Near Me | Haircut, Spa & Beauty Services - Sanwar</title>
     <meta name="description" content="Find the best salon near you! Book haircuts, spa treatments, bridal makeup instantly. Top-rated salons, verified reviews, best prices guaranteed." />
     <meta name="keywords" content="salon near me, haircut near me, spa near me, beauty salon near me, bridal makeup near me, best salon, hair salon near me, unisex salon" />
-    
+
     <!-- Local SEO Meta Tags -->
     <meta name="geo.region" content="IN">
     <meta name="geo.placename" content="India">
     <meta name="ICBM" content="20.5937, 78.9629">
     <meta name="DC.title" content="Best Salon Near Me - Sanwar">
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://sanwarhub.in/" />
     <meta property="og:title" content="Best Salon Near Me | Haircut & Beauty Services - Sanwar" />
     <meta property="og:description" content="Find top-rated salons near you. Book haircuts, spa treatments & beauty services instantly. Verified reviews, best prices!" />
-    <meta property="og:image" content="/favicon.jpg" />
+    <meta property="og:image" content="/icon-512x512.png" />
     <meta property="og:locale" content="en_IN" />
-    
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://sanwarhub.in/" />
     <meta property="twitter:title" content="Best Salon Near Me | Haircut & Beauty Services - Sanwar" />
     <meta property="twitter:description" content="Find top-rated salons near you. Book haircuts, spa treatments & beauty services instantly. Verified reviews, best prices!" />
-    <meta property="twitter:image" content="/favicon.jpg" />
-    
+    <meta property="twitter:image" content="/icon-512x512.png" />
+
     <!-- Sanwar Software Application Structured Data -->
     <script type="application/ld+json">
     {
@@ -46,7 +60,7 @@
       "@type": "SoftwareApplication",
       "name": "Sanwar",
       "url": "https://sanwarhub.in",
-      "logo": "https://sanwarhub.in/logo.png", 
+      "logo": "https://sanwarhub.in/icon-512x512.png",
       "founder": [
         {
           "@type": "Person",
@@ -78,15 +92,15 @@
         "name": "Tiruchirappalli, India"
       },
       "email": "contact@sanwarhub.in",
-      "description": "Sanwar is a smart salon management and customer engagement platform that connects salon owners with customers. The platform helps salon owners simplify daily operations, manage bookings, promote their services, and attract new clients. Unlike generic business apps, Sanwar is designed specifically for the beauty and grooming industry, empowering small salon owners with digital tools usually reserved for big businesses. Customers can discover nearby salons, book appointments, and enjoy a seamless beauty service experience.",
+      "description": "Sanwar is a smart salon management and customer engagement platform that connects salon owners with customers.",
       "sameAs": [
-        "https://www.linkedin.com/company/sanwar",  
-        "https://instagram.com/sanwar.com.in",    
-        "https://twitter.com/sanwar"               
+        "https://www.linkedin.com/company/sanwar",
+        "https://instagram.com/sanwar.com.in",
+        "https://twitter.com/sanwar"
       ]
     }
     </script>
-    
+
     <!-- Service Schema for Near Me Searches -->
     <script type="application/ld+json">
     {
@@ -110,7 +124,7 @@
           {
             "@type": "Offer",
             "itemOffered": {
-              "@type": "Service", 
+              "@type": "Service",
               "name": "Haircut Near Me",
               "description": "Professional haircuts for men, women, and kids"
             }
@@ -119,7 +133,7 @@
             "@type": "Offer",
             "itemOffered": {
               "@type": "Service",
-              "name": "Spa Near Me", 
+              "name": "Spa Near Me",
               "description": "Relaxing spa treatments and massages"
             }
           },
@@ -135,23 +149,21 @@
       }
     }
     </script>
-    
+
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DBC4KWYHJJ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-DBC4KWYHJJ');
     </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
 </html>

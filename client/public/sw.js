@@ -1,158 +1,147 @@
-// Service Worker for PWA and Push Notifications
-const CACHE_NAME = 'sanwar-pwa-v1';
-const RUNTIME_CACHE = 'sanwar-runtime-v1';
+// Sanwar PWA Service Worker - v3
+const CACHE_VERSION = 'sanwar-v3';
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
+const API_CACHE = `${CACHE_VERSION}-api`;
 
-// Essential files to cache for offline access
-const PRECACHE_URLS = [
+// Core shell assets to pre-cache on install
+const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
+  '/favicon.ico',
   '/favicon.svg',
-  '/favicon.jpg'
 ];
 
+// ─── Install: pre-cache shell ───────────────────────────────────────────────
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(PRECACHE_URLS);
-      })
+    caches.open(STATIC_CACHE)
+      .then((cache) => cache.addAll(PRECACHE_ASSETS))
       .then(() => self.skipWaiting())
   );
 });
 
+// ─── Activate: clean old caches ──────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating...');
-  const currentCaches = [CACHE_NAME, RUNTIME_CACHE];
+  const keepCaches = [STATIC_CACHE, DYNAMIC_CACHE, API_CACHE];
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return cacheNames.filter((cacheName) => !currentCaches.includes(cacheName));
-    }).then((cachesToDelete) => {
-      return Promise.all(cachesToDelete.map((cacheToDelete) => {
-        return caches.delete(cacheToDelete);
-      }));
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys.filter((k) => !keepCaches.includes(k)).map((k) => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch event - Network first, then cache
+// ─── Fetch strategy ──────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET and cross-origin requests (analytics, Clerk, etc.)
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+
+  // API calls → Network first, fallback to cache (never serve stale data)
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirstWithCache(request, API_CACHE, 5000));
     return;
   }
 
-  // For API calls, use network first strategy
-  if (event.request.url.includes('/api/')) {
+  // Navigation requests → Network first with offline fallback to cached /
+  if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          // Clone the response before caching
-          const responseClone = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => {
-          // If network fails, try cache
-          return caches.match(event.request);
-        })
+      fetch(request)
+        .catch(() => caches.match('/') || caches.match(request))
     );
     return;
   }
 
-  // For other requests, cache first strategy
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(event.request).then((response) => {
-        // Don't cache if not a valid response
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-
-        const responseToCache = response.clone();
-        caches.open(RUNTIME_CACHE).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return response;
-      });
-    })
-  );
-});
-
-self.addEventListener('push', (event) => {
-  console.log('Push event received:', event);
-  
-  if (!event.data) {
-    console.log('Push event has no data');
+  // Static assets (JS, CSS, images, fonts) → Cache first, update in background
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(cacheFirstWithBackgroundUpdate(request, STATIC_CACHE));
     return;
   }
+
+  // Everything else → Network first, cache response for next time
+  event.respondWith(networkFirstWithCache(request, DYNAMIC_CACHE, 8000));
+});
+
+function isStaticAsset(pathname) {
+  return /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|ico|webp|avif)$/i.test(pathname);
+}
+
+async function cacheFirstWithBackgroundUpdate(request, cacheName) {
+  const cached = await caches.match(request);
+  const fetchPromise = fetch(request).then((response) => {
+    if (response && response.status === 200) {
+      const clone = response.clone();
+      caches.open(cacheName).then((cache) => cache.put(request, clone));
+    }
+    return response;
+  }).catch(() => null);
+
+  return cached || fetchPromise;
+}
+
+async function networkFirstWithCache(request, cacheName, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    const response = await fetch(request, { signal: controller.signal });
+    clearTimeout(timer);
+    if (response && response.status === 200) {
+      const clone = response.clone();
+      caches.open(cacheName).then((cache) => cache.put(request, clone));
+    }
+    return response;
+  } catch {
+    clearTimeout(timer);
+    const cached = await caches.match(request);
+    return cached || new Response(JSON.stringify({ error: 'Offline' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// ─── Push notifications ──────────────────────────────────────────────────────
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  try {
     const data = event.data.json();
-    console.log('Push data:', data);
-
-    const options = {
-      body: data.body || 'You have a new notification',
-      icon: data.icon || '/icon-192x192.png',
-      badge: data.badge || '/badge-72x72.png',
-      tag: data.tag || 'notification',
-      requireInteraction: data.requireInteraction || false,
-      data: data.data || {},
-      actions: data.actions || [],
-      vibrate: [200, 100, 200],
-    };
-
     event.waitUntil(
-      self.registration.showNotification(data.title || 'Sanwar', options)
+      self.registration.showNotification(data.title || 'Sanwar', {
+        body: data.body || 'You have a new notification',
+        icon: '/icon-192x192.png',
+        badge: '/icon-192x192.png',
+        tag: data.tag || 'sanwar-notification',
+        requireInteraction: data.requireInteraction || false,
+        data: data.data || {},
+        vibrate: [200, 100, 200],
+      })
     );
-  } catch (error) {
-    console.error('Error processing push event:', error);
-    
-    // Fallback notification
+  } catch {
     event.waitUntil(
       self.registration.showNotification('Sanwar', {
         body: 'You have a new notification',
         icon: '/icon-192x192.png',
-        badge: '/badge-72x72.png',
       })
     );
   }
 });
 
 self.addEventListener('notificationclick', (event) => {
-  console.log('Notification clicked:', event);
-  
   event.notification.close();
-
-  const data = event.notification.data;
-  const url = data.url || '/';
-
+  const url = event.notification.data?.url || '/';
   event.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then((clients) => {
-      // Check if there's already a window/tab open with the target URL
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
-        if (client.url === url && 'focus' in client) {
-          return client.focus();
-        }
+        if (client.url.includes(url) && 'focus' in client) return client.focus();
       }
-      
-      // If not, open a new window/tab
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(url);
-      }
+      return self.clients.openWindow(url);
     })
   );
-});
-
-self.addEventListener('notificationclose', (event) => {
-  console.log('Notification closed:', event);
-  // Optional: Track notification dismissal analytics
 });

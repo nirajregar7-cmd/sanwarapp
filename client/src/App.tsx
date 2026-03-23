@@ -8,6 +8,7 @@ import { useCountryConfig } from "@/hooks/useCountryConfig";
 
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { MobileInstallButton } from "@/components/MobileInstallButton";
+import { CustomerBottomNav } from "@/components/CustomerBottomNav";
 import { AppClerkProvider } from "@/lib/clerk-provider";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { ImpersonationBanner } from "@/components/ImpersonationBanner";
@@ -517,6 +518,7 @@ function App() {
           <TooltipProvider>
             <Router />
             <Toaster />
+            <CustomerBottomNav />
             <InstallPrompt />
             <MobileInstallButton />
           </TooltipProvider>
