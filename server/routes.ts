@@ -1805,10 +1805,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (serviceDetails.length !== serviceIds.length) {
         return res.status(400).json({ message: "One or more services not found" });
       }
+
+      // Fetch active offers for this salon to apply discounts
+      const now = new Date();
+      const activeOffers = await db.select()
+        .from(salonOffers)
+        .where(
+          and(
+            eq(salonOffers.salonId, salonId),
+            eq(salonOffers.isActive, true),
+            eq(salonOffers.isVisible, true),
+            lte(salonOffers.validFrom, now),
+            gte(salonOffers.validUntil, now)
+          )
+        );
+
+      // Calculate discounted price for a service based on active offers
+      const getDiscountedPrice = (service: typeof serviceDetails[0]): string => {
+        const originalPrice = parseFloat(service.price.toString());
+        let bestDiscount = 0;
+        let discountType = 'percentage';
+
+        for (const offer of activeOffers) {
+          let applicableDiscount = 0;
+
+          if (offer.isApplicableToAllServices) {
+            applicableDiscount = parseFloat(offer.discountValue.toString());
+            discountType = offer.discountType;
+          } else if (offer.applicableServices && offer.applicableServices.includes(service.id)) {
+            if (offer.serviceSpecificDiscounts) {
+              try {
+                const svcDiscounts = typeof offer.serviceSpecificDiscounts === 'string'
+                  ? JSON.parse(offer.serviceSpecificDiscounts)
+                  : offer.serviceSpecificDiscounts;
+                if (svcDiscounts[service.id]) {
+                  applicableDiscount = parseFloat(svcDiscounts[service.id]);
+                  discountType = offer.discountType;
+                }
+              } catch {}
+            }
+            if (applicableDiscount === 0) {
+              applicableDiscount = parseFloat(offer.discountValue.toString());
+              discountType = offer.discountType;
+            }
+          }
+
+          if (applicableDiscount > bestDiscount) {
+            bestDiscount = applicableDiscount;
+          }
+        }
+
+        if (bestDiscount === 0) return service.price.toString();
+
+        let discountedPrice = discountType === 'percentage'
+          ? originalPrice * (1 - bestDiscount / 100)
+          : originalPrice - bestDiscount;
+
+        discountedPrice = Math.max(0, discountedPrice);
+        return discountedPrice.toFixed(2);
+      };
       
       // Create separate booking records for each service
       const createdBookings = [];
       for (const service of serviceDetails) {
+        const discountedAmount = getDiscountedPrice(service);
         const [booking] = await db.insert(bookings).values({
           customerId: userId,
           salonId,
@@ -1818,7 +1878,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           date,
           startTime: timeSlot.startTime,
           endTime: timeSlot.endTime,
-          totalAmount: service.price,
+          totalAmount: discountedAmount,
           confirmationAmount: '0',
           paymentStatus: 'pending',
           status: 'pending',
