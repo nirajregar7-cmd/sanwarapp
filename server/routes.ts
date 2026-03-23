@@ -11098,6 +11098,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============ CUSTOMER-SALON CHAT ROUTES ============
 
+  // Get all salon conversations for a customer (my message threads)
+  app.get('/api/customer/chat-conversations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+
+      const conversations = await db.execute(sql`
+        SELECT DISTINCT ON (sc.salon_id)
+          sc.salon_id,
+          sc.message as last_message,
+          sc.sender_type as last_sender_type,
+          sc.created_at as last_message_at,
+          s.name as salon_name,
+          s.image_url as salon_image,
+          s.address as salon_address,
+          (SELECT COUNT(*) FROM salon_chats WHERE salon_id = sc.salon_id AND customer_id = ${userId} AND is_read = false AND sender_type = 'owner')::int as unread_count
+        FROM salon_chats sc
+        JOIN salons s ON s.id = sc.salon_id
+        WHERE sc.customer_id = ${userId}
+        ORDER BY sc.salon_id, sc.created_at DESC
+      `);
+
+      res.json(conversations.rows || []);
+    } catch (error) {
+      console.error('Error fetching customer conversations:', error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
   // Send a message (customer or owner)
   app.post('/api/salons/:salonId/chat', isAuthenticated, async (req: any, res) => {
     try {
