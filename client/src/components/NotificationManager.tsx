@@ -85,7 +85,7 @@ async function requestNotificationPermission(): Promise<boolean> {
 // Subscribe to push notifications
 async function subscribeToPush(registration: ServiceWorkerRegistration): Promise<PushSubscription | null> {
   try {
-    const applicationServerKey = process.env.VITE_VAPID_PUBLIC_KEY;
+    const applicationServerKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
     if (!applicationServerKey) {
       console.error('VAPID public key not found');
       return null;

@@ -1891,6 +1891,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sendSalonOwnerBookingNotification(booking.id).catch(e =>
           console.error('Owner notification error:', e)
         );
+
+        // Real-time in-app + push notifications
+        import('./notifications').then(({ notifyCustomerBookingRequested, notifyOwnerNewBooking }) => {
+          notifyCustomerBookingRequested(booking.id).catch(() => {});
+          notifyOwnerNewBooking(booking.id).catch(() => {});
+        }).catch(() => {});
       }
       
       // Return all created bookings
@@ -5568,25 +5574,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateBookingStatus(req.params.id, status, paymentId, paymentStatus, suggestedDate, suggestedTime, ownerNote);
       res.json({ message: "Booking status updated" });
 
-      // Send email notifications to customer (async, non-blocking)
-      try {
-        const { sendOwnerConfirmedEmail, sendOwnerDeclinedEmail, sendOwnerSuggestionEmail } = await import('./booking-notifications');
+      // Send email + in-app + push notifications to customer (async, non-blocking)
+      import('./booking-notifications').then(({ sendOwnerConfirmedEmail, sendOwnerDeclinedEmail, sendOwnerSuggestionEmail }) => {
         if (status === 'confirmed') {
-          sendOwnerConfirmedEmail(req.params.id).then(sent =>
-            console.log(`📧 Booking confirmed email sent: ${sent}`)
-          );
+          sendOwnerConfirmedEmail(req.params.id).then(sent => console.log(`📧 Confirmed email: ${sent}`));
         } else if (status === 'cancelled') {
-          sendOwnerDeclinedEmail(req.params.id).then(sent =>
-            console.log(`📧 Booking declined email sent: ${sent}`)
-          );
+          sendOwnerDeclinedEmail(req.params.id).then(sent => console.log(`📧 Declined email: ${sent}`));
         } else if (status === 'owner_suggested' && suggestedDate && suggestedTime) {
           sendOwnerSuggestionEmail(req.params.id, suggestedDate, suggestedTime, ownerNote).then(sent =>
-            console.log(`📧 Booking suggestion email sent: ${sent}`)
+            console.log(`📧 Suggestion email: ${sent}`)
           );
         }
-      } catch (emailErr) {
-        console.error('Email notification error (non-critical):', emailErr);
-      }
+      }).catch(e => console.error('Email notification error:', e));
+
+      // In-app + push notifications
+      import('./notifications').then(({ notifyCustomerBookingAccepted, notifyCustomerBookingRejected, notifyCustomerRescheduleSuggested }) => {
+        if (status === 'confirmed') {
+          notifyCustomerBookingAccepted(req.params.id).catch(() => {});
+        } else if (status === 'cancelled') {
+          notifyCustomerBookingRejected(req.params.id).catch(() => {});
+        } else if (status === 'owner_suggested') {
+          notifyCustomerRescheduleSuggested(req.params.id).catch(() => {});
+        }
+      }).catch(() => {});
     } catch (error) {
       console.error("Error updating booking status:", error);
       res.status(500).json({ message: "Failed to update booking status" });
@@ -7759,6 +7769,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching notification history:", error);
       res.status(500).json({ message: "Failed to fetch notification history" });
+    }
+  });
+
+  // Get unread notification count
+  app.get('/api/notifications/unread-count', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const result = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(notificationHistory)
+        .where(
+          and(
+            eq(notificationHistory.userId, userId),
+            eq(notificationHistory.isRead, false)
+          )
+        );
+      res.json({ count: result[0]?.count ?? 0 });
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+      res.status(500).json({ count: 0 });
+    }
+  });
+
+  // Mark all notifications as read
+  app.patch('/api/notifications/read-all', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      await db
+        .update(notificationHistory)
+        .set({ isRead: true, deliveredAt: new Date() })
+        .where(
+          and(
+            eq(notificationHistory.userId, userId),
+            eq(notificationHistory.isRead, false)
+          )
+        );
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Error marking notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark notifications as read" });
+    }
+  });
+
+  // Mark a single notification as read
+  app.patch('/api/notifications/:id/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      await db
+        .update(notificationHistory)
+        .set({ isRead: true, deliveredAt: new Date() })
+        .where(
+          and(
+            eq(notificationHistory.id, req.params.id),
+            eq(notificationHistory.userId, userId)
+          )
+        );
+      res.json({ message: "Notification marked as read" });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
     }
   });
 

@@ -1,0 +1,123 @@
+Build a complete real-time notification system for my salon booking app "Sanwar".
+
+Tech stack: Web app / PWA (frontend + backend)
+
+Requirements:
+
+1. Booking Flow Notifications
+
+When a user places a booking:
+
+- Send notification to user:
+  "⏳ Booking request sent to {SalonName} for {Time}"
+
+- Send notification to salon owner:
+  "📩 New booking request at {Time}"
+  Include actions:
+  
+  - Accept
+  - Reject
+  - Reschedule
+
+2. Salon Response System
+
+If salon ACCEPTS:
+
+- Notify user:
+  "✅ Your booking at {SalonName} is confirmed for {Time}"
+
+If salon REJECTS:
+
+- Notify user:
+  "❌ {SalonName} declined your booking. Try nearby salons"
+
+If salon RESCHEDULES:
+
+- Notify user:
+  "🔁 {SalonName} suggests {NewTime} instead of {OldTime}"
+  Include action buttons:
+  - Accept new time
+  - Choose another slot
+
+3. Auto Timeout System
+
+- If salon does not respond within 3 minutes:
+  - Auto cancel booking
+  - Notify user:
+    "⚠️ No response from salon. Booking auto-cancelled"
+
+4. Reminder System
+
+- If booking is confirmed:
+  - Send ONE reminder 30 minutes before appointment:
+    "⏰ Your appointment at {SalonName} starts in 30 minutes"
+
+5. Real Offer Notifications (only if real data exists)
+
+- Example:
+  "💸 Haircut at ₹{Price} at {SalonName}"
+  "📍 {Distance} away • Today only"
+
+Conditions:
+
+- Must be location-based
+- Must be time-limited
+- Do not send fake or repeated offers
+
+6. Urgency Notifications (only if real)
+
+- Example:
+  "⚡ Only {SlotsLeft} slots left at {SalonName}"
+
+Condition:
+
+- Trigger only when slots are actually low
+
+7. Re-engagement (controlled)
+
+- If user inactive for 3–5 days:
+  "✂️ Time for a fresh look? Top salons near you are available"
+
+Limit:
+
+- Max 1–2 times per week
+
+8. Backend Logic
+
+- Create booking status system:
+  pending → accepted → rejected → rescheduled → cancelled
+
+- Store:
+  userId, salonId, time, status, createdAt
+
+- Implement timer (3 minutes) for auto cancel
+
+9. Push Notification Setup
+
+- Use Firebase Cloud Messaging (FCM)
+- Register service worker for PWA
+- Save user device token
+- Send notifications based on events
+
+10. UI Integration
+
+- Add buttons in notifications where possible:
+  - Accept
+  - Reject
+  - Book Now
+
+11. Rules
+
+- Do NOT spam users
+- Do NOT send fake urgency or fake offers
+- Ensure all notifications are based on real data
+
+Output:
+
+- Backend code (Node.js or simple API)
+- Frontend integration
+- Firebase setup steps
+- Working notification triggers
+
+Goal:
+Create a real-world, production-level notification system like Zomato/Uber but for salon booking.

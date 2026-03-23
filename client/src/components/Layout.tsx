@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Scissors, User, Store, Calendar, ChevronDown, Menu, X, LogOut, Home, BarChart3, Settings, Gift, Search, UserPlus, MessageSquare, Package, Crown, Percent, Eye, Camera, Globe } from "lucide-react";
+import { NotificationBell } from "./NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -183,6 +184,8 @@ export default function Layout({ children }: LayoutProps) {
             {/* Desktop Navigation */}
             {isAuthenticated && !isMobile && (
               <div className="flex items-center space-x-2 sm:space-x-4">
+                {/* Notification Bell */}
+                <NotificationBell />
                 {/* Profile Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -224,6 +227,11 @@ export default function Layout({ children }: LayoutProps) {
                 <Button asChild size="sm" className="bg-blue-600 text-white hover:bg-blue-700 text-xs sm:text-sm px-3 sm:px-4">
                   <a href="/api/login">{t('nav.login')}</a>
                 </Button>
+              )}
+
+              {/* Mobile Notification Bell */}
+              {isAuthenticated && isMobile && (
+                <NotificationBell />
               )}
 
               {/* Mobile Menu Button */}

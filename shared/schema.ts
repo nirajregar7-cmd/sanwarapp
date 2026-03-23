@@ -523,16 +523,18 @@ export const notificationHistory = pgTable("notification_history", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   type: varchar("type", { 
-    enum: ["booking_confirmation", "booking_reminder", "day_before_reminder", "hour_before_reminder", "promotional"] 
+    enum: ["booking_confirmation", "booking_reminder", "day_before_reminder", "hour_before_reminder", "promotional", "booking_request", "booking_accepted", "booking_rejected", "booking_rescheduled", "booking_auto_cancelled", "appointment_reminder", "re_engagement"] 
   }).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message").notNull(),
-  channel: varchar("channel", { enum: ["web_push", "email", "sms"] }).notNull(),
+  channel: varchar("channel", { enum: ["web_push", "email", "sms", "in_app"] }).notNull(),
   status: varchar("status", { enum: ["sent", "delivered", "failed", "pending"] }).default("pending"),
   bookingId: varchar("booking_id").references(() => bookings.id, { onDelete: "set null" }),
   sentAt: timestamp("sent_at").defaultNow(),
   deliveredAt: timestamp("delivered_at"),
   failureReason: text("failure_reason"),
+  isRead: boolean("is_read").default(false),
+  actionUrl: varchar("action_url", { length: 500 }),
 });
 
 // Salon Owner Account Details for money transfers

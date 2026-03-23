@@ -339,10 +339,11 @@ async function logNotification(data: {
   type: string;
   title: string;
   message: string;
-  channel: 'web_push' | 'email' | 'sms';
+  channel: 'web_push' | 'email' | 'sms' | 'in_app';
   status: 'sent' | 'delivered' | 'failed' | 'pending';
   bookingId?: string;
   failureReason?: string;
+  actionUrl?: string;
 }) {
   try {
     await db.insert(notificationHistory).values({
@@ -350,14 +351,41 @@ async function logNotification(data: {
       type: data.type as any,
       title: data.title,
       message: data.message,
-      channel: data.channel,
+      channel: data.channel as any,
       status: data.status,
       bookingId: data.bookingId,
       failureReason: data.failureReason,
+      actionUrl: data.actionUrl,
       sentAt: new Date()
     });
   } catch (error) {
     console.error('Error logging notification:', error);
+  }
+}
+
+// Save an in-app notification that appears in the notification bell center
+export async function logInAppNotification(data: {
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  bookingId?: string;
+  actionUrl?: string;
+}) {
+  try {
+    await db.insert(notificationHistory).values({
+      userId: data.userId,
+      type: data.type as any,
+      title: data.title,
+      message: data.message,
+      channel: 'in_app' as any,
+      status: 'delivered',
+      bookingId: data.bookingId,
+      actionUrl: data.actionUrl,
+      sentAt: new Date(),
+    });
+  } catch (error) {
+    console.error('Error logging in-app notification:', error);
   }
 }
 
@@ -724,4 +752,198 @@ export async function sendHourBeforeReminder(bookingId: string) {
     console.error('Error sending hour before reminder:', error);
     throw error;
   }
+}
+
+// Helper: get booking with full details
+async function getFullBookingDetails(bookingId: string) {
+  const [booking] = await db
+    .select({
+      id: bookings.id,
+      customerId: bookings.customerId,
+      salonId: bookings.salonId,
+      date: bookings.date,
+      startTime: bookings.startTime,
+      endTime: bookings.endTime,
+      status: bookings.status,
+      totalAmount: bookings.totalAmount,
+      suggestedDate: bookings.suggestedDate,
+      suggestedTime: bookings.suggestedTime,
+      ownerNote: bookings.ownerNote,
+      createdAt: bookings.createdAt,
+      salon: { id: salons.id, name: salons.name, ownerId: salons.ownerId, address: salons.address },
+      service: { name: services.name, duration: services.duration },
+    })
+    .from(bookings)
+    .leftJoin(salons, eq(bookings.salonId, salons.id))
+    .leftJoin(services, eq(bookings.serviceId, services.id))
+    .where(eq(bookings.id, bookingId));
+  return booking;
+}
+
+// Helper: send push to all subscriptions of a user
+async function sendPushToUser(userId: string, payload: {
+  title: string;
+  body: string;
+  tag?: string;
+  data?: Record<string, any>;
+  requireInteraction?: boolean;
+  actions?: { action: string; title: string }[];
+}) {
+  try {
+    const subs = await db
+      .select()
+      .from(pushSubscriptions)
+      .where(eq(pushSubscriptions.userId, userId));
+
+    for (const sub of subs) {
+      if (!sub.endpoint || !sub.p256dhKey || !sub.authKey) continue;
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dhKey, auth: sub.authKey } },
+          JSON.stringify(payload),
+          { TTL: 86400 }
+        );
+      } catch (e: any) {
+        if (e.statusCode === 410 || e.statusCode === 404) {
+          // Subscription expired — remove it
+          await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, sub.id));
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error sending push to user:', error);
+  }
+}
+
+// Notify CUSTOMER: "Booking request sent"
+export async function notifyCustomerBookingRequested(bookingId: string) {
+  const booking = await getFullBookingDetails(bookingId);
+  if (!booking) return;
+
+  const title = '⏳ Booking Request Sent';
+  const body = `Your request to ${booking.salon?.name} for ${booking.startTime} on ${booking.date} is pending confirmation.`;
+
+  await Promise.all([
+    sendPushToUser(booking.customerId, { title, body, tag: `booking-${bookingId}`, data: { url: '/customer/bookings', bookingId } }),
+    logInAppNotification({ userId: booking.customerId, type: 'booking_request', title, message: body, bookingId, actionUrl: '/customer/bookings' }),
+  ]);
+}
+
+// Notify OWNER: "New booking request" with action buttons
+export async function notifyOwnerNewBooking(bookingId: string) {
+  const booking = await getFullBookingDetails(bookingId);
+  if (!booking || !booking.salon?.ownerId) return;
+
+  const [customer] = await db.select({ firstName: users.firstName, lastName: users.lastName }).from(users).where(eq(users.id, booking.customerId));
+  const customerName = customer ? `${customer.firstName || ''} ${customer.lastName || ''}`.trim() : 'Customer';
+
+  const title = '📩 New Booking Request';
+  const body = `${customerName} wants ${booking.service?.name || 'a service'} at ${booking.startTime} on ${booking.date}`;
+
+  await Promise.all([
+    sendPushToUser(booking.salon.ownerId, {
+      title, body, tag: `owner-booking-${bookingId}`,
+      requireInteraction: true,
+      data: { url: '/owner/bookings', bookingId },
+      actions: [
+        { action: 'accept', title: '✅ Accept' },
+        { action: 'reject', title: '❌ Reject' },
+      ],
+    }),
+    logInAppNotification({ userId: booking.salon.ownerId, type: 'booking_request', title, message: body, bookingId, actionUrl: '/owner/bookings' }),
+  ]);
+}
+
+// Notify CUSTOMER: booking accepted by owner
+export async function notifyCustomerBookingAccepted(bookingId: string) {
+  const booking = await getFullBookingDetails(bookingId);
+  if (!booking) return;
+
+  const title = '✅ Booking Confirmed!';
+  const body = `Your appointment at ${booking.salon?.name} is confirmed for ${booking.startTime} on ${booking.date}.`;
+
+  await Promise.all([
+    sendPushToUser(booking.customerId, { title, body, tag: `booking-${bookingId}`, data: { url: '/customer/bookings', bookingId } }),
+    logInAppNotification({ userId: booking.customerId, type: 'booking_accepted', title, message: body, bookingId, actionUrl: '/customer/bookings' }),
+  ]);
+}
+
+// Notify CUSTOMER: booking rejected by owner
+export async function notifyCustomerBookingRejected(bookingId: string, salonName?: string) {
+  const booking = await getFullBookingDetails(bookingId);
+  if (!booking) return;
+
+  const name = salonName || booking.salon?.name || 'the salon';
+  const title = '❌ Booking Declined';
+  const body = `${name} declined your booking. Try booking a nearby salon.`;
+
+  await Promise.all([
+    sendPushToUser(booking.customerId, { title, body, tag: `booking-${bookingId}`, data: { url: '/', bookingId } }),
+    logInAppNotification({ userId: booking.customerId, type: 'booking_rejected', title, message: body, bookingId, actionUrl: '/' }),
+  ]);
+}
+
+// Notify CUSTOMER: owner suggested a new time (reschedule)
+export async function notifyCustomerRescheduleSuggested(bookingId: string) {
+  const booking = await getFullBookingDetails(bookingId);
+  if (!booking) return;
+
+  const newTime = booking.suggestedTime || 'a new time';
+  const newDate = booking.suggestedDate || booking.date;
+  const title = '🔁 New Time Suggested';
+  const body = `${booking.salon?.name} suggests ${newTime} on ${newDate} instead. Accept or choose another slot.`;
+
+  await Promise.all([
+    sendPushToUser(booking.customerId, {
+      title, body, tag: `booking-${bookingId}`,
+      requireInteraction: true,
+      data: { url: '/customer/bookings', bookingId },
+      actions: [
+        { action: 'accept', title: '✅ Accept New Time' },
+        { action: 'view', title: '🗓 Choose Another' },
+      ],
+    }),
+    logInAppNotification({ userId: booking.customerId, type: 'booking_rescheduled', title, message: body, bookingId, actionUrl: '/customer/bookings' }),
+  ]);
+}
+
+// Notify CUSTOMER: booking auto-cancelled (no owner response in 3 min)
+export async function notifyCustomerAutoCancel(bookingId: string) {
+  const booking = await getFullBookingDetails(bookingId);
+  if (!booking) return;
+
+  const title = '⚠️ Booking Auto-Cancelled';
+  const body = `${booking.salon?.name || 'The salon'} didn't respond in time. Your booking has been cancelled automatically.`;
+
+  await Promise.all([
+    sendPushToUser(booking.customerId, { title, body, tag: `booking-${bookingId}`, data: { url: '/', bookingId } }),
+    logInAppNotification({ userId: booking.customerId, type: 'booking_auto_cancelled', title, message: body, bookingId, actionUrl: '/' }),
+  ]);
+}
+
+// Notify CUSTOMER: 30-minute reminder before appointment
+export async function notifyCustomer30MinReminder(bookingId: string) {
+  const booking = await getFullBookingDetails(bookingId);
+  if (!booking) return;
+
+  const title = '⏰ Appointment in 30 Minutes';
+  const body = `Your appointment at ${booking.salon?.name} starts at ${booking.startTime}. Get ready!`;
+
+  await Promise.all([
+    sendPushToUser(booking.customerId, { title, body, tag: `reminder-${bookingId}`, data: { url: '/customer/bookings', bookingId } }),
+    logInAppNotification({ userId: booking.customerId, type: 'appointment_reminder', title, message: body, bookingId, actionUrl: '/customer/bookings' }),
+  ]);
+}
+
+// Re-engagement notification for inactive users
+export async function notifyReEngagement(userId: string, nearbyCount?: number) {
+  const title = '✂️ Time for a fresh look?';
+  const body = nearbyCount
+    ? `${nearbyCount} top salons near you are available and ready to book!`
+    : 'Top salons near you are available. Book your next appointment now!';
+
+  await Promise.all([
+    sendPushToUser(userId, { title, body, tag: 're-engagement', data: { url: '/' } }),
+    logInAppNotification({ userId, type: 're_engagement', title, message: body, actionUrl: '/' }),
+  ]);
 }
