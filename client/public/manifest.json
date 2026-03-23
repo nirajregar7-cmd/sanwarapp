@@ -5,13 +5,25 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#7c3aed",
   "theme_color": "#7c3aed",
   "orientation": "portrait-primary",
   "lang": "en-IN",
   "categories": ["lifestyle", "business"],
   "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
@@ -31,14 +43,14 @@
       "short_name": "Book",
       "description": "Find and book a salon near you",
       "url": "/",
-      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "My Bookings",
       "short_name": "Bookings",
       "description": "View your upcoming bookings",
       "url": "/customer/bookings",
-      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

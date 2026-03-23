@@ -1,5 +1,5 @@
-// Sanwar PWA Service Worker - v3
-const CACHE_VERSION = 'sanwar-v3';
+// Sanwar PWA Service Worker - v4
+const CACHE_VERSION = 'sanwar-v4';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -8,8 +8,11 @@ const API_CACHE = `${CACHE_VERSION}-api`;
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
   '/icon-192x192.png',
   '/icon-512x512.png',
+  '/apple-touch-icon.png',
   '/favicon.ico',
   '/favicon.svg',
 ];
