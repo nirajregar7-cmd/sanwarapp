@@ -17,6 +17,7 @@ import Layout from "@/components/Layout";
 
 // Pages
 import Landing from "@/pages/landing";
+import ExplorePage from "@/pages/explore";
 import FindSalons from "@/pages/customer/find-salons";
 import SalonDiscovery from "@/pages/SalonDiscovery";
 import AuthPage from "@/pages/auth";
@@ -136,6 +137,9 @@ function Router() {
       {/* Landing page - accessible to all users */}
       <Route path="/landing" component={Landing} />
       
+      {/* Explore page - accessible to all users */}
+      <Route path="/explore" component={ExplorePage} />
+
       {/* Salon discovery/listing pages - accessible to all users */}
       <Route path="/salons">
         <Layout>
