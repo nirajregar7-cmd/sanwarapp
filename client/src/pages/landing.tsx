@@ -276,7 +276,7 @@ export default function Landing() {
                 <img
                   src={sanwarLogo}
                   alt="Sanwar"
-                  className="w-12 h-12 rounded-xl object-cover shadow-md transform group-hover:scale-110 transition-all duration-300"
+                  className="w-11 h-11 object-contain transform group-hover:scale-110 transition-all duration-300"
                 />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
               </div>
@@ -1448,7 +1448,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <img src={sanwarLogo} alt="Sanwar" className="w-9 h-9 rounded-xl object-cover" />
+                <img src={sanwarLogo} alt="Sanwar" className="w-9 h-9 object-contain" />
                 <span className="text-2xl font-bold">Sanwar</span>
               </div>
               <p className="text-gray-400">

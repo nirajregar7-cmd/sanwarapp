@@ -50,7 +50,7 @@ export default function Features() {
                 <img
                   src={sanwarLogo}
                   alt="Sanwar"
-                  className="w-10 h-10 rounded-xl object-cover shadow-md transform group-hover:scale-110 transition-all duration-300"
+                  className="w-11 h-11 object-contain transform group-hover:scale-110 transition-all duration-300"
                 />
                 <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></div>
               </div>
