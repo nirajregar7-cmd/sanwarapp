@@ -489,6 +489,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         );
       
+      // Fetch salon IDs that have at least one active offer
+      const activeSalonOffers = await db
+        .select({ salonId: salonOffers.salonId })
+        .from(salonOffers)
+        .where(and(eq(salonOffers.isActive, true), eq(salonOffers.isVisible, true)));
+      const salonIdsWithOffers = new Set(activeSalonOffers.map(o => o.salonId));
+
       // Calculate distance for all salons
       const salonsWithDistance = allSalons
         .filter(row => row.salon.latitude && row.salon.longitude)
@@ -510,7 +517,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return {
             ...row.salon,
             primaryImageUrl: row.primaryMedia?.fileUrl || null,
-            distance
+            distance,
+            hasActiveOffers: salonIdsWithOffers.has(row.salon.id),
           };
         })
         .filter(salon => salon.distance <= searchRadius)
@@ -550,10 +558,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
         .orderBy(desc(salons.averageRating), desc(salons.totalReviews));
 
+      // Fetch salon IDs that have at least one active offer
+      const activeFeaturedOffers = await db
+        .select({ salonId: salonOffers.salonId })
+        .from(salonOffers)
+        .where(and(eq(salonOffers.isActive, true), eq(salonOffers.isVisible, true)));
+      const featuredSalonIdsWithOffers = new Set(activeFeaturedOffers.map(o => o.salonId));
+
       // Transform salons with their primary media
       const salonsWithMedia = allFeaturedSalons.map(row => ({
         ...row.salon,
-        primaryImageUrl: row.primaryMedia?.fileUrl || null
+        primaryImageUrl: row.primaryMedia?.fileUrl || null,
+        hasActiveOffers: featuredSalonIdsWithOffers.has(row.salon.id),
       }));
       
       let featuredSalons = salonsWithMedia;
