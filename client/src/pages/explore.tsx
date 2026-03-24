@@ -58,7 +58,7 @@ type SalonWithExtras = Salon & {
 export default function ExplorePage() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [minRating, setMinRating] = useState(0);
   const [selectedBrand, setSelectedBrand] = useState("");
   const [offersOnly, setOffersOnly] = useState(false);
