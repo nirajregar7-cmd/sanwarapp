@@ -59,8 +59,6 @@ export default function SalonDetail() {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [followerCount, setFollowerCount] = useState(0);
   const [appliedReferralCode, setAppliedReferralCode] = useState<any>(null);
   const [viewingMedia, setViewingMedia] = useState<any>(null);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -577,28 +575,27 @@ export default function SalonDetail() {
     },
   });
 
-  // Follow status query
+  // Follow status + follower count — derive from query data, never setState in select
   const resolvedSalonIdForFollow = resolvedSalonId || salonId;
-  useQuery<{ isFollowing: boolean }>({
+
+  const { data: followStatusData } = useQuery<{ isFollowing: boolean }>({
     queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follow`],
     enabled: !!resolvedSalonIdForFollow && isAuthenticated && (user as any)?.userType === 'customer',
-    refetchOnWindowFocus: false,
     staleTime: 60 * 1000,
     queryFn: async () => {
       const res = await fetch(`/api/salons/${resolvedSalonIdForFollow}/follow`, { credentials: 'include' });
       if (!res.ok) return { isFollowing: false };
       return res.json();
     },
-    select: (data) => { setIsFollowing(data.isFollowing); return data; },
   });
+  const isFollowing = followStatusData?.isFollowing ?? false;
 
-  // Follower count query (public)
-  useQuery<{ followerCount: number }>({
+  const { data: followerCountData } = useQuery<{ followerCount: number }>({
     queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follower-count`],
     enabled: !!resolvedSalonIdForFollow,
     staleTime: 60 * 1000,
-    select: (data) => { setFollowerCount(data.followerCount); return data; },
   });
+  const followerCount = followerCountData?.followerCount ?? 0;
 
   const followMutation = useMutation({
     mutationFn: async () => {
@@ -607,16 +604,14 @@ export default function SalonDetail() {
       return await res.json();
     },
     onSuccess: (data) => {
-      setIsFollowing(data.isFollowing);
-      setFollowerCount(data.followerCount ?? followerCount);
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follow`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follower-count`] });
       toast({
         title: data.isFollowing ? "Following!" : "Unfollowed",
         description: data.isFollowing
           ? "You'll get push notifications and emails when this salon adds new offers."
           : "You'll no longer receive offer alerts from this salon.",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follow`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follower-count`] });
     },
     onError: () => {
       toast({ title: "Error", description: "Could not update follow status. Please try again.", variant: "destructive" });
