@@ -454,8 +454,8 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <main>{children}</main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 sm:py-12">
+      {/* Footer — hidden on mobile (bottom nav handles navigation there) */}
+      {!isMobile && <footer className="bg-gray-900 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div className="col-span-1 sm:col-span-2 md:col-span-1">
@@ -500,7 +500,7 @@ export default function Layout({ children }: LayoutProps) {
             <p className="text-sm">&copy; 2024 Sanwar. All rights reserved.</p>
           </div>
         </div>
-      </footer>
+      </footer>}
 
       {/* Mobile push notification prompt — shows for customers who haven't subscribed */}
       <MobilePushPrompt />
