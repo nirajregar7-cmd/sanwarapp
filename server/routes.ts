@@ -7231,41 +7231,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get customer's liked salons
-  app.get('/api/customer/liked-salons', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.id;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      // Check if user is customer
-      const user = await storage.getUser(userId);
-      if (!user || user.userType !== 'customer') {
-        return res.status(403).json({ message: "Only customers can view liked salons" });
-      }
-      
-      const likedSalons = await storage.getSalonLikesByCustomer(userId);
-      
-      // Get full salon details for each liked salon
-      const salonsWithDetails = await Promise.all(
-        likedSalons.map(async (like) => {
-          const salon = await storage.getSalonById(like.salonId);
-          return {
-            ...like,
-            salon
-          };
-        })
-      );
-      
-      res.json(salonsWithDetails);
-    } catch (error) {
-      console.error("Error fetching liked salons:", error);
-      res.status(500).json({ message: "Failed to fetch liked salons" });
-    }
-  });
-  
   // Get salon likes for salon owner (see who liked their salon)
   app.get('/api/owner/salon/:salonId/likes', isAuthenticated, async (req: any, res) => {
     try {

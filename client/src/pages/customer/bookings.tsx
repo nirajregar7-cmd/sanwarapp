@@ -21,6 +21,7 @@ import {
   Scissors,
   RotateCcw,
   Phone,
+  Bell,
 } from "lucide-react";
 import type { BookingWithDetails } from "@shared/schema";
 import { useLocation } from "wouter";
@@ -512,14 +513,49 @@ export default function CustomerBookings() {
         )}
       </div>
 
-      {/* Liked Salons */}
+      {/* Liked & Following Salons */}
       <LikedSalons />
+      <FollowingSalons />
+      <div className="h-6" />
     </div>
   );
 }
 
+function SalonCard({ salon, badge }: { salon: any; badge?: JSX.Element }) {
+  const img = salon.imageUrl || salon.primaryImageUrl || salon.coverImageUrl;
+  return (
+    <Link href={`/salon/${salon.id}`}>
+      <div className="w-36 flex-shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden active:scale-95 transition-transform cursor-pointer">
+        <div className="relative h-24 bg-gradient-to-br from-purple-100 to-pink-100">
+          {img ? (
+            <img src={img} alt={salon.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Scissors className="h-8 w-8 text-purple-300" />
+            </div>
+          )}
+          {badge && (
+            <div className="absolute top-1.5 right-1.5">{badge}</div>
+          )}
+        </div>
+        <div className="p-2.5">
+          <p className="font-semibold text-xs text-gray-900 truncate leading-tight">{salon.name || "Salon"}</p>
+          <p className="text-[10px] text-gray-400 truncate mt-0.5">{salon.address || salon.city || ""}</p>
+          {salon.averageRating > 0 && (
+            <div className="flex items-center gap-0.5 mt-1">
+              <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+              <span className="text-[10px] font-semibold text-gray-600">
+                {parseFloat(salon.averageRating?.toString() || "0").toFixed(1)}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function LikedSalons() {
-  const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
   const { data: likedSalons, isLoading } = useQuery<any[]>({
     queryKey: ["/api/customer/liked-salons"],
@@ -544,35 +580,48 @@ function LikedSalons() {
       ) : (
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {likedSalons!.map((salon: any) => (
-            <Link key={salon.id} href={`/salon/${salon.id}`}>
-              <div className="w-36 flex-shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden active:scale-95 transition-transform">
-                <div className="h-24 bg-gradient-to-br from-purple-100 to-pink-100">
-                  {salon.imageUrl ? (
-                    <img
-                      src={salon.imageUrl}
-                      alt={salon.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Scissors className="h-8 w-8 text-purple-300" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-2.5">
-                  <p className="font-semibold text-xs text-gray-900 truncate">{salon.name}</p>
-                  <p className="text-[10px] text-gray-500 truncate mt-0.5">{salon.address}</p>
-                  {salon.averageRating > 0 && (
-                    <div className="flex items-center gap-0.5 mt-1">
-                      <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                      <span className="text-[10px] font-semibold text-gray-600">
-                        {salon.averageRating.toFixed(1)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Link>
+            <SalonCard
+              key={salon.id}
+              salon={salon}
+              badge={<Heart className="h-3.5 w-3.5 text-red-500 fill-red-400 drop-shadow" />}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FollowingSalons() {
+  const { isAuthenticated } = useAuth();
+  const { data: followingSalons, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/customer/following"],
+    enabled: !!isAuthenticated,
+    retry: false,
+  });
+
+  if (!followingSalons?.length && !isLoading) return null;
+
+  return (
+    <div className="px-4 mt-6">
+      <h2 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+        <Bell className="h-4 w-4 text-purple-500 fill-purple-100" />
+        Following
+      </h2>
+      {isLoading ? (
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="w-36 flex-shrink-0 bg-white rounded-2xl h-44 animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {followingSalons!.map((salon: any) => (
+            <SalonCard
+              key={salon.id}
+              salon={salon}
+              badge={<Bell className="h-3.5 w-3.5 text-purple-600 fill-purple-500 drop-shadow" />}
+            />
           ))}
         </div>
       )}
