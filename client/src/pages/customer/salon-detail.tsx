@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
-  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown, Building2, MessageSquare, Edit, Trash2, Navigation
+  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown, Building2, MessageSquare, Edit, Trash2, Navigation, Bell, BellOff
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { useState, useEffect, useRef } from "react";
@@ -59,6 +59,8 @@ export default function SalonDetail() {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
   const [appliedReferralCode, setAppliedReferralCode] = useState<any>(null);
   const [viewingMedia, setViewingMedia] = useState<any>(null);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -575,6 +577,65 @@ export default function SalonDetail() {
     },
   });
 
+  // Follow status query
+  const resolvedSalonIdForFollow = resolvedSalonId || salonId;
+  useQuery<{ isFollowing: boolean }>({
+    queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follow`],
+    enabled: !!resolvedSalonIdForFollow && isAuthenticated && (user as any)?.userType === 'customer',
+    refetchOnWindowFocus: false,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const res = await fetch(`/api/salons/${resolvedSalonIdForFollow}/follow`, { credentials: 'include' });
+      if (!res.ok) return { isFollowing: false };
+      return res.json();
+    },
+    select: (data) => { setIsFollowing(data.isFollowing); return data; },
+  });
+
+  // Follower count query (public)
+  useQuery<{ followerCount: number }>({
+    queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follower-count`],
+    enabled: !!resolvedSalonIdForFollow,
+    staleTime: 60 * 1000,
+    select: (data) => { setFollowerCount(data.followerCount); return data; },
+  });
+
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      const method = isFollowing ? "DELETE" : "POST";
+      const res = await apiRequest(method, `/api/salons/${resolvedSalonIdForFollow}/follow`);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setIsFollowing(data.isFollowing);
+      setFollowerCount(data.followerCount ?? followerCount);
+      toast({
+        title: data.isFollowing ? "Following!" : "Unfollowed",
+        description: data.isFollowing
+          ? "You'll get push notifications and emails when this salon adds new offers."
+          : "You'll no longer receive offer alerts from this salon.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follow`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonIdForFollow}/follower-count`] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Could not update follow status. Please try again.", variant: "destructive" });
+    },
+  });
+
+  const handleFollowToggle = () => {
+    if (!isAuthenticated) {
+      toast({ title: "Login Required", description: "Please log in to follow salons.", variant: "destructive" });
+      navigate(`/auth?redirect=${window.location.pathname}`);
+      return;
+    }
+    if ((user as any)?.userType !== 'customer') {
+      toast({ title: "Customer Account Required", description: "Only customers can follow salons.", variant: "destructive" });
+      return;
+    }
+    followMutation.mutate();
+  };
+
   // Share functionality
   const handleShare = async () => {
     try {
@@ -951,6 +1012,23 @@ export default function SalonDetail() {
                 {likesCount > 0 && (
                   <span className="ml-1 text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">
                     {likesCount}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant={isFollowing ? "default" : "outline"}
+                size="sm"
+                className={`flex-1 sm:flex-none ${isFollowing ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}`}
+                onClick={handleFollowToggle}
+                disabled={followMutation.isPending}
+              >
+                {isFollowing
+                  ? <BellOff className="h-4 w-4 mr-2" />
+                  : <Bell className="h-4 w-4 mr-2" />}
+                {isFollowing ? 'Following' : 'Follow'}
+                {followerCount > 0 && (
+                  <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${isFollowing ? 'bg-purple-500' : 'bg-gray-100 text-gray-600'}`}>
+                    {followerCount}
                   </span>
                 )}
               </Button>

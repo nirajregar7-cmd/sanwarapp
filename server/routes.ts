@@ -18,8 +18,8 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos, salonChats } from "@shared/schema";
-import { sendBookingConfirmationNotification, sendSalonOwnerBookingNotification } from "./notifications";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos, salonChats, salonFollowers } from "@shared/schema";
+import { sendBookingConfirmationNotification, sendSalonOwnerBookingNotification, notifyFollowersNewOffer } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection, sendDiscountCardEmail } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
 import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArray, gte, lte, isNull } from "drizzle-orm";
@@ -942,6 +942,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch salon offers" });
     }
   });
+
+  // ─── Salon Follow / Unfollow ───────────────────────────────────────────────
+
+  // Check if current customer follows a salon
+  app.get('/api/salons/:salonId/follow', isAuthenticated, async (req: any, res) => {
+    try {
+      const customerId = req.user?.id;
+      const { salonId } = req.params;
+      const [row] = await db
+        .select()
+        .from(salonFollowers)
+        .where(and(eq(salonFollowers.salonId, salonId), eq(salonFollowers.customerId, customerId)));
+      res.json({ isFollowing: !!row });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to check follow status" });
+    }
+  });
+
+  // Follow a salon
+  app.post('/api/salons/:salonId/follow', isAuthenticated, async (req: any, res) => {
+    try {
+      const customerId = req.user?.id;
+      const { salonId } = req.params;
+      // Upsert — ignore duplicate
+      await db.insert(salonFollowers).values({ salonId, customerId }).onConflictDoNothing();
+      const [{ count: followerCount }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(salonFollowers)
+        .where(eq(salonFollowers.salonId, salonId));
+      res.json({ isFollowing: true, followerCount });
+    } catch (error) {
+      console.error("Error following salon:", error);
+      res.status(500).json({ message: "Failed to follow salon" });
+    }
+  });
+
+  // Unfollow a salon
+  app.delete('/api/salons/:salonId/follow', isAuthenticated, async (req: any, res) => {
+    try {
+      const customerId = req.user?.id;
+      const { salonId } = req.params;
+      await db.delete(salonFollowers)
+        .where(and(eq(salonFollowers.salonId, salonId), eq(salonFollowers.customerId, customerId)));
+      const [{ count: followerCount }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(salonFollowers)
+        .where(eq(salonFollowers.salonId, salonId));
+      res.json({ isFollowing: false, followerCount });
+    } catch (error) {
+      console.error("Error unfollowing salon:", error);
+      res.status(500).json({ message: "Failed to unfollow salon" });
+    }
+  });
+
+  // Get follower count for a salon (public)
+  app.get('/api/salons/:salonId/follower-count', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const [{ count: followerCount }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(salonFollowers)
+        .where(eq(salonFollowers.salonId, salonId));
+      res.json({ followerCount });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get follower count" });
+    }
+  });
+
+  // Get all salons a customer follows
+  app.get('/api/customer/following', isAuthenticated, async (req: any, res) => {
+    try {
+      const customerId = req.user?.id;
+      const followed = await db
+        .select({ salon: salons })
+        .from(salonFollowers)
+        .innerJoin(salons, eq(salonFollowers.salonId, salons.id))
+        .where(eq(salonFollowers.customerId, customerId))
+        .orderBy(desc(salonFollowers.createdAt));
+      res.json(followed.map(r => r.salon));
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get followed salons" });
+    }
+  });
+
+  // ─── Salon Staff ────────────────────────────────────────────────────────────
 
   // Salon staff endpoint
   app.get('/api/salons/:salonId/staff', async (req, res) => {
@@ -8146,6 +8231,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         promoCode: offerData.promoCode || null,
         serviceSpecificDiscounts: transformedData.serviceSpecificDiscounts,
       }).returning();
+      
+      // Fire-and-forget: notify followers about the new offer
+      if (newOffer && newOffer.isActive && newOffer.isVisible) {
+        notifyFollowersNewOffer(newOffer.id, salon.id).catch(console.error);
+      }
       
       res.json(newOffer);
     } catch (error) {

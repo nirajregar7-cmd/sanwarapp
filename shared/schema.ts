@@ -1809,6 +1809,20 @@ export type SalonChat = typeof salonChats.$inferSelect;
 export type InsertSalonChat = z.infer<typeof insertSalonChatSchema>;
 
 // Salon Staff Registrations - for professionals seeking salon jobs
+export const salonFollowers = pgTable("salon_followers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertSalonFollowerSchema = createInsertSchema(salonFollowers).omit({
+  id: true,
+  createdAt: true,
+});
+export type SalonFollower = typeof salonFollowers.$inferSelect;
+export type InsertSalonFollower = z.infer<typeof insertSalonFollowerSchema>;
+
 export const staffRegistrations = pgTable("staff_registrations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fullName: varchar("full_name", { length: 255 }).notNull(),

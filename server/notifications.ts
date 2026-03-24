@@ -7,9 +7,11 @@ import {
   bookings,
   salons,
   services,
-  users 
+  users,
+  salonFollowers,
+  salonOffers,
 } from '@shared/schema';
-import { eq, and, desc, gte } from 'drizzle-orm';
+import { eq, and, desc, gte, inArray } from 'drizzle-orm';
 
 // Configure VAPID keys for web push
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
@@ -946,4 +948,110 @@ export async function notifyReEngagement(userId: string, nearbyCount?: number) {
     sendPushToUser(userId, { title, body, tag: 're-engagement', data: { url: '/' } }),
     logInAppNotification({ userId, type: 're_engagement', title, message: body, actionUrl: '/' }),
   ]);
+}
+
+// Notify followers when a salon creates a new offer/discount
+export async function notifyFollowersNewOffer(offerId: string, salonId: string) {
+  try {
+    // Get offer details
+    const [offer] = await db.select().from(salonOffers).where(eq(salonOffers.id, offerId));
+    if (!offer) return;
+
+    // Get salon details
+    const [salon] = await db.select({ name: salons.name }).from(salons).where(eq(salons.id, salonId));
+    if (!salon) return;
+
+    // Get all followers of this salon
+    const followers = await db
+      .select({ customerId: salonFollowers.customerId })
+      .from(salonFollowers)
+      .where(eq(salonFollowers.salonId, salonId));
+
+    if (followers.length === 0) return;
+
+    const customerIds = followers.map(f => f.customerId);
+
+    // Get customer details (email + name) for email sending
+    const customers = await db
+      .select({ id: users.id, email: users.email, firstName: users.firstName })
+      .from(users)
+      .where(inArray(users.id, customerIds));
+
+    const discountText = offer.discountType === 'percentage'
+      ? `${offer.discountValue}% off`
+      : `₹${offer.discountValue} off`;
+
+    const title = `🎉 New Offer at ${salon.name}!`;
+    const body = `${salon.name} is offering ${discountText} — ${offer.title}. Book now before it expires!`;
+    const actionUrl = `/salon/${salonId}`;
+
+    const { sendEmail } = await import('./emailService');
+
+    // Send push + in-app + email to each follower
+    await Promise.all(
+      customerIds.map(async (customerId) => {
+        await Promise.all([
+          sendPushToUser(customerId, {
+            title,
+            body,
+            tag: `new-offer-${offerId}`,
+            data: { url: actionUrl },
+            requireInteraction: true,
+          }),
+          logInAppNotification({
+            userId: customerId,
+            type: 'promotional',
+            title,
+            message: body,
+            actionUrl,
+          }),
+        ]);
+      })
+    );
+
+    // Send email to each follower who has an email
+    await Promise.all(
+      customers
+        .filter(c => c.email)
+        .map(async (customer) => {
+          const name = customer.firstName || 'there';
+          const html = `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+              <div style="background:linear-gradient(135deg,#7c3aed,#db2777);padding:28px 24px;border-radius:12px 12px 0 0;text-align:center;">
+                <h1 style="color:white;margin:0;font-size:24px;">🎉 New Offer Just For You!</h1>
+              </div>
+              <div style="background:#fff;padding:24px;border:1px solid #e5e7eb;border-radius:0 0 12px 12px;">
+                <p style="color:#374151;font-size:16px;">Hi ${name},</p>
+                <p style="color:#374151;font-size:15px;">
+                  <strong>${salon.name}</strong>, one of your followed salons, has a new offer just for you:
+                </p>
+                <div style="background:#faf5ff;border:1px solid #d8b4fe;border-radius:10px;padding:20px;margin:20px 0;text-align:center;">
+                  <h2 style="color:#7c3aed;margin:0 0 8px;">${offer.title}</h2>
+                  <p style="font-size:28px;font-weight:bold;color:#db2777;margin:8px 0;">${discountText}</p>
+                  ${offer.promoCode ? `<p style="color:#6b7280;font-size:14px;">Use code: <strong style="color:#7c3aed;">${offer.promoCode}</strong></p>` : ''}
+                  ${offer.minOrderAmount && Number(offer.minOrderAmount) > 0 ? `<p style="color:#6b7280;font-size:13px;">Min order: ₹${offer.minOrderAmount}</p>` : ''}
+                  ${offer.validUntil ? `<p style="color:#6b7280;font-size:13px;">Valid until: ${new Date(offer.validUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>` : ''}
+                </div>
+                <p style="color:#6b7280;font-size:13px;">You're receiving this because you follow ${salon.name} on Sanwar.</p>
+                <div style="text-align:center;margin-top:24px;">
+                  <a href="https://sanwarhub.in/salon/${salonId}" 
+                     style="background:#7c3aed;color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;">
+                    Book Now
+                  </a>
+                </div>
+              </div>
+            </div>
+          `;
+          await sendEmail({
+            to: customer.email!,
+            subject: `🎉 ${salon.name} has a new offer: ${discountText}`,
+            html,
+          });
+        })
+    );
+
+    console.log(`[Followers] Notified ${customerIds.length} followers of new offer at ${salon.name}`);
+  } catch (error) {
+    console.error('[Followers] Error notifying followers of new offer:', error);
+  }
 }
