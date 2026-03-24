@@ -217,6 +217,17 @@ function Router() {
                   <OwnerDashboard />
                 </Layout>
               </Route>
+              {/* Alias routes so notifications and links always work */}
+              <Route path="/owner/dashboard">
+                <Layout>
+                  <OwnerDashboard />
+                </Layout>
+              </Route>
+              <Route path="/owner/bookings">
+                <Layout>
+                  <OwnerDashboard />
+                </Layout>
+              </Route>
             </>
           )}
           
