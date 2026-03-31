@@ -305,7 +305,7 @@ export default function Landing() {
                 className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group"
                 data-testid="link-services"
               >
-                Services
+                Get Salon Job
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link
@@ -380,7 +380,7 @@ export default function Landing() {
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="link-services-mobile"
                 >
-                  Services
+                  Get Salon Job
                 </Link>
                 <Link
                   href="/about"
@@ -1389,6 +1389,58 @@ export default function Landing() {
               </div>
             </div>
           </FadeInSection>
+        </div>
+      </section>
+
+      {/* Staff Registration Banner */}
+      <section className="py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white p-8 sm:p-12 shadow-2xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-16 translate-x-16" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="flex-1">
+                  <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+                    🔥 New Feature
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl font-extrabold mb-3">
+                    Sanwar Staff Registration
+                  </h2>
+                  <p className="text-blue-100 text-lg mb-4">
+                    Are you a barber, stylist, beautician, or makeup artist? Register your professional profile and get discovered by verified salons.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {["Barbers", "Hair Stylists", "Beauticians", "Nail Artists", "Makeup Artists", "Helpers"].map((role) => (
+                      <span key={role} className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
+                        {role}
+                      </span>
+                    ))}
+                  </div>
+                  <Link href="/staff-registration">
+                    <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 font-bold px-8 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                      Register as a Professional →
+                    </Button>
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-center flex-shrink-0">
+                  {[
+                    { step: "1", label: "Fill your profile" },
+                    { step: "2", label: "Add your skills" },
+                    { step: "3", label: "Set salary range" },
+                    { step: "4", label: "Get hired!" },
+                  ].map((item) => (
+                    <div key={item.step} className="bg-white/15 rounded-2xl p-4 w-28">
+                      <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-2">
+                        {item.step}
+                      </div>
+                      <p className="text-xs font-medium leading-tight">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -83,7 +83,7 @@ export default function Services() {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link href="/services" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-services">
-                Services
+                Get Salon Job
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link href="/about" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-about">
@@ -138,7 +138,7 @@ export default function Services() {
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="link-services-mobile"
                 >
-                  Services
+                  Get Salon Job
                 </Link>
                 <Link 
                   href="/about" 
