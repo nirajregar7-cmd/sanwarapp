@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useLocation as useRouter, Link } from "wouter";
-import sanwarLogo from "@/assets/sanwar-logo.png";
 import {
   Search,
   Scissors,
@@ -12,11 +11,9 @@ import {
   ShoppingBag,
   Users,
   MapPin,
-  ChevronRight,
   Filter,
-  X,
-  Menu,
 } from "lucide-react";
+import PublicNav from "@/components/PublicNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +28,6 @@ import { useQuery } from "@tanstack/react-query";
 import type { Salon } from "@/../../shared/schema";
 import SalonCard from "@/components/SalonCard";
 import { useLocation } from "@/contexts/LocationContext";
-import { useAuth } from "@/hooks/useAuth";
 import LocationPermissionDialog from "@/components/LocationPermissionDialog";
 import { TypewriterEffect } from "@/components/TypewriterEffect";
 
@@ -39,9 +35,7 @@ export default function FindSalons() {
   const [, setRoute] = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { locationPreference, requestLocationOnce, showLocationDialog, setShowLocationDialog, denyLocationPermission } = useLocation();
-  const { isAuthenticated } = useAuth();
 
   // Fetch nearby salons if location is available
   const { data: nearbySalons = [] } = useQuery<Salon[]>({
@@ -136,163 +130,7 @@ export default function FindSalons() {
         onDeny={denyLocationPermission}
       />
 
-      {/* NAVIGATION BAR */}
-      <nav className="bg-white shadow-lg sticky top-0 z-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo and Brand */}
-            <Link
-              href="/"
-              className="flex items-center space-x-3 group cursor-pointer"
-              data-testid="link-logo"
-            >
-              <div className="relative">
-                <img
-                  src={sanwarLogo}
-                  alt="Sanwar"
-                  className="w-16 h-16 object-contain transform group-hover:scale-110 transition-all duration-300"
-                />
-                <div className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-              </div>
-              <div>
-                <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:via-pink-600 group-hover:to-blue-700 transition-all duration-300">
-                  Sanwar
-                </span>
-                <p className="text-xs text-gray-500 font-medium -mt-1">
-                  Smart Salon Booking
-                </p>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center space-x-1">
-              <Link
-                href="/"
-                className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group"
-                data-testid="link-home"
-              >
-                Home
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              <Link
-                href="/services"
-                className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group"
-                data-testid="link-services"
-              >
-                Get Salon Job
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              <Link
-                href="/hire-staff"
-                className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group"
-                data-testid="link-about"
-              >
-                Hire Staff
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              <Link
-                href="/contact"
-                className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group"
-                data-testid="link-contact"
-              >
-                Contact
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              {isAuthenticated ? (
-                <Link
-                  href="/dashboard"
-                  className="ml-4 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-2.5 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold"
-                  data-testid="link-dashboard"
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <Link
-                  href="/auth"
-                  className="ml-4 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-2.5 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold flex items-center space-x-2"
-                  data-testid="link-login"
-                >
-                  <span>Login / Register</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              )}
-            </div>
-
-            {/* Mobile Hamburger Menu Button */}
-            <button
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              data-testid="button-mobile-menu"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6 text-gray-700" />
-              ) : (
-                <Menu className="h-6 w-6 text-gray-700" />
-              )}
-            </button>
-          </div>
-
-          {/* Mobile Menu Dropdown */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-gray-100 py-4 px-4 bg-white">
-              <div className="flex flex-col space-y-3">
-                <Link
-                  href="/"
-                  className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="mobile-link-home"
-                >
-                  Home
-                </Link>
-                <Link
-                  href="/services"
-                  className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="mobile-link-services"
-                >
-                  Get Salon Job
-                </Link>
-                <Link
-                  href="/hire-staff"
-                  className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="mobile-link-about"
-                >
-                  Hire Staff
-                </Link>
-                <Link
-                  href="/contact"
-                  className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="mobile-link-contact"
-                >
-                  Contact
-                </Link>
-                {isAuthenticated ? (
-                  <Link
-                    href="/dashboard"
-                    className="mx-4 mt-2 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-3 rounded-full text-center font-semibold"
-                    onClick={() => setMobileMenuOpen(false)}
-                    data-testid="mobile-link-dashboard"
-                  >
-                    Dashboard
-                  </Link>
-                ) : (
-                  <Link
-                    href="/auth"
-                    className="mx-4 mt-2 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-3 rounded-full text-center font-semibold"
-                    onClick={() => setMobileMenuOpen(false)}
-                    data-testid="mobile-link-login"
-                  >
-                    Login / Register
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+      <PublicNav />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* HERO */}

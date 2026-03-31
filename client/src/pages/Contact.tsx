@@ -4,15 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Mail, Phone, MapPin, Clock, MessageSquare, Users, HelpCircle, Menu, X, Scissors, ChevronRight } from "lucide-react";
-import sanwarLogo from "@/assets/sanwar-logo.png";
+import { ArrowLeft, Mail, Phone, MapPin, Clock, MessageSquare, Users, HelpCircle } from "lucide-react";
 import { SiInstagram, SiFacebook, SiX, SiLinkedin } from "react-icons/si";
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function Contact() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -36,132 +32,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-lg sticky top-0 z-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo and Brand */}
-            <Link href="/" className="flex items-center space-x-3 group cursor-pointer" data-testid="link-logo">
-              <div className="relative">
-                <img
-                  src={sanwarLogo}
-                  alt="Sanwar"
-                  className="w-16 h-16 object-contain transform group-hover:scale-110 transition-all duration-300"
-                />
-                <div className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-              </div>
-              <div>
-                <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:via-pink-600 group-hover:to-blue-700 transition-all duration-300">
-                  Sanwar
-                </span>
-                <p className="text-xs text-gray-500 font-medium -mt-1">Smart Salon Booking</p>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center space-x-1">
-              <Link href="/" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-home">
-                Home
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              <Link href="/services" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-services">
-                Services
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              <Link href="/about" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-about">
-                About Us
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              <Link href="/contact" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-contact">
-                Contact
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              {isAuthenticated ? (
-                <Link href="/dashboard" className="ml-4 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-2.5 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold" data-testid="link-dashboard">
-                  Dashboard
-                </Link>
-              ) : (
-                <Link href="/auth" className="ml-4 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white px-6 py-2.5 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold flex items-center space-x-2" data-testid="link-login">
-                  <span>Login / Register</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-gray-600 hover:text-gray-900"
-                data-testid="button-mobile-menu"
-              >
-                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden animate-fade-in-up">
-              <div className="px-2 pt-2 pb-3 space-y-2 bg-gradient-to-br from-white to-purple-50 border-t border-gray-200 shadow-inner">
-                <Link 
-                  href="/" 
-                  className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="link-home-mobile"
-                >
-                  Home
-                </Link>
-                <Link 
-                  href="/services" 
-                  className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="link-services-mobile"
-                >
-                  Services
-                </Link>
-                <Link 
-                  href="/about" 
-                  className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="link-about-mobile"
-                >
-                  About Us
-                </Link>
-                <Link 
-                  href="/contact" 
-                  className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="link-contact-mobile"
-                >
-                  Contact
-                </Link>
-                {isAuthenticated ? (
-                  <Link 
-                    href="/dashboard" 
-                    className="block px-4 py-3 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-semibold mx-2 mt-2 text-center"
-                    onClick={() => setMobileMenuOpen(false)}
-                    data-testid="link-dashboard-mobile"
-                  >
-                    Dashboard
-                  </Link>
-                ) : (
-                  <Link 
-                    href="/auth" 
-                    className="block px-4 py-3 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-semibold mx-2 mt-2 text-center"
-                    onClick={() => setMobileMenuOpen(false)}
-                    data-testid="link-login-mobile"
-                  >
-                    Login / Register
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+      <PublicNav />
 
       {/* Header */}
       <section className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white py-16">

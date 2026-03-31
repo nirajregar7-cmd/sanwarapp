@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import sanwarLogo from "@/assets/sanwar-logo.png";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,8 +129,6 @@ function PhotoPreview({
 }
 
 export default function StaffRegistration() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [step, setStep] = useState(0);
@@ -332,61 +329,7 @@ export default function StaffRegistration() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50">
-      {/* Navbar */}
-      <nav className="bg-white shadow-lg sticky top-0 z-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <Link href="/" className="flex items-center space-x-3 group cursor-pointer">
-              <div className="relative">
-                <img
-                  src={sanwarLogo}
-                  alt="Sanwar"
-                  className="w-16 h-16 object-contain transform group-hover:scale-110 transition-all"
-                />
-                <div className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-              </div>
-              <div>
-                <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 bg-clip-text text-transparent">
-                  Sanwar
-                </span>
-                <p className="text-xs text-gray-500 -mt-1">Smart Salon Booking</p>
-              </div>
-            </Link>
-
-            <div className="hidden md:flex items-center space-x-1">
-              <Link href="/" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors">Home</Link>
-              <Link href="/services" className="px-4 py-2 text-purple-600 font-semibold">Get Salon Job</Link>
-              <Link href="/hire-staff" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors">Hire Staff</Link>
-              <Link href="/contact" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors">Contact</Link>
-              {isAuthenticated ? (
-                <Link href="/" className="ml-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transition-all">
-                  Dashboard
-                </Link>
-              ) : (
-                <Link href="/auth" className="ml-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transition-all flex items-center gap-2">
-                  <span>Login / Register</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              )}
-            </div>
-
-            <div className="md:hidden">
-              <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
-            </div>
-          </div>
-
-          {mobileMenuOpen && (
-            <div className="md:hidden pb-4 space-y-2">
-              <Link href="/" className="block px-4 py-3 text-gray-700 hover:text-purple-600 font-semibold rounded-xl" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-              <Link href="/services" className="block px-4 py-3 text-purple-600 font-semibold rounded-xl" onClick={() => setMobileMenuOpen(false)}>Get Salon Job</Link>
-              <Link href="/hire-staff" className="block px-4 py-3 text-gray-700 hover:text-purple-600 font-semibold rounded-xl" onClick={() => setMobileMenuOpen(false)}>Hire Staff</Link>
-              <Link href="/contact" className="block px-4 py-3 text-gray-700 hover:text-purple-600 font-semibold rounded-xl" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-            </div>
-          )}
-        </div>
-      </nav>
+      <PublicNav />
 
       {/* Main Content */}
       <div className="flex justify-center py-10 px-4">

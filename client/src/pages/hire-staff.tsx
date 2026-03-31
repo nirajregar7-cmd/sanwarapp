@@ -29,7 +29,6 @@ import {
   Scissors,
   Users,
 } from "lucide-react";
-import sanwarLogo from "@/assets/sanwar-logo.png";
 import type { StaffRegistration } from "@/../../shared/schema";
 
 const ROLES = [
@@ -137,41 +136,7 @@ export default function HireStaff() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* NAV */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <img src={sanwarLogo} alt="Sanwar" className="h-9 w-9 rounded-xl" />
-              <div className="leading-tight">
-                <div className="font-extrabold text-lg text-gray-900">Sanwar</div>
-                <div className="text-[10px] text-gray-500 -mt-0.5">Smart Salon Booking</div>
-              </div>
-            </Link>
-            <div className="hidden md:flex items-center gap-1">
-              <Link href="/" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors rounded-lg hover:bg-purple-50">Home</Link>
-              <Link href="/services" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors rounded-lg hover:bg-purple-50">Get Salon Job</Link>
-              <Link href="/hire-staff" className="px-4 py-2 text-purple-600 font-semibold bg-purple-50 rounded-lg">Hire Staff</Link>
-              <Link href="/contact" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors rounded-lg hover:bg-purple-50">Contact</Link>
-            </div>
-            <div className="flex items-center gap-3">
-              {isAuthenticated ? (
-                <Link href="/">
-                  <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-semibold px-5">
-                    Dashboard
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/api/login">
-                  <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-semibold px-5">
-                    Login / Register <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicNav />
 
       {/* HERO BANNER */}
       <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 text-white py-10 px-4">
