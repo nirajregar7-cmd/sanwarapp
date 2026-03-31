@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import PublicNav from "@/components/PublicNav";
 import { Link, useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";

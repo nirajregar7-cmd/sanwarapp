@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PublicNav from "@/components/PublicNav";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";

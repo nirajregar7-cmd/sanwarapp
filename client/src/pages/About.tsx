@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import PublicNav from "@/components/PublicNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Users, Target, Award, Heart } from "lucide-react";
