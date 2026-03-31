@@ -11446,6 +11446,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/staff-registrations/search', async (req: any, res) => {
+    try {
+      const { city, role, gender } = req.query;
+      let registrations = await storage.getAllStaffRegistrations();
+      if (city && city !== 'all') {
+        registrations = registrations.filter((r: any) =>
+          r.city?.toLowerCase().includes((city as string).toLowerCase())
+        );
+      }
+      if (role && role !== 'all') {
+        registrations = registrations.filter((r: any) =>
+          r.role?.toLowerCase() === (role as string).toLowerCase()
+        );
+      }
+      if (gender && gender !== 'all') {
+        registrations = registrations.filter((r: any) =>
+          r.gender?.toLowerCase() === (gender as string).toLowerCase()
+        );
+      }
+      res.json(registrations);
+    } catch (error) {
+      console.error('Error searching staff registrations:', error);
+      res.status(500).json({ message: "Failed to search registrations" });
+    }
+  });
+
   app.get('/api/staff-registrations', isAuthenticated, async (req: any, res) => {
     try {
       const registrations = await storage.getAllStaffRegistrations();

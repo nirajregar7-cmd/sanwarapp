@@ -183,11 +183,11 @@ export default function FindSalons() {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link
-                href="/about"
+                href="/hire-staff"
                 className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group"
                 data-testid="link-about"
               >
-                About Us
+                Hire Staff
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link
@@ -254,12 +254,12 @@ export default function FindSalons() {
                   Get Salon Job
                 </Link>
                 <Link
-                  href="/about"
+                  href="/hire-staff"
                   className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-semibold"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="mobile-link-about"
                 >
-                  About Us
+                  Hire Staff
                 </Link>
                 <Link
                   href="/contact"
@@ -529,7 +529,7 @@ export default function FindSalons() {
                     </div>
                   ))}
                 </div>
-                <Link href="/api/login?user_intent=salon_owner">
+                <Link href="/hire-staff">
                   <Button size="sm" className="w-full bg-white text-emerald-700 hover:bg-green-50 font-bold rounded-full shadow-md hover:shadow-lg transition-all">
                     Start Hiring Now →
                   </Button>

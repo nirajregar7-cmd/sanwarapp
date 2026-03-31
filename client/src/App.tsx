@@ -79,6 +79,7 @@ import Blog from "@/pages/Blog";
 // Info Pages
 import About from "@/pages/About";
 import Services from "@/pages/Services";
+import HireStaff from "@/pages/hire-staff";
 import Contact from "@/pages/Contact";
 import StaffRegistration from "@/pages/staff-registration";
 
@@ -517,6 +518,7 @@ function Router() {
       {/* Public Info Pages */}
       <Route path="/about" component={About} />
       <Route path="/services" component={Services} />
+      <Route path="/hire-staff" component={HireStaff} />
       <Route path="/contact" component={Contact} />
       <Route path="/staff-registration" component={StaffRegistration} />
 

@@ -356,7 +356,7 @@ export default function StaffRegistration() {
             <div className="hidden md:flex items-center space-x-1">
               <Link href="/" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors">Home</Link>
               <Link href="/services" className="px-4 py-2 text-purple-600 font-semibold">Get Salon Job</Link>
-              <Link href="/about" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors">About Us</Link>
+              <Link href="/hire-staff" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors">Hire Staff</Link>
               <Link href="/contact" className="px-4 py-2 text-gray-700 hover:text-purple-600 font-semibold transition-colors">Contact</Link>
               {isAuthenticated ? (
                 <Link href="/" className="ml-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transition-all">
@@ -381,7 +381,7 @@ export default function StaffRegistration() {
             <div className="md:hidden pb-4 space-y-2">
               <Link href="/" className="block px-4 py-3 text-gray-700 hover:text-purple-600 font-semibold rounded-xl" onClick={() => setMobileMenuOpen(false)}>Home</Link>
               <Link href="/services" className="block px-4 py-3 text-purple-600 font-semibold rounded-xl" onClick={() => setMobileMenuOpen(false)}>Get Salon Job</Link>
-              <Link href="/about" className="block px-4 py-3 text-gray-700 hover:text-purple-600 font-semibold rounded-xl" onClick={() => setMobileMenuOpen(false)}>About Us</Link>
+              <Link href="/hire-staff" className="block px-4 py-3 text-gray-700 hover:text-purple-600 font-semibold rounded-xl" onClick={() => setMobileMenuOpen(false)}>Hire Staff</Link>
               <Link href="/contact" className="block px-4 py-3 text-gray-700 hover:text-purple-600 font-semibold rounded-xl" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
             </div>
           )}

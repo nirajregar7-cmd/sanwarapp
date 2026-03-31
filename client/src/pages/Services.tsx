@@ -86,8 +86,8 @@ export default function Services() {
                 Get Salon Job
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
-              <Link href="/about" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-about">
-                About Us
+              <Link href="/hire-staff" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-about">
+                Hire Staff
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link href="/contact" className="relative px-4 py-2 text-gray-700 hover:text-purple-600 transition-all font-semibold group" data-testid="link-contact">
@@ -141,12 +141,12 @@ export default function Services() {
                   Get Salon Job
                 </Link>
                 <Link 
-                  href="/about" 
+                  href="/hire-staff" 
                   className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-white rounded-xl transition-all font-semibold"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="link-about-mobile"
                 >
-                  About Us
+                  Hire Staff
                 </Link>
                 <Link 
                   href="/contact" 
