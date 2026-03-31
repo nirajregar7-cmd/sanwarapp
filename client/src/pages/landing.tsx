@@ -1392,54 +1392,109 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Staff Registration Banner */}
-      <section className="py-10 px-4 sm:px-6 lg:px-8">
+      {/* Salon Jobs Marketplace Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="max-w-6xl mx-auto">
-          <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white p-8 sm:p-12 shadow-2xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-16 translate-x-16" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
-            <div className="relative z-10">
-              <div className="flex flex-col md:flex-row items-center gap-8">
-                <div className="flex-1">
-                  <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
-                    🔥 New Feature
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl font-extrabold mb-3">
-                    Sanwar Staff Registration
-                  </h2>
-                  <p className="text-blue-100 text-lg mb-4">
-                    Are you a barber, stylist, beautician, or makeup artist? Register your professional profile and get discovered by verified salons.
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {["Barbers", "Hair Stylists", "Beauticians", "Nail Artists", "Makeup Artists", "Helpers"].map((role) => (
-                      <span key={role} className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
-                        {role}
-                      </span>
-                    ))}
-                  </div>
-                  <Link href="/staff-registration">
-                    <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 font-bold px-8 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105">
-                      Register as a Professional →
-                    </Button>
-                  </Link>
+          {/* Section heading */}
+          <div className="text-center mb-10">
+            <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+              🔥 New Feature
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3">
+              Sanwar Jobs Marketplace
+            </h2>
+            <p className="text-gray-500 text-lg max-w-xl mx-auto">
+              Whether you're a salon owner looking for skilled staff, or a beauty professional looking for your next role — we've got you covered.
+            </p>
+          </div>
+
+          {/* Two cards side by side */}
+          <div className="grid md:grid-cols-2 gap-6">
+
+            {/* Card 1 — Get Salon Job (for professionals) */}
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white p-8 shadow-2xl flex flex-col">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-12 translate-x-12" />
+              <div className="absolute bottom-0 left-0 w-36 h-36 bg-white/5 rounded-full translate-y-8 -translate-x-8" />
+              <div className="relative z-10 flex-1 flex flex-col">
+                <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-semibold mb-4 w-fit">
+                  👤 For Professionals
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-center flex-shrink-0">
+                <h3 className="text-2xl sm:text-3xl font-extrabold mb-2">Get Salon Job</h3>
+                <p className="text-blue-100 text-sm mb-4 flex-1">
+                  Are you a barber, stylist, beautician, or makeup artist? Register your professional profile and get discovered by verified salons.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-5">
+                  {["Barbers", "Hair Stylists", "Beauticians", "Nail Artists", "Makeup Artists", "Helpers"].map((role) => (
+                    <span key={role} className="bg-white/20 px-2.5 py-0.5 rounded-full text-xs font-medium">
+                      {role}
+                    </span>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-6">
                   {[
                     { step: "1", label: "Fill your profile" },
                     { step: "2", label: "Add your skills" },
                     { step: "3", label: "Set salary range" },
                     { step: "4", label: "Get hired!" },
                   ].map((item) => (
-                    <div key={item.step} className="bg-white/15 rounded-2xl p-4 w-28">
-                      <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-2">
+                    <div key={item.step} className="bg-white/15 rounded-xl p-3 text-center">
+                      <div className="w-8 h-8 bg-white/30 rounded-full flex items-center justify-center font-bold text-sm mx-auto mb-1">
                         {item.step}
                       </div>
-                      <p className="text-xs font-medium leading-tight">{item.label}</p>
+                      <p className="text-[11px] font-medium leading-tight">{item.label}</p>
                     </div>
                   ))}
                 </div>
+                <Link href="/staff-registration">
+                  <Button size="lg" className="w-full bg-white text-blue-700 hover:bg-blue-50 font-bold rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                    Register as a Professional →
+                  </Button>
+                </Link>
               </div>
             </div>
+
+            {/* Card 2 — Hire Staff (for salon owners) */}
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 text-white p-8 shadow-2xl flex flex-col">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-12 translate-x-12" />
+              <div className="absolute bottom-0 left-0 w-36 h-36 bg-white/5 rounded-full translate-y-8 -translate-x-8" />
+              <div className="relative z-10 flex-1 flex flex-col">
+                <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-semibold mb-4 w-fit">
+                  🏪 For Salon Owners
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-extrabold mb-2">Hire Skilled Staff</h3>
+                <p className="text-green-50 text-sm mb-4 flex-1">
+                  Find verified, experienced beauty professionals for your salon. Browse profiles, check skills & salary expectations, and hire the perfect fit.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-5">
+                  {["Post a Job", "Browse Profiles", "Verified Skills", "Salary Filters", "Instant Connect", "Free Listing"].map((tag) => (
+                    <span key={tag} className="bg-white/20 px-2.5 py-0.5 rounded-full text-xs font-medium">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-6">
+                  {[
+                    { step: "1", label: "List your vacancy" },
+                    { step: "2", label: "Browse profiles" },
+                    { step: "3", label: "Shortlist talent" },
+                    { step: "4", label: "Hire & grow!" },
+                  ].map((item) => (
+                    <div key={item.step} className="bg-white/15 rounded-xl p-3 text-center">
+                      <div className="w-8 h-8 bg-white/30 rounded-full flex items-center justify-center font-bold text-sm mx-auto mb-1">
+                        {item.step}
+                      </div>
+                      <p className="text-[11px] font-medium leading-tight">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <Link href="/api/login?user_intent=salon_owner">
+                  <Button size="lg" className="w-full bg-white text-emerald-700 hover:bg-green-50 font-bold rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                    Start Hiring Now →
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
