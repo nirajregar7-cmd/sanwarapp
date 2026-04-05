@@ -531,6 +531,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Temporary diagnostic endpoint
+  app.get('/api/debug/db', async (_req, res) => {
+    try {
+      const dbUrl = process.env.DATABASE_URL || '';
+      const hostMatch = dbUrl.match(/@([^/]+)\//);
+      const dbHost = hostMatch ? hostMatch[1] : 'unknown';
+      const result = await db.execute(sql`SELECT count(*) as salon_count FROM salons`);
+      const userCount = await db.execute(sql`SELECT count(*) as user_count FROM users`);
+      res.json({
+        db_host: dbHost,
+        salon_count: result.rows[0],
+        user_count: userCount.rows[0],
+        node_env: process.env.NODE_ENV,
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // Featured salons endpoint (real data only)
   app.get('/api/salons/featured', async (req, res) => {
     try {
