@@ -5,11 +5,15 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-if (!process.env.DATABASE_URL) {
+// NEON_DATABASE_URL takes priority — Replit overrides DATABASE_URL in production
+// with its own managed database. We use NEON_DATABASE_URL to connect to our own DB.
+const dbUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+
+if (!dbUrl) {
   throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+    "NEON_DATABASE_URL (or DATABASE_URL) must be set.",
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ connectionString: dbUrl });
 export const db = drizzle({ client: pool, schema });
