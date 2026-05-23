@@ -659,16 +659,17 @@ export class DatabaseStorage implements IStorage {
 
     // Get salon working hours for the specified date
     const dayOfWeek = new Date(date).getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const workingHours = await db
+    const workingHoursResult = await db
       .select()
       .from(workingHours)
       .where(and(eq(workingHours.salonId, salonId), eq(workingHours.dayOfWeek, dayOfWeek)));
 
-    if (workingHours.length === 0 || !workingHours[0].isOpen) {
+    if (workingHoursResult.length === 0 || !workingHoursResult[0].isOpen) {
       return { generated: 0, message: "Salon is closed on this day" };
     }
 
-    const { startTime, endTime } = workingHours[0];
+    const startTime = workingHoursResult[0].openTime || '09:00';
+    const endTime = workingHoursResult[0].closeTime || '18:00';
     console.log(`[SLOT GENERATION] Salon hours: ${startTime} - ${endTime}`);
 
     // Get all active staff members with their assigned services
@@ -1538,7 +1539,7 @@ export class DatabaseStorage implements IStorage {
 
   // Admin operations implementation
   async getAllUsers(userType?: string, search?: string): Promise<User[]> {
-    let query = db.select().from(users);
+    let query: any = db.select().from(users);
     
     const conditions = [];
     if (userType) {
@@ -1715,7 +1716,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getContentModerations(status?: string): Promise<ContentModeration[]> {
-    let query = db.select().from(contentModerations);
+    let query: any = db.select().from(contentModerations);
     
     if (status) {
       query = query.where(eq(contentModerations.status, status as any));
@@ -1810,7 +1811,7 @@ export class DatabaseStorage implements IStorage {
         eq(users.userType, "salon_owner")
       ));
     
-    return salonOwner;
+    return salonOwner as unknown as User | undefined;
   }
 
   // Password reset OTP operations
