@@ -52,3 +52,7 @@ integrations = ["javascript_object_storage:1.0.0", "javascript_log_in_with_repli
 VAPID_PUBLIC_KEY = "BPen-Rq8ijWTpv4gERqJqgQ-Z-bpB0JJF33vtmrJU_5s2VhDSIe9EtGe0CWV3VdP6BO22jZL5sNQpTIhvOkupfE"
 VAPID_PRIVATE_KEY = "50f_AXW-NHUEY0TTXn5dhvyXmra5UFcH_WT9_hy-HSk"
 VITE_VAPID_PUBLIC_KEY = "BPen-Rq8ijWTpv4gERqJqgQ-Z-bpB0JJF33vtmrJU_5s2VhDSIe9EtGe0CWV3VdP6BO22jZL5sNQpTIhvOkupfE"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
