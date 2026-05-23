@@ -82,6 +82,8 @@ import Services from "@/pages/Services";
 import HireStaff from "@/pages/hire-staff";
 import Contact from "@/pages/Contact";
 import StaffRegistration from "@/pages/staff-registration";
+import StaffLogin from "@/pages/staff-login";
+import StaffDashboard from "@/pages/staff-dashboard";
 
 
 
@@ -521,6 +523,8 @@ function Router() {
       <Route path="/hire-staff" component={HireStaff} />
       <Route path="/contact" component={Contact} />
       <Route path="/staff-registration" component={StaffRegistration} />
+      <Route path="/staff-login" component={StaffLogin} />
+      <Route path="/staff-dashboard" component={StaffDashboard} />
 
       {/* Fallback routes */}
       <Route path="/landing" component={Landing} />

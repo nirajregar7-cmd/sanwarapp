@@ -18,7 +18,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos, salonChats, salonFollowers } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, staffOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos, salonChats, salonFollowers } from "@shared/schema";
 import { sendBookingConfirmationNotification, sendSalonOwnerBookingNotification, notifyFollowersNewOffer } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection, sendDiscountCardEmail } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -27,6 +27,7 @@ import { eq, desc, isNotNull, sql, count, and, or, not, exists, like, asc, inArr
 import { createCashfreeOrder, verifyCashfreePayment, verifyCashfreeWebhookSignature } from "./cashfree-payment";
 import { calculateRevenueShare } from "@shared/revenue";
 import { sendPasswordResetOTP, generateOTP, sendWhatsAppMessage } from "./whatsapp";
+import jwt from "jsonwebtoken";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { setupSEORoutes } from "./seoRoutes";
@@ -10937,6 +10938,306 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error verifying salon owner OTP:", error);
       res.status(500).json({ error: "Failed to verify OTP" });
+    }
+  });
+
+  // ============================================================
+  // STAFF MOBILE OTP AUTHENTICATION
+  // ============================================================
+
+  // Ensure staff_otps table exists (simple migration)
+  try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "staff_otps" (
+        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+        "phone" varchar(20) NOT NULL,
+        "otp" varchar(6) NOT NULL,
+        "is_verified" boolean DEFAULT false,
+        "expires_at" timestamp NOT NULL,
+        "created_at" timestamp DEFAULT now()
+      )
+    `);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS "staff_otps_phone_idx" ON "staff_otps"("phone")`);
+  } catch (e) {
+    // Table may already exist, ignore
+  }
+
+  const STAFF_JWT_SECRET = process.env.JWT_SECRET || 'sanwar-staff-secret-key-2024';
+
+  // Helper: create staff token
+  function createStaffToken(staffMember: any) {
+    return jwt.sign(
+      {
+        staffId: staffMember.id,
+        salonId: staffMember.salonId,
+        phone: staffMember.phone,
+        name: staffMember.name,
+        role: staffMember.role,
+        type: 'staff'
+      },
+      STAFF_JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+  }
+
+  // Send OTP for staff login
+  app.post('/api/staff/send-otp', async (req, res) => {
+    try {
+      const { phone } = req.body;
+      if (!phone) {
+        return res.status(400).json({ error: "Phone number is required" });
+      }
+
+      // Check if staff exists with this phone
+      const staffMembers = await db.select().from(staff).where(eq(staff.phone, phone));
+      if (staffMembers.length === 0) {
+        return res.status(400).json({ error: "No staff member found with this phone number" });
+      }
+
+      // Generate OTP
+      const otp = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Save OTP
+      await db.insert(staffOtps).values({ phone, otp, expiresAt });
+
+      // Send via WhatsApp/SMS
+      const message = `Your Sanwar Staff Login OTP: ${otp}. Valid for 10 minutes. Do not share. - Sanwar Team`;
+      // Format phone for Twilio: ensure +91 prefix if Indian number
+      let formattedPhone = phone;
+      if (phone.length === 10 && /^[6-9]/.test(phone)) {
+        formattedPhone = `+91${phone}`;
+      } else if (phone.startsWith('0') && phone.length === 11) {
+        formattedPhone = `+91${phone.substring(1)}`;
+      } else if (!phone.startsWith('+')) {
+        formattedPhone = `+${phone}`;
+      }
+      const smsSent = await sendWhatsAppMessage({ to: formattedPhone, body: message });
+
+      // In development, return OTP even if SMS fails so testing is possible
+      const isDev = process.env.NODE_ENV === 'development';
+      if (!smsSent && !isDev) {
+        return res.status(500).json({ error: "Failed to send OTP. Please try again." });
+      }
+
+      res.json({
+        message: smsSent ? `OTP sent to ${phone}` : `OTP generated for ${phone} (SMS not sent)`,
+        expiresAt: expiresAt.toISOString(),
+        ...(isDev && !smsSent ? { otp } : {})
+      });
+    } catch (error: any) {
+      console.error("Error sending staff OTP:", error);
+      res.status(500).json({ error: "Failed to send OTP" });
+    }
+  });
+
+  // Verify OTP and log staff in
+  app.post('/api/staff/verify-otp', async (req, res) => {
+    try {
+      const { phone, otp } = req.body;
+      if (!phone || !otp) {
+        return res.status(400).json({ error: "Phone and OTP are required" });
+      }
+
+      // Find OTP record - filter isVerified in JS to avoid Drizzle boolean issues
+      const candidates = await db.select().from(staffOtps)
+        .where(and(
+          eq(staffOtps.phone, phone),
+          eq(staffOtps.otp, otp)
+        ))
+        .orderBy(desc(staffOtps.createdAt))
+        .limit(1);
+      const otpRecord = candidates.find((r: any) => r.isVerified === false || r.isVerified === null);
+
+      if (!otpRecord) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+      }
+
+      if (new Date() > otpRecord.expiresAt) {
+        return res.status(400).json({ error: "OTP has expired. Please request a new one." });
+      }
+
+      // Mark OTP verified
+      await db.update(staffOtps)
+        .set({ isVerified: true })
+        .where(eq(staffOtps.id, otpRecord.id));
+
+      // Get staff member
+      const [staffMember] = await db.select().from(staff).where(eq(staff.phone, phone)).limit(1);
+      if (!staffMember) {
+        return res.status(400).json({ error: "Staff member not found" });
+      }
+
+      // Create JWT token
+      const token = createStaffToken(staffMember);
+
+      res.json({
+        message: "Login successful!",
+        token,
+        staff: {
+          id: staffMember.id,
+          name: staffMember.name,
+          role: staffMember.role,
+          phone: staffMember.phone,
+          email: staffMember.email,
+          photoUrl: staffMember.photoUrl,
+          salonId: staffMember.salonId,
+          experience: staffMember.experience,
+          specialties: staffMember.specialties,
+          bio: staffMember.bio,
+          isActive: staffMember.isActive,
+          rating: staffMember.rating,
+          totalReviews: staffMember.totalReviews,
+          canManageSchedule: staffMember.canManageSchedule,
+          defaultSlotDuration: staffMember.defaultSlotDuration,
+        }
+      });
+    } catch (error: any) {
+      console.error("Error verifying staff OTP:", error);
+      res.status(500).json({ error: "Failed to verify OTP" });
+    }
+  });
+
+  // Middleware to verify staff token
+  async function verifyStaffToken(req: any, res: any, next: any) {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: "No token provided" });
+      }
+      const token = authHeader.substring(7);
+      const decoded = jwt.verify(token, STAFF_JWT_SECRET) as any;
+      if (decoded.type !== 'staff') {
+        return res.status(401).json({ error: "Invalid token type" });
+      }
+      // Verify staff still exists
+      const [staffMember] = await db.select().from(staff).where(eq(staff.id, decoded.staffId)).limit(1);
+      if (!staffMember) {
+        return res.status(401).json({ error: "Staff member no longer exists" });
+      }
+      req.staff = decoded;
+      req.staffMember = staffMember;
+      next();
+    } catch (error: any) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+  }
+
+  // Get current staff profile
+  app.get('/api/staff/me', async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: "No token provided" });
+      }
+      const token = authHeader.substring(7);
+      const decoded = jwt.verify(token, STAFF_JWT_SECRET) as any;
+      if (decoded.type !== 'staff') {
+        return res.status(401).json({ error: "Invalid token" });
+      }
+
+      const [staffMember] = await db.select().from(staff).where(eq(staff.id, decoded.staffId)).limit(1);
+      if (!staffMember) {
+        return res.status(404).json({ error: "Staff member not found" });
+      }
+
+      // Get salon info
+      const [salon] = await db.select().from(salons).where(eq(salons.id, staffMember.salonId)).limit(1);
+
+      res.json({
+        id: staffMember.id,
+        name: staffMember.name,
+        role: staffMember.role,
+        phone: staffMember.phone,
+        email: staffMember.email,
+        photoUrl: staffMember.photoUrl,
+        salonId: staffMember.salonId,
+        salonName: salon?.name || '',
+        experience: staffMember.experience,
+        specialties: staffMember.specialties,
+        bio: staffMember.bio,
+        isActive: staffMember.isActive,
+        rating: staffMember.rating,
+        totalReviews: staffMember.totalReviews,
+        canManageSchedule: staffMember.canManageSchedule,
+        defaultSlotDuration: staffMember.defaultSlotDuration,
+      });
+    } catch (error: any) {
+      console.error("Error fetching staff profile:", error);
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
+  // Update staff profile
+  app.put('/api/staff/profile', async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: "No token provided" });
+      }
+      const token = authHeader.substring(7);
+      const decoded = jwt.verify(token, STAFF_JWT_SECRET) as any;
+      if (decoded.type !== 'staff') {
+        return res.status(401).json({ error: "Invalid token" });
+      }
+
+      const { name, role, email, photoUrl, experience, specialties, bio } = req.body;
+      const updates: any = {};
+      if (name !== undefined) updates.name = name;
+      if (role !== undefined) updates.role = role;
+      if (email !== undefined) updates.email = email;
+      if (photoUrl !== undefined) updates.photoUrl = photoUrl;
+      if (experience !== undefined) updates.experience = experience;
+      if (specialties !== undefined) updates.specialties = specialties;
+      if (bio !== undefined) updates.bio = bio;
+      updates.updatedAt = new Date();
+
+      const [updated] = await db.update(staff)
+        .set(updates)
+        .where(eq(staff.id, decoded.staffId))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ error: "Staff member not found" });
+      }
+
+      res.json({ message: "Profile updated successfully", staff: updated });
+    } catch (error: any) {
+      console.error("Error updating staff profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Get staff's upcoming bookings
+  app.get('/api/staff/bookings', async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: "No token provided" });
+      }
+      const token = authHeader.substring(7);
+      const decoded = jwt.verify(token, STAFF_JWT_SECRET) as any;
+      if (decoded.type !== 'staff') {
+        return res.status(401).json({ error: "Invalid token" });
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const staffBookings = await db.select()
+        .from(bookings)
+        .where(and(
+          eq(bookings.staffId, decoded.staffId),
+          or(
+            eq(bookings.status, 'confirmed'),
+            eq(bookings.status, 'pending')
+          ),
+          gte(bookings.date, today)
+        ))
+        .orderBy(asc(bookings.date), asc(bookings.time));
+
+      res.json(staffBookings);
+    } catch (error: any) {
+      console.error("Error fetching staff bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
     }
   });
 

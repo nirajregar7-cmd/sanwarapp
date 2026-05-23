@@ -68,6 +68,16 @@ export const salonOwnerOtps = pgTable("salon_owner_otps", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Staff OTPs for mobile-only login
+export const staffOtps = pgTable("staff_otps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  otp: varchar("otp", { length: 6 }).notNull(),
+  isVerified: boolean("is_verified").default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Salons table
 export const salons = pgTable("salons", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1684,6 +1694,16 @@ export const insertSalonOwnerOtpSchema = createInsertSchema(salonOwnerOtps).omit
 
 export type SalonOwnerOtp = typeof salonOwnerOtps.$inferSelect;
 export type InsertSalonOwnerOtp = z.infer<typeof insertSalonOwnerOtpSchema>;
+
+// Staff OTP schema and types
+export const insertStaffOtpSchema = createInsertSchema(staffOtps).omit({
+  id: true,
+  createdAt: true,
+  isVerified: true,
+});
+
+export type StaffOtp = typeof staffOtps.$inferSelect;
+export type InsertStaffOtp = z.infer<typeof insertStaffOtpSchema>;
 
 // Payment orders schema and types
 export const insertPaymentOrderSchema = createInsertSchema(paymentOrders).omit({
