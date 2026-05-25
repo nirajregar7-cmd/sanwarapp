@@ -5313,20 +5313,73 @@ export default function OwnerDashboard() {
                       : serviceGenderFilter === 'men'
                       ? MEN_ONLY_SERVICES
                       : WOMEN_ONLY_SERVICES;
+
+                    // Collect unique category names used in selected services
                     let globalIdx = 0;
-                    const selectedServices: { name: string; description: string; price: number; duration: number; categoryId: string | null }[] = [];
+                    const usedCategories = new Set<string>();
                     for (const [categoryName, svcList] of Object.entries(sourceData)) {
-                      const matchingCategory = serviceCategories.find(
-                        (cat: any) => cat.name.toLowerCase() === categoryName.toLowerCase()
-                      );
-                      for (const svc of svcList) {
-                        if (selectedPremade.has(globalIdx)) {
-                          selectedServices.push({ ...svc, categoryId: matchingCategory ? matchingCategory.id : null });
-                        }
+                      for (const _ of svcList) {
+                        if (selectedPremade.has(globalIdx)) usedCategories.add(categoryName);
                         globalIdx++;
                       }
                     }
-                    quickAddServicesMutation.mutate(selectedServices);
+
+                    // Auto-create any missing categories, then add services
+                    (async () => {
+                      const categoryColorMap: Record<string, string> = {
+                        "Hair Care": "#3B82F6", "Women's Hair": "#3B82F6", "Men's Hair": "#3B82F6",
+                        "Facial & Skin": "#10B981", "Nail Services": "#F59E0B",
+                        "Bridal Services": "#EC4899", "Saree Draping": "#EC4899",
+                        "Massage & Spa": "#8B5CF6", "Men's Massage": "#8B5CF6", "Women's Spa": "#8B5CF6",
+                        "Beard & Grooming": "#EF4444", "Makeup": "#EC4899", "Waxing & Threading": "#10B981",
+                      };
+                      const categoryIconMap: Record<string, string> = {
+                        "Hair Care": "Scissors", "Women's Hair": "Scissors", "Men's Hair": "Scissors",
+                        "Facial & Skin": "Sparkles", "Nail Services": "Palette",
+                        "Bridal Services": "Heart", "Saree Draping": "Heart",
+                        "Massage & Spa": "Star", "Men's Massage": "Star", "Women's Spa": "Star",
+                        "Beard & Grooming": "Crown", "Makeup": "Palette", "Waxing & Threading": "Scissors",
+                      };
+
+                      // Build up-to-date category map (existing + newly created)
+                      const categoryIdMap: Record<string, string> = {};
+                      for (const cat of serviceCategories) {
+                        categoryIdMap[(cat as any).name.toLowerCase()] = (cat as any).id;
+                      }
+
+                      // Create missing categories
+                      for (const catName of usedCategories) {
+                        if (!categoryIdMap[catName.toLowerCase()]) {
+                          try {
+                            const res = await apiRequest('POST', `/api/salons/${salon?.id}/categories`, {
+                              name: catName,
+                              description: `${catName} services`,
+                              icon: categoryIconMap[catName] || "Scissors",
+                              color: categoryColorMap[catName] || "#3B82F6",
+                            });
+                            const created = await res.json();
+                            if (created?.id) categoryIdMap[catName.toLowerCase()] = created.id;
+                          } catch {}
+                        }
+                      }
+
+                      // Invalidate categories so they reload
+                      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/categories`] });
+
+                      // Now build services with correct categoryIds
+                      let idx = 0;
+                      const selectedServices: { name: string; description: string; price: number; duration: number; categoryId: string | null }[] = [];
+                      for (const [categoryName, svcList] of Object.entries(sourceData)) {
+                        const catId = categoryIdMap[categoryName.toLowerCase()] || null;
+                        for (const svc of svcList) {
+                          if (selectedPremade.has(idx)) {
+                            selectedServices.push({ ...svc, categoryId: catId });
+                          }
+                          idx++;
+                        }
+                      }
+                      quickAddServicesMutation.mutate(selectedServices);
+                    })();
                   } else if (quickAddType === 'staff') {
                     const selected = PREMADE_STAFF
                       .map((m, i) => ({ ...m, _index: i }))
