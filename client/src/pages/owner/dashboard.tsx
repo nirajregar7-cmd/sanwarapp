@@ -1991,12 +1991,24 @@ export default function OwnerDashboard() {
               <div className="relative flex-shrink-0">
                 <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl">
                   {salon?.imageUrl ? (
-                    <img src={salon.imageUrl} alt={salon.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                      <Scissors className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                    </div>
-                  )}
+                    <img
+                      src={salon.imageUrl}
+                      alt={salon.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 items-center justify-center"
+                    style={{ display: salon?.imageUrl ? 'none' : 'flex' }}
+                  >
+                    <Scissors className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                  </div>
                 </div>
                 {salon?.verificationStatus === 'approved' && (
                   <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
