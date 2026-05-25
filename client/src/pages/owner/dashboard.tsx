@@ -873,13 +873,14 @@ export default function OwnerDashboard() {
   // Auto-show first-time setup wizard
   useEffect(() => {
     if (localStorage.getItem('sanwar_setup_done')) return;
-    if (salonLoading || servicesLoading || staffLoading) return;
+    if (salonLoading) return; // Always wait for salon to resolve first
     if (!salon) {
       // No salon yet — start from step 0 (Create Profile)
+      // Don't wait for services/staff — they're disabled when there's no salon
       setSetupWizardOpen(true);
       setSetupWizardStep(0);
-    } else if (services.length === 0 && staff.length === 0) {
-      // Salon exists but empty — start from step 1 (Services)
+    } else if (!servicesLoading && !staffLoading && services.length === 0 && staff.length === 0) {
+      // Salon exists but no services or staff — start from step 1
       setSetupWizardOpen(true);
       setSetupWizardStep(1);
     }
