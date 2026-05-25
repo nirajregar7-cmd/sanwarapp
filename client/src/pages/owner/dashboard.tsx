@@ -436,6 +436,83 @@ const PREMADE_SERVICES: Record<string, { name: string; description: string; pric
   ],
 };
 
+// Gender-differentiated services: men-only services
+const MEN_ONLY_SERVICES = {
+  "Beard & Grooming": [
+    { name: "Beard Trim", description: "Precision beard trimming and shaping", price: 100, duration: 15 },
+    { name: "Beard Styling", description: "Creative beard styling and design", price: 200, duration: 30 },
+    { name: "Shave", description: "Clean shave with hot towel", price: 150, duration: 20 },
+    { name: "Beard Color", description: "Beard coloring and touch-up", price: 250, duration: 30 },
+    { name: "Moustache Styling", description: "Moustache grooming and shaping", price: 80, duration: 10 },
+  ],
+  "Men's Hair": [
+    { name: "Men's Hair Cut", description: "Classic or modern men's haircut", price: 150, duration: 30 },
+    { name: "Hair Wash & Styling", description: "Hair wash with styling product", price: 200, duration: 30 },
+    { name: "Men's Hair Spa", description: "Deep conditioning hair treatment", price: 400, duration: 45 },
+    { name: "Head Shave", description: "Complete head shave with hot towel", price: 120, duration: 20 },
+    { name: "Buzz Cut", description: "Machine clipper buzz cut", price: 100, duration: 15 },
+    { name: "Fade Cut", description: "Skin fade or taper fade haircut", price: 250, duration: 35 },
+  ],
+  "Men's Massage": [
+    { name: "Back & Shoulder Massage", description: "Deep tissue back massage", price: 400, duration: 30 },
+    { name: "Head & Neck Massage", description: "Relaxing head and neck massage", price: 250, duration: 25 },
+  ],
+};
+
+// Gender-differentiated services: women-only services
+const WOMEN_ONLY_SERVICES = {
+  "Women's Hair": [
+    { name: "Women's Hair Cut", description: "Ladies haircut with styling", price: 300, duration: 45 },
+    { name: "Blow Dry & Styling", description: "Wash, blow dry and styling", price: 400, duration: 45 },
+    { name: "Hair Straightening (Temporary)", description: "Iron straightening for smooth hair", price: 500, duration: 60 },
+    { name: "Curling & Waves", description: "Professional curling or beach waves", price: 450, duration: 50 },
+    { name: "Hair Wash & Conditioning", description: "Deep conditioning wash treatment", price: 350, duration: 40 },
+    { name: "Hair Color (Global)", description: "Full hair coloring", price: 1500, duration: 120 },
+    { name: "Hair Color (Root Touch-up)", description: "Root color touch-up only", price: 600, duration: 60 },
+    { name: "Hair Highlights", description: "Partial or full highlights", price: 1200, duration: 90 },
+  ],
+  "Saree Draping": [
+    { name: "Saree Draping", description: "Traditional saree draping service", price: 300, duration: 20 },
+    { name: "Bridal Saree Draping", description: "Special bridal saree draping", price: 500, duration: 30 },
+  ],
+  "Women's Spa": [
+    { name: "Full Body Massage", description: "Relaxing full body oil massage", price: 1000, duration: 60 },
+    { name: "Back Massage", description: "Deep tissue back massage", price: 500, duration: 30 },
+    { name: "Foot Reflexology", description: "Pressure point foot massage", price: 400, duration: 30 },
+  ],
+};
+
+// Combined unisex services + gender specific for easy access
+const ALL_SERVICES_BY_GENDER = {
+  unisex: PREMADE_SERVICES,
+  men: MEN_ONLY_SERVICES,
+  women: WOMEN_ONLY_SERVICES,
+};
+
+// Premade staff templates for quick add
+const PREMADE_STAFF = [
+  { name: "Ravi Kumar", role: "Senior Hair Stylist", phone: "", email: "", specialties: ["Hair Cutting", "Coloring", "Styling"], experience: "5+ years" },
+  { name: "Priya Sharma", role: "Beautician", phone: "", email: "", specialties: ["Facials", "Waxing", "Threading"], experience: "3+ years" },
+  { name: "Amit Singh", role: "Barber", phone: "", email: "", specialties: ["Beard Styling", "Shaving", "Men's Haircuts"], experience: "4+ years" },
+  { name: "Neha Gupta", role: "Nail Technician", phone: "", email: "", specialties: ["Manicure", "Pedicure", "Nail Art"], experience: "2+ years" },
+  { name: "Rajesh Verma", role: "Massage Therapist", phone: "", email: "", specialties: ["Full Body Massage", "Head Massage", "Back Massage"], experience: "6+ years" },
+  { name: "Anita Patel", role: "Bridal Makeup Artist", phone: "", email: "", specialties: ["Bridal Makeup", "Mehndi", "HD Makeup"], experience: "7+ years" },
+  { name: "Suresh Yadav", role: "Hair Colorist", phone: "", email: "", specialties: ["Hair Coloring", "Highlights", "Balayage"], experience: "4+ years" },
+  { name: "Pooja Mehta", role: "Skin Specialist", phone: "", email: "", specialties: ["Facials", "Skin Treatment", "De-Tan"], experience: "3+ years" },
+];
+
+// Premade offer templates for quick add
+const PREMADE_OFFERS = [
+  { title: "New Customer Special", description: "Welcome discount for first-time customers. Get a great deal on your first visit!", discountType: "percentage", discountValue: "20", minOrderAmount: "0", maxDiscountAmount: "300", maxUsagePerCustomer: "1", maxTotalUsage: "100" },
+  { title: "Weekend Flash Sale", description: "Special weekend discounts on all services. Valid Saturday and Sunday only!", discountType: "percentage", discountValue: "15", minOrderAmount: "500", maxDiscountAmount: "500", maxUsagePerCustomer: "2", maxTotalUsage: "50" },
+  { title: "Happy Hours — 10% Off", description: "Book between 10 AM to 2 PM and enjoy discounted rates on all services.", discountType: "percentage", discountValue: "10", minOrderAmount: "0", maxDiscountAmount: "200", maxUsagePerCustomer: "3", maxTotalUsage: "" },
+  { title: "Festive Season Offer", description: "Celebrate the festival season with special discounts on bridal and party packages!", discountType: "fixed_amount", discountValue: "500", minOrderAmount: "2000", maxDiscountAmount: "", maxUsagePerCustomer: "1", maxTotalUsage: "30" },
+  { title: "Refer a Friend — ₹100 Off", description: "Refer a friend and both get ₹100 off on your next booking. Share the love!", discountType: "fixed_amount", discountValue: "100", minOrderAmount: "500", maxDiscountAmount: "", maxUsagePerCustomer: "5", maxTotalUsage: "" },
+  { title: "Combo Deal — 25% Off", description: "Book any 2 or more services together and get 25% off the total bill.", discountType: "percentage", discountValue: "25", minOrderAmount: "800", maxDiscountAmount: "1000", maxUsagePerCustomer: "2", maxTotalUsage: "40" },
+  { title: "Loyalty Reward — ₹200 Cashback", description: "For our loyal customers! Get ₹200 cashback on bookings above ₹1500.", discountType: "fixed_amount", discountValue: "200", minOrderAmount: "1500", maxDiscountAmount: "", maxUsagePerCustomer: "1", maxTotalUsage: "20" },
+  { title: "Birthday Special — 30% Off", description: "It's your birthday! Enjoy 30% off on any service during your birthday month.", discountType: "percentage", discountValue: "30", minOrderAmount: "0", maxDiscountAmount: "600", maxUsagePerCustomer: "1", maxTotalUsage: "" },
+];
+
 export default function OwnerDashboard() {
   const { user, isAuthenticated } = useAuth();
   const { shouldShowOnboarding, onboardingSteps, completeOnboarding, skipOnboarding } = useOnboarding('salon-owner');
@@ -446,8 +523,9 @@ export default function OwnerDashboard() {
   const [tempImageUrl, setTempImageUrl] = useState<string>("");
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [quickAddDialogOpen, setQuickAddDialogOpen] = useState(false);
-  const [quickAddType, setQuickAddType] = useState<'categories' | 'services'>('categories');
+  const [quickAddType, setQuickAddType] = useState<'categories' | 'services' | 'staff' | 'offers'>('categories');
   const [selectedPremade, setSelectedPremade] = useState<Set<number>>(new Set());
+  const [serviceGenderFilter, setServiceGenderFilter] = useState<'men' | 'women' | 'unisex'>('unisex');
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
@@ -1081,6 +1159,82 @@ export default function OwnerDashboard() {
       setQuickAddDialogOpen(false);
       setSelectedPremade(new Set());
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/services`] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Quick add staff mutation
+  const quickAddStaffMutation = useMutation({
+    mutationFn: async (staffToAdd: typeof PREMADE_STAFF) => {
+      const results = [];
+      for (const member of staffToAdd) {
+        const res = await apiRequest('POST', `/api/salons/${salon?.id}/staff`, member);
+        results.push(await res.json());
+      }
+      return results;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: `${data.length} Staff Added!`,
+        description: "All selected staff members have been added to your salon.",
+      });
+      setQuickAddDialogOpen(false);
+      setSelectedPremade(new Set());
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/staff`] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Quick add offers mutation
+  const quickAddOffersMutation = useMutation({
+    mutationFn: async (offersToAdd: typeof PREMADE_OFFERS) => {
+      const results = [];
+      const now = new Date();
+      const validFrom = now.toISOString().split('T')[0] + 'T00:00:00.000Z';
+      const validUntil = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + 'T23:59:59.000Z';
+      for (const offer of offersToAdd) {
+        const payload = {
+          ...offer,
+          discountValue: parseFloat(offer.discountValue),
+          minOrderAmount: parseFloat(offer.minOrderAmount || "0"),
+          maxDiscountAmount: offer.maxDiscountAmount ? parseFloat(offer.maxDiscountAmount) : null,
+          maxUsagePerCustomer: parseInt(offer.maxUsagePerCustomer),
+          maxTotalUsage: offer.maxTotalUsage ? parseInt(offer.maxTotalUsage) : null,
+          validFrom: new Date(validFrom),
+          validUntil: new Date(validUntil),
+          isApplicableToAllServices: true,
+          applicableServices: [],
+          isActive: true,
+          isVisible: true,
+          priority: 0,
+          promoCode: "",
+          isPromoCodeRequired: false,
+        };
+        const res = await apiRequest('POST', '/api/owner/salon/offers', payload);
+        results.push(await res.json());
+      }
+      return results;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: `${data.length} Offers Added!`,
+        description: "All selected offers have been created for your salon.",
+      });
+      setQuickAddDialogOpen(false);
+      setSelectedPremade(new Set());
+      queryClient.invalidateQueries({ queryKey: ['/api/owner/salon/offers'] });
     },
     onError: (error: Error) => {
       toast({
@@ -2535,14 +2689,29 @@ export default function OwnerDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     Team Management
-                    <Button onClick={() => {
-                      setEditingItem(null);
-                      staffForm.reset();
-                      setStaffDialogOpen(true);
-                    }}>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Add Staff
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setQuickAddType('staff');
+                          setSelectedPremade(new Set());
+                          setQuickAddDialogOpen(true);
+                        }}
+                        className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                      >
+                        <Zap className="h-4 w-4 mr-1" />
+                        Quick Add
+                      </Button>
+                      <Button onClick={() => {
+                        setEditingItem(null);
+                        staffForm.reset();
+                        setStaffDialogOpen(true);
+                      }}>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Staff
+                      </Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -3020,12 +3189,27 @@ export default function OwnerDashboard() {
                       <Percent className="h-5 w-5 mr-2" />
                       Promotional Offers Management
                     </div>
-                    <Link href="/shopkeeper/offers">
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create New Offer
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setQuickAddType('offers');
+                          setSelectedPremade(new Set());
+                          setQuickAddDialogOpen(true);
+                        }}
+                        className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                      >
+                        <Zap className="h-4 w-4 mr-1" />
+                        Quick Add
                       </Button>
-                    </Link>
+                      <Link href="/shopkeeper/offers">
+                        <Button>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create New Offer
+                        </Button>
+                      </Link>
+                    </div>
                   </CardTitle>
                   <CardDescription>
                     Create and manage special offers to attract more customers to your salon
@@ -4814,14 +4998,20 @@ export default function OwnerDashboard() {
 
       {/* Quick Add Dialog */}
       <Dialog open={quickAddDialogOpen} onOpenChange={setQuickAddDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-orange-500" />
-              Quick Add {quickAddType === 'categories' ? 'Categories' : 'Services'}
+              Quick Add {quickAddType === 'categories' ? 'Categories' : quickAddType === 'services' ? 'Services' : quickAddType === 'staff' ? 'Staff' : 'Offers'}
             </DialogTitle>
             <DialogDescription>
-              Select from premade {quickAddType} and add them to your salon in one click. You can edit prices and details later.
+              {quickAddType === 'categories'
+                ? "Select from premade categories and add them to your salon in one click."
+                : quickAddType === 'services'
+                ? "Select services by gender type and add them to your salon. Prices are editable later."
+                : quickAddType === 'staff'
+                ? "Select premade staff profiles and add them to your team. You can edit details later."
+                : "Select premade promotional offers and activate them for your salon. Valid for 30 days by default."}
             </DialogDescription>
           </DialogHeader>
 
@@ -4883,74 +5073,207 @@ export default function OwnerDashboard() {
                 })}
               </div>
             </div>
-          ) : (
+          ) : quickAddType === 'services' ? (
             <div className="space-y-3">
+              {/* Gender Filter Tabs */}
+              <div className="flex gap-2 mb-2">
+                {(['unisex', 'men', 'women'] as const).map((gender) => (
+                  <button
+                    key={gender}
+                    onClick={() => {
+                      setServiceGenderFilter(gender);
+                      setSelectedPremade(new Set());
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      serviceGenderFilter === gender
+                        ? 'bg-orange-100 text-orange-700 border border-orange-300'
+                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                    }`}
+                  >
+                    {gender === 'unisex' ? '👥 Unisex' : gender === 'men' ? '👨 Men' : '👩 Women'}
+                  </button>
+                ))}
+              </div>
               <p className="text-sm text-gray-500">
-                Select services to add. They will be created uncategorized — you can assign categories later.
+                Showing {serviceGenderFilter} services. Select the ones to add to your salon:
               </p>
-              {Object.entries(PREMADE_SERVICES).map(([categoryName, servicesList]) => (
-                <div key={categoryName} className="border rounded-lg overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-2 flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium text-gray-700">{categoryName}</span>
-                    <span className="text-xs text-gray-400">({servicesList.length} services)</span>
+              {(() => {
+                const sourceData = serviceGenderFilter === 'unisex'
+                  ? PREMADE_SERVICES
+                  : serviceGenderFilter === 'men'
+                  ? MEN_ONLY_SERVICES
+                  : WOMEN_ONLY_SERVICES;
+                return Object.entries(sourceData).map(([categoryName, servicesList]) => (
+                  <div key={categoryName} className="border rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-2 flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">{categoryName}</span>
+                      <span className="text-xs text-gray-400">({servicesList.length} services)</span>
+                    </div>
+                    <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {servicesList.map((svc, svcIndex) => {
+                        const globalIndex = Object.entries(sourceData)
+                          .slice(0, Object.keys(sourceData).indexOf(categoryName))
+                          .reduce((sum, [, list]) => sum + list.length, 0) + svcIndex;
+                        const isSelected = selectedPremade.has(globalIndex);
+                        const alreadyExists = services.some(
+                          (existing: any) => existing.name.toLowerCase() === svc.name.toLowerCase()
+                        );
+                        return (
+                          <button
+                            key={globalIndex}
+                            onClick={() => {
+                              if (alreadyExists) return;
+                              const newSelected = new Set(selectedPremade);
+                              if (isSelected) newSelected.delete(globalIndex);
+                              else newSelected.add(globalIndex);
+                              setSelectedPremade(newSelected);
+                            }}
+                            disabled={alreadyExists}
+                            className={`p-2 rounded border text-left transition-all ${
+                              alreadyExists
+                                ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                                : isSelected
+                                ? 'border-orange-400 bg-orange-50'
+                                : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{svc.name}</p>
+                                <p className="text-xs text-gray-500 truncate">{svc.description}</p>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-sm font-semibold text-green-600">₹{svc.price}</p>
+                                <p className="text-xs text-gray-400">{svc.duration}m</p>
+                              </div>
+                              {alreadyExists && (
+                                <span className="text-xs bg-gray-200 text-gray-600 px-1 rounded">Added</span>
+                              )}
+                              {isSelected && !alreadyExists && (
+                                <CheckSquare className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {servicesList.map((svc, svcIndex) => {
-                      const globalIndex = Object.entries(PREMADE_SERVICES)
-                        .slice(0, Object.keys(PREMADE_SERVICES).indexOf(categoryName))
-                        .reduce((sum, [, list]) => sum + list.length, 0) + svcIndex;
-                      const isSelected = selectedPremade.has(globalIndex);
-                      const alreadyExists = services.some(
-                        (existing: any) => existing.name.toLowerCase() === svc.name.toLowerCase()
-                      );
-                      return (
-                        <button
-                          key={globalIndex}
-                          onClick={() => {
-                            if (alreadyExists) return;
-                            const newSelected = new Set(selectedPremade);
-                            if (isSelected) newSelected.delete(globalIndex);
-                            else newSelected.add(globalIndex);
-                            setSelectedPremade(newSelected);
-                          }}
-                          disabled={alreadyExists}
-                          className={`p-2 rounded border text-left transition-all ${
-                            alreadyExists
-                              ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                              : isSelected
-                              ? 'border-orange-400 bg-orange-50'
-                              : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{svc.name}</p>
-                              <p className="text-xs text-gray-500 truncate">{svc.description}</p>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                              <p className="text-sm font-semibold text-green-600">₹{svc.price}</p>
-                              <p className="text-xs text-gray-400">{svc.duration}m</p>
-                            </div>
+                ));
+              })()}
+            </div>
+          ) : quickAddType === 'staff' ? (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500">Click to select the staff members you want to add:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {PREMADE_STAFF.map((member, index) => {
+                  const isSelected = selectedPremade.has(index);
+                  const alreadyExists = staff.some(
+                    (existing: any) => existing.name.toLowerCase() === member.name.toLowerCase()
+                  );
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (alreadyExists) return;
+                        const newSelected = new Set(selectedPremade);
+                        if (isSelected) newSelected.delete(index);
+                        else newSelected.add(index);
+                        setSelectedPremade(newSelected);
+                      }}
+                      disabled={alreadyExists}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        alreadyExists
+                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                          : isSelected
+                          ? 'border-orange-400 bg-orange-50'
+                          : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0">
+                          {member.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm truncate">{member.name}</p>
                             {alreadyExists && (
-                              <span className="text-xs bg-gray-200 text-gray-600 px-1 rounded">Added</span>
+                              <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">Added</span>
                             )}
                             {isSelected && !alreadyExists && (
                               <CheckSquare className="h-4 w-4 text-orange-500 flex-shrink-0" />
                             )}
                           </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+                          <p className="text-xs text-orange-600 font-medium">{member.role}</p>
+                          <p className="text-xs text-gray-500">{member.experience}</p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {member.specialties?.join(', ')}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500">Click to select the promotional offers you want to create:</p>
+              <div className="grid grid-cols-1 gap-3">
+                {PREMADE_OFFERS.map((offer, index) => {
+                  const isSelected = selectedPremade.has(index);
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        const newSelected = new Set(selectedPremade);
+                        if (isSelected) newSelected.delete(index);
+                        else newSelected.add(index);
+                        setSelectedPremade(newSelected);
+                      }}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        isSelected
+                          ? 'border-orange-400 bg-orange-50'
+                          : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-sm flex-shrink-0">
+                          {offer.discountType === 'percentage' ? `${offer.discountValue}%` : `₹${offer.discountValue}`}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">{offer.title}</p>
+                            {isSelected && (
+                              <CheckSquare className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">{offer.description}</p>
+                          <div className="flex gap-2 mt-1.5">
+                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                              {offer.discountType === 'percentage' ? 'Percentage' : 'Fixed Amount'}
+                            </span>
+                            {parseFloat(offer.minOrderAmount) > 0 && (
+                              <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                                Min ₹{offer.minOrderAmount}
+                              </span>
+                            )}
+                            <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                              Max {offer.maxUsagePerCustomer} use{parseInt(offer.maxUsagePerCustomer) > 1 ? 's' : ''}/customer
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
           <div className="flex justify-between items-center pt-2">
             <p className="text-sm text-gray-500">
-              {selectedPremade.size} {quickAddType === 'categories' ? 'categories' : 'services'} selected
+              {selectedPremade.size} {quickAddType === 'categories' ? 'categories' : quickAddType === 'services' ? 'services' : quickAddType === 'staff' ? 'staff' : 'offers'} selected
             </p>
             <div className="flex gap-2">
               <Button
@@ -4967,10 +5290,15 @@ export default function OwnerDashboard() {
                   if (quickAddType === 'categories') {
                     const selected = PREMADE_CATEGORIES.filter((_, i) => selectedPremade.has(i));
                     quickAddCategoriesMutation.mutate(selected);
-                  } else {
+                  } else if (quickAddType === 'services') {
+                    const sourceData = serviceGenderFilter === 'unisex'
+                      ? PREMADE_SERVICES
+                      : serviceGenderFilter === 'men'
+                      ? MEN_ONLY_SERVICES
+                      : WOMEN_ONLY_SERVICES;
                     let globalIdx = 0;
                     const selectedServices: { name: string; description: string; price: number; duration: number; categoryId: null }[] = [];
-                    for (const [, svcList] of Object.entries(PREMADE_SERVICES)) {
+                    for (const [, svcList] of Object.entries(sourceData)) {
                       for (const svc of svcList) {
                         if (selectedPremade.has(globalIdx)) {
                           selectedServices.push({ ...svc, categoryId: null });
@@ -4979,12 +5307,22 @@ export default function OwnerDashboard() {
                       }
                     }
                     quickAddServicesMutation.mutate(selectedServices);
+                  } else if (quickAddType === 'staff') {
+                    const selected = PREMADE_STAFF.filter((_, i) => selectedPremade.has(i));
+                    quickAddStaffMutation.mutate(selected);
+                  } else {
+                    const selected = PREMADE_OFFERS.filter((_, i) => selectedPremade.has(i));
+                    quickAddOffersMutation.mutate(selected);
                   }
                 }}
-                disabled={selectedPremade.size === 0 || quickAddCategoriesMutation.isPending || quickAddServicesMutation.isPending}
+                disabled={selectedPremade.size === 0 ||
+                  quickAddCategoriesMutation.isPending ||
+                  quickAddServicesMutation.isPending ||
+                  quickAddStaffMutation.isPending ||
+                  quickAddOffersMutation.isPending}
                 className="bg-orange-600 hover:bg-orange-700"
               >
-                {quickAddCategoriesMutation.isPending || quickAddServicesMutation.isPending
+                {quickAddCategoriesMutation.isPending || quickAddServicesMutation.isPending || quickAddStaffMutation.isPending || quickAddOffersMutation.isPending
                   ? 'Adding...'
                   : `Add ${selectedPremade.size} ${quickAddType}`}
               </Button>
