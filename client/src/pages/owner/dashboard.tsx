@@ -759,6 +759,8 @@ export default function OwnerDashboard() {
   const [wizardFaqSaving, setWizardFaqSaving] = useState(false);
   const [wizardLocating, setWizardLocating] = useState(false);
   const [wizardLocationSet, setWizardLocationSet] = useState(false);
+  const [wizardUploading, setWizardUploading] = useState(false);
+  const [wizardUploadedCount, setWizardUploadedCount] = useState(0);
 
   const closeSetupWizard = () => {
     setSetupWizardOpen(false);
@@ -6253,31 +6255,88 @@ export default function OwnerDashboard() {
             {setupWizardStep === 3 && (
               <div className="p-4 max-w-2xl mx-auto space-y-4">
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Media Gallery Management</h2>
-                  <p className="text-sm text-gray-500">Manage your salon photos and videos (up to 50 files). Upload high-quality images to showcase your work.</p>
+                  <h2 className="text-lg font-bold text-gray-900">Add Salon Photos</h2>
+                  <p className="text-sm text-gray-500">Upload photos of your work, interior, and team. Great photos attract more customers!</p>
                 </div>
-                <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-200">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <Camera className="h-10 w-10 text-white" />
-                  </div>
-                  <p className="text-lg font-bold text-gray-900 mb-2">Enhanced Media Gallery</p>
-                  <p className="text-sm text-gray-500 mb-5">Upload up to 50 photos and videos to showcase your salon's work. Support for images and videos with advanced categorization and management.</p>
-                  <div className="grid grid-cols-3 gap-3 mb-5">
-                    {[["50 files limit", "📁"], ["Photos & Videos", "🎬"], ["Categories", "🏷️"], ["100MB per file", "📦"], ["Drag & Drop", "🖱️"], ["Cloud Storage", "☁️"]].map(([label, icon]) => (
-                      <div key={label} className="flex items-center gap-1.5 text-xs text-gray-600 bg-white rounded-xl p-2 border border-gray-100 justify-center">
-                        <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                        <span className="font-medium">{label}</span>
+
+                {/* Upload zone */}
+                <label className={`flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 cursor-pointer transition-all ${wizardUploading ? "border-orange-300 bg-orange-50" : "border-gray-300 bg-gray-50 hover:border-orange-400 hover:bg-orange-50"}`}>
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    className="hidden"
+                    disabled={wizardUploading}
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (!files.length || !salon?.id) return;
+                      setWizardUploading(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append('salonId', salon.id);
+                        files.forEach(f => formData.append('files', f));
+                        const res = await fetch('/api/salons/media/upload', {
+                          method: 'POST',
+                          body: formData,
+                        });
+                        if (res.ok) {
+                          const data = await res.json();
+                          const added = Array.isArray(data) ? data.length : 1;
+                          setWizardUploadedCount(prev => prev + added);
+                          queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon.id}/media`] });
+                          toast({ title: `${added} photo${added > 1 ? 's' : ''} uploaded!`, description: "Your salon gallery has been updated." });
+                        } else {
+                          const err = await res.json().catch(() => ({}));
+                          toast({ title: "Upload failed", description: err.message || "Please try again.", variant: "destructive" });
+                        }
+                      } catch {
+                        toast({ title: "Upload failed", description: "Network error. Please try again.", variant: "destructive" });
+                      } finally {
+                        setWizardUploading(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  {wizardUploading ? (
+                    <>
+                      <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
+                      <p className="text-sm font-semibold text-orange-600">Uploading photos...</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-md">
+                        <Camera className="h-7 w-7 text-white" />
                       </div>
-                    ))}
+                      <div className="text-center">
+                        <p className="text-sm font-semibold text-gray-800">Click to upload photos</p>
+                        <p className="text-xs text-gray-400 mt-0.5">Images & videos · Multiple files supported</p>
+                      </div>
+                    </>
+                  )}
+                </label>
+
+                {wizardUploadedCount > 0 && (
+                  <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <p className="text-sm font-medium text-green-700">{wizardUploadedCount} photo{wizardUploadedCount > 1 ? 's' : ''} uploaded successfully</p>
                   </div>
-                  <Button
-                    onClick={() => { closeSetupWizard(); window.location.href = '/owner/media-gallery'; }}
-                    className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-semibold rounded-xl px-8 h-11 shadow-md"
-                  >
-                    <Camera className="h-4 w-4 mr-2" /> Access Media Gallery
-                  </Button>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-xs text-gray-400">or</span>
+                  <div className="flex-1 h-px bg-gray-200" />
                 </div>
-                <p className="text-center text-sm text-gray-400">Or tap "Next" to continue and add photos later</p>
+
+                <Button
+                  variant="outline"
+                  onClick={() => window.open('/owner/media-gallery', '_blank')}
+                  className="w-full rounded-xl border-gray-300 text-gray-600 h-10 text-sm"
+                >
+                  <Camera className="h-4 w-4 mr-2" /> Open Full Media Gallery (new tab)
+                </Button>
+
+                <p className="text-center text-xs text-gray-400">You can always add more photos later from your dashboard</p>
               </div>
             )}
 
