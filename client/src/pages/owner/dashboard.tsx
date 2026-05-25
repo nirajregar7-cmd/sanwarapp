@@ -707,6 +707,18 @@ const PREMADE_STAFF = [
   { name: "Pooja Mehta", role: "Skin Specialist", phone: "", email: "", specialties: ["Facials", "Skin Treatment", "De-Tan"], experience: "3+ years" },
 ];
 
+// Premade FAQs for wizard setup
+const WIZARD_FAQS = [
+  { q: "Do I need to book in advance?", a: "We recommend booking in advance to secure your time slot. Walk-ins welcome based on availability." },
+  { q: "What payment methods do you accept?", a: "We accept cash, UPI (PhonePe, Google Pay, Paytm), and card payments." },
+  { q: "Is parking available?", a: "Yes, parking is available nearby. Contact us for exact directions." },
+  { q: "How long does a typical session take?", a: "Duration varies by service. You'll see exact duration when booking." },
+  { q: "Can I reschedule my appointment?", a: "Yes! Reschedule or cancel up to 2 hours before your appointment through the app." },
+  { q: "Do you use hygienic tools?", a: "We maintain strict hygiene standards and sterilize all tools after every use." },
+  { q: "Do you offer home service?", a: "Currently we only provide services at our salon." },
+  { q: "Are your products safe for sensitive skin?", a: "We use dermatologically tested products. Please inform your stylist of any allergies." },
+];
+
 // Premade offer templates for quick add
 const PREMADE_OFFERS = [
   { title: "New Customer Special", description: "Welcome discount for first-time customers. Get a great deal on your first visit!", discountType: "percentage", discountValue: "20", minOrderAmount: "0", maxDiscountAmount: "300", maxUsagePerCustomer: "1", maxTotalUsage: "100" },
@@ -739,6 +751,17 @@ export default function OwnerDashboard() {
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [exitingImpersonation, setExitingImpersonation] = useState(false);
   const [promoVideoDialogOpen, setPromoVideoDialogOpen] = useState(false);
+
+  // First-time setup wizard
+  const [setupWizardOpen, setSetupWizardOpen] = useState(false);
+  const [setupWizardStep, setSetupWizardStep] = useState(0); // 0=services, 1=staff, 2=photos, 3=faqs, 4=done
+  const [wizardFaqSelected, setWizardFaqSelected] = useState<Set<number>>(new Set([0, 1, 4, 5]));
+  const [wizardFaqSaving, setWizardFaqSaving] = useState(false);
+
+  const closeSetupWizard = () => {
+    setSetupWizardOpen(false);
+    localStorage.setItem('sanwar_setup_done', '1');
+  };
 
   // Check if we're in impersonation mode
   useEffect(() => {
@@ -842,6 +865,34 @@ export default function OwnerDashboard() {
     enabled: !!salon?.id,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
+
+  // Auto-show first-time setup wizard
+  useEffect(() => {
+    if (salon?.id && !servicesLoading && !staffLoading && services.length === 0 && staff.length === 0) {
+      if (!localStorage.getItem('sanwar_setup_done')) {
+        setSetupWizardOpen(true);
+      }
+    }
+  }, [salon?.id, servicesLoading, staffLoading, services.length, staff.length]);
+
+  // Advance wizard after services added
+  useEffect(() => {
+    if (setupWizardOpen && setupWizardStep === 0 && quickAddServicesMutation.isSuccess) {
+      setSetupWizardStep(1);
+      setSelectedPremade(new Set());
+      quickAddServicesMutation.reset();
+    }
+  }, [quickAddServicesMutation.isSuccess, setupWizardOpen, setupWizardStep]);
+
+  // Advance wizard after staff added
+  useEffect(() => {
+    if (setupWizardOpen && setupWizardStep === 1 && quickAddStaffMutation.isSuccess) {
+      setSetupWizardStep(2);
+      setSelectedPremade(new Set());
+      setEditedStaffData({});
+      quickAddStaffMutation.reset();
+    }
+  }, [quickAddStaffMutation.isSuccess, setupWizardOpen, setupWizardStep]);
 
   // Fetch service categories for the salon - parallel loading with caching
   const { data: serviceCategories = [], isLoading: categoriesLoading } = useQuery<any[]>({
@@ -5733,6 +5784,362 @@ export default function OwnerDashboard() {
           onSkip={skipOnboarding}
         />
       )}
+
+      {/* ─── FIRST-TIME SETUP WIZARD ─── */}
+      {setupWizardOpen && (
+        <div className="fixed inset-0 z-[200] bg-white flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="flex-shrink-0 bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                <Zap className="h-4 w-4 text-orange-500" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-sm leading-tight">Quick Salon Setup</p>
+                <p className="text-xs text-gray-400">Get ready in under 1 minute</p>
+              </div>
+            </div>
+            <button onClick={closeSetupWizard} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Step progress */}
+          <div className="flex-shrink-0 border-b bg-gray-50 px-4 py-2.5 overflow-x-auto">
+            <div className="flex gap-1.5 min-w-max sm:min-w-0">
+              {[
+                { label: "Services", icon: "✂️" },
+                { label: "Staff", icon: "👥" },
+                { label: "Photos", icon: "📷" },
+                { label: "FAQs", icon: "💬" },
+              ].map((s, i) => {
+                const done = i < setupWizardStep;
+                const active = i === setupWizardStep;
+                return (
+                  <div key={i} className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${active ? "bg-orange-100 text-orange-700 border border-orange-300" : done ? "bg-green-100 text-green-700" : "text-gray-400"}`}>
+                      {done ? <CheckCircle className="w-3.5 h-3.5" /> : <span>{s.icon}</span>}
+                      {s.label}
+                    </div>
+                    {i < 3 && <span className="text-gray-300 text-xs">›</span>}
+                  </div>
+                );
+              })}
+            </div>
+            {/* Progress bar */}
+            <div className="mt-2 h-1 bg-gray-200 rounded-full">
+              <div className="h-full bg-orange-500 rounded-full transition-all duration-500" style={{ width: `${(setupWizardStep / 4) * 100}%` }} />
+            </div>
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto">
+
+            {/* STEP 0 — SERVICES */}
+            {setupWizardStep === 0 && (
+              <div className="p-4 space-y-4 max-w-2xl mx-auto">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Add Your Services</h2>
+                  <p className="text-sm text-gray-500">Select services you offer. Prices can be edited anytime later.</p>
+                </div>
+                {/* Gender filter */}
+                <div className="flex gap-2">
+                  {(['unisex', 'men', 'women'] as const).map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => { setServiceGenderFilter(g); setSelectedPremade(new Set()); }}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${serviceGenderFilter === g ? "bg-orange-100 text-orange-700 border-orange-300" : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"}`}
+                    >
+                      {g === 'unisex' ? '👥 Unisex' : g === 'men' ? '👨 Men' : '👩 Women'}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500">Showing {serviceGenderFilter} services. Tap to select:</p>
+                {/* Services by category */}
+                {(() => {
+                  const sourceData = serviceGenderFilter === 'unisex' ? PREMADE_SERVICES : serviceGenderFilter === 'men' ? MEN_ONLY_SERVICES : WOMEN_ONLY_SERVICES;
+                  return Object.entries(sourceData).map(([categoryName, servicesList]: [string, any[]]) => {
+                    const categoryKeys = Object.keys(sourceData);
+                    const catOffset = Object.entries(sourceData).slice(0, categoryKeys.indexOf(categoryName)).reduce((sum, [, list]: [string, any]) => sum + list.length, 0);
+                    const availableIndices = servicesList.map((_, i) => catOffset + i).filter(i => !services.some((ex: any) => ex.name.toLowerCase() === servicesList[i - catOffset].name.toLowerCase()));
+                    const allSelected = availableIndices.length > 0 && availableIndices.every(i => selectedPremade.has(i));
+                    return (
+                      <div key={categoryName} className="border rounded-xl overflow-hidden">
+                        <button
+                          className={`w-full px-4 py-2.5 flex items-center gap-2 text-left transition-all ${allSelected ? "bg-orange-50 border-b border-orange-100" : "bg-gray-50 border-b border-gray-100 hover:bg-orange-50/40"}`}
+                          onClick={() => {
+                            const newSelected = new Set(selectedPremade);
+                            if (allSelected) availableIndices.forEach(i => newSelected.delete(i));
+                            else availableIndices.forEach(i => newSelected.add(i));
+                            setSelectedPremade(newSelected);
+                          }}
+                        >
+                          <Layers className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm font-semibold text-gray-700">{categoryName}</span>
+                          <span className="text-xs text-gray-400">({servicesList.length})</span>
+                          <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full ${allSelected ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-600"}`}>
+                            {allSelected ? "All selected" : "Select all"}
+                          </span>
+                        </button>
+                        <div className="p-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {servicesList.map((svc: any, svcIdx: number) => {
+                            const globalIdx = catOffset + svcIdx;
+                            const isSelected = selectedPremade.has(globalIdx);
+                            const alreadyExists = services.some((ex: any) => ex.name.toLowerCase() === svc.name.toLowerCase());
+                            return (
+                              <button
+                                key={globalIdx}
+                                onClick={() => {
+                                  if (alreadyExists) return;
+                                  const newSelected = new Set(selectedPremade);
+                                  isSelected ? newSelected.delete(globalIdx) : newSelected.add(globalIdx);
+                                  setSelectedPremade(newSelected);
+                                }}
+                                disabled={alreadyExists}
+                                className={`p-2.5 rounded-lg border text-left transition-all ${alreadyExists ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed" : isSelected ? "border-orange-400 bg-orange-50" : "border-gray-200 hover:border-orange-200 hover:bg-orange-50/30"}`}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{svc.name}</p>
+                                    <p className="text-xs text-gray-400 truncate">{svc.description}</p>
+                                  </div>
+                                  <div className="text-right flex-shrink-0">
+                                    <p className="text-sm font-semibold text-green-600">₹{svc.price}</p>
+                                    <p className="text-xs text-gray-400">{svc.duration}m</p>
+                                  </div>
+                                  {isSelected && !alreadyExists && <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0" />}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            )}
+
+            {/* STEP 1 — STAFF */}
+            {setupWizardStep === 1 && (
+              <div className="p-4 space-y-4 max-w-2xl mx-auto">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Add Your Team</h2>
+                  <p className="text-sm text-gray-500"><span className="text-orange-600 font-medium">Click Select</span>, edit the name, then add. You can skip this too.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {PREMADE_STAFF.map((member, index) => {
+                    const isSelected = selectedPremade.has(index);
+                    const alreadyExists = staff.some((ex: any) => ex.name.toLowerCase() === (editedStaffData[index]?.name || member.name).toLowerCase());
+                    const edits = editedStaffData[index] || { name: member.name, experience: member.experience };
+                    return (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-xl border-2 text-left transition-all ${alreadyExists ? "border-gray-200 bg-gray-50 opacity-50" : isSelected ? "border-orange-400 bg-orange-50" : "border-gray-200 hover:border-orange-200"}`}
+                      >
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0">
+                            {edits.name.split(' ').map((n: string) => n[0]).join('')}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-orange-600 font-medium">{member.role}</p>
+                            <p className="text-xs text-gray-400">{member.specialties.slice(0, 2).join(', ')}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (alreadyExists) return;
+                              const newSelected = new Set(selectedPremade);
+                              if (isSelected) { newSelected.delete(index); const newEdits = { ...editedStaffData }; delete newEdits[index]; setEditedStaffData(newEdits); }
+                              else newSelected.add(index);
+                              setSelectedPremade(newSelected);
+                            }}
+                            disabled={alreadyExists}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex-shrink-0 ${alreadyExists ? "bg-gray-200 text-gray-400 cursor-not-allowed" : isSelected ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-600"}`}
+                          >
+                            {alreadyExists ? "Added" : isSelected ? "✓ Selected" : "Select"}
+                          </button>
+                        </div>
+                        {isSelected && !alreadyExists && (
+                          <div className="space-y-1.5 mt-1">
+                            <input
+                              type="text"
+                              value={edits.name}
+                              onChange={e => setEditedStaffData(prev => ({ ...prev, [index]: { ...edits, name: e.target.value } }))}
+                              placeholder="Name"
+                              className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                            />
+                            <input
+                              type="text"
+                              value={edits.experience}
+                              onChange={e => setEditedStaffData(prev => ({ ...prev, [index]: { ...edits, experience: e.target.value } }))}
+                              placeholder="Experience"
+                              className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2 — PHOTOS */}
+            {setupWizardStep === 2 && (
+              <div className="p-4 max-w-2xl mx-auto space-y-5">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Add Salon Photos</h2>
+                  <p className="text-sm text-gray-500">Upload photos of your salon, work, and services to attract customers.</p>
+                </div>
+                <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6 text-center">
+                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Camera className="h-8 w-8 text-orange-500" />
+                  </div>
+                  <p className="font-semibold text-gray-900 mb-1">Upload to your Media Gallery</p>
+                  <p className="text-sm text-gray-500 mb-4">Add salon interior, haircuts, treatments, and before/after photos for best results.</p>
+                  <Button
+                    onClick={() => { closeSetupWizard(); window.location.href = '/owner/media-gallery'; }}
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl px-6"
+                  >
+                    <Camera className="h-4 w-4 mr-2" /> Open Media Gallery
+                  </Button>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                  <p className="text-sm font-semibold text-gray-700">📸 Tips for great photos:</p>
+                  <ul className="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                    <li>Use good lighting — natural light works best</li>
+                    <li>Show before & after results of your best work</li>
+                    <li>Include interior photos so customers know what to expect</li>
+                    <li>Add at least 5 photos for maximum visibility</li>
+                  </ul>
+                </div>
+                <p className="text-center text-sm text-gray-400">Or skip this and add photos later from the Settings tab</p>
+              </div>
+            )}
+
+            {/* STEP 3 — FAQs */}
+            {setupWizardStep === 3 && (
+              <div className="p-4 max-w-2xl mx-auto space-y-4">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Add Customer FAQs</h2>
+                  <p className="text-sm text-gray-500">Pick ready-made answers to common questions. Saves customers from calling you!</p>
+                </div>
+                <div className="space-y-2">
+                  {WIZARD_FAQS.map((faq, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setWizardFaqSelected(prev => { const next = new Set(prev); next.has(i) ? next.delete(i) : next.add(i); return next; })}
+                      className={`w-full text-left rounded-xl border-2 p-3.5 transition-all ${wizardFaqSelected.has(i) ? "border-orange-400 bg-orange-50" : "border-gray-200 bg-white hover:border-orange-200"}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-all ${wizardFaqSelected.has(i) ? "border-orange-500 bg-orange-500" : "border-gray-300"}`}>
+                          {wizardFaqSelected.has(i) && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800">{faq.q}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{faq.a}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4 — DONE */}
+            {setupWizardStep === 4 && (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-sm mx-auto pt-16">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <CheckCircle className="h-10 w-10 text-green-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">You're all set! 🎉</h2>
+                <p className="text-gray-500 mb-6">Your salon is ready to go live on Sanwar. Customers can now discover and book with you.</p>
+                <Button onClick={closeSetupWizard} className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl px-8 h-12 text-base">
+                  Go to Dashboard →
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Footer actions */}
+          {setupWizardStep < 4 && (
+            <div className="flex-shrink-0 border-t bg-white px-4 py-3 flex items-center justify-between gap-3">
+              <button onClick={closeSetupWizard} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+                Skip setup
+              </button>
+              <div className="flex gap-2">
+                {setupWizardStep > 0 && (
+                  <Button variant="outline" onClick={() => setSetupWizardStep(s => s - 1)} className="rounded-xl h-10 px-4 text-sm">
+                    ← Back
+                  </Button>
+                )}
+                {setupWizardStep === 0 && (
+                  <Button
+                    onClick={() => {
+                      if (selectedPremade.size === 0) { setSetupWizardStep(1); return; }
+                      const sourceData = serviceGenderFilter === 'unisex' ? PREMADE_SERVICES : serviceGenderFilter === 'men' ? MEN_ONLY_SERVICES : WOMEN_ONLY_SERVICES;
+                      const flat: any[] = Object.values(sourceData).flat();
+                      const selectedServices = flat
+                        .map((svc, i) => ({ ...svc, _idx: i }))
+                        .filter(svc => selectedPremade.has(svc._idx))
+                        .map(({ _idx, ...svc }) => ({ ...svc, price: parseFloat(String(svc.price)), categoryId: null }));
+                      quickAddServicesMutation.mutate(selectedServices);
+                    }}
+                    disabled={quickAddServicesMutation.isPending}
+                    className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-10 px-5 text-sm font-semibold"
+                  >
+                    {quickAddServicesMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin mr-1" />Adding...</> : selectedPremade.size > 0 ? `Add ${selectedPremade.size} Services →` : "Skip →"}
+                  </Button>
+                )}
+                {setupWizardStep === 1 && (
+                  <Button
+                    onClick={() => {
+                      if (selectedPremade.size === 0) { setSetupWizardStep(2); return; }
+                      const selected = PREMADE_STAFF
+                        .map((m, i) => ({ ...m, _index: i }))
+                        .filter(m => selectedPremade.has(m._index))
+                        .map(m => ({ ...m, name: editedStaffData[m._index]?.name || m.name, experience: editedStaffData[m._index]?.experience || m.experience }));
+                      quickAddStaffMutation.mutate(selected);
+                    }}
+                    disabled={quickAddStaffMutation.isPending}
+                    className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-10 px-5 text-sm font-semibold"
+                  >
+                    {quickAddStaffMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin mr-1" />Adding...</> : selectedPremade.size > 0 ? `Add ${selectedPremade.size} Staff →` : "Skip →"}
+                  </Button>
+                )}
+                {setupWizardStep === 2 && (
+                  <Button onClick={() => setSetupWizardStep(3)} className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-10 px-5 text-sm font-semibold">
+                    Next → FAQs
+                  </Button>
+                )}
+                {setupWizardStep === 3 && (
+                  <Button
+                    onClick={async () => {
+                      if (wizardFaqSelected.size > 0) {
+                        setWizardFaqSaving(true);
+                        try {
+                          const selectedFaqs = [...wizardFaqSelected].map(i => WIZARD_FAQS[i]);
+                          for (const faq of selectedFaqs) {
+                            await apiRequest("POST", "/api/owner/salon/faqs", { question: faq.q, answer: faq.a });
+                          }
+                          queryClient.invalidateQueries({ queryKey: ["/api/owner/salon/faqs"] });
+                        } catch {}
+                        setWizardFaqSaving(false);
+                      }
+                      setSetupWizardStep(4);
+                    }}
+                    disabled={wizardFaqSaving}
+                    className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-10 px-5 text-sm font-semibold"
+                  >
+                    {wizardFaqSaving ? <><Loader2 className="h-4 w-4 animate-spin mr-1" />Saving...</> : wizardFaqSelected.size > 0 ? `Add ${wizardFaqSelected.size} FAQs & Finish` : "Finish →"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {/* ─── END SETUP WIZARD ─── */}
 
     </div>
   );
