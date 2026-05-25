@@ -2168,16 +2168,8 @@ export default function OwnerDashboard() {
                   <TabsTrigger value="offers" className="text-xs py-3">Offers</TabsTrigger>
                   <TabsTrigger value="faqs" className="text-xs py-3">FAQs</TabsTrigger>
                 </TabsList>
-                <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
+                <TabsList className="grid w-full grid-cols-1 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger value="reviews" className="text-xs py-3">Reviews</TabsTrigger>
-                  <TabsTrigger value="messages" className="text-xs py-3 relative">
-                    Messages
-                    {brandMessages.filter(msg => !msg.isRead).length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {brandMessages.filter(msg => !msg.isRead).length}
-                      </span>
-                    )}
-                  </TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 gap-1 h-auto p-1 mt-1">
                   <TabsTrigger
@@ -2198,7 +2190,7 @@ export default function OwnerDashboard() {
               
               {/* Desktop Tab Navigation */}
               <div className="hidden sm:block">
-                <TabsList className="grid w-full grid-cols-11 gap-1">
+                <TabsList className="grid w-full grid-cols-10 gap-1">
                   <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
                   <TabsTrigger value="services" className="text-sm">Services</TabsTrigger>
                   <TabsTrigger value="staff" className="text-sm">Staff</TabsTrigger>
@@ -2213,14 +2205,6 @@ export default function OwnerDashboard() {
                     disabled={salon?.verificationStatus !== 'approved'}
                   >
                     {salon?.verificationStatus !== 'approved' ? '🔒' : '🔥'} Hire Staff
-                  </TabsTrigger>
-                  <TabsTrigger value="messages" className="text-sm relative">
-                    Messages
-                    {brandMessages.filter(msg => !msg.isRead).length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {brandMessages.filter(msg => !msg.isRead).length}
-                      </span>
-                    )}
                   </TabsTrigger>
                   <TabsTrigger value="settings" className="text-sm">Settings</TabsTrigger>
                 </TabsList>
