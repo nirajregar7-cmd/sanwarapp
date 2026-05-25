@@ -2155,7 +2155,7 @@ export default function OwnerDashboard() {
             )}
             {!salon && (
               <Button
-                onClick={() => setSalonDialogOpen(true)}
+                onClick={() => { setSetupWizardOpen(true); setSetupWizardStep(0); }}
                 size="lg"
                 className="bg-amber-500 hover:bg-amber-400 text-white border-0 shadow-lg shadow-amber-500/25"
               >
@@ -2192,7 +2192,7 @@ export default function OwnerDashboard() {
                     Complete your salon profile to appear on our platform and start receiving bookings from customers.
                   </p>
                   <Button 
-                    onClick={() => setSalonDialogOpen(true)} 
+                    onClick={() => { setSetupWizardOpen(true); setSetupWizardStep(0); }}
                     size="lg" 
                     className="w-full"
                   >
