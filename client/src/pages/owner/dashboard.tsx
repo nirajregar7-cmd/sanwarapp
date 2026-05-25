@@ -2267,6 +2267,23 @@ export default function OwnerDashboard() {
                   <h3 className="font-semibold text-gray-900">Quick Actions</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <Link href="/owner/salon-wizard" className="group">
+                    <div className="relative overflow-hidden rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 p-4 sm:p-5 hover:shadow-lg hover:border-violet-400 transition-all cursor-pointer h-full">
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-violet-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="absolute top-3 right-3">
+                        <span className="text-[10px] font-bold bg-violet-600 text-white px-2 py-0.5 rounded-full">QUICK SETUP</span>
+                      </div>
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center mb-3 shadow-lg shadow-violet-200">
+                        <Sparkles className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900 text-sm mb-1">Salon Setup Wizard</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed">Complete your salon profile in 1–2 minutes</p>
+                      <div className="mt-3 flex items-center text-violet-600 text-xs font-medium group-hover:gap-2 gap-1 transition-all">
+                        Start <span>→</span>
+                      </div>
+                    </div>
+                  </Link>
+
                   <Link href="/owner/staff-slot-generator" className="group">
                     <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-5 hover:shadow-lg hover:border-blue-200 transition-all cursor-pointer h-full">
                       <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />

@@ -39,6 +39,7 @@ import FeedbackHelp from "@/pages/feedback-help";
 import CountryOnboarding from "@/pages/CountryOnboarding";
 import CountrySettings from "@/pages/CountrySettings";
 import OwnerDashboard from "@/pages/owner/dashboard";
+import SalonWizard from "@/pages/owner/salon-wizard";
 import TimeSlots from "@/pages/owner/time-slots";
 import TimeSlotManagement from "@/pages/owner/time-slot-management";
 import StaffSchedulePage from "@/pages/owner/staff-schedule";
@@ -490,6 +491,9 @@ function Router() {
                 <Layout>
                   <OwnerMessages />
                 </Layout>
+              </Route>
+              <Route path="/owner/salon-wizard">
+                <SalonWizard />
               </Route>
             </>
           )}
