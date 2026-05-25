@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import PublicNav from "@/components/PublicNav";
 import { Link, useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
@@ -33,6 +33,17 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
+
+const PROFESSIONAL_TOKEN_KEY = "sanwar_professional_token";
+function getProfessionalToken() { return localStorage.getItem(PROFESSIONAL_TOKEN_KEY); }
+function getProfessionalMobile(): string | null {
+  const token = getProfessionalToken();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.mobile || null;
+  } catch { return null; }
+}
 
 const ROLES = [
   "Barber",
@@ -135,6 +146,13 @@ export default function StaffRegistration() {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
 
+  // Auth guard: must be logged in as professional
+  useEffect(() => {
+    if (!getProfessionalToken()) {
+      navigate("/professional-login");
+    }
+  }, []);
+
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
   const workingPhotosInputRef = useRef<HTMLInputElement>(null);
 
@@ -143,9 +161,12 @@ export default function StaffRegistration() {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingWorking, setUploadingWorking] = useState(false);
 
+  // Pre-fill mobile from token
+  const prefillMobile = getProfessionalMobile() || "";
+
   const [form, setForm] = useState<FormData>({
     fullName: "",
-    mobile: "",
+    mobile: prefillMobile,
     city: "",
     area: "",
     headline: "",
@@ -169,6 +190,8 @@ export default function StaffRegistration() {
     },
     onSuccess: () => {
       setSubmitted(true);
+      // Redirect to dashboard after short delay
+      setTimeout(() => navigate("/professional-dashboard"), 2500);
     },
     onError: () => {
       toast({

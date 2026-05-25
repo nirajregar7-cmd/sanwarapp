@@ -3,10 +3,9 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Smartphone, Loader2, Shield, CheckCircle, Sparkles, ArrowLeft, UserPlus } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Smartphone, Loader2, Shield, CheckCircle, Sparkles, ArrowLeft, UserPlus, LogIn } from "lucide-react";
 
-const PROFESSIONAL_TOKEN_KEY = "sanwar_professional_token";
+export const PROFESSIONAL_TOKEN_KEY = "sanwar_professional_token";
 
 export function useProfessionalAuth() {
   const token = localStorage.getItem(PROFESSIONAL_TOKEN_KEY);
@@ -23,12 +22,15 @@ export default function ProfessionalLogin() {
   const { isAuthenticated } = useProfessionalAuth();
   const [, setLocation] = useLocation();
 
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [step, setStep] = useState<"form" | "otp">("form");
+  const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [pendingIsNew, setPendingIsNew] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) setLocation("/professional-dashboard");
@@ -46,16 +48,23 @@ export default function ProfessionalLogin() {
       toast({ title: "Invalid number", description: "Enter a valid 10-digit mobile number", variant: "destructive" });
       return;
     }
+    if (mode === "signup" && !name.trim()) {
+      toast({ title: "Name required", description: "Please enter your full name", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch("/api/professional/send-otp", {
+      const url = mode === "signup" ? "/api/professional/register-otp" : "/api/professional/send-otp";
+      const body = mode === "signup" ? { fullName: name, phone } : { phone };
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+      if (!res.ok) throw new Error(data.error || "Failed");
       setStep("otp");
+      setPendingIsNew(!!data.isNew);
       startCountdown();
       if (data.otp) setDevOtp(data.otp);
       toast({ title: "OTP Sent!", description: `OTP sent to ${phone}` });
@@ -81,13 +90,21 @@ export default function ProfessionalLogin() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Invalid OTP");
       localStorage.setItem(PROFESSIONAL_TOKEN_KEY, data.token);
-      toast({ title: "Welcome back!", description: "Logged in successfully." });
-      setLocation("/professional-dashboard");
+      toast({ title: mode === "signup" ? "Account created! 🎉" : "Welcome back!", description: "Logged in successfully." });
+      // New signup goes to complete profile, existing login goes to dashboard
+      setLocation(pendingIsNew ? "/staff-registration" : "/professional-dashboard");
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    setStep("form");
+    setOtp("");
+    setDevOtp(null);
+    setPendingIsNew(false);
   };
 
   return (
@@ -110,56 +127,84 @@ export default function ProfessionalLogin() {
 
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-              <Shield className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">Professional Login</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {step === "phone"
-                ? "Enter your registered mobile number to continue"
-                : `Enter the OTP sent to +91 ${phone}`}
-            </p>
-          </div>
-
-          {devOtp && (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
-              <p className="text-xs text-amber-700 font-medium">Dev Mode OTP: <span className="font-bold text-amber-900 text-lg">{devOtp}</span></p>
+          {/* Mode toggle */}
+          {step === "form" && (
+            <div className="flex bg-gray-100 rounded-2xl p-1 mb-6">
+              <button
+                onClick={() => { setMode("login"); resetForm(); }}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${mode === "login" ? "bg-white shadow text-indigo-700" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                <LogIn className="w-4 h-4" /> Login
+              </button>
+              <button
+                onClick={() => { setMode("signup"); resetForm(); }}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${mode === "signup" ? "bg-white shadow text-indigo-700" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                <UserPlus className="w-4 h-4" /> Sign Up
+              </button>
             </div>
           )}
 
-          {step === "phone" ? (
-            <div className="space-y-4">
+          {/* Icon & title */}
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+              <Shield className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {step === "otp" ? "Enter OTP" : mode === "signup" ? "Create Account" : "Professional Login"}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {step === "otp"
+                ? `OTP sent to +91 ${phone}`
+                : mode === "signup"
+                ? "Register to create your professional profile"
+                : "Enter your registered mobile number"}
+            </p>
+          </div>
+
+          {/* Dev OTP hint */}
+          {devOtp && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
+              <p className="text-xs text-amber-700 font-medium">Dev OTP: <span className="font-bold text-amber-900 text-xl tracking-widest">{devOtp}</span></p>
+            </div>
+          )}
+
+          {step === "form" ? (
+            <div className="space-y-3">
+              {mode === "signup" && (
+                <Input
+                  placeholder="Your Full Name *"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-12 rounded-xl"
+                  onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
+                />
+              )}
               <div className="relative">
                 <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
                   type="tel"
-                  placeholder="10-digit mobile number"
+                  placeholder="10-digit mobile number *"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="pl-10 h-12 text-lg text-center tracking-wider"
+                  className="pl-10 h-12 rounded-xl tracking-wider text-center"
                   maxLength={10}
                   onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
                 />
               </div>
               <Button
                 onClick={handleSendOtp}
-                disabled={loading || phone.length < 10}
-                className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold"
+                disabled={loading || phone.length < 10 || (mode === "signup" && !name.trim())}
+                className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Send OTP"}
               </Button>
-              <div className="relative my-2">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-                <div className="relative text-center text-xs text-gray-400 bg-white px-2 w-fit mx-auto">or</div>
-              </div>
-              <Link href="/staff-registration">
-                <Button variant="outline" className="w-full h-11 rounded-xl border-indigo-200 text-indigo-700 hover:bg-indigo-50">
-                  <UserPlus className="w-4 h-4 mr-2" /> Register as a New Professional
-                </Button>
-              </Link>
-              <p className="text-center text-xs text-gray-400 mt-2">
-                Your mobile number must match your registration profile.
+
+              <p className="text-center text-xs text-gray-400 pt-1">
+                {mode === "login"
+                  ? <>Don't have an account? <button onClick={() => setMode("signup")} className="text-indigo-600 font-semibold hover:underline">Sign Up</button></>
+                  : <>Already registered? <button onClick={() => setMode("login")} className="text-indigo-600 font-semibold hover:underline">Login</button></>
+                }
               </p>
             </div>
           ) : (
@@ -170,7 +215,7 @@ export default function ProfessionalLogin() {
                 placeholder="Enter OTP"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="h-12 text-2xl text-center tracking-[0.5em] font-mono"
+                className="h-12 text-2xl text-center tracking-[0.5em] font-mono rounded-xl"
                 maxLength={6}
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && handleVerifyOtp()}
@@ -178,23 +223,23 @@ export default function ProfessionalLogin() {
               <Button
                 onClick={handleVerifyOtp}
                 disabled={loading || otp.length < 4}
-                className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold"
+                className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                  <><CheckCircle className="w-4 h-4 mr-2" /> Verify & Login</>
+                  <><CheckCircle className="w-4 h-4 mr-2" /> Verify & {mode === "signup" ? "Create Account" : "Login"}</>
                 )}
               </Button>
               <div className="text-center">
                 {countdown > 0 ? (
-                  <p className="text-sm text-gray-500">Resend OTP in {countdown}s</p>
+                  <p className="text-sm text-gray-500">Resend in {countdown}s</p>
                 ) : (
                   <button onClick={handleSendOtp} disabled={loading} className="text-sm text-indigo-600 font-medium hover:underline">
                     Resend OTP
                   </button>
                 )}
               </div>
-              <button onClick={() => { setStep("phone"); setOtp(""); setDevOtp(null); }} className="w-full text-center text-sm text-gray-500 hover:text-gray-700">
-                Change phone number
+              <button onClick={resetForm} className="w-full text-center text-sm text-gray-500 hover:text-gray-700">
+                ← Go back
               </button>
             </div>
           )}

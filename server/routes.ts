@@ -11811,6 +11811,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Register new professional: create minimal profile + send OTP
+  app.post('/api/professional/register-otp', async (req, res) => {
+    try {
+      const { fullName, phone } = req.body;
+      if (!fullName || !phone) return res.status(400).json({ error: "Name and phone are required" });
+
+      // Check if mobile already exists
+      const [existing] = await db.select().from(staffRegistrations).where(eq(staffRegistrations.mobile, phone)).limit(1);
+      if (existing) return res.status(400).json({ error: "An account already exists with this mobile. Please login instead." });
+
+      // Create minimal profile
+      await db.insert(staffRegistrations).values({
+        fullName: fullName.trim(),
+        mobile: phone,
+        city: '',
+        area: '',
+        role: '',
+      });
+
+      // Send OTP
+      const otp = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      await db.insert(staffOtps).values({ phone, otp, expiresAt });
+
+      let formattedPhone = phone;
+      if (phone.length === 10 && /^[6-9]/.test(phone)) formattedPhone = `+91${phone}`;
+      else if (!phone.startsWith('+')) formattedPhone = `+${phone}`;
+      const smsSent = await sendWhatsAppMessage({ to: formattedPhone, body: `Your Sanwar OTP: ${otp}. Valid for 10 minutes. - Sanwar Team` });
+      const isDev = process.env.NODE_ENV === 'development';
+
+      res.json({
+        message: 'OTP sent',
+        isNew: true,
+        ...(isDev && !smsSent ? { otp } : {})
+      });
+    } catch (error: any) {
+      console.error("Professional register-otp error:", error);
+      res.status(500).json({ error: "Failed to create account" });
+    }
+  });
+
   // Send OTP to professional (checks staffRegistrations table)
   app.post('/api/professional/send-otp', async (req, res) => {
     try {
