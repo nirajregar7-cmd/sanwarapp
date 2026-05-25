@@ -761,6 +761,7 @@ export default function OwnerDashboard() {
   const [wizardLocationSet, setWizardLocationSet] = useState(false);
   const [wizardUploading, setWizardUploading] = useState(false);
   const [wizardUploadedCount, setWizardUploadedCount] = useState(0);
+  const [wizardServSaving, setWizardServSaving] = useState(false);
 
   const closeSetupWizard = () => {
     setSetupWizardOpen(false);
@@ -6436,20 +6437,83 @@ export default function OwnerDashboard() {
                 {/* Step 1 — Add services */}
                 {setupWizardStep === 1 && (
                   <Button
-                    onClick={() => {
+                    onClick={async () => {
                       if (selectedPremade.size === 0) { setSetupWizardStep(2); return; }
                       const sourceData = serviceGenderFilter === 'unisex' ? PREMADE_SERVICES : serviceGenderFilter === 'men' ? MEN_ONLY_SERVICES : WOMEN_ONLY_SERVICES;
-                      const flat: any[] = Object.values(sourceData).flat();
-                      const selectedServices = flat
-                        .map((svc, i) => ({ ...svc, _idx: i }))
-                        .filter(svc => selectedPremade.has(svc._idx))
-                        .map(({ _idx, ...svc }) => ({ ...svc, price: parseFloat(String(svc.price)), categoryId: null }));
-                      quickAddServicesMutation.mutate(selectedServices);
+
+                      // Collect selected services grouped by category
+                      const byCategory: Record<string, { name: string; description: string; price: number; duration: number }[]> = {};
+                      let globalIdx = 0;
+                      for (const [catName, svcList] of Object.entries(sourceData)) {
+                        for (const svc of svcList as any[]) {
+                          if (selectedPremade.has(globalIdx)) {
+                            if (!byCategory[catName]) byCategory[catName] = [];
+                            byCategory[catName].push({ ...svc, price: parseFloat(String(svc.price)) });
+                          }
+                          globalIdx++;
+                        }
+                      }
+                      if (Object.keys(byCategory).length === 0) { setSetupWizardStep(2); return; }
+
+                      const CATEGORY_COLORS: Record<string, string> = {
+                        "Hair Care": "#F97316", "Men's Hair": "#3B82F6", "Women's Hair": "#F97316",
+                        "Facial & Skin": "#EC4899", "Men's Skincare": "#64748B", "Women's Facial & Skin": "#EC4899",
+                        "Nail Services": "#A855F7", "Women's Nail Services": "#A855F7", "Men's Nail Care": "#A855F7",
+                        "Bridal Services": "#EF4444", "Massage & Spa": "#3B82F6", "Men's Massage": "#3B82F6",
+                        "Women's Spa & Massage": "#3B82F6", "Beard & Grooming": "#78350F",
+                        "Makeup": "#F472B6", "Women's Makeup": "#F472B6", "Waxing & Threading": "#EAB308",
+                        "Men's Waxing": "#EAB308", "Hair Treatments": "#0D9488", "Eye & Eyebrow": "#6366F1",
+                        "Saree Draping": "#BE185D",
+                      };
+                      const CATEGORY_ICONS: Record<string, string> = {
+                        "Hair Care": "Scissors", "Men's Hair": "Scissors", "Women's Hair": "Scissors",
+                        "Hair Treatments": "Sparkles", "Facial & Skin": "Sparkles", "Men's Skincare": "Sparkles",
+                        "Women's Facial & Skin": "Sparkles", "Nail Services": "Sparkles",
+                        "Women's Nail Services": "Sparkles", "Men's Nail Care": "Sparkles",
+                        "Bridal Services": "Heart", "Massage & Spa": "Star", "Men's Massage": "Star",
+                        "Women's Spa & Massage": "Star", "Makeup": "Palette", "Women's Makeup": "Palette",
+                        "Waxing & Threading": "Scissors", "Men's Waxing": "Scissors",
+                        "Eye & Eyebrow": "Star", "Beard & Grooming": "Scissors", "Saree Draping": "Heart",
+                      };
+
+                      setWizardServSaving(true);
+                      try {
+                        const categoryMap: Record<string, string> = {};
+                        let catOrder = 0;
+                        for (const catName of Object.keys(byCategory)) {
+                          try {
+                            const res = await apiRequest('POST', `/api/salons/${salon?.id}/categories`, {
+                              name: catName,
+                              description: `${catName} services`,
+                              icon: CATEGORY_ICONS[catName] || 'Scissors',
+                              color: CATEGORY_COLORS[catName] || '#6B7280',
+                              order: catOrder++,
+                            });
+                            const cat = await res.json();
+                            if (cat?.id) categoryMap[catName] = cat.id;
+                          } catch {}
+                        }
+                        const allServices = Object.entries(byCategory).flatMap(([catName, svcs]) =>
+                          svcs.map(svc => ({ ...svc, categoryId: categoryMap[catName] || null }))
+                        );
+                        for (const svc of allServices) {
+                          await apiRequest('POST', `/api/salons/${salon?.id}/services`, svc);
+                        }
+                        queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/services`] });
+                        queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/categories`] });
+                        toast({ title: `${allServices.length} Services Added!`, description: "Services added with categories." });
+                        setSelectedPremade(new Set());
+                        setSetupWizardStep(2);
+                      } catch {
+                        toast({ title: "Error adding services", variant: "destructive" });
+                      } finally {
+                        setWizardServSaving(false);
+                      }
                     }}
-                    disabled={quickAddServicesMutation.isPending}
+                    disabled={wizardServSaving}
                     className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-10 px-5 text-sm font-semibold"
                   >
-                    {quickAddServicesMutation.isPending
+                    {wizardServSaving
                       ? <><Loader2 className="h-4 w-4 animate-spin mr-1.5" />Adding...</>
                       : selectedPremade.size > 0 ? `Add ${selectedPremade.size} Services →` : "Skip →"}
                   </Button>

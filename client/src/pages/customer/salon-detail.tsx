@@ -1314,11 +1314,15 @@ export default function SalonDetail() {
                       >
                         All Services
                       </button>
-                      {servicesByCategory.map((category) => (
+                      {servicesByCategory.map((category) => {
+                        const catLower = (category.name || '').toLowerCase();
+                        const isMen = catLower.includes("men's") || category.name === "Beard & Grooming";
+                        const isWomen = catLower.includes("women's") || category.name === "Bridal Services" || category.name === "Saree Draping";
+                        return (
                         <button
                           key={category.id}
                           onClick={() => setSelectedCategoryFilter(category.id)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center space-x-2 ${
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
                             selectedCategoryFilter === category.id
                               ? "text-white shadow-md"
                               : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
@@ -1329,21 +1333,28 @@ export default function SalonDetail() {
                           data-testid={`filter-category-${category.id}`}
                         >
                           <div 
-                            className="w-3 h-3 rounded-full"
+                            className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ 
                               backgroundColor: selectedCategoryFilter === category.id ? "rgba(255,255,255,0.3)" : category.color || '#3B82F6' 
                             }}
                           />
                           <span>{category.name}</span>
+                          {isMen && <span className="text-xs opacity-80">♂</span>}
+                          {isWomen && <span className="text-xs opacity-80">♀</span>}
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                     
                     <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                       <div className="space-y-6">
                         {servicesByCategory
                           .filter(category => selectedCategoryFilter === "all" || category.id === selectedCategoryFilter)
-                          .map((category) => (
+                          .map((category) => {
+                              const catLower2 = (category.name || '').toLowerCase();
+                              const isMen2 = catLower2.includes("men's") || category.name === "Beard & Grooming";
+                              const isWomen2 = catLower2.includes("women's") || category.name === "Bridal Services" || category.name === "Saree Draping";
+                              return (
                             <div key={category.id} className="space-y-3">
                               {/* Category Header */}
                               <div className="flex items-center space-x-3 pb-2 border-b border-gray-200">
@@ -1357,8 +1368,16 @@ export default function SalonDetail() {
                                    category.icon === 'Heart' ? '❤️' :
                                    category.icon === 'Star' ? '⭐' : '💫'}
                                 </div>
-                                <div>
-                                  <h3 className="font-semibold text-gray-900 text-lg">{category.name}</h3>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h3 className="font-semibold text-gray-900 text-lg">{category.name}</h3>
+                                    {isMen2 && (
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">♂ Men</span>
+                                    )}
+                                    {isWomen2 && (
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 font-medium">♀ Women</span>
+                                    )}
+                                  </div>
                                   {category.description && (
                                     <p className="text-sm text-gray-600">{category.description}</p>
                                   )}
@@ -1418,7 +1437,8 @@ export default function SalonDetail() {
                                 )}
                               </div>
                             </div>
-                          ))}
+                          );
+                          })}
                       </div>
                     </div>
                     
