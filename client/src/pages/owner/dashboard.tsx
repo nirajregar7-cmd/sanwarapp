@@ -16,7 +16,8 @@ import {
   Edit, Trash2, Eye, Phone, MapPin, TrendingUp, Activity,
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
   CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play, 
-  HelpCircle, Edit2, Palette, Tags, Mail, LogOut, Shield, Gift, Send, MessageCircle, ArrowLeft
+  HelpCircle, Edit2, Palette, Tags, Mail, LogOut, Shield, Gift, Send, MessageCircle, ArrowLeft,
+  Zap, Layers, Package, CheckSquare
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -360,6 +361,81 @@ type FaqFormData = z.infer<typeof faqSchema>;
 type ServiceCategoryFormData = z.infer<typeof serviceCategorySchema>;
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+// Premade category templates for quick add
+const PREMADE_CATEGORIES = [
+  { name: "Hair Care", description: "Haircuts, styling, treatments and coloring", icon: "Scissors", color: "#3B82F6" },
+  { name: "Facial & Skin", description: "Facials, cleanups, and skin treatments", icon: "Sparkles", color: "#10B981" },
+  { name: "Nail Services", description: "Manicure, pedicure, and nail art", icon: "Palette", color: "#F59E0B" },
+  { name: "Bridal Services", description: "Bridal makeup, mehndi, and packages", icon: "Heart", color: "#EC4899" },
+  { name: "Massage & Spa", description: "Body massage, spa therapies and relaxation", icon: "Star", color: "#8B5CF6" },
+  { name: "Beard & Grooming", description: "Beard styling, shaves, and grooming", icon: "Crown", color: "#EF4444" },
+  { name: "Makeup", description: "Party makeup, HD makeup, and special looks", icon: "Palette", color: "#EC4899" },
+  { name: "Waxing & Threading", description: "Full body waxing, threading, and hair removal", icon: "Scissors", color: "#10B981" },
+];
+
+// Premade service templates grouped by category name for quick add
+const PREMADE_SERVICES: Record<string, { name: string; description: string; price: number; duration: number }[]> = {
+  "Hair Care": [
+    { name: "Hair Cut", description: "Professional haircut with styling", price: 200, duration: 30 },
+    { name: "Hair Wash & Blow Dry", description: "Deep cleansing wash with blow dry styling", price: 300, duration: 45 },
+    { name: "Hair Coloring", description: "Root touch-up or full hair coloring", price: 800, duration: 90 },
+    { name: "Hair Spa", description: "Nourishing hair spa treatment", price: 500, duration: 60 },
+    { name: "Keratin Treatment", description: "Smoothing keratin hair treatment", price: 2500, duration: 120 },
+    { name: "Hair Straightening", description: "Permanent hair straightening", price: 3000, duration: 150 },
+    { name: "Head Massage", description: "Relaxing oil head massage", price: 250, duration: 30 },
+    { name: "Hair Trim", description: "Quick trim and layering", price: 150, duration: 20 },
+  ],
+  "Facial & Skin": [
+    { name: "Basic Facial", description: "Cleansing, scrubbing, and face pack", price: 400, duration: 45 },
+    { name: "Gold Facial", description: "Luxury gold facial for glowing skin", price: 800, duration: 60 },
+    { name: "Diamond Facial", description: "Diamond facial for radiant skin", price: 1200, duration: 75 },
+    { name: "Face Cleanup", description: "Blackhead removal and cleanup", price: 300, duration: 30 },
+    { name: "Bleach", description: "Face and neck bleaching", price: 250, duration: 30 },
+    { name: "De-Tan", description: "Tan removal treatment", price: 350, duration: 45 },
+    { name: "Under Eye Treatment", description: "Dark circle and puffiness treatment", price: 400, duration: 30 },
+  ],
+  "Nail Services": [
+    { name: "Manicure", description: "Hand cleaning, shaping, and polish", price: 300, duration: 30 },
+    { name: "Pedicure", description: "Foot spa with cleaning and polish", price: 400, duration: 45 },
+    { name: "Nail Art", description: "Creative nail art design", price: 500, duration: 60 },
+    { name: "Gel Nails", description: "Gel polish application", price: 600, duration: 45 },
+    { name: "Acrylic Nails", description: "Acrylic nail extensions", price: 800, duration: 60 },
+  ],
+  "Bridal Services": [
+    { name: "Bridal Makeup", description: "Complete bridal makeup package", price: 5000, duration: 180 },
+    { name: "Mehndi", description: "Bridal mehndi / henna application", price: 1500, duration: 120 },
+    { name: "Pre-Bridal Package", description: "Full body preparation package", price: 8000, duration: 240 },
+    { name: "Engagement Makeup", description: "Light engagement makeup", price: 3000, duration: 90 },
+  ],
+  "Massage & Spa": [
+    { name: "Full Body Massage", description: "Relaxing full body oil massage", price: 800, duration: 60 },
+    { name: "Back Massage", description: "Focused back and shoulder massage", price: 400, duration: 30 },
+    { name: "Body Scrub", description: "Exfoliating body scrub treatment", price: 600, duration: 45 },
+    { name: "Body Polish", description: "Skin brightening body polish", price: 700, duration: 60 },
+  ],
+  "Beard & Grooming": [
+    { name: "Beard Trim", description: "Precision beard trimming and shaping", price: 100, duration: 15 },
+    { name: "Beard Styling", description: "Creative beard styling and design", price: 200, duration: 30 },
+    { name: "Shave", description: "Clean shave with hot towel", price: 150, duration: 20 },
+    { name: "Beard Color", description: "Beard coloring and touch-up", price: 250, duration: 30 },
+  ],
+  "Makeup": [
+    { name: "Party Makeup", description: "Glam party makeup look", price: 1500, duration: 60 },
+    { name: "HD Makeup", description: "High-definition camera-ready makeup", price: 2500, duration: 90 },
+    { name: "Natural Makeup", description: "Subtle everyday makeup", price: 1000, duration: 45 },
+    { name: "Eye Makeup", description: "Dramatic eye makeup only", price: 500, duration: 30 },
+  ],
+  "Waxing & Threading": [
+    { name: "Full Body Wax", description: "Complete body waxing", price: 800, duration: 60 },
+    { name: "Half Arms Wax", description: "Upper or lower arms waxing", price: 200, duration: 20 },
+    { name: "Half Legs Wax", description: "Upper or lower legs waxing", price: 250, duration: 25 },
+    { name: "Underarms Wax", description: "Underarm hair removal", price: 100, duration: 10 },
+    { name: "Eyebrow Threading", description: "Eyebrow shaping with thread", price: 50, duration: 10 },
+    { name: "Upper Lip Threading", description: "Upper lip hair removal", price: 30, duration: 5 },
+    { name: "Full Face Threading", description: "Complete face threading", price: 150, duration: 20 },
+  ],
+};
+
 export default function OwnerDashboard() {
   const { user, isAuthenticated } = useAuth();
   const { shouldShowOnboarding, onboardingSteps, completeOnboarding, skipOnboarding } = useOnboarding('salon-owner');
@@ -369,6 +445,9 @@ export default function OwnerDashboard() {
   const [imageUploading, setImageUploading] = useState(false);
   const [tempImageUrl, setTempImageUrl] = useState<string>("");
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
+  const [quickAddDialogOpen, setQuickAddDialogOpen] = useState(false);
+  const [quickAddType, setQuickAddType] = useState<'categories' | 'services'>('categories');
+  const [selectedPremade, setSelectedPremade] = useState<Set<number>>(new Set());
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
@@ -951,6 +1030,62 @@ export default function OwnerDashboard() {
       toast({
         title: "Error",
         description: `Failed to ${editingItem ? 'update' : 'create'} category. Please try again.`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Quick add categories mutation
+  const quickAddCategoriesMutation = useMutation({
+    mutationFn: async (categories: typeof PREMADE_CATEGORIES) => {
+      const results = [];
+      for (const cat of categories) {
+        const res = await apiRequest('POST', `/api/salons/${salon?.id}/categories`, cat);
+        results.push(await res.json());
+      }
+      return results;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: `${data.length} Categories Added!`,
+        description: "All selected categories have been added to your salon.",
+      });
+      setQuickAddDialogOpen(false);
+      setSelectedPremade(new Set());
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/categories`] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Quick add services mutation
+  const quickAddServicesMutation = useMutation({
+    mutationFn: async (servicesToAdd: { name: string; description: string; price: number; duration: number; categoryId: string | null }[]) => {
+      const results = [];
+      for (const svc of servicesToAdd) {
+        const res = await apiRequest('POST', `/api/salons/${salon?.id}/services`, svc);
+        results.push(await res.json());
+      }
+      return results;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: `${data.length} Services Added!`,
+        description: "All selected services have been added to your salon.",
+      });
+      setQuickAddDialogOpen(false);
+      setSelectedPremade(new Set());
+      queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon?.id}/services`] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -2050,14 +2185,29 @@ export default function OwnerDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     Services & Pricing
-                    <Button onClick={() => {
-                      setEditingItem(null);
-                      serviceForm.reset();
-                      setServiceDialogOpen(true);
-                    }}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Service
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setQuickAddType('services');
+                          setSelectedPremade(new Set());
+                          setQuickAddDialogOpen(true);
+                        }}
+                        className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                      >
+                        <Zap className="h-4 w-4 mr-1" />
+                        Quick Add
+                      </Button>
+                      <Button onClick={() => {
+                        setEditingItem(null);
+                        serviceForm.reset();
+                        setServiceDialogOpen(true);
+                      }}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Service
+                      </Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -2153,9 +2303,23 @@ export default function OwnerDashboard() {
                         Organize your services into categories to help customers find what they need
                       </CardDescription>
                     </div>
-                    <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button onClick={() => {
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setQuickAddType('categories');
+                          setSelectedPremade(new Set());
+                          setQuickAddDialogOpen(true);
+                        }}
+                        className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                      >
+                        <Zap className="h-4 w-4 mr-1" />
+                        Quick Add
+                      </Button>
+                      <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button onClick={() => {
                           setEditingItem(null);
                           categoryForm.reset({
                             name: "",
@@ -2285,6 +2449,7 @@ export default function OwnerDashboard() {
                         </Form>
                       </DialogContent>
                     </Dialog>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -4644,6 +4809,187 @@ export default function OwnerDashboard() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Add Dialog */}
+      <Dialog open={quickAddDialogOpen} onOpenChange={setQuickAddDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-orange-500" />
+              Quick Add {quickAddType === 'categories' ? 'Categories' : 'Services'}
+            </DialogTitle>
+            <DialogDescription>
+              Select from premade {quickAddType} and add them to your salon in one click. You can edit prices and details later.
+            </DialogDescription>
+          </DialogHeader>
+
+          {quickAddType === 'categories' ? (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500">Click to select the categories you want to add:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {PREMADE_CATEGORIES.map((cat, index) => {
+                  const isSelected = selectedPremade.has(index);
+                  const alreadyExists = serviceCategories.some(
+                    (existing: any) => existing.name.toLowerCase() === cat.name.toLowerCase()
+                  );
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (alreadyExists) return;
+                        const newSelected = new Set(selectedPremade);
+                        if (isSelected) newSelected.delete(index);
+                        else newSelected.add(index);
+                        setSelectedPremade(newSelected);
+                      }}
+                      disabled={alreadyExists}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        alreadyExists
+                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                          : isSelected
+                          ? 'border-orange-400 bg-orange-50'
+                          : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
+                          style={{ backgroundColor: cat.color + '20', color: cat.color }}
+                        >
+                          {cat.icon === 'Scissors' ? '✂️' :
+                           cat.icon === 'Sparkles' ? '✨' :
+                           cat.icon === 'Palette' ? '🎨' :
+                           cat.icon === 'Heart' ? '❤️' :
+                           cat.icon === 'Star' ? '⭐' :
+                           cat.icon === 'Crown' ? '👑' : '💫'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm truncate">{cat.name}</p>
+                            {alreadyExists && (
+                              <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">Added</span>
+                            )}
+                            {isSelected && !alreadyExists && (
+                              <CheckSquare className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 truncate">{cat.description}</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500">
+                Select services to add. They will be created uncategorized — you can assign categories later.
+              </p>
+              {Object.entries(PREMADE_SERVICES).map(([categoryName, servicesList]) => (
+                <div key={categoryName} className="border rounded-lg overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-2 flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700">{categoryName}</span>
+                    <span className="text-xs text-gray-400">({servicesList.length} services)</span>
+                  </div>
+                  <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {servicesList.map((svc, svcIndex) => {
+                      const globalIndex = Object.entries(PREMADE_SERVICES)
+                        .slice(0, Object.keys(PREMADE_SERVICES).indexOf(categoryName))
+                        .reduce((sum, [, list]) => sum + list.length, 0) + svcIndex;
+                      const isSelected = selectedPremade.has(globalIndex);
+                      const alreadyExists = services.some(
+                        (existing: any) => existing.name.toLowerCase() === svc.name.toLowerCase()
+                      );
+                      return (
+                        <button
+                          key={globalIndex}
+                          onClick={() => {
+                            if (alreadyExists) return;
+                            const newSelected = new Set(selectedPremade);
+                            if (isSelected) newSelected.delete(globalIndex);
+                            else newSelected.add(globalIndex);
+                            setSelectedPremade(newSelected);
+                          }}
+                          disabled={alreadyExists}
+                          className={`p-2 rounded border text-left transition-all ${
+                            alreadyExists
+                              ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                              : isSelected
+                              ? 'border-orange-400 bg-orange-50'
+                              : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{svc.name}</p>
+                              <p className="text-xs text-gray-500 truncate">{svc.description}</p>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <p className="text-sm font-semibold text-green-600">₹{svc.price}</p>
+                              <p className="text-xs text-gray-400">{svc.duration}m</p>
+                            </div>
+                            {alreadyExists && (
+                              <span className="text-xs bg-gray-200 text-gray-600 px-1 rounded">Added</span>
+                            )}
+                            {isSelected && !alreadyExists && (
+                              <CheckSquare className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex justify-between items-center pt-2">
+            <p className="text-sm text-gray-500">
+              {selectedPremade.size} {quickAddType === 'categories' ? 'categories' : 'services'} selected
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setQuickAddDialogOpen(false);
+                  setSelectedPremade(new Set());
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (quickAddType === 'categories') {
+                    const selected = PREMADE_CATEGORIES.filter((_, i) => selectedPremade.has(i));
+                    quickAddCategoriesMutation.mutate(selected);
+                  } else {
+                    let globalIdx = 0;
+                    const selectedServices: { name: string; description: string; price: number; duration: number; categoryId: null }[] = [];
+                    for (const [, svcList] of Object.entries(PREMADE_SERVICES)) {
+                      for (const svc of svcList) {
+                        if (selectedPremade.has(globalIdx)) {
+                          selectedServices.push({ ...svc, categoryId: null });
+                        }
+                        globalIdx++;
+                      }
+                    }
+                    quickAddServicesMutation.mutate(selectedServices);
+                  }
+                }}
+                disabled={selectedPremade.size === 0 || quickAddCategoriesMutation.isPending || quickAddServicesMutation.isPending}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                {quickAddCategoriesMutation.isPending || quickAddServicesMutation.isPending
+                  ? 'Adding...'
+                  : `Add ${selectedPremade.size} ${quickAddType}`}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
