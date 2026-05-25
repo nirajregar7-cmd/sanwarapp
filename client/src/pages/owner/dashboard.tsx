@@ -307,6 +307,7 @@ const salonSchema = z.object({
   facebookId: z.string().optional(),
   googleMapsLink: z.string().optional(),
   confirmationAmount: z.number().min(0),
+  salonType: z.enum(["unisex", "male", "female"]).default("unisex"),
 });
 
 const serviceSchema = z.object({
@@ -1145,6 +1146,7 @@ export default function OwnerDashboard() {
       facebookId: salon?.facebookId || "",
       googleMapsLink: salon?.googleMapsLink || "",
       confirmationAmount: salon?.confirmationAmount || 0,
+      salonType: (salon as any)?.salonType || "unisex",
     },
   });
 
@@ -1490,6 +1492,7 @@ export default function OwnerDashboard() {
         facebookId: salon.facebookId || "",
         googleMapsLink: salon.googleMapsLink || "",
         confirmationAmount: salon.confirmationAmount || 0,
+        salonType: (salon as any).salonType || "unisex",
       });
       // Reset temporary image state
       setTempImageUrl("");
@@ -1975,59 +1978,105 @@ export default function OwnerDashboard() {
         </div>
       )}
       
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
-          <div className="flex flex-col space-y-3 sm:space-y-4 lg:space-y-0 lg:flex-row lg:justify-between lg:items-center">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
-                  {salon ? salon.name : "Setup Your Salon"}
-                </h1>
-                {salon && (
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Badge 
-                      className={
-                        salon.verificationStatus === 'approved' 
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" 
-                          : salon.verificationStatus === 'rejected'
-                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                      }
-                    >
-                      {salon.verificationStatus === 'approved' && <CheckCircle className="h-3 w-3 mr-1" />}
-                      {salon.verificationStatus === 'approved' ? 'Verified' : 
-                       salon.verificationStatus === 'rejected' ? 'Rejected' : 'Pending Review'}
-                    </Badge>
+      {/* Premium Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(168,85,247,0.15)_0%,_transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(234,179,8,0.12)_0%,_transparent_60%)]" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              {/* Salon Avatar */}
+              <div className="relative flex-shrink-0">
+                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl">
+                  {salon?.imageUrl ? (
+                    <img src={salon.imageUrl} alt={salon.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                      <Scissors className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                    </div>
+                  )}
+                </div>
+                {salon?.verificationStatus === 'approved' && (
+                  <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
+                    <CheckCircle className="h-3 w-3 text-white" />
                   </div>
                 )}
               </div>
-              <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base mt-1">
-                {salon ? "Manage your salon and grow your business" : "Create your salon profile to get started"}
-              </p>
-              {salon?.verificationNotes && (
-                <div className="mt-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                    Admin Notes:
-                  </p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    {salon.verificationNotes}
-                  </p>
+              {/* Salon Info */}
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">
+                    {salon ? salon.name : "Setup Your Salon"}
+                  </h1>
+                  {salon && (
+                    <Badge className={
+                      salon.verificationStatus === 'approved'
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs"
+                        : salon.verificationStatus === 'rejected'
+                        ? "bg-red-500/20 text-red-300 border border-red-500/30 text-xs"
+                        : "bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs"
+                    }>
+                      {salon.verificationStatus === 'approved' ? '✓ Verified' :
+                       salon.verificationStatus === 'rejected' ? '✗ Rejected' : '⏳ Pending Review'}
+                    </Badge>
+                  )}
+                  {salon && (salon as any).salonType && (
+                    <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs capitalize">
+                      {(salon as any).salonType === 'male' ? '👨 Men\'s Salon' :
+                       (salon as any).salonType === 'female' ? '👩 Women\'s Salon' :
+                       '👥 Unisex Salon'}
+                    </Badge>
+                  )}
                 </div>
-              )}
+                <p className="text-slate-400 text-sm">
+                  {salon ? "Premium Salon Dashboard — Grow your business with Sanwar" : "Create your salon profile to get started"}
+                </p>
+                {salon?.address && (
+                  <p className="text-slate-500 text-xs mt-0.5 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />{salon.address}
+                  </p>
+                )}
+              </div>
             </div>
+            {/* Right side stats */}
+            {salon && (
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="text-center px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                  <p className="text-lg sm:text-xl font-bold text-amber-400">{bookings.length}</p>
+                  <p className="text-xs text-slate-400">Bookings</p>
+                </div>
+                <div className="text-center px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                  <p className="text-lg sm:text-xl font-bold text-emerald-400">
+                    ₹{bookings.reduce((sum, b) => sum + Number(b.totalAmount || 0), 0).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-slate-400">Revenue</p>
+                </div>
+                <div className="text-center px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                  <p className="text-lg sm:text-xl font-bold text-yellow-400">
+                    {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "—"}
+                  </p>
+                  <p className="text-xs text-slate-400">Rating</p>
+                </div>
+              </div>
+            )}
             {!salon && (
-              <Button 
-                onClick={() => setSalonDialogOpen(true)} 
+              <Button
+                onClick={() => setSalonDialogOpen(true)}
                 size="lg"
-                className="w-full sm:w-auto lg:w-auto"
+                className="bg-amber-500 hover:bg-amber-400 text-white border-0 shadow-lg shadow-amber-500/25"
               >
                 <Store className="h-4 w-4 mr-2" />
-                <span className="hidden xs:inline">Create Salon Profile</span>
-                <span className="xs:hidden">Create Profile</span>
+                Create Salon Profile
               </Button>
             )}
           </div>
+          {salon?.verificationNotes && (
+            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+              <p className="text-sm text-blue-300"><span className="font-semibold">Admin Note:</span> {salon.verificationNotes}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -2167,135 +2216,137 @@ export default function OwnerDashboard() {
             </div>
 
             <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                    <Link href="/owner/staff-slot-generator">
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
-                      >
-                        <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mb-2 flex-shrink-0" />
-                        <div className="text-center w-full px-2">
-                          <p className="font-medium text-sm sm:text-base mb-1">Staff Time Slots</p>
-                          <p className="text-xs text-gray-600 leading-tight break-words">Generate individual slots for each staff member</p>
-                        </div>
-                      </Button>
-                    </Link>
 
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
-                      onClick={() => setPromoVideoDialogOpen(true)}
-                    >
-                      <Video className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mb-2 flex-shrink-0" />
-                      <div className="text-center w-full px-2">
-                        <p className="font-medium text-sm sm:text-base mb-1">Promotional Video</p>
-                        <p className="text-xs text-gray-600 leading-tight break-words">Upload a video tour of your salon for customers</p>
-                      </div>
-                    </Button>
+              {/* Salon Type Selector */}
+              <div className="rounded-2xl border bg-gradient-to-br from-slate-50 to-white p-4 sm:p-6 shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-8 w-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <Store className="h-4 w-4 text-purple-600" />
                   </div>
-                  
                   <div>
-                    <Link href="/owner/account-details">
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
-                      >
-                        <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mb-2 flex-shrink-0" />
-                        <div className="text-center w-full px-2">
-                          <p className="font-medium text-sm sm:text-base mb-1">Account Details</p>
-                          <p className="text-xs text-gray-600 leading-tight break-words">Setup bank account for payment transfers</p>
-                        </div>
-                      </Button>
-                    </Link>
-
-                    <Link href="/shopkeeper/discount-customers">
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
-                      >
-                        <Gift className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mb-2 flex-shrink-0" />
-                        <div className="text-center w-full px-2">
-                          <p className="font-medium text-sm sm:text-base mb-1">Discount Customers</p>
-                          <p className="text-xs text-gray-600 leading-tight break-words">View customers with Sanwar discount cards</p>
-                        </div>
-                      </Button>
-                    </Link>
-
-                    <Link href="/owner/messages">
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full relative"
-                      >
-                        <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mb-2 flex-shrink-0" />
-                        <div className="text-center w-full px-2">
-                          <p className="font-medium text-sm sm:text-base mb-1">Customer Messages</p>
-                          <p className="text-xs text-gray-600 leading-tight break-words">Chat directly with customers</p>
-                        </div>
-                      </Button>
-                    </Link>
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Salon Type</h3>
+                    <p className="text-xs text-gray-500">Select who your salon primarily serves</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { value: "unisex", label: "Unisex", emoji: "👥", desc: "Men & Women", color: "border-purple-300 bg-purple-50", active: "border-purple-500 bg-purple-100 shadow-md shadow-purple-100" },
+                    { value: "male", label: "Men's", emoji: "👨", desc: "Men Only", color: "border-blue-300 bg-blue-50", active: "border-blue-500 bg-blue-100 shadow-md shadow-blue-100" },
+                    { value: "female", label: "Women's", emoji: "👩", desc: "Women Only", color: "border-pink-300 bg-pink-50", active: "border-pink-500 bg-pink-100 shadow-md shadow-pink-100" },
+                  ].map((type) => {
+                    const currentType = (salon as any)?.salonType || "unisex";
+                    const isActive = currentType === type.value;
+                    return (
+                      <button
+                        key={type.value}
+                        onClick={async () => {
+                          try {
+                            await apiRequest("PUT", `/api/salons/${salon.id}`, { salonType: type.value });
+                            queryClient.invalidateQueries({ queryKey: ['/api/owner/salon'] });
+                            toast({ title: "Salon type updated!", description: `Salon set to ${type.label} type.` });
+                          } catch {
+                            toast({ title: "Error", description: "Could not update salon type.", variant: "destructive" });
+                          }
+                        }}
+                        className={`relative flex flex-col items-center p-3 sm:p-4 rounded-xl border-2 transition-all cursor-pointer ${isActive ? type.active : type.color + ' hover:border-opacity-70'}`}
+                      >
+                        {isActive && (
+                          <div className="absolute top-2 right-2 h-4 w-4 rounded-full bg-green-500 flex items-center justify-center">
+                            <CheckCircle className="h-3 w-3 text-white" />
+                          </div>
+                        )}
+                        <span className="text-2xl sm:text-3xl mb-1">{type.emoji}</span>
+                        <span className="font-semibold text-gray-900 text-xs sm:text-sm">{type.label}</span>
+                        <span className="text-xs text-gray-500 hidden sm:block">{type.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" data-testid="salon-stats">
-                <Card>
-                  <CardContent className="p-3 sm:p-4 lg:p-6">
-                    <div className="flex items-center">
-                      <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 flex-shrink-0" />
-                      <div className="ml-2 sm:ml-4 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600">Total Bookings</p>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{bookings.length}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" data-testid="salon-stats">
+                {[
+                  { icon: Calendar, label: "Total Bookings", value: bookings.length, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
+                  { icon: IndianRupee, label: "Total Revenue", value: `₹${bookings.reduce((sum, b) => sum + Number(b.totalAmount || 0), 0).toLocaleString()}`, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+                  { icon: Star, label: "Avg Rating", value: salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+                  { icon: Users, label: "Team Members", value: staff.length, color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-100" },
+                ].map(({ icon: Icon, label, value, color, bg, border }) => (
+                  <Card key={label} className={`border ${border} shadow-sm hover:shadow-md transition-shadow`}>
+                    <CardContent className="p-4 sm:p-5">
+                      <div className={`h-10 w-10 rounded-xl ${bg} flex items-center justify-center mb-3`}>
+                        <Icon className={`h-5 w-5 ${color}`} />
+                      </div>
+                      <p className="text-xs sm:text-sm font-medium text-gray-500 mb-1">{label}</p>
+                      <p className={`text-xl sm:text-2xl font-bold ${color}`}>{value}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Quick Actions — Premium Cards */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="h-4 w-4 text-amber-500" />
+                  <h3 className="font-semibold text-gray-900">Quick Actions</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <Link href="/owner/staff-slot-generator" className="group">
+                    <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-5 hover:shadow-lg hover:border-blue-200 transition-all cursor-pointer h-full">
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center mb-3 shadow-lg shadow-blue-200">
+                        <Calendar className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900 text-sm mb-1">Staff Time Slots</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed">Generate individual slots for each staff member</p>
+                      <div className="mt-3 flex items-center text-blue-600 text-xs font-medium group-hover:gap-2 gap-1 transition-all">
+                        Open <span>→</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardContent className="p-3 sm:p-4 lg:p-6">
-                    <div className="flex items-center">
-                      <IndianRupee className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 flex-shrink-0" />
-                      <div className="ml-2 sm:ml-4 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600">Monthly Revenue</p>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-                          ₹{bookings.reduce((sum, booking) => sum + Number(booking.totalAmount || 0), 0).toLocaleString()}
-                        </p>
+                  </Link>
+
+                  <button onClick={() => setPromoVideoDialogOpen(true)} className="group text-left w-full">
+                    <div className="relative overflow-hidden rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50 p-4 sm:p-5 hover:shadow-lg hover:border-purple-200 transition-all cursor-pointer h-full">
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="h-10 w-10 rounded-xl bg-purple-600 flex items-center justify-center mb-3 shadow-lg shadow-purple-200">
+                        <Video className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900 text-sm mb-1">Promotional Video</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed">Upload a video tour of your salon for customers</p>
+                      <div className="mt-3 flex items-center text-purple-600 text-xs font-medium group-hover:gap-2 gap-1 transition-all">
+                        Upload <span>→</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardContent className="p-3 sm:p-4 lg:p-6">
-                    <div className="flex items-center">
-                      <Star className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 flex-shrink-0" />
-                      <div className="ml-2 sm:ml-4 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600">Average Rating</p>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-                          {salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New"}
-                        </p>
+                  </button>
+
+                  <Link href="/owner/account-details" className="group">
+                    <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 sm:p-5 hover:shadow-lg hover:border-emerald-200 transition-all cursor-pointer h-full">
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center mb-3 shadow-lg shadow-emerald-200">
+                        <CreditCard className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900 text-sm mb-1">Account Details</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed">Setup bank account for payment transfers</p>
+                      <div className="mt-3 flex items-center text-emerald-600 text-xs font-medium group-hover:gap-2 gap-1 transition-all">
+                        Setup <span>→</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardContent className="p-3 sm:p-4 lg:p-6">
-                    <div className="flex items-center">
-                      <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 flex-shrink-0" />
-                      <div className="ml-2 sm:ml-4 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600">Team Members</p>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{staff.length}</p>
+                  </Link>
+
+                  <Link href="/owner/messages" className="group">
+                    <div className="relative overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-orange-50 p-4 sm:p-5 hover:shadow-lg hover:border-amber-200 transition-all cursor-pointer h-full">
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="h-10 w-10 rounded-xl bg-amber-600 flex items-center justify-center mb-3 shadow-lg shadow-amber-200">
+                        <MessageSquare className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900 text-sm mb-1">Customer Messages</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed">Chat directly with your customers</p>
+                      <div className="mt-3 flex items-center text-amber-600 text-xs font-medium group-hover:gap-2 gap-1 transition-all">
+                        Open <span>→</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </Link>
+                </div>
               </div>
 
               {/* Salon ID Card for Brand Invitations */}
@@ -3972,6 +4023,7 @@ export default function OwnerDashboard() {
                         facebookId: salon?.facebookId || "",
                         googleMapsLink: salon?.googleMapsLink || "",
                         confirmationAmount: salon?.confirmationAmount || 0,
+                        salonType: (salon as any)?.salonType || "unisex",
                       });
                       setSalonDialogOpen(true);
                     }}>
