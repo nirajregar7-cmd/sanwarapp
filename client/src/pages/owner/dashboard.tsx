@@ -754,9 +754,11 @@ export default function OwnerDashboard() {
 
   // First-time setup wizard
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
-  const [setupWizardStep, setSetupWizardStep] = useState(0); // 0=services, 1=staff, 2=photos, 3=faqs, 4=done
+  const [setupWizardStep, setSetupWizardStep] = useState(0);
   const [wizardFaqSelected, setWizardFaqSelected] = useState<Set<number>>(new Set([0, 1, 4, 5]));
   const [wizardFaqSaving, setWizardFaqSaving] = useState(false);
+  const [wizardLocating, setWizardLocating] = useState(false);
+  const [wizardLocationSet, setWizardLocationSet] = useState(false);
 
   const closeSetupWizard = () => {
     setSetupWizardOpen(false);
@@ -5920,26 +5922,139 @@ export default function OwnerDashboard() {
                         />
                         <FormField
                           control={salonForm.control}
-                          name="confirmationAmount"
+                          name="salonType"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Confirmation Amount (₹)</FormLabel>
-                              <FormControl>
-                                <Input type="number" placeholder="0" {...field} className="rounded-xl"
-                                  onChange={(e) => field.onChange(Number(e.target.value))} />
-                              </FormControl>
+                              <FormLabel>Salon Type *</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className="rounded-xl">
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="unisex">👥 Unisex</SelectItem>
+                                  <SelectItem value="male">👨 Men Only</SelectItem>
+                                  <SelectItem value="female">👩 Women Only</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
+
+                      {/* Location — required */}
+                      <FormField
+                        control={salonForm.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Shop address, area, city" {...field} className="rounded-xl" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* GPS Location picker */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Salon Location *</label>
+                        <div className={`rounded-xl border-2 p-3.5 flex items-center justify-between gap-3 transition-all ${wizardLocationSet ? "border-green-400 bg-green-50" : "border-dashed border-gray-300 bg-gray-50"}`}>
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${wizardLocationSet ? "bg-green-100" : "bg-gray-200"}`}>
+                              <MapPin className={`h-5 w-5 ${wizardLocationSet ? "text-green-600" : "text-gray-400"}`} />
+                            </div>
+                            <div className="min-w-0">
+                              {wizardLocationSet ? (
+                                <>
+                                  <p className="text-sm font-semibold text-green-700">Location detected ✓</p>
+                                  <p className="text-xs text-green-600 truncate">
+                                    {salonForm.watch('latitude')?.toFixed(4)}, {salonForm.watch('longitude')?.toFixed(4)}
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="text-sm font-medium text-gray-600">Tap to detect your location</p>
+                                  <p className="text-xs text-gray-400">Required — helps customers find you</p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={wizardLocating}
+                            onClick={() => {
+                              if (!navigator.geolocation) {
+                                toast({ title: "Not supported", description: "Your browser doesn't support GPS location.", variant: "destructive" });
+                                return;
+                              }
+                              setWizardLocating(true);
+                              navigator.geolocation.getCurrentPosition(
+                                async (pos) => {
+                                  const { latitude, longitude } = pos.coords;
+                                  salonForm.setValue('latitude', latitude, { shouldValidate: true });
+                                  salonForm.setValue('longitude', longitude, { shouldValidate: true });
+                                  setWizardLocationSet(true);
+                                  setWizardLocating(false);
+                                  // Reverse geocode to fill address if empty
+                                  if (!salonForm.getValues('address')) {
+                                    try {
+                                      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+                                      const data = await res.json();
+                                      const addr = data.display_name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                                      salonForm.setValue('address', addr.substring(0, 120));
+                                    } catch {}
+                                  }
+                                  toast({ title: "Location detected!", description: "Your salon location has been set." });
+                                },
+                                (err) => {
+                                  setWizardLocating(false);
+                                  toast({ title: "Location access denied", description: "Please allow location access or type your address manually.", variant: "destructive" });
+                                },
+                                { enableHighAccuracy: true, timeout: 10000 }
+                              );
+                            }}
+                            className="rounded-xl flex-shrink-0 border-gray-300 text-xs"
+                          >
+                            {wizardLocating
+                              ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />Locating...</>
+                              : wizardLocationSet
+                              ? <><MapPin className="h-3.5 w-3.5 mr-1" />Re-detect</>
+                              : <><MapPin className="h-3.5 w-3.5 mr-1" />Use GPS Location</>}
+                          </Button>
+                        </div>
+                        {salonForm.formState.errors.latitude && (
+                          <p className="text-xs text-red-500">Please detect your location using the GPS button above</p>
+                        )}
+                      </div>
+
+                      <FormField
+                        control={salonForm.control}
+                        name="confirmationAmount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Booking Confirmation Amount (₹)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="0" {...field} className="rounded-xl"
+                                onChange={(e) => field.onChange(Number(e.target.value))} />
+                            </FormControl>
+                            <p className="text-xs text-gray-400">Amount customers pay upfront to confirm booking (0 = free booking)</p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                           control={salonForm.control}
                           name="instagramId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Instagram ID (optional)</FormLabel>
+                              <FormLabel>Instagram (optional)</FormLabel>
                               <FormControl>
                                 <Input placeholder="yourhandle (without @)" {...field} className="rounded-xl" />
                               </FormControl>
@@ -5952,7 +6067,7 @@ export default function OwnerDashboard() {
                           name="facebookId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Facebook ID (optional)</FormLabel>
+                              <FormLabel>Facebook (optional)</FormLabel>
                               <FormControl>
                                 <Input placeholder="yourpage (without facebook.com/)" {...field} className="rounded-xl" />
                               </FormControl>
