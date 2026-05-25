@@ -17,7 +17,7 @@ import {
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
   CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play, 
   HelpCircle, Edit2, Palette, Tags, Mail, LogOut, Shield, Gift, Send, MessageCircle, ArrowLeft,
-  Zap, Layers, Package, CheckSquare, Sparkles
+  Zap, Layers, Package, CheckSquare, Sparkles, X, Loader2
 } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
