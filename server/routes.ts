@@ -6274,56 +6274,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No files uploaded" });
       }
       
-      const objectStorageService = new ObjectStorageService();
+      const { randomUUID } = await import('crypto');
+      const { writeFile, mkdir } = await import('fs/promises');
+      const { join } = await import('path');
       const uploadResults = [];
+      
+      const uploadsDir = join(process.cwd(), 'uploads');
+      await mkdir(uploadsDir, { recursive: true });
       
       for (let i = 0; i < uploadedFiles.length; i++) {
         const file = uploadedFiles[i];
         const fileType = file.mimetype.startsWith('video/') ? "video" : "image";
         
         if (currentCount + i >= 50) {
-          break; // Stop if we've reached the limit
+          break;
         }
         
         try {
-          // Upload to object storage
-          const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+          const fileExtension = (file.originalname.split('.').pop() || 'jpg').toLowerCase();
+          const filename = `${randomUUID()}.${fileExtension}`;
+          const filePath = join(uploadsDir, filename);
           
-          // Upload file to the presigned URL
-          const uploadResponse = await fetch(uploadURL, {
-            method: "PUT",
-            body: file.buffer,
-            headers: {
-              "Content-Type": file.mimetype
-            }
-          });
+          await writeFile(filePath, file.buffer);
           
-          if (!uploadResponse.ok) {
-            throw new Error("Failed to upload file to storage");
-          }
+          const fileUrl = `/uploads/${filename}`;
           
-          // Get the file URL (normalize from upload URL)
-          const fileUrl = objectStorageService.normalizeObjectEntityPath(uploadURL);
-          
-          // Set ACL policy for the uploaded file to make it publicly accessible
-          try {
-            console.log('Setting ACL policy for uploaded file:', fileUrl);
-            const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-              fileUrl,
-              {
-                owner: userId,
-                visibility: "public", // Media should be public for salon display
-              }
-            );
-            console.log('ACL policy set successfully for media file:', objectPath);
-          } catch (aclError) {
-            console.error('Error setting ACL policy for media file:', aclError);
-            console.error('Upload URL was:', uploadURL);
-            console.error('File URL was:', fileUrl);
-            // Continue with upload even if ACL fails - fallback to permissive access
-          }
-          
-          // Save media record to database
           const [savedMedia] = await db.insert(salonMedia).values({
             salonId,
             fileUrl,
@@ -6335,8 +6310,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }).returning();
           
           uploadResults.push(savedMedia);
+          console.log(`Saved file ${file.originalname} → ${fileUrl}`);
         } catch (error) {
-          console.error(`Error uploading file ${file.originalname}:`, error);
+          console.error(`Error saving file ${file.originalname}:`, error);
         }
       }
       

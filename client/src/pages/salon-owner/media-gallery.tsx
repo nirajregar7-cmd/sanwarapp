@@ -124,6 +124,7 @@ export default function MediaGallery() {
       const response = await fetch("/api/salons/media/upload", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
       if (!response.ok) {
         const error = await response.json();
