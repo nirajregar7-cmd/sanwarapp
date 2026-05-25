@@ -2260,26 +2260,6 @@ export default function OwnerDashboard() {
                 </div>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" data-testid="salon-stats">
-                {[
-                  { icon: Calendar, label: "Total Bookings", value: bookings.length, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
-                  { icon: IndianRupee, label: "Total Revenue", value: `₹${bookings.reduce((sum, b) => sum + Number(b.totalAmount || 0), 0).toLocaleString()}`, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
-                  { icon: Star, label: "Avg Rating", value: salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
-                  { icon: Users, label: "Team Members", value: staff.length, color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-100" },
-                ].map(({ icon: Icon, label, value, color, bg, border }) => (
-                  <Card key={label} className={`border ${border} shadow-sm hover:shadow-md transition-shadow`}>
-                    <CardContent className="p-4 sm:p-5">
-                      <div className={`h-10 w-10 rounded-xl ${bg} flex items-center justify-center mb-3`}>
-                        <Icon className={`h-5 w-5 ${color}`} />
-                      </div>
-                      <p className="text-xs sm:text-sm font-medium text-gray-500 mb-1">{label}</p>
-                      <p className={`text-xl sm:text-2xl font-bold ${color}`}>{value}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
               {/* Quick Actions — Premium Cards */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
@@ -2343,6 +2323,26 @@ export default function OwnerDashboard() {
                     </div>
                   </Link>
                 </div>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" data-testid="salon-stats">
+                {[
+                  { icon: Calendar, label: "Total Bookings", value: bookings.length, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
+                  { icon: IndianRupee, label: "Total Revenue", value: `₹${bookings.reduce((sum, b) => sum + Number(b.totalAmount || 0), 0).toLocaleString()}`, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+                  { icon: Star, label: "Avg Rating", value: salon.averageRating ? Number(salon.averageRating).toFixed(1) : "New", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+                  { icon: Users, label: "Team Members", value: staff.length, color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-100" },
+                ].map(({ icon: Icon, label, value, color, bg, border }) => (
+                  <Card key={label} className={`border ${border} shadow-sm hover:shadow-md transition-shadow`}>
+                    <CardContent className="p-4 sm:p-5">
+                      <div className={`h-10 w-10 rounded-xl ${bg} flex items-center justify-center mb-3`}>
+                        <Icon className={`h-5 w-5 ${color}`} />
+                      </div>
+                      <p className="text-xs sm:text-sm font-medium text-gray-500 mb-1">{label}</p>
+                      <p className={`text-xl sm:text-2xl font-bold ${color}`}>{value}</p>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
 
               {/* Salon ID Card for Brand Invitations */}
