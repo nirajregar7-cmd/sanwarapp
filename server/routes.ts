@@ -11656,55 +11656,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Public photo upload for staff registrations (no auth required)
+  // Public photo upload for staff registrations (no auth required) — disk-based
   app.post('/api/staff-registrations/upload-photo', upload.single('file'), async (req: any, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded" });
-      }
-      if (req.file.size > 5 * 1024 * 1024) {
-        return res.status(400).json({ error: "File too large. Max 5MB allowed." });
-      }
+      if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+      if (req.file.size > 5 * 1024 * 1024) return res.status(400).json({ error: "File too large. Max 5MB." });
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(req.file.mimetype)) {
-        return res.status(400).json({ error: "Only JPEG, PNG and WebP images are allowed." });
-      }
+      if (!allowedTypes.includes(req.file.mimetype)) return res.status(400).json({ error: "Only JPEG, PNG or WebP allowed." });
 
-      const objectStorageService = new ObjectStorageService();
       const { randomUUID } = await import('crypto');
-      const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
-      const filename = `${randomUUID()}.${fileExtension}`;
-
-      const privateDir = objectStorageService.getPrivateObjectDir();
-      const fullPath = `${privateDir}/staff-photos/${filename}`;
-
-      let path = fullPath.startsWith("/") ? fullPath : `/${fullPath}`;
-      const pathParts = path.split("/");
-      if (pathParts.length < 3) throw new Error("Invalid path");
-
-      const bucketName = pathParts[1];
-      const objectName = pathParts.slice(2).join("/");
-
-      const bucket = objectStorageClient.bucket(bucketName);
-      const file = bucket.file(objectName);
-
-      await file.save(req.file.buffer, {
-        metadata: { contentType: req.file.mimetype },
-        validation: false,
-      });
-
-      try {
-        await objectStorageService.trySetObjectEntityAclPolicy(
-          `/objects/staff-photos/${filename}`,
-          { owner: "public", visibility: "public" }
-        );
-      } catch (_) {}
-
-      const objectPath = `/objects/staff-photos/${filename}`;
-      res.json({ url: objectPath, filename });
+      const { mkdir, writeFile } = await import('fs/promises');
+      const { join } = await import('path');
+      const uploadsDir = join(process.cwd(), 'uploads', 'staff-photos');
+      await mkdir(uploadsDir, { recursive: true });
+      const ext = req.file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
+      const filename = `${randomUUID()}.${ext}`;
+      await writeFile(join(uploadsDir, filename), req.file.buffer);
+      res.json({ url: `/uploads/staff-photos/${filename}` });
     } catch (error) {
       console.error("Error uploading staff photo:", error);
       res.status(500).json({ error: "Failed to upload photo" });
+    }
+  });
+
+  // Resume upload for staff registrations — disk-based
+  app.post('/api/staff-registrations/upload-resume', upload.single('file'), async (req: any, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+      if (req.file.size > 10 * 1024 * 1024) return res.status(400).json({ error: "File too large. Max 10MB." });
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(req.file.mimetype)) return res.status(400).json({ error: "Only PDF or Word documents allowed." });
+
+      const { randomUUID } = await import('crypto');
+      const { mkdir, writeFile } = await import('fs/promises');
+      const { join } = await import('path');
+      const uploadsDir = join(process.cwd(), 'uploads', 'staff-resumes');
+      await mkdir(uploadsDir, { recursive: true });
+      const ext = req.file.originalname.split('.').pop()?.toLowerCase() || 'pdf';
+      const filename = `${randomUUID()}.${ext}`;
+      await writeFile(join(uploadsDir, filename), req.file.buffer);
+      res.json({ url: `/uploads/staff-resumes/${filename}`, originalName: req.file.originalname });
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+      res.status(500).json({ error: "Failed to upload resume" });
     }
   });
 
