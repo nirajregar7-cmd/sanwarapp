@@ -526,6 +526,7 @@ export default function OwnerDashboard() {
   const [quickAddType, setQuickAddType] = useState<'categories' | 'services' | 'staff' | 'offers'>('categories');
   const [selectedPremade, setSelectedPremade] = useState<Set<number>>(new Set());
   const [serviceGenderFilter, setServiceGenderFilter] = useState<'men' | 'women' | 'unisex'>('unisex');
+  const [editedStaffData, setEditedStaffData] = useState<Record<number, { name: string; experience: string }>>({});
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
@@ -5164,54 +5165,102 @@ export default function OwnerDashboard() {
             </div>
           ) : quickAddType === 'staff' ? (
             <div className="space-y-3">
-              <p className="text-sm text-gray-500">Click to select the staff members you want to add:</p>
+              <p className="text-sm text-gray-500">
+                <span className="font-medium text-orange-600">Click to select</span> a staff member, then <span className="font-medium text-orange-600">edit their name and experience</span> before adding:
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {PREMADE_STAFF.map((member, index) => {
                   const isSelected = selectedPremade.has(index);
                   const alreadyExists = staff.some(
-                    (existing: any) => existing.name.toLowerCase() === member.name.toLowerCase()
+                    (existing: any) => existing.name.toLowerCase() === (editedStaffData[index]?.name || member.name).toLowerCase()
                   );
+                  const edits = editedStaffData[index] || { name: member.name, experience: member.experience };
                   return (
-                    <button
+                    <div
                       key={index}
-                      onClick={() => {
-                        if (alreadyExists) return;
-                        const newSelected = new Set(selectedPremade);
-                        if (isSelected) newSelected.delete(index);
-                        else newSelected.add(index);
-                        setSelectedPremade(newSelected);
-                      }}
-                      disabled={alreadyExists}
                       className={`p-3 rounded-lg border-2 text-left transition-all ${
                         alreadyExists
-                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                          ? 'border-gray-200 bg-gray-50 opacity-60'
                           : isSelected
                           ? 'border-orange-400 bg-orange-50'
                           : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0">
-                          {member.name.split(' ').map(n => n[0]).join('')}
+                          {edits.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm truncate">{member.name}</p>
-                            {alreadyExists && (
-                              <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">Added</span>
-                            )}
                             {isSelected && !alreadyExists && (
                               <CheckSquare className="h-4 w-4 text-orange-500 flex-shrink-0" />
                             )}
                           </div>
                           <p className="text-xs text-orange-600 font-medium">{member.role}</p>
-                          <p className="text-xs text-gray-500">{member.experience}</p>
-                          <p className="text-xs text-gray-400 truncate">
-                            {member.specialties?.join(', ')}
-                          </p>
                         </div>
+                        <button
+                          onClick={() => {
+                            if (alreadyExists) return;
+                            const newSelected = new Set(selectedPremade);
+                            if (isSelected) {
+                              newSelected.delete(index);
+                              const newEdits = { ...editedStaffData };
+                              delete newEdits[index];
+                              setEditedStaffData(newEdits);
+                            } else {
+                              newSelected.add(index);
+                            }
+                            setSelectedPremade(newSelected);
+                          }}
+                          disabled={alreadyExists}
+                          className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+                            alreadyExists
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : isSelected
+                              ? 'bg-orange-500 text-white hover:bg-orange-600'
+                              : 'bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-600'
+                          }`}
+                        >
+                          {alreadyExists ? 'Added' : isSelected ? 'Selected' : 'Select'}
+                        </button>
                       </div>
-                    </button>
+
+                      <div className="space-y-2 mt-1">
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-0.5">Name</label>
+                          <input
+                            type="text"
+                            value={edits.name}
+                            onChange={(e) => {
+                              setEditedStaffData(prev => ({
+                                ...prev,
+                                [index]: { ...edits, name: e.target.value }
+                              }));
+                            }}
+                            className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-orange-300"
+                            placeholder="Staff name"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-0.5">Experience</label>
+                          <input
+                            type="text"
+                            value={edits.experience}
+                            onChange={(e) => {
+                              setEditedStaffData(prev => ({
+                                ...prev,
+                                [index]: { ...edits, experience: e.target.value }
+                              }));
+                            }}
+                            className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-orange-300"
+                            placeholder="e.g. 5+ years"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-400 truncate">
+                          {member.specialties?.join(', ')}
+                        </p>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -5308,7 +5357,14 @@ export default function OwnerDashboard() {
                     }
                     quickAddServicesMutation.mutate(selectedServices);
                   } else if (quickAddType === 'staff') {
-                    const selected = PREMADE_STAFF.filter((_, i) => selectedPremade.has(i));
+                    const selected = PREMADE_STAFF
+                      .map((m, i) => ({ ...m, _index: i }))
+                      .filter((m) => selectedPremade.has(m._index))
+                      .map((m) => ({
+                        ...m,
+                        name: editedStaffData[m._index]?.name || m.name,
+                        experience: editedStaffData[m._index]?.experience || m.experience,
+                      }));
                     quickAddStaffMutation.mutate(selected);
                   } else {
                     const selected = PREMADE_OFFERS.filter((_, i) => selectedPremade.has(i));
