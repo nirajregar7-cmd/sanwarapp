@@ -1,11 +1,15 @@
 import { useState } from "react";
 import PublicNav from "@/components/PublicNav";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -29,7 +33,11 @@ import {
   AlertCircle,
   Scissors,
   Users,
+  Send,
+  Loader2,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { StaffRegistration } from "@/../../shared/schema";
 
 const ROLES = [
@@ -73,12 +81,39 @@ const EXPERIENCE_OPTIONS = [
 
 export default function HireStaff() {
   const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [citySearch, setCitySearch] = useState("");
   const [selectedRole, setSelectedRole] = useState("all");
   const [selectedGender, setSelectedGender] = useState("all");
   const [minExp, setMinExp] = useState("all");
   const [nameSearch, setNameSearch] = useState("");
   const [contactedId, setContactedId] = useState<string | null>(null);
+  const [offerTarget, setOfferTarget] = useState<StaffRegistration | null>(null);
+  const [offerMsg, setOfferMsg] = useState("");
+  const [offerSalary, setOfferSalary] = useState("");
+  const [sentOffers, setSentOffers] = useState<Set<string>>(new Set());
+
+  const sendOfferMutation = useMutation({
+    mutationFn: async (person: StaffRegistration) => {
+      return apiRequest("POST", "/api/staff-job-offers", {
+        professionalMobile: person.mobile,
+        professionalName: person.fullName,
+        role: person.role,
+        message: offerMsg || undefined,
+        offeredSalary: offerSalary ? parseInt(offerSalary) : undefined,
+      });
+    },
+    onSuccess: (_, person) => {
+      setSentOffers(prev => new Set([...prev, person.id]));
+      setOfferTarget(null);
+      setOfferMsg("");
+      setOfferSalary("");
+      toast({ title: "Job Offer Sent! 🎉", description: `${offerTarget?.fullName || "Professional"} will see your offer in their dashboard.` });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message || "Could not send offer", variant: "destructive" });
+    },
+  });
 
   const userType = (user as any)?.userType;
   const isSalonOwner = userType === "salon_owner";
@@ -429,7 +464,7 @@ export default function HireStaff() {
                     </div>
 
                     {/* Action footer */}
-                    <div className="px-5 pb-5">
+                    <div className="px-5 pb-5 space-y-2">
                       {!isAuthenticated ? (
                         <Link href="/api/login">
                           <Button size="sm" className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold">
@@ -448,33 +483,34 @@ export default function HireStaff() {
                             Register Your Salon First
                           </Button>
                         </Link>
-                      ) : contactedId === person.id ? (
-                        <div className="flex items-center justify-center gap-2 text-green-600 text-sm font-semibold py-2 bg-green-50 rounded-xl">
-                          <CheckCircle2 className="w-4 h-4" /> Contact info revealed
+                      ) : sentOffers.has(person.id) ? (
+                        <div className="flex items-center justify-center gap-2 text-emerald-600 text-sm font-semibold py-2 bg-emerald-50 rounded-xl border border-emerald-200">
+                          <CheckCircle2 className="w-4 h-4" /> Offer Sent!
                         </div>
                       ) : (
-                        <div className="space-y-2">
+                        <>
                           <Button
                             size="sm"
                             className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold"
-                            onClick={() => setContactedId(person.id)}
+                            onClick={() => setContactedId(contactedId === person.id ? null : person.id)}
                           >
-                            <Phone className="w-3.5 h-3.5 mr-1.5" /> View Contact & Hire
+                            <Phone className="w-3.5 h-3.5 mr-1.5" /> View Contact
                           </Button>
-                          {contactedId === person.id && (
-                            <a href={`tel:${person.mobile}`} className="block">
-                              <Button size="sm" variant="outline" className="w-full rounded-xl text-sm">
-                                📞 {person.mobile}
-                              </Button>
-                            </a>
-                          )}
-                        </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full rounded-xl font-semibold border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                            onClick={() => setOfferTarget(person)}
+                          >
+                            <Send className="w-3.5 h-3.5 mr-1.5" /> Send Job Offer
+                          </Button>
+                        </>
                       )}
                     </div>
 
                     {/* Revealed contact */}
                     {contactedId === person.id && (
-                      <div className="mx-5 mb-5 -mt-3 p-3 bg-green-50 rounded-xl border border-green-200">
+                      <div className="mx-5 mb-5 -mt-1 p-3 bg-green-50 rounded-xl border border-green-200">
                         <p className="text-xs text-green-700 font-semibold mb-1">Contact Details</p>
                         <a href={`tel:${person.mobile}`} className="flex items-center gap-2 text-sm font-bold text-green-800 hover:underline">
                           <Phone className="w-4 h-4" /> {person.mobile}
@@ -496,11 +532,18 @@ export default function HireStaff() {
           <p className="text-blue-100 mb-6 text-lg">
             Register your profile and get discovered by hundreds of verified salon owners across India.
           </p>
-          <Link href="/staff-registration">
-            <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 font-bold px-8 rounded-full shadow-lg">
-              Register as a Professional →
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/staff-registration">
+              <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 font-bold px-8 rounded-full shadow-lg">
+                Register as a Professional →
+              </Button>
+            </Link>
+            <Link href="/professional-login">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 font-bold px-8 rounded-full bg-transparent">
+                Professional Login / Check Offers
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -508,6 +551,74 @@ export default function HireStaff() {
       <footer className="bg-gray-900 text-gray-400 py-6 px-4 text-center text-sm">
         © Sanwar — Digitalizing India's Salon Industry · <Link href="/about" className="hover:text-white">About</Link> · <Link href="/contact" className="hover:text-white">Contact</Link> · <Link href="/privacy" className="hover:text-white">Privacy</Link>
       </footer>
+
+      {/* Send Job Offer Dialog */}
+      <Dialog open={!!offerTarget} onOpenChange={(open) => { if (!open) { setOfferTarget(null); setOfferMsg(""); setOfferSalary(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="w-5 h-5 text-indigo-600" />
+              Send Job Offer
+            </DialogTitle>
+            <DialogDescription>
+              Sending offer to <span className="font-semibold text-gray-900">{offerTarget?.fullName}</span> ({offerTarget?.role})
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">
+                Offered Salary (₹/month) <span className="normal-case font-normal text-gray-400">— optional</span>
+              </label>
+              <div className="relative">
+                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  type="number"
+                  placeholder="e.g. 20000"
+                  value={offerSalary}
+                  onChange={(e) => setOfferSalary(e.target.value)}
+                  className="pl-9 rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">
+                Personal Message <span className="normal-case font-normal text-gray-400">— optional</span>
+              </label>
+              <Textarea
+                placeholder="Tell them about your salon, work culture, and why they should join..."
+                value={offerMsg}
+                onChange={(e) => setOfferMsg(e.target.value)}
+                className="rounded-xl resize-none"
+                rows={4}
+              />
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl"
+                onClick={() => { setOfferTarget(null); setOfferMsg(""); setOfferSalary(""); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold"
+                disabled={sendOfferMutation.isPending}
+                onClick={() => offerTarget && sendOfferMutation.mutate(offerTarget)}
+              >
+                {sendOfferMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                ) : (
+                  <Send className="w-4 h-4 mr-1.5" />
+                )}
+                Send Offer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

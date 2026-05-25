@@ -1876,3 +1876,26 @@ export const insertStaffRegistrationSchema = createInsertSchema(staffRegistratio
 
 export type StaffRegistration = typeof staffRegistrations.$inferSelect;
 export type InsertStaffRegistration = z.infer<typeof insertStaffRegistrationSchema>;
+
+export const staffJobOffers = pgTable("staff_job_offers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id", { length: 255 }).notNull(),
+  salonName: varchar("salon_name", { length: 255 }).notNull(),
+  salonCity: varchar("salon_city", { length: 100 }),
+  ownerPhone: varchar("owner_phone", { length: 20 }),
+  professionalMobile: varchar("professional_mobile", { length: 20 }).notNull(),
+  professionalName: varchar("professional_name", { length: 255 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(),
+  message: text("message"),
+  offeredSalary: integer("offered_salary"),
+  status: varchar("status", { length: 20 }).default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertStaffJobOfferSchema = createInsertSchema(staffJobOffers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type StaffJobOffer = typeof staffJobOffers.$inferSelect;
+export type InsertStaffJobOffer = z.infer<typeof insertStaffJobOfferSchema>;

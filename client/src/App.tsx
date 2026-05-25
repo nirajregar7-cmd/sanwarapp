@@ -84,6 +84,9 @@ import Contact from "@/pages/Contact";
 import StaffRegistration from "@/pages/staff-registration";
 import StaffLogin from "@/pages/staff-login";
 import StaffDashboard from "@/pages/staff-dashboard";
+import ProfessionalPortal from "@/pages/professional-portal";
+import ProfessionalLogin from "@/pages/professional-login";
+import ProfessionalDashboard from "@/pages/professional-dashboard";
 
 
 
@@ -525,6 +528,9 @@ function Router() {
       <Route path="/staff-registration" component={StaffRegistration} />
       <Route path="/staff-login" component={StaffLogin} />
       <Route path="/staff-dashboard" component={StaffDashboard} />
+      <Route path="/professional-portal" component={ProfessionalPortal} />
+      <Route path="/professional-login" component={ProfessionalLogin} />
+      <Route path="/professional-dashboard" component={ProfessionalDashboard} />
 
       {/* Fallback routes */}
       <Route path="/landing" component={Landing} />

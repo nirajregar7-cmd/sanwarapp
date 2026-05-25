@@ -18,7 +18,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, staffOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos, salonChats, salonFollowers } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, staffOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos, salonChats, salonFollowers, staffRegistrations, staffJobOffers } from "@shared/schema";
 import { sendBookingConfirmationNotification, sendSalonOwnerBookingNotification, notifyFollowersNewOffer } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection, sendDiscountCardEmail } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -11780,6 +11780,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching staff registrations:', error);
       res.status(500).json({ message: "Failed to fetch staff registrations" });
+    }
+  });
+
+  // ============================================================
+  // PROFESSIONAL PORTAL — Auth + Job Offers
+  // ============================================================
+
+  const PROFESSIONAL_JWT_SECRET = process.env.JWT_SECRET || 'sanwar-professional-secret-2024';
+
+  function createProfessionalToken(professional: any) {
+    return jwt.sign(
+      { professionalId: professional.id, mobile: professional.mobile, type: 'professional' },
+      PROFESSIONAL_JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+  }
+
+  async function verifyProfessionalToken(req: any, res: any, next: any) {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: "No token provided" });
+      const token = authHeader.substring(7);
+      const decoded = jwt.verify(token, PROFESSIONAL_JWT_SECRET) as any;
+      if (decoded.type !== 'professional') return res.status(401).json({ error: "Invalid token type" });
+      req.professional = decoded;
+      next();
+    } catch {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+  }
+
+  // Send OTP to professional (checks staffRegistrations table)
+  app.post('/api/professional/send-otp', async (req, res) => {
+    try {
+      const { phone } = req.body;
+      if (!phone) return res.status(400).json({ error: "Phone number is required" });
+
+      const [professional] = await db.select().from(staffRegistrations).where(eq(staffRegistrations.mobile, phone)).limit(1);
+      if (!professional) return res.status(400).json({ error: "No professional profile found with this mobile. Please register first." });
+
+      const otp = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      await db.insert(staffOtps).values({ phone, otp, expiresAt });
+
+      const message = `Your Sanwar Professional Portal OTP: ${otp}. Valid for 10 minutes. - Sanwar Team`;
+      let formattedPhone = phone;
+      if (phone.length === 10 && /^[6-9]/.test(phone)) formattedPhone = `+91${phone}`;
+      else if (!phone.startsWith('+')) formattedPhone = `+${phone}`;
+      const smsSent = await sendWhatsAppMessage({ to: formattedPhone, body: message });
+      const isDev = process.env.NODE_ENV === 'development';
+
+      res.json({
+        message: smsSent ? `OTP sent to ${phone}` : `OTP generated (SMS not sent)`,
+        expiresAt: expiresAt.toISOString(),
+        ...(isDev && !smsSent ? { otp } : {})
+      });
+    } catch (error: any) {
+      console.error("Professional OTP error:", error);
+      res.status(500).json({ error: "Failed to send OTP" });
+    }
+  });
+
+  // Verify OTP and log professional in
+  app.post('/api/professional/verify-otp', async (req, res) => {
+    try {
+      const { phone, otp } = req.body;
+      if (!phone || !otp) return res.status(400).json({ error: "Phone and OTP are required" });
+
+      const candidates = await db.select().from(staffOtps)
+        .where(and(eq(staffOtps.phone, phone), eq(staffOtps.otp, otp)))
+        .orderBy(desc(staffOtps.createdAt)).limit(1);
+      const otpRecord = candidates.find((r: any) => r.isVerified === false || r.isVerified === null);
+      if (!otpRecord) return res.status(400).json({ error: "Invalid or expired OTP" });
+      if (new Date() > otpRecord.expiresAt) return res.status(400).json({ error: "OTP has expired" });
+
+      await db.update(staffOtps).set({ isVerified: true }).where(eq(staffOtps.id, otpRecord.id));
+
+      const [professional] = await db.select().from(staffRegistrations).where(eq(staffRegistrations.mobile, phone)).limit(1);
+      if (!professional) return res.status(400).json({ error: "Professional profile not found" });
+
+      const token = createProfessionalToken(professional);
+      res.json({ message: "Login successful!", token, professional });
+    } catch (error: any) {
+      console.error("Professional verify OTP error:", error);
+      res.status(500).json({ error: "Failed to verify OTP" });
+    }
+  });
+
+  // Get professional profile
+  app.get('/api/professional/me', verifyProfessionalToken, async (req: any, res) => {
+    try {
+      const [professional] = await db.select().from(staffRegistrations).where(eq(staffRegistrations.mobile, req.professional.mobile)).limit(1);
+      if (!professional) return res.status(404).json({ error: "Profile not found" });
+      res.json(professional);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
+  // Get job offers for professional
+  app.get('/api/professional/job-offers', verifyProfessionalToken, async (req: any, res) => {
+    try {
+      const offers = await db.select().from(staffJobOffers)
+        .where(eq(staffJobOffers.professionalMobile, req.professional.mobile))
+        .orderBy(desc(staffJobOffers.createdAt));
+      res.json(offers);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch job offers" });
+    }
+  });
+
+  // Accept or reject a job offer
+  app.put('/api/professional/job-offers/:id', verifyProfessionalToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      if (!['accepted', 'rejected'].includes(status)) return res.status(400).json({ error: "Invalid status" });
+
+      const [offer] = await db.select().from(staffJobOffers).where(eq(staffJobOffers.id, id)).limit(1);
+      if (!offer) return res.status(404).json({ error: "Offer not found" });
+      if (offer.professionalMobile !== req.professional.mobile) return res.status(403).json({ error: "Forbidden" });
+
+      await db.update(staffJobOffers).set({ status }).where(eq(staffJobOffers.id, id));
+      res.json({ message: `Offer ${status}` });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update offer" });
+    }
+  });
+
+  // Salon owner sends a job offer to a professional
+  app.post('/api/staff-job-offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id;
+      const userRecord = await storage.getUser(userId);
+      if (!userRecord || userRecord.userType !== 'salon_owner') {
+        return res.status(403).json({ error: "Only salon owners can send job offers" });
+      }
+
+      const salon = await storage.getSalonByOwnerId(userId);
+      if (!salon) return res.status(400).json({ error: "You must have a salon profile to send job offers" });
+
+      const { professionalMobile, professionalName, role, message, offeredSalary } = req.body;
+      if (!professionalMobile || !professionalName || !role) {
+        return res.status(400).json({ error: "Mobile, name, and role are required" });
+      }
+
+      const [existing] = await db.select().from(staffJobOffers)
+        .where(and(eq(staffJobOffers.salonId, salon.id), eq(staffJobOffers.professionalMobile, professionalMobile)))
+        .limit(1);
+      if (existing) return res.status(400).json({ error: "You already sent an offer to this professional" });
+
+      const [offer] = await db.insert(staffJobOffers).values({
+        salonId: salon.id,
+        salonName: salon.name,
+        salonCity: salon.address || '',
+        ownerPhone: (userRecord as any).phone || '',
+        professionalMobile,
+        professionalName,
+        role,
+        message: message || null,
+        offeredSalary: offeredSalary ? parseInt(offeredSalary) : null,
+        status: 'pending',
+      }).returning();
+
+      res.json({ message: "Job offer sent!", offer });
+    } catch (error: any) {
+      console.error("Send job offer error:", error);
+      res.status(500).json({ error: "Failed to send job offer" });
     }
   });
 
