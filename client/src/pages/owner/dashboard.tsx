@@ -881,40 +881,6 @@ export default function OwnerDashboard() {
     }
   }, [salonLoading, servicesLoading, staffLoading, salon?.id, services.length, staff.length]);
 
-  // Advance wizard after salon profile created (step 0 → 1)
-  useEffect(() => {
-    if (setupWizardOpen && setupWizardStep === 0 && salonMutation.isSuccess) {
-      setSetupWizardStep(1);
-      salonMutation.reset();
-    }
-  }, [salonMutation.isSuccess, setupWizardOpen, setupWizardStep]);
-
-  // Advance wizard after services added (step 1 → 2)
-  useEffect(() => {
-    if (setupWizardOpen && setupWizardStep === 1 && quickAddServicesMutation.isSuccess) {
-      setSetupWizardStep(2);
-      setSelectedPremade(new Set());
-      quickAddServicesMutation.reset();
-    }
-  }, [quickAddServicesMutation.isSuccess, setupWizardOpen, setupWizardStep]);
-
-  // Advance wizard after staff added (step 2 → 3)
-  useEffect(() => {
-    if (setupWizardOpen && setupWizardStep === 2 && quickAddStaffMutation.isSuccess) {
-      setSetupWizardStep(3);
-      setSelectedPremade(new Set());
-      setEditedStaffData({});
-      quickAddStaffMutation.reset();
-    }
-  }, [quickAddStaffMutation.isSuccess, setupWizardOpen, setupWizardStep]);
-
-  // Advance wizard after schedule saved (step 4 → 5)
-  useEffect(() => {
-    if (setupWizardOpen && setupWizardStep === 4 && updateWorkingHoursMutation.isSuccess) {
-      setSetupWizardStep(5);
-      updateWorkingHoursMutation.reset();
-    }
-  }, [updateWorkingHoursMutation.isSuccess, setupWizardOpen, setupWizardStep]);
 
   // Fetch service categories for the salon - parallel loading with caching
   const { data: serviceCategories = [], isLoading: categoriesLoading } = useQuery<any[]>({
@@ -1659,6 +1625,42 @@ export default function OwnerDashboard() {
       });
     },
   });
+
+  // ── Wizard advancement effects (placed after all mutations are defined) ──
+  // Step 0 → 1: salon profile created
+  useEffect(() => {
+    if (setupWizardOpen && setupWizardStep === 0 && salonMutation.isSuccess) {
+      setSetupWizardStep(1);
+      salonMutation.reset();
+    }
+  }, [salonMutation.isSuccess, setupWizardOpen, setupWizardStep]);
+
+  // Step 1 → 2: services added
+  useEffect(() => {
+    if (setupWizardOpen && setupWizardStep === 1 && quickAddServicesMutation.isSuccess) {
+      setSetupWizardStep(2);
+      setSelectedPremade(new Set());
+      quickAddServicesMutation.reset();
+    }
+  }, [quickAddServicesMutation.isSuccess, setupWizardOpen, setupWizardStep]);
+
+  // Step 2 → 3: staff added
+  useEffect(() => {
+    if (setupWizardOpen && setupWizardStep === 2 && quickAddStaffMutation.isSuccess) {
+      setSetupWizardStep(3);
+      setSelectedPremade(new Set());
+      setEditedStaffData({});
+      quickAddStaffMutation.reset();
+    }
+  }, [quickAddStaffMutation.isSuccess, setupWizardOpen, setupWizardStep]);
+
+  // Step 4 → 5: schedule saved
+  useEffect(() => {
+    if (setupWizardOpen && setupWizardStep === 4 && updateWorkingHoursMutation.isSuccess) {
+      setSetupWizardStep(5);
+      updateWorkingHoursMutation.reset();
+    }
+  }, [updateWorkingHoursMutation.isSuccess, setupWizardOpen, setupWizardStep]);
 
   const profileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
