@@ -1971,18 +1971,6 @@ export default function OwnerDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
-                      onClick={() => setActiveTab('services')}
-                    >
-                      <Scissors className="h-6 w-6 sm:h-8 sm:w-8 text-pink-600 mb-2 flex-shrink-0" />
-                      <div className="text-center w-full px-2">
-                        <p className="font-medium text-sm sm:text-base mb-1">Manage Services</p>
-                        <p className="text-xs text-gray-600 leading-tight break-words">Add and organize your salon's services and pricing</p>
-                      </div>
-                    </Button>
-
                     <Link href="/owner/staff-slot-generator">
                       <Button 
                         variant="outline" 
@@ -2010,19 +1998,6 @@ export default function OwnerDashboard() {
                   </div>
                   
                   <div>
-                    <Link href="/owner/staff-management">
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
-                      >
-                        <Users className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mb-2 flex-shrink-0" />
-                        <div className="text-center w-full px-2">
-                          <p className="font-medium text-sm sm:text-base mb-1">Staff Management</p>
-                          <p className="text-xs text-gray-600 leading-tight break-words">Manage staff schedules and service assignments</p>
-                        </div>
-                      </Button>
-                    </Link>
-
                     <Link href="/owner/account-details">
                       <Button 
                         variant="outline" 
@@ -2045,19 +2020,6 @@ export default function OwnerDashboard() {
                         <div className="text-center w-full px-2">
                           <p className="font-medium text-sm sm:text-base mb-1">Discount Customers</p>
                           <p className="text-xs text-gray-600 leading-tight break-words">View customers with Sanwar discount cards</p>
-                        </div>
-                      </Button>
-                    </Link>
-
-                    <Link href="/owner/confirmation-settings">
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center p-4 sm:p-6 h-auto min-h-[120px] sm:min-h-[140px] w-full"
-                      >
-                        <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mb-2 flex-shrink-0" />
-                        <div className="text-center w-full px-2">
-                          <p className="font-medium text-sm sm:text-base mb-1">Confirmation Fee</p>
-                          <p className="text-xs text-gray-600 leading-tight break-words">Set your booking confirmation amount</p>
                         </div>
                       </Button>
                     </Link>
