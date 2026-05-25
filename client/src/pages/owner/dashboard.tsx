@@ -6236,6 +6236,10 @@ export default function OwnerDashboard() {
                               onChange={e => setEditedStaffData(prev => ({ ...prev, [index]: { ...edits, experience: e.target.value } }))}
                               placeholder="Experience (e.g. 3+ years)"
                               className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400" />
+                            <input type="url" value={edits.photoUrl || ""}
+                              onChange={e => setEditedStaffData(prev => ({ ...prev, [index]: { ...edits, photoUrl: e.target.value } }))}
+                              placeholder="Photo URL (optional) — paste image link"
+                              className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400" />
                           </div>
                         )}
                       </div>
@@ -6398,8 +6402,19 @@ export default function OwnerDashboard() {
                       const selected = PREMADE_STAFF
                         .map((m, i) => ({ ...m, _index: i }))
                         .filter(m => selectedPremade.has(m._index))
-                        .map(m => ({ ...m, name: editedStaffData[m._index]?.name || m.name, experience: editedStaffData[m._index]?.experience || m.experience }));
-                      quickAddStaffMutation.mutate(selected);
+                        .map(({ _index, ...m }) => ({
+                          ...m,
+                          name: editedStaffData[_index]?.name || m.name,
+                          experience: editedStaffData[_index]?.experience || m.experience,
+                          photoUrl: editedStaffData[_index]?.photoUrl || null,
+                        }));
+                      quickAddStaffMutation.mutate(selected, {
+                        onSettled: () => {
+                          setSetupWizardStep(3);
+                          setSelectedPremade(new Set());
+                          setEditedStaffData({});
+                        },
+                      });
                     }}
                     disabled={quickAddStaffMutation.isPending}
                     className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-10 px-5 text-sm font-semibold"
