@@ -69,17 +69,17 @@ export default function OwnerMessages() {
   // Get conversations for this salon
   const { data: conversations = [], isLoading: loadingConvs } = useQuery<Conversation[]>({
     queryKey: ["/api/salons", salonId, "conversations"],
-    queryFn: () => apiRequest("GET", `/api/salons/${salonId}/conversations`),
+    queryFn: async () => { const r = await apiRequest("GET", `/api/salons/${salonId}/conversations`); return r.json(); },
     enabled: !!salonId,
     refetchInterval: 10000,
   });
 
-  const totalUnread = conversations.reduce((s, c) => s + (c.unread_count || 0), 0);
+  const totalUnread = Array.isArray(conversations) ? conversations.reduce((s, c) => s + (c.unread_count || 0), 0) : 0;
 
   // Get messages for active conversation
   const { data: messages = [], isLoading: loadingMsgs } = useQuery<ChatMessage[]>({
     queryKey: ["/api/salons", salonId, "chat", activeCustomer?.customer_id],
-    queryFn: () => apiRequest("GET", `/api/salons/${salonId}/chat/${activeCustomer!.customer_id}`),
+    queryFn: async () => { const r = await apiRequest("GET", `/api/salons/${salonId}/chat/${activeCustomer!.customer_id}`); return r.json(); },
     enabled: !!salonId && !!activeCustomer,
     refetchInterval: 5000,
   });
