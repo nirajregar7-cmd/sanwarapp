@@ -111,12 +111,6 @@ export default function Layout({ children }: LayoutProps) {
                         Products & Facilities
                       </Link>
                       <Link 
-                        href="/shopkeeper/media-gallery" 
-                        className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
-                      >
-                        Media Gallery
-                      </Link>
-                      <Link 
                         href="/shopkeeper/analytics" 
                         className="text-sm font-medium text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
                       >
@@ -322,14 +316,6 @@ export default function Layout({ children }: LayoutProps) {
                       >
                         <Package className="h-4 w-4 mr-3" />
                         Products & Facilities
-                      </Link>
-                      <Link 
-                        href="/shopkeeper/media-gallery" 
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Camera className="h-4 w-4 mr-3" />
-                        Media Gallery
                       </Link>
                       <Link 
                         href="/shopkeeper/analytics" 
