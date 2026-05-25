@@ -181,6 +181,19 @@ export default function SalonCard({ salon }: SalonCardProps) {
               </Badge>
             </div>
           )}
+          {(salon as any).salonType && (
+            <div className="absolute top-2 right-2">
+              <Badge className={`font-semibold px-2 py-0.5 text-xs ${
+                (salon as any).salonType === 'male'
+                  ? 'bg-blue-600 text-white'
+                  : (salon as any).salonType === 'female'
+                  ? 'bg-pink-500 text-white'
+                  : 'bg-purple-600 text-white'
+              }`}>
+                {(salon as any).salonType === 'male' ? '👨 Men\'s' : (salon as any).salonType === 'female' ? '👩 Women\'s' : '👥 Unisex'}
+              </Badge>
+            </div>
+          )}
         </div>
         
         <CardContent className="p-4 flex-1 flex flex-col">
