@@ -219,7 +219,7 @@ export default function HireStaff() {
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
           <div className="max-w-5xl mx-auto flex items-center gap-3 text-amber-800 text-sm">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>You're browsing as a guest. <Link href="/api/login" className="font-bold underline">Login as a Salon Owner</Link> to view contact details and connect with professionals.</span>
+            <span>You're browsing as a guest. <Link href="/auth" className="font-bold underline">Login as a Salon Owner</Link> to view contact details and connect with professionals.</span>
           </div>
         </div>
       )}
@@ -466,13 +466,13 @@ export default function HireStaff() {
                     {/* Action footer */}
                     <div className="px-5 pb-5 space-y-2">
                       {!isAuthenticated ? (
-                        <Link href="/api/login">
+                        <Link href="/auth">
                           <Button size="sm" className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold">
                             Login to Connect
                           </Button>
                         </Link>
                       ) : !isSalonOwner ? (
-                        <Link href="/api/login?user_intent=salon_owner">
+                        <Link href="/auth">
                           <Button size="sm" variant="outline" className="w-full rounded-xl font-semibold text-sm">
                             Login as Salon Owner
                           </Button>
