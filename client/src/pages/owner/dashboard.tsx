@@ -5072,18 +5072,50 @@ export default function OwnerDashboard() {
                   : serviceGenderFilter === 'men'
                   ? MEN_ONLY_SERVICES
                   : WOMEN_ONLY_SERVICES;
-                return Object.entries(sourceData).map(([categoryName, servicesList]) => (
+                return Object.entries(sourceData).map(([categoryName, servicesList]) => {
+                  const categoryKeys = Object.keys(sourceData);
+                  const catOffset = Object.entries(sourceData)
+                    .slice(0, categoryKeys.indexOf(categoryName))
+                    .reduce((sum, [, list]) => sum + list.length, 0);
+                  const availableIndices = servicesList
+                    .map((svc, i) => ({ idx: catOffset + i, svc }))
+                    .filter(({ svc }) => !services.some((ex: any) => ex.name.toLowerCase() === svc.name.toLowerCase()))
+                    .map(({ idx }) => idx);
+                  const allSelected = availableIndices.length > 0 && availableIndices.every(i => selectedPremade.has(i));
+                  const someSelected = availableIndices.some(i => selectedPremade.has(i));
+
+                  return (
                   <div key={categoryName} className="border rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-2 flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm font-medium text-gray-700">{categoryName}</span>
+                    <button
+                      className={`w-full px-4 py-2.5 flex items-center gap-2 transition-all text-left ${
+                        allSelected ? 'bg-orange-50 border-b border-orange-200' : someSelected ? 'bg-orange-50/50 border-b border-orange-100' : 'bg-gray-50 border-b border-gray-100 hover:bg-orange-50/40'
+                      }`}
+                      onClick={() => {
+                        const newSelected = new Set(selectedPremade);
+                        if (allSelected) {
+                          availableIndices.forEach(i => newSelected.delete(i));
+                        } else {
+                          availableIndices.forEach(i => newSelected.add(i));
+                        }
+                        setSelectedPremade(newSelected);
+                      }}
+                    >
+                      {allSelected
+                        ? <CheckSquare className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                        : someSelected
+                        ? <CheckSquare className="h-4 w-4 text-orange-300 flex-shrink-0" />
+                        : <Layers className="h-4 w-4 text-gray-400 flex-shrink-0" />}
+                      <span className={`text-sm font-semibold ${allSelected || someSelected ? 'text-orange-700' : 'text-gray-700'}`}>{categoryName}</span>
                       <span className="text-xs text-gray-400">({servicesList.length} services)</span>
-                    </div>
+                      {availableIndices.length > 0 && (
+                        <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full ${allSelected ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                          {allSelected ? 'All selected' : 'Select all'}
+                        </span>
+                      )}
+                    </button>
                     <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {servicesList.map((svc, svcIndex) => {
-                        const globalIndex = Object.entries(sourceData)
-                          .slice(0, Object.keys(sourceData).indexOf(categoryName))
-                          .reduce((sum, [, list]) => sum + list.length, 0) + svcIndex;
+                        const globalIndex = catOffset + svcIndex;
                         const isSelected = selectedPremade.has(globalIndex);
                         const alreadyExists = services.some(
                           (existing: any) => existing.name.toLowerCase() === svc.name.toLowerCase()
@@ -5128,7 +5160,8 @@ export default function OwnerDashboard() {
                       })}
                     </div>
                   </div>
-                ));
+                  );
+                });
               })()}
             </div>
           ) : quickAddType === 'staff' ? (
