@@ -6279,10 +6279,11 @@ export default function OwnerDashboard() {
                         const res = await fetch('/api/salons/media/upload', {
                           method: 'POST',
                           body: formData,
+                          credentials: 'include',
                         });
                         if (res.ok) {
                           const data = await res.json();
-                          const added = Array.isArray(data) ? data.length : 1;
+                          const added = Array.isArray(data?.uploadedFiles) ? data.uploadedFiles.length : Array.isArray(data) ? data.length : 1;
                           setWizardUploadedCount(prev => prev + added);
                           queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon.id}/media`] });
                           toast({ title: `${added} photo${added > 1 ? 's' : ''} uploaded!`, description: "Your salon gallery has been updated." });
