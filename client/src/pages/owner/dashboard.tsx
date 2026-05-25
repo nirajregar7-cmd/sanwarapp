@@ -2352,9 +2352,18 @@ export default function OwnerDashboard() {
                               value={(service as any).categoryId || "none"}
                               onValueChange={(value) => handleQuickCategoryChange(service, value)}
                             >
-                              <SelectTrigger className="h-8 w-32 text-xs">
-                                <Tags className="h-3 w-3 mr-1" />
-                                <SelectValue placeholder="Category" />
+                              <SelectTrigger className="h-8 w-40 text-xs">
+                                {(() => {
+                                  const cat = serviceCategories.find((c: any) => c.id === (service as any).categoryId);
+                                  return cat ? (
+                                    <div className="flex items-center gap-1.5 overflow-hidden">
+                                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color || '#3B82F6' }} />
+                                      <span className="truncate">{cat.name}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-400">No Category</span>
+                                  );
+                                })()}
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="none">No Category</SelectItem>
@@ -5305,11 +5314,14 @@ export default function OwnerDashboard() {
                       ? MEN_ONLY_SERVICES
                       : WOMEN_ONLY_SERVICES;
                     let globalIdx = 0;
-                    const selectedServices: { name: string; description: string; price: number; duration: number; categoryId: null }[] = [];
-                    for (const [, svcList] of Object.entries(sourceData)) {
+                    const selectedServices: { name: string; description: string; price: number; duration: number; categoryId: string | null }[] = [];
+                    for (const [categoryName, svcList] of Object.entries(sourceData)) {
+                      const matchingCategory = serviceCategories.find(
+                        (cat: any) => cat.name.toLowerCase() === categoryName.toLowerCase()
+                      );
                       for (const svc of svcList) {
                         if (selectedPremade.has(globalIdx)) {
-                          selectedServices.push({ ...svc, categoryId: null });
+                          selectedServices.push({ ...svc, categoryId: matchingCategory ? matchingCategory.id : null });
                         }
                         globalIdx++;
                       }
