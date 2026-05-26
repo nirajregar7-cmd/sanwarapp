@@ -13,7 +13,8 @@ import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
-  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown, Building2, MessageSquare, Edit, Trash2, Navigation, Bell, BellOff
+  ChevronLeft, ChevronRight, Video, HelpCircle, ChevronDown, ChevronUp, Crown, Building2, MessageSquare, Edit, Trash2, Navigation, Bell, BellOff,
+  ShoppingCart, Plus, Minus
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { useState, useEffect, useRef } from "react";
@@ -65,6 +66,14 @@ export default function SalonDetail() {
   const [selectedStaffBio, setSelectedStaffBio] = useState<Staff | null>(null);
   const [expandedFaqs, setExpandedFaqs] = useState<Set<string>>(new Set());
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
+  const [cartServiceIds, setCartServiceIds] = useState<string[]>([]);
+
+  // Toggle a service in the cart
+  const toggleCartService = (serviceId: string) => {
+    setCartServiceIds(prev =>
+      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]
+    );
+  };
   
   // Ref to track if we've already processed the pending booking
   const hasProcessedPendingBooking = useRef(false);
@@ -367,6 +376,34 @@ export default function SalonDetail() {
     },
   });
 
+  // When booking dialog opens: pre-fill services from cart and auto-select first staff
+  useEffect(() => {
+    if (bookingDialogOpen) {
+      // Pre-fill selected services from cart
+      if (cartServiceIds.length > 0) {
+        form.setValue("serviceIds", cartServiceIds);
+      }
+      // Auto-select first active staff member
+      const activeStaff = staff.filter(m => m.isActive);
+      if (activeStaff.length > 0 && !form.getValues("staffId")) {
+        const firstStaff = activeStaff[0];
+        form.setValue("staffId", firstStaff.id);
+        setSelectedStaff(firstStaff.id);
+      }
+    }
+  }, [bookingDialogOpen, staff]);
+
+  // Also auto-select staff when staff data loads and dialog is already open
+  useEffect(() => {
+    if (bookingDialogOpen && staff.length > 0 && !form.getValues("staffId")) {
+      const activeStaff = staff.filter(m => m.isActive);
+      if (activeStaff.length > 0) {
+        form.setValue("staffId", activeStaff[0].id);
+        setSelectedStaff(activeStaff[0].id);
+      }
+    }
+  }, [staff]);
+
   // Pay at Salon mutation for multiple services
   const payAtSalonMutation = useMutation({
     mutationFn: async (data: BookingFormData) => {
@@ -399,6 +436,7 @@ export default function SalonDetail() {
       
       setBookingDialogOpen(false);
       form.reset();
+      setCartServiceIds([]);
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonId}/time-slots`] });
     },
     onError: (error) => {
@@ -500,8 +538,9 @@ export default function SalonDetail() {
         description: "Your request is pending salon confirmation. You'll get an email once the salon confirms.",
       });
       setBookingDialogOpen(false);
-      setAppliedReferralCode(null); // Reset referral code
+      setAppliedReferralCode(null);
       form.reset();
+      setCartServiceIds([]);
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonId}/time-slots`] });
       
       // Clear pending booking data from localStorage
@@ -1386,51 +1425,77 @@ export default function SalonDetail() {
                               
                               {/* Services in this category */}
                               <div className="space-y-3">
-                                {category.services && category.services.length > 0 ? category.services.map((service: Service) => (
-                                  <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0 ml-4">
-                                    <div className="flex-1 min-w-0">
-                                      <h4 className="font-semibold text-blue-600 text-sm sm:text-base">{service.name}</h4>
-                                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{service.description}</p>
-                                      <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-500">
-                                        <Clock className="h-3 w-3 mr-1" />
-                                        {service.duration} mins
+                                {category.services && category.services.length > 0 ? category.services.map((service: Service) => {
+                                  const isInCart = cartServiceIds.includes(service.id);
+                                  return (
+                                  <div key={service.id} className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg space-y-2 sm:space-y-0 ml-4 transition-all duration-200 ${isInCart ? 'border-green-400 bg-green-50' : 'hover:bg-gray-50'}`}>
+                                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                                      {isInCart && (
+                                        <div className="flex-shrink-0 mt-0.5">
+                                          <CheckCircle className="h-5 w-5 text-green-500" />
+                                        </div>
+                                      )}
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className={`font-semibold text-sm sm:text-base ${isInCart ? 'text-green-700' : 'text-blue-600'}`}>{service.name}</h4>
+                                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{service.description}</p>
+                                        <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-500">
+                                          <Clock className="h-3 w-3 mr-1" />
+                                          {service.duration} mins
+                                        </div>
                                       </div>
                                     </div>
-                                    <div className="text-left sm:text-right flex-shrink-0">
-                                      {(() => {
-                                        const discountInfo = calculateServiceDiscountedPrice(service);
-                                        if (discountInfo) {
-                                          return (
-                                            <div className="space-y-1">
-                                              <div className="text-sm text-red-500 line-through">
-                                                ₹{discountInfo.originalPrice.toFixed(2)}
-                                              </div>
-                                              <div className="text-lg font-semibold text-green-600">
-                                                ₹{discountInfo.discountedPrice.toFixed(2)}
-                                              </div>
-                                              <div className="text-xs text-red-600 font-medium">
-                                                {discountInfo.discountType === 'percentage' 
-                                                  ? `${discountInfo.discountPercentage}% OFF` 
-                                                  : `₹${discountInfo.discountPercentage} OFF`}
-                                              </div>
-                                              {discountInfo.offerTitle && (
-                                                <div className="text-xs text-purple-600 font-medium mt-1">
-                                                  {discountInfo.offerTitle}
+                                    <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                                      <div className="text-left sm:text-right">
+                                        {(() => {
+                                          const discountInfo = calculateServiceDiscountedPrice(service);
+                                          if (discountInfo) {
+                                            return (
+                                              <div className="space-y-0.5">
+                                                <div className="text-xs text-red-500 line-through">
+                                                  ₹{discountInfo.originalPrice.toFixed(2)}
                                                 </div>
-                                              )}
-                                            </div>
-                                          );
-                                        } else {
-                                          return (
-                                            <div className="text-lg font-semibold text-green-600">
-                                              ₹{service.price}
-                                            </div>
-                                          );
-                                        }
-                                      })()}
+                                                <div className="text-base font-semibold text-green-600">
+                                                  ₹{discountInfo.discountedPrice.toFixed(2)}
+                                                </div>
+                                                <div className="text-xs text-red-600 font-medium">
+                                                  {discountInfo.discountType === 'percentage' 
+                                                    ? `${discountInfo.discountPercentage}% OFF` 
+                                                    : `₹${discountInfo.discountPercentage} OFF`}
+                                                </div>
+                                              </div>
+                                            );
+                                          } else {
+                                            return (
+                                              <div className="text-base font-semibold text-green-600">
+                                                ₹{service.price}
+                                              </div>
+                                            );
+                                          }
+                                        })()}
+                                      </div>
+                                      <button
+                                        onClick={() => toggleCartService(service.id)}
+                                        className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+                                          isInCart
+                                            ? 'bg-green-500 text-white hover:bg-red-500'
+                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                        }`}
+                                      >
+                                        {isInCart ? (
+                                          <>
+                                            <CheckCircle className="h-3.5 w-3.5" />
+                                            Added
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Plus className="h-3.5 w-3.5" />
+                                            Add
+                                          </>
+                                        )}
+                                      </button>
                                     </div>
                                   </div>
-                                )) : (
+                                );}) : (
                                   <div className="text-sm text-gray-500 ml-4 py-2">
                                     No services in this category
                                   </div>
@@ -1448,6 +1513,45 @@ export default function SalonDetail() {
                         <p className="text-sm text-gray-500">
                           Showing all {services.length} services across {servicesByCategory.length} categories • Scroll to see more
                         </p>
+                      </div>
+                    )}
+
+                    {/* Cart summary bar */}
+                    {cartServiceIds.length > 0 && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <ShoppingCart className="h-4 w-4 text-green-600 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <span className="text-sm font-semibold text-green-800">
+                              {cartServiceIds.length} service{cartServiceIds.length > 1 ? 's' : ''} selected
+                            </span>
+                            <span className="text-xs text-green-700 ml-2">
+                              ₹{services
+                                .filter(s => cartServiceIds.includes(s.id))
+                                .map(s => {
+                                  const d = calculateServiceDiscountedPrice(s);
+                                  return d ? d.discountedPrice : parseFloat(s.price);
+                                })
+                                .reduce((sum, p) => sum + p, 0)
+                                .toFixed(0)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => setCartServiceIds([])}
+                            className="text-xs text-gray-500 hover:text-red-500 underline"
+                          >
+                            Clear
+                          </button>
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white text-xs px-3"
+                            onClick={() => setBookingDialogOpen(true)}
+                          >
+                            Book Now
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -2046,7 +2150,14 @@ export default function SalonDetail() {
                   <DialogTrigger asChild>
                     <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg">
                       <Crown className="h-4 w-4 mr-2" />
-                      Book an Luxury
+                      {cartServiceIds.length > 0 ? (
+                        <span className="flex items-center gap-2">
+                          Book Now
+                          <span className="bg-white text-blue-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                            {cartServiceIds.length}
+                          </span>
+                        </span>
+                      ) : "Book an Luxury"}
                     </Button>
                   </DialogTrigger>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
