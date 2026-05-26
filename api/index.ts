@@ -3,36 +3,33 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "../server/routes";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 
-// Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
-
+  const reqPath = req.path;
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      console.log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
+    if (reqPath.startsWith("/api")) {
+      console.log(`${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`);
     }
   });
-
   next();
 });
 
-// Setup routes
-(async () => {
+// Initialize routes once and reuse across warm invocations
+const appReady: Promise<void> = (async () => {
   await registerRoutes(app);
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    console.error("Server error:", err);
+    res.status(status).json({ message });
+  });
 })();
 
-// Error handling
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-  console.error('Server error:', err);
-  res.status(status).json({ message });
-});
-
-// For Vercel serverless functions
-export default app;
+export default async function handler(req: Request, res: Response) {
+  await appReady;
+  app(req, res);
+}
