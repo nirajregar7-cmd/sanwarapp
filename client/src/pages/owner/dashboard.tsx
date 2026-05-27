@@ -1545,6 +1545,38 @@ export default function OwnerDashboard() {
     }
   }, [salonDialogOpen, salon, salonForm]);
 
+  // Wizard cover photo upload — uses local filesystem, no Object Storage needed
+  const handleWizardCoverUpload = async (file: File) => {
+    if (!file) return;
+    // Show instant local preview via FileReader
+    const reader = new FileReader();
+    reader.onload = (e) => setTempImageUrl(e.target?.result as string);
+    reader.readAsDataURL(file);
+
+    setImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/owner/salon/cover-upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const { imageUrl } = await res.json();
+        setTempImageUrl(imageUrl);
+        salonForm.setValue('imageUrl', imageUrl);
+        toast({ title: "Cover photo added!", description: "Your photo will appear on your salon card." });
+      } else {
+        toast({ title: "Upload failed", description: "Could not save photo. Please try again.", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Upload failed", description: "Network error. Please try again.", variant: "destructive" });
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   // Manual image upload function
   const handleImageUpload = async (file: File) => {
     if (!file) return;
@@ -5966,7 +5998,7 @@ export default function OwnerDashboard() {
                   style={{ borderColor: tempImageUrl ? '#f97316' : undefined }}>
                   <input type="file" accept="image/*" className="hidden"
                     disabled={imageUploading}
-                    onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); }} />
+                    onChange={(e) => { const file = e.target.files?.[0]; if (file) handleWizardCoverUpload(file); e.target.value = ""; }} />
                   {tempImageUrl ? (
                     <img src={tempImageUrl} alt="Cover" className="w-12 h-12 rounded-xl object-cover flex-shrink-0 ring-2 ring-orange-400" />
                   ) : (

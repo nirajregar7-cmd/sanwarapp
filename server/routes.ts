@@ -6270,6 +6270,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple cover photo upload — saves to local /uploads/, no Object Storage needed
+  app.post("/api/owner/salon/cover-upload", isAuthenticated, upload.single('file'), async (req: any, res) => {
+    try {
+      const file = req.file;
+      if (!file) return res.status(400).json({ error: "No file provided" });
+
+      const { randomUUID } = await import('crypto');
+      const { writeFile, mkdir } = await import('fs/promises');
+      const { join } = await import('path');
+
+      const uploadsDir = join(process.cwd(), 'uploads');
+      await mkdir(uploadsDir, { recursive: true });
+
+      const ext = (file.originalname.split('.').pop() || 'jpg').toLowerCase();
+      const filename = `cover-${randomUUID()}.${ext}`;
+      const filePath = join(uploadsDir, filename);
+      await writeFile(filePath, file.buffer);
+
+      res.json({ imageUrl: `/uploads/${filename}` });
+    } catch (error) {
+      console.error("Cover upload error:", error);
+      res.status(500).json({ error: "Upload failed" });
+    }
+  });
+
   app.post("/api/salons/media/upload", isAuthenticated, upload.array('files', 50), async (req: any, res) => {
     try {
       const userId = req.user?.id;
