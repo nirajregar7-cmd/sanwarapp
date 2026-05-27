@@ -708,6 +708,43 @@ const PREMADE_STAFF = [
 ];
 
 // Premade FAQs for wizard setup
+const PREMADE_FACILITIES = [
+  { icon: "❄️", name: "Air Conditioning", description: "Fully air-conditioned salon" },
+  { icon: "📶", name: "Free WiFi", description: "High-speed WiFi for customers" },
+  { icon: "📺", name: "TV Entertainment", description: "TV for customer entertainment" },
+  { icon: "🚗", name: "Free Parking", description: "Ample parking space available" },
+  { icon: "☕", name: "Refreshments", description: "Tea, coffee & water served" },
+  { icon: "🎵", name: "Music System", description: "Relaxing background music" },
+  { icon: "💺", name: "Premium Seating", description: "Comfortable waiting area" },
+  { icon: "🔌", name: "Charging Points", description: "USB charging stations available" },
+  { icon: "🚽", name: "Clean Washroom", description: "Well-maintained restrooms" },
+  { icon: "🧴", name: "Hand Sanitizer", description: "Sanitizers placed throughout" },
+  { icon: "♿", name: "Wheelchair Access", description: "Accessible for all customers" },
+  { icon: "💳", name: "Card / UPI Payment", description: "Cards, UPI & digital wallets" },
+  { icon: "🌿", name: "Organic Products", description: "Eco-friendly product options" },
+  { icon: "🔒", name: "CCTV Security", description: "24/7 security surveillance" },
+  { icon: "📖", name: "Reading Materials", description: "Magazines & reading material" },
+  { icon: "💧", name: "Purified Water", description: "Clean drinking water provided" },
+];
+
+const PREMADE_PRODUCTS = [
+  { name: "Schwarzkopf Professional Shampoo", brand: "Schwarzkopf", category: "Shampoo & Conditioner", price: 850, description: "Professional salon-grade shampoo" },
+  { name: "L'Oréal Serie Expert", brand: "L'Oréal Professionnel", category: "Hair Care", price: 750, description: "Expert hair treatment range" },
+  { name: "Wella Color Brilliance", brand: "Wella", category: "Hair Color", price: 650, description: "Vivid, long-lasting hair color" },
+  { name: "Kérastase Elixir Ultime", brand: "Kérastase", category: "Hair Care", price: 2500, description: "Luxury hair oil & serum" },
+  { name: "Matrix Biolage Shampoo", brand: "Matrix", category: "Shampoo & Conditioner", price: 450, description: "Natural ingredient hair care" },
+  { name: "TRESemmé Heat Protect Spray", brand: "TRESemmé", category: "Styling Products", price: 299, description: "Heat protection for styling" },
+  { name: "Streax Hair Serum", brand: "Streax", category: "Hair Care", price: 199, description: "Frizz-control hair serum" },
+  { name: "Dove Nourishing Conditioner", brand: "Dove", category: "Shampoo & Conditioner", price: 250, description: "Intense moisture conditioner" },
+  { name: "Biotique Bio Bhringraj Shampoo", brand: "Biotique", category: "Shampoo & Conditioner", price: 180, description: "Ayurvedic hair growth shampoo" },
+  { name: "OGX Coconut Milk Shampoo", brand: "OGX", category: "Shampoo & Conditioner", price: 599, description: "Coconut milk strengthening shampoo" },
+  { name: "Lakme Skin Gloss Face Serum", brand: "Lakme", category: "Skin Care", price: 349, description: "Brightening skin serum" },
+  { name: "Himalaya Face Wash", brand: "Himalaya", category: "Skin Care", price: 120, description: "Gentle daily face wash" },
+  { name: "Gatsby Styling Wax", brand: "Gatsby", category: "Styling Products", price: 199, description: "Strong hold styling wax" },
+  { name: "Park Avenue Hair Gel", brand: "Park Avenue", category: "Styling Products", price: 149, description: "Professional hold hair gel" },
+  { name: "Professional Straightener Brush", brand: "Generic", category: "Hair Tools", price: 1299, description: "Electric hair straightener brush" },
+];
+
 const WIZARD_FAQS = [
   { q: "Do I need to book in advance?", a: "We recommend booking in advance to secure your time slot. Walk-ins welcome based on availability." },
   { q: "What payment methods do you accept?", a: "We accept cash, UPI (PhonePe, Google Pay, Paytm), and card payments." },
@@ -762,6 +799,9 @@ export default function OwnerDashboard() {
   const [wizardUploading, setWizardUploading] = useState(false);
   const [wizardUploadedCount, setWizardUploadedCount] = useState(0);
   const [wizardServSaving, setWizardServSaving] = useState(false);
+  const [wizardFacilitiesSelected, setWizardFacilitiesSelected] = useState<Set<number>>(new Set([0, 1, 4, 8, 11]));
+  const [wizardProductsSelected, setWizardProductsSelected] = useState<Set<number>>(new Set());
+  const [wizardAmenitiesSaving, setWizardAmenitiesSaving] = useState(false);
 
   const closeSetupWizard = () => {
     setSetupWizardOpen(false);
@@ -1692,10 +1732,10 @@ export default function OwnerDashboard() {
     }
   }, [quickAddStaffMutation.isSuccess, setupWizardOpen, setupWizardStep]);
 
-  // Step 4 → 5: schedule saved
+  // Step 5 → 6: schedule saved
   useEffect(() => {
-    if (setupWizardOpen && setupWizardStep === 4 && updateWorkingHoursMutation.isSuccess) {
-      setSetupWizardStep(5);
+    if (setupWizardOpen && setupWizardStep === 5 && updateWorkingHoursMutation.isSuccess) {
+      setSetupWizardStep(6);
       updateWorkingHoursMutation.reset();
     }
   }, [updateWorkingHoursMutation.isSuccess, setupWizardOpen, setupWizardStep]);
@@ -5870,7 +5910,7 @@ export default function OwnerDashboard() {
               </div>
               <div>
                 <p className="font-bold text-white text-sm leading-tight">Salon Setup</p>
-                <p className="text-xs text-orange-100">Step {setupWizardStep + 1} of 6 — Get your salon live in minutes</p>
+                <p className="text-xs text-orange-100">Step {setupWizardStep + 1} of 7 — Get your salon live in minutes</p>
               </div>
             </div>
             <button
@@ -5889,6 +5929,7 @@ export default function OwnerDashboard() {
                 { label: "Profile", icon: "🏪", color: "orange" },
                 { label: "Services", icon: "✂️", color: "blue" },
                 { label: "Staff", icon: "👥", color: "purple" },
+                { label: "Amenities", icon: "🏠", color: "teal" },
                 { label: "Photos", icon: "📷", color: "pink" },
                 { label: "Schedule", icon: "🕐", color: "green" },
                 { label: "FAQs", icon: "💬", color: "indigo" },
@@ -5899,6 +5940,7 @@ export default function OwnerDashboard() {
                   orange: "border-orange-500 text-orange-600",
                   blue: "border-blue-500 text-blue-600",
                   purple: "border-purple-500 text-purple-600",
+                  teal: "border-teal-500 text-teal-600",
                   pink: "border-pink-500 text-pink-600",
                   green: "border-green-500 text-green-600",
                   indigo: "border-indigo-500 text-indigo-600",
@@ -5924,7 +5966,7 @@ export default function OwnerDashboard() {
             <div className="h-0.5 bg-gray-100 mt-0">
               <div
                 className="h-full bg-gradient-to-r from-orange-400 to-orange-600 transition-all duration-500"
-                style={{ width: `${Math.min((setupWizardStep / 5) * 100, 100)}%` }}
+                style={{ width: `${Math.min((setupWizardStep / 6) * 100, 100)}%` }}
               />
             </div>
           </div>
@@ -6414,8 +6456,68 @@ export default function OwnerDashboard() {
               </div>
             )}
 
-            {/* ── STEP 3 — PHOTOS ── */}
+            {/* ── STEP 3 — AMENITIES (Products & Facilities) ── */}
             {setupWizardStep === 3 && (
+              <div className="p-4 max-w-2xl mx-auto space-y-5">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">🏠 Amenities & Products</h2>
+                  <p className="text-sm text-gray-500">Tap to select what your salon offers. Customers love seeing these listed!</p>
+                </div>
+
+                {/* Facilities */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-gray-700">✨ Facilities ({wizardFacilitiesSelected.size} selected)</p>
+                    <button onClick={() => setWizardFacilitiesSelected(new Set())} className="text-xs text-gray-400 hover:text-red-400 transition-colors">Clear all</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {PREMADE_FACILITIES.map((fac, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setWizardFacilitiesSelected(prev => { const next = new Set(prev); next.has(i) ? next.delete(i) : next.add(i); return next; })}
+                        className={`flex items-center gap-2.5 rounded-xl border-2 px-3 py-2.5 text-left transition-all ${wizardFacilitiesSelected.has(i) ? "border-teal-400 bg-teal-50" : "border-gray-200 bg-white hover:border-teal-200"}`}
+                      >
+                        <span className="text-lg flex-shrink-0">{fac.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-gray-800 leading-tight truncate">{fac.name}</p>
+                          <p className="text-[10px] text-gray-400 leading-tight truncate">{fac.description}</p>
+                        </div>
+                        {wizardFacilitiesSelected.has(i) && <CheckCircle className="h-3.5 w-3.5 text-teal-500 flex-shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Products */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-gray-700">🧴 Products You Sell ({wizardProductsSelected.size} selected)</p>
+                    <button onClick={() => setWizardProductsSelected(new Set())} className="text-xs text-gray-400 hover:text-red-400 transition-colors">Clear all</button>
+                  </div>
+                  <div className="space-y-2">
+                    {PREMADE_PRODUCTS.map((prod, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setWizardProductsSelected(prev => { const next = new Set(prev); next.has(i) ? next.delete(i) : next.add(i); return next; })}
+                        className={`w-full flex items-center gap-3 rounded-xl border-2 px-3.5 py-2.5 text-left transition-all ${wizardProductsSelected.has(i) ? "border-orange-400 bg-orange-50" : "border-gray-200 bg-white hover:border-orange-200"}`}
+                      >
+                        <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${wizardProductsSelected.has(i) ? "border-orange-500 bg-orange-500" : "border-gray-300"}`}>
+                          {wizardProductsSelected.has(i) && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-gray-800 leading-tight">{prod.name}</p>
+                          <p className="text-xs text-gray-400">{prod.brand} · {prod.category} · ₹{prod.price}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-center text-xs text-gray-400">You can manage these anytime from the Products & Facilities section</p>
+              </div>
+            )}
+
+            {/* ── STEP 4 — PHOTOS ── */}
+            {setupWizardStep === 4 && (
               <div className="p-4 max-w-2xl mx-auto space-y-4">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">📷 Add Salon Photos</h2>
@@ -6516,8 +6618,8 @@ export default function OwnerDashboard() {
               </div>
             )}
 
-            {/* ── STEP 4 — SCHEDULE ── */}
-            {setupWizardStep === 4 && (
+            {/* ── STEP 5 — SCHEDULE ── */}
+            {setupWizardStep === 5 && (
               <div className="p-4 max-w-2xl mx-auto space-y-4">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">Set Your Working Hours</h2>
@@ -6527,15 +6629,15 @@ export default function OwnerDashboard() {
                   <WorkingHoursForm
                     workingHours={workingHours}
                     onSave={(hoursData) => updateWorkingHoursMutation.mutate(hoursData)}
-                    onCancel={() => setSetupWizardStep(5)}
+                    onCancel={() => setSetupWizardStep(6)}
                     isLoading={updateWorkingHoursMutation.isPending}
                   />
                 </div>
               </div>
             )}
 
-            {/* ── STEP 5 — FAQs ── */}
-            {setupWizardStep === 5 && (
+            {/* ── STEP 6 — FAQs ── */}
+            {setupWizardStep === 6 && (
               <div className="p-4 max-w-2xl mx-auto space-y-4">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">Add Customer FAQs</h2>
@@ -6563,8 +6665,8 @@ export default function OwnerDashboard() {
               </div>
             )}
 
-            {/* ── STEP 6 — DONE ── */}
-            {setupWizardStep === 6 && (
+            {/* ── STEP 7 — DONE ── */}
+            {setupWizardStep === 7 && (
               <div className="flex flex-col items-center justify-center p-8 text-center max-w-sm mx-auto pt-16">
                 <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
                   <CheckCircle className="h-12 w-12 text-green-500" />
@@ -6581,14 +6683,14 @@ export default function OwnerDashboard() {
           </div>
 
           {/* Footer */}
-          {setupWizardStep < 6 && (
+          {setupWizardStep < 7 && (
             <div className="flex-shrink-0 border-t bg-white px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-1px_8px_rgba(0,0,0,0.06)]">
               <button onClick={closeSetupWizard} className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-gray-50">
                 <X className="h-3.5 w-3.5" />
                 <span>Exit setup</span>
               </button>
               <div className="flex gap-2">
-                {setupWizardStep > 0 && setupWizardStep !== 4 && (
+                {setupWizardStep > 0 && setupWizardStep !== 5 && (
                   <Button variant="outline" onClick={() => setSetupWizardStep(s => s - 1)} className="rounded-xl h-10 px-4 text-sm border-gray-200 hover:border-gray-300">
                     ← Back
                   </Button>
@@ -6724,17 +6826,70 @@ export default function OwnerDashboard() {
                   </Button>
                 )}
 
-                {/* Step 3 — Photos (just next) */}
+                {/* Step 3 — Amenities: save facilities + products then next */}
                 {setupWizardStep === 3 && (
-                  <Button onClick={() => setSetupWizardStep(4)} className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-10 px-5 text-sm font-semibold">
+                  <Button
+                    onClick={async () => {
+                      if (wizardFacilitiesSelected.size === 0 && wizardProductsSelected.size === 0) {
+                        setSetupWizardStep(4);
+                        return;
+                      }
+                      setWizardAmenitiesSaving(true);
+                      try {
+                        for (const i of wizardFacilitiesSelected) {
+                          const fac = PREMADE_FACILITIES[i];
+                          await apiRequest("POST", `/api/salons/${salon?.id}/facilities`, {
+                            name: fac.name,
+                            icon: fac.icon,
+                            description: fac.description,
+                            isAvailable: true,
+                          });
+                        }
+                        for (const i of wizardProductsSelected) {
+                          const prod = PREMADE_PRODUCTS[i];
+                          await apiRequest("POST", `/api/salons/${salon?.id}/products`, {
+                            name: prod.name,
+                            brand: prod.brand,
+                            category: prod.category,
+                            price: String(prod.price),
+                            description: prod.description,
+                            inStock: true,
+                            stockQuantity: 10,
+                          });
+                        }
+                        queryClient.invalidateQueries({ queryKey: ["/api/salons", salon?.id, "facilities"] });
+                        queryClient.invalidateQueries({ queryKey: ["/api/salons", salon?.id, "products"] });
+                        const total = wizardFacilitiesSelected.size + wizardProductsSelected.size;
+                        toast({ title: `${total} item${total > 1 ? 's' : ''} added!`, description: "Facilities and products saved." });
+                      } catch {
+                        toast({ title: "Error saving amenities", variant: "destructive" });
+                      } finally {
+                        setWizardAmenitiesSaving(false);
+                      }
+                      setSetupWizardStep(4);
+                    }}
+                    disabled={wizardAmenitiesSaving}
+                    className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-10 px-5 text-sm font-semibold"
+                  >
+                    {wizardAmenitiesSaving
+                      ? <><Loader2 className="h-4 w-4 animate-spin mr-1.5" />Saving...</>
+                      : (wizardFacilitiesSelected.size + wizardProductsSelected.size) > 0
+                        ? `Save ${wizardFacilitiesSelected.size + wizardProductsSelected.size} Items →`
+                        : "Skip →"}
+                  </Button>
+                )}
+
+                {/* Step 4 — Photos (just next) */}
+                {setupWizardStep === 4 && (
+                  <Button onClick={() => setSetupWizardStep(5)} className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-10 px-5 text-sm font-semibold">
                     Next → Schedule
                   </Button>
                 )}
 
-                {/* Step 4 — Schedule: form has its own Save/Skip buttons via WorkingHoursForm onCancel */}
+                {/* Step 5 — Schedule: form has its own Save/Skip buttons via WorkingHoursForm onCancel */}
 
-                {/* Step 5 — FAQs & Finish */}
-                {setupWizardStep === 5 && (
+                {/* Step 6 — FAQs & Finish */}
+                {setupWizardStep === 6 && (
                   <Button
                     onClick={async () => {
                       if (wizardFaqSelected.size > 0) {
@@ -6748,7 +6903,7 @@ export default function OwnerDashboard() {
                         } catch {}
                         setWizardFaqSaving(false);
                       }
-                      setSetupWizardStep(6);
+                      setSetupWizardStep(7);
                     }}
                     disabled={wizardFaqSaving}
                     className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-10 px-5 text-sm font-semibold"
