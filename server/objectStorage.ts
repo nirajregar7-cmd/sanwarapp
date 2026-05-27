@@ -11,24 +11,43 @@ import {
 
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 
-// The object storage client is used to interact with the object storage service.
-export const objectStorageClient = new Storage({
-  credentials: {
-    audience: "replit",
-    subject_token_type: "access_token",
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: "external_account",
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: {
-        type: "json",
-        subject_token_field_name: "access_token",
+// Creates the GCS storage client.
+// On Replit: uses the sidecar for authentication (no credentials needed).
+// On Vercel / other environments: uses GOOGLE_APPLICATION_CREDENTIALS_JSON env var.
+function createStorageClient(): Storage {
+  const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  if (credentialsJson) {
+    try {
+      const credentials = JSON.parse(credentialsJson);
+      console.log("Using GOOGLE_APPLICATION_CREDENTIALS_JSON for GCS authentication");
+      return new Storage({ credentials });
+    } catch (e) {
+      console.error("Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON:", e);
+    }
+  }
+
+  // Default: Replit sidecar authentication
+  return new Storage({
+    credentials: {
+      audience: "replit",
+      subject_token_type: "access_token",
+      token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
+      type: "external_account",
+      credential_source: {
+        url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
+        format: {
+          type: "json",
+          subject_token_field_name: "access_token",
+        },
       },
+      universe_domain: "googleapis.com",
     },
-    universe_domain: "googleapis.com",
-  },
-  projectId: "",
-});
+    projectId: "",
+  });
+}
+
+// The object storage client is used to interact with the object storage service.
+export const objectStorageClient = createStorageClient();
 
 export class ObjectNotFoundError extends Error {
   constructor() {
