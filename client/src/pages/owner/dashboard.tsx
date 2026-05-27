@@ -5886,6 +5886,74 @@ export default function OwnerDashboard() {
             </div>
           </div>
 
+          {/* ── PERSISTENT LIVE CARD PREVIEW (all steps) ── */}
+          <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3 shadow-sm">
+            <div className="max-w-2xl mx-auto flex items-center gap-3">
+
+              {/* Mini card thumbnail */}
+              <div className="w-48 flex-shrink-0 rounded-xl border border-gray-200 overflow-hidden shadow-sm bg-white flex flex-col">
+                <div className="h-16 relative overflow-hidden bg-gradient-to-br from-orange-100 to-amber-50">
+                  {tempImageUrl
+                    ? <img src={tempImageUrl} alt="preview" className="w-full h-full object-cover" />
+                    : <div className="flex items-center justify-center h-full text-orange-200"><Camera className="h-7 w-7" /></div>
+                  }
+                  <div className="absolute top-1 left-1 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                    {salonForm.watch('salonType') === 'male' ? '💈 Men' : salonForm.watch('salonType') === 'female' ? '💅 Women' : '✂️ Unisex'}
+                  </div>
+                </div>
+                <div className="px-2 py-1.5">
+                  <p className="text-[11px] font-bold text-gray-900 truncate leading-tight">{salonForm.watch('name') || 'Your Salon Name'}</p>
+                  <p className="text-[9px] text-gray-400 truncate mt-0.5">{salonForm.watch('address') || 'Address shown here'}</p>
+                  <div className="flex items-center gap-0.5 mt-0.5">
+                    {[1,2,3,4,5].map(s => <span key={s} className="text-yellow-400 text-[9px]">★</span>)}
+                    <span className="text-[9px] text-gray-400 ml-1">New</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live stats — update as each step completes */}
+              <div className="flex-1 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                {[
+                  {
+                    icon: "📸",
+                    label: "Photo",
+                    value: tempImageUrl ? "✓ Set" : "Not set",
+                    done: !!tempImageUrl,
+                  },
+                  {
+                    icon: "✂️",
+                    label: "Services",
+                    value: services?.length > 0 ? `${services.length} added` : "None yet",
+                    done: services?.length > 0,
+                  },
+                  {
+                    icon: "👥",
+                    label: "Staff",
+                    value: staff?.length > 0 ? `${staff.length} added` : "None yet",
+                    done: staff?.length > 0,
+                  },
+                  {
+                    icon: "🕐",
+                    label: "Hours",
+                    value: workingHours?.some((h: any) => h.isOpen) ? "Set ✓" : "Not set",
+                    done: workingHours?.some((h: any) => h.isOpen),
+                  },
+                ].map((stat) => (
+                  <div key={stat.label} className={`rounded-lg px-2 py-1.5 text-center border transition-all ${stat.done ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-100"}`}>
+                    <span className="text-sm">{stat.icon}</span>
+                    <p className={`text-[9px] font-bold uppercase tracking-wide mt-0.5 ${stat.done ? "text-green-600" : "text-gray-400"}`}>{stat.label}</p>
+                    <p className={`text-[10px] font-semibold ${stat.done ? "text-green-700" : "text-gray-500"}`}>{stat.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden sm:block text-right flex-shrink-0">
+                <p className="text-[9px] font-bold uppercase tracking-wide text-gray-400">Live Preview</p>
+                <p className="text-[9px] text-gray-400 mt-0.5">Updates as you fill</p>
+              </div>
+            </div>
+          </div>
+
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto">
 
@@ -5893,58 +5961,25 @@ export default function OwnerDashboard() {
             {setupWizardStep === 0 && (
               <div className="p-4 max-w-2xl mx-auto space-y-4">
 
-                {/* Cover photo + card preview row */}
-                <div className="flex gap-3 items-stretch">
-                  {/* Upload area */}
-                  <label className="flex-1 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed cursor-pointer transition-all min-h-[110px] relative overflow-hidden group"
-                    style={{ borderColor: tempImageUrl ? 'transparent' : '#e5e7eb' }}>
-                    <input type="file" accept="image/*" className="hidden"
-                      disabled={imageUploading}
-                      onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); }} />
-                    {tempImageUrl ? (
-                      <>
-                        <img src={tempImageUrl} alt="Cover" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
-                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all rounded-2xl flex items-center justify-center">
-                          <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1.5 rounded-full">Change Photo</span>
-                        </div>
-                      </>
-                    ) : imageUploading ? (
-                      <><Loader2 className="h-7 w-7 text-orange-400 animate-spin" /><p className="text-xs text-orange-500 font-medium">Uploading...</p></>
-                    ) : (
-                      <div className="text-center px-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mx-auto mb-1.5">
-                          <Camera className="h-5 w-5 text-orange-400" />
-                        </div>
-                        <p className="text-xs font-semibold text-gray-700">Add Cover Photo</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">Shown on your salon card</p>
-                      </div>
-                    )}
-                  </label>
-
-                  {/* Card preview */}
-                  <div className="w-44 flex-shrink-0">
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5 text-center">Card Preview</p>
-                    <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm bg-white">
-                      <div className="h-20 bg-gradient-to-br from-orange-100 to-orange-50 relative overflow-hidden">
-                        {tempImageUrl
-                          ? <img src={tempImageUrl} alt="preview" className="w-full h-full object-cover" />
-                          : <div className="flex items-center justify-center h-full text-orange-200"><Camera className="h-8 w-8" /></div>
-                        }
-                        <div className="absolute top-1.5 left-1.5 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                          {salonForm.watch('salonType') === 'male' ? '💈 Men' : salonForm.watch('salonType') === 'female' ? '💅 Women' : '✂️ Unisex'}
-                        </div>
-                      </div>
-                      <div className="p-2">
-                        <p className="text-xs font-bold text-gray-900 truncate">{salonForm.watch('name') || 'Your Salon Name'}</p>
-                        <p className="text-[10px] text-gray-400 truncate mt-0.5">{salonForm.watch('address') || 'Address shown here'}</p>
-                        <div className="flex items-center gap-0.5 mt-1">
-                          {[1,2,3,4,5].map(s => <span key={s} className="text-yellow-400 text-[9px]">★</span>)}
-                          <span className="text-[9px] text-gray-400 ml-1">New</span>
-                        </div>
-                      </div>
+                {/* Cover photo upload — compact, no duplicate card preview */}
+                <label className="flex items-center gap-3 bg-white rounded-2xl border-2 border-dashed px-4 py-3.5 cursor-pointer transition-all group hover:border-orange-400 hover:bg-orange-50/30 relative overflow-hidden"
+                  style={{ borderColor: tempImageUrl ? '#f97316' : undefined }}>
+                  <input type="file" accept="image/*" className="hidden"
+                    disabled={imageUploading}
+                    onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); }} />
+                  {tempImageUrl ? (
+                    <img src={tempImageUrl} alt="Cover" className="w-12 h-12 rounded-xl object-cover flex-shrink-0 ring-2 ring-orange-400" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+                      {imageUploading ? <Loader2 className="h-5 w-5 text-orange-400 animate-spin" /> : <Camera className="h-5 w-5 text-orange-400" />}
                     </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800">{tempImageUrl ? "Cover photo added ✓" : imageUploading ? "Uploading photo..." : "Add a cover photo"}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{tempImageUrl ? "Tap to change — this appears on your salon card" : "Tap to upload — shown on your salon card to customers"}</p>
                   </div>
-                </div>
+                  {tempImageUrl && <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />}
+                </label>
 
                 <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
                   <p className="font-semibold text-gray-900 text-base">Setup Your Salon</p>
