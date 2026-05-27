@@ -2168,6 +2168,17 @@ export default function OwnerDashboard() {
             {/* Right side stats */}
             {salon && (
               <div className="flex items-center gap-3 sm:gap-4">
+                {/* Preview My Salon button */}
+                <a
+                  href={`/salon/${salon.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 text-white text-sm font-semibold transition-all shadow-sm"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span className="hidden sm:inline">Preview Salon</span>
+                  <span className="sm:hidden">Preview</span>
+                </a>
                 <div className="text-center px-3 py-2 rounded-xl bg-white/5 border border-white/10">
                   <p className="text-lg sm:text-xl font-bold text-amber-400">{bookings.length}</p>
                   <p className="text-xs text-slate-400">Bookings</p>
@@ -5979,9 +5990,21 @@ export default function OwnerDashboard() {
                 ))}
               </div>
 
-              <div className="hidden sm:block text-right flex-shrink-0">
+              <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
                 <p className="text-[9px] font-bold uppercase tracking-wide text-gray-400">Live Preview</p>
-                <p className="text-[9px] text-gray-400 mt-0.5">Updates as you fill</p>
+                {salon?.id ? (
+                  <a
+                    href={`/salon/${salon.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold transition-all shadow-sm"
+                  >
+                    <Eye className="h-3 w-3" />
+                    Full Preview
+                  </a>
+                ) : (
+                  <span className="text-[9px] text-gray-400">Save profile first</span>
+                )}
               </div>
             </div>
           </div>
