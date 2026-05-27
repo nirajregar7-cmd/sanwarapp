@@ -1869,6 +1869,7 @@ export default function SalonDetail() {
                           src={salon.imageUrl}
                           alt={salon.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400"; }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">

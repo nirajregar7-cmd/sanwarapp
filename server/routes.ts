@@ -4065,29 +4065,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Object storage routes
   app.get("/objects/:objectPath(*)", async (req: any, res) => {
-    console.log("Accessing object:", req.path);
-    // Get user ID if authenticated, but don't require authentication
+    const REPLIT_SIDECAR = "http://127.0.0.1:1106";
+    const privateDirRaw = process.env.PRIVATE_OBJECT_DIR || "";
+    const parts = privateDirRaw.startsWith("/") ? privateDirRaw.slice(1).split("/") : privateDirRaw.split("/");
+    const bucketName = parts[0];
+
+    // Strip "/objects/" prefix to get the entity ID (e.g. "uploads/UUID")
+    const entityId = req.path.replace(/^\/objects\//, "");
+    const objectName = `.private/${entityId}`;
+
+    // --- Strategy 1: presigned GET URL via sidecar (fast, no token needed) ---
+    if (bucketName) {
+      try {
+        const signRes = await fetch(`${REPLIT_SIDECAR}/object-storage/signed-object-url`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bucket_name: bucketName,
+            object_name: objectName,
+            method: "GET",
+            expires_at: new Date(Date.now() + 3600 * 1000).toISOString(),
+          }),
+        });
+        if (signRes.ok) {
+          const { signed_url } = await signRes.json();
+          res.set("Cache-Control", "public, max-age=3600");
+          return res.redirect(302, signed_url);
+        }
+        console.warn("Signed URL failed:", signRes.status, await signRes.text());
+      } catch (signErr) {
+        console.warn("Signed URL request error:", signErr);
+      }
+    }
+
+    // --- Strategy 2: stream via GCS client (original approach) ---
     const userId = req.isAuthenticated && req.isAuthenticated() ? req.user?.id : undefined;
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
       const canAccess = await objectStorageService.canAccessObjectEntity({
         objectFile,
-        userId: userId,
+        userId,
         requestedPermission: ObjectPermission.READ,
       });
       if (!canAccess) {
-        console.log("Access denied for object:", req.path);
         return res.sendStatus(401);
       }
-      console.log("Serving object:", req.path);
-      objectStorageService.downloadObject(objectFile, res);
+      return objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
-      console.error("Error checking object access:", error);
       if (error instanceof ObjectNotFoundError) {
-        console.log("Object not found:", req.path);
         return res.sendStatus(404);
       }
+      // GCS auth errors (sidecar 401 "no allowed resources") — treat as not found
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes("no allowed resources") || msg.includes("401") || msg.includes("sign")) {
+        return res.sendStatus(404);
+      }
+      console.error("Object serve error:", error);
       return res.sendStatus(500);
     }
   });

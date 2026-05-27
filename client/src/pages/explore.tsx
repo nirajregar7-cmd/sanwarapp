@@ -322,7 +322,8 @@ export default function ExplorePage() {
                       {/* Image */}
                       <div className="w-28 h-28 flex-shrink-0 bg-gradient-to-br from-purple-100 to-pink-100 relative">
                         {imgUrl ? (
-                          <img src={imgUrl} alt={salon.name} className="w-full h-full object-cover" />
+                          <img src={imgUrl} alt={salon.name} className="w-full h-full object-cover"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200"; }} />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Scissors className="h-10 w-10 text-purple-300" />

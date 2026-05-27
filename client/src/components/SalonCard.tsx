@@ -172,6 +172,7 @@ export default function SalonCard({ salon }: SalonCardProps) {
             src={salon.primaryImageUrl || salon.imageUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"} 
             alt={salon.name} 
             className="w-full h-36 object-cover transition-transform duration-200 group-hover:scale-105"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=240"; }}
           />
           {bestOffer && (
             <div className="absolute top-2 left-2">
