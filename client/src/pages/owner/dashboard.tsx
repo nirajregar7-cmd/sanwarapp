@@ -5817,50 +5817,72 @@ export default function OwnerDashboard() {
 
       {/* ─── FIRST-TIME SETUP WIZARD ─── */}
       {setupWizardOpen && (
-        <div className="fixed inset-0 z-[200] bg-white flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-[200] bg-gray-50 flex flex-col overflow-hidden">
 
           {/* Header */}
-          <div className="flex-shrink-0 bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
-                <Zap className="h-4 w-4 text-orange-500" />
+          <div className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3.5 flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Zap className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-bold text-gray-900 text-sm leading-tight">Quick Salon Setup</p>
-                <p className="text-xs text-gray-400">Get your salon ready in minutes</p>
+                <p className="font-bold text-white text-sm leading-tight">Salon Setup</p>
+                <p className="text-xs text-orange-100">Step {setupWizardStep + 1} of 6 — Get your salon live in minutes</p>
               </div>
             </div>
-            <button onClick={closeSetupWizard} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
-              <X className="h-5 w-5" />
+            <button
+              onClick={closeSetupWizard}
+              className="flex items-center gap-1.5 text-white/80 hover:text-white hover:bg-white/20 transition-all px-3 py-1.5 rounded-lg text-xs font-medium"
+            >
+              <X className="h-4 w-4" />
+              <span>Exit</span>
             </button>
           </div>
 
           {/* Step progress bar */}
-          <div className="flex-shrink-0 border-b bg-gray-50 px-4 py-2.5 overflow-x-auto">
-            <div className="flex gap-1 min-w-max">
+          <div className="flex-shrink-0 border-b bg-white px-4 pt-3 pb-0 shadow-sm">
+            <div className="flex gap-0 overflow-x-auto scrollbar-hide">
               {[
-                { label: "Profile", icon: "🏪" },
-                { label: "Services", icon: "✂️" },
-                { label: "Staff", icon: "👥" },
-                { label: "Photos", icon: "📷" },
-                { label: "Schedule", icon: "🕐" },
-                { label: "FAQs", icon: "💬" },
+                { label: "Profile", icon: "🏪", color: "orange" },
+                { label: "Services", icon: "✂️", color: "blue" },
+                { label: "Staff", icon: "👥", color: "purple" },
+                { label: "Photos", icon: "📷", color: "pink" },
+                { label: "Schedule", icon: "🕐", color: "green" },
+                { label: "FAQs", icon: "💬", color: "indigo" },
               ].map((s, i) => {
                 const done = i < setupWizardStep;
                 const active = i === setupWizardStep;
+                const colorMap: Record<string, string> = {
+                  orange: "border-orange-500 text-orange-600",
+                  blue: "border-blue-500 text-blue-600",
+                  purple: "border-purple-500 text-purple-600",
+                  pink: "border-pink-500 text-pink-600",
+                  green: "border-green-500 text-green-600",
+                  indigo: "border-indigo-500 text-indigo-600",
+                };
                 return (
-                  <div key={i} className="flex items-center gap-0.5">
-                    <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all ${active ? "bg-orange-100 text-orange-700 border border-orange-300" : done ? "bg-green-100 text-green-700" : "text-gray-400 bg-transparent"}`}>
-                      {done ? <CheckCircle className="w-3.5 h-3.5" /> : <span>{s.icon}</span>}
-                      <span className="hidden sm:inline">{s.label}</span>
-                    </div>
-                    {i < 5 && <span className="text-gray-200 text-xs mx-0.5">›</span>}
-                  </div>
+                  <button
+                    key={i}
+                    onClick={() => done && setSetupWizardStep(i)}
+                    className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold border-b-2 transition-all whitespace-nowrap flex-shrink-0 ${
+                      active
+                        ? `${colorMap[s.color]} bg-transparent`
+                        : done
+                        ? "border-green-400 text-green-600 cursor-pointer hover:bg-green-50"
+                        : "border-transparent text-gray-400 cursor-default"
+                    }`}
+                  >
+                    {done ? <CheckCircle className="w-3.5 h-3.5 text-green-500" /> : <span>{s.icon}</span>}
+                    <span className="hidden sm:inline">{s.label}</span>
+                  </button>
                 );
               })}
             </div>
-            <div className="mt-2 h-1.5 bg-gray-200 rounded-full">
-              <div className="h-full bg-orange-500 rounded-full transition-all duration-500" style={{ width: `${(setupWizardStep / 6) * 100}%` }} />
+            <div className="h-0.5 bg-gray-100 mt-0">
+              <div
+                className="h-full bg-gradient-to-r from-orange-400 to-orange-600 transition-all duration-500"
+                style={{ width: `${Math.min((setupWizardStep / 5) * 100, 100)}%` }}
+              />
             </div>
           </div>
 
@@ -5869,12 +5891,61 @@ export default function OwnerDashboard() {
 
             {/* ── STEP 0 — SALON PROFILE ── */}
             {setupWizardStep === 0 && (
-              <div className="p-4 max-w-2xl mx-auto space-y-5">
-                <div className="text-center pt-2">
-                  <div className="text-5xl mb-3">✂️</div>
-                  <h2 className="text-xl font-bold text-gray-900">Welcome to Sanwar!</h2>
-                  <p className="text-sm text-gray-500 mt-1">Let's set up your salon profile to start attracting customers</p>
+              <div className="p-4 max-w-2xl mx-auto space-y-4">
+
+                {/* Cover photo + card preview row */}
+                <div className="flex gap-3 items-stretch">
+                  {/* Upload area */}
+                  <label className="flex-1 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed cursor-pointer transition-all min-h-[110px] relative overflow-hidden group"
+                    style={{ borderColor: tempImageUrl ? 'transparent' : '#e5e7eb' }}>
+                    <input type="file" accept="image/*" className="hidden"
+                      disabled={imageUploading}
+                      onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); }} />
+                    {tempImageUrl ? (
+                      <>
+                        <img src={tempImageUrl} alt="Cover" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all rounded-2xl flex items-center justify-center">
+                          <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1.5 rounded-full">Change Photo</span>
+                        </div>
+                      </>
+                    ) : imageUploading ? (
+                      <><Loader2 className="h-7 w-7 text-orange-400 animate-spin" /><p className="text-xs text-orange-500 font-medium">Uploading...</p></>
+                    ) : (
+                      <div className="text-center px-3">
+                        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mx-auto mb-1.5">
+                          <Camera className="h-5 w-5 text-orange-400" />
+                        </div>
+                        <p className="text-xs font-semibold text-gray-700">Add Cover Photo</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Shown on your salon card</p>
+                      </div>
+                    )}
+                  </label>
+
+                  {/* Card preview */}
+                  <div className="w-44 flex-shrink-0">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5 text-center">Card Preview</p>
+                    <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm bg-white">
+                      <div className="h-20 bg-gradient-to-br from-orange-100 to-orange-50 relative overflow-hidden">
+                        {tempImageUrl
+                          ? <img src={tempImageUrl} alt="preview" className="w-full h-full object-cover" />
+                          : <div className="flex items-center justify-center h-full text-orange-200"><Camera className="h-8 w-8" /></div>
+                        }
+                        <div className="absolute top-1.5 left-1.5 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                          {salonForm.watch('salonType') === 'male' ? '💈 Men' : salonForm.watch('salonType') === 'female' ? '💅 Women' : '✂️ Unisex'}
+                        </div>
+                      </div>
+                      <div className="p-2">
+                        <p className="text-xs font-bold text-gray-900 truncate">{salonForm.watch('name') || 'Your Salon Name'}</p>
+                        <p className="text-[10px] text-gray-400 truncate mt-0.5">{salonForm.watch('address') || 'Address shown here'}</p>
+                        <div className="flex items-center gap-0.5 mt-1">
+                          {[1,2,3,4,5].map(s => <span key={s} className="text-yellow-400 text-[9px]">★</span>)}
+                          <span className="text-[9px] text-gray-400 ml-1">New</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
                 <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
                   <p className="font-semibold text-gray-900 text-base">Setup Your Salon</p>
                   <p className="text-sm text-gray-500">Complete your salon profile to appear on our platform and start receiving bookings from customers.</p>
@@ -6257,86 +6328,98 @@ export default function OwnerDashboard() {
             {setupWizardStep === 3 && (
               <div className="p-4 max-w-2xl mx-auto space-y-4">
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Add Salon Photos</h2>
-                  <p className="text-sm text-gray-500">Upload photos of your work, interior, and team. Great photos attract more customers!</p>
+                  <h2 className="text-lg font-bold text-gray-900">📷 Add Salon Photos</h2>
+                  <p className="text-sm text-gray-500">Great photos attract 3× more bookings. Upload your best work, interior, and team shots!</p>
                 </div>
 
-                {/* Upload zone */}
-                <label className={`flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 cursor-pointer transition-all ${wizardUploading ? "border-orange-300 bg-orange-50" : "border-gray-300 bg-gray-50 hover:border-orange-400 hover:bg-orange-50"}`}>
-                  <input
-                    type="file"
-                    accept="image/*,video/*"
-                    multiple
-                    className="hidden"
-                    disabled={wizardUploading}
-                    onChange={async (e) => {
-                      const files = Array.from(e.target.files || []);
-                      if (!files.length || !salon?.id) return;
-                      setWizardUploading(true);
-                      try {
-                        const formData = new FormData();
-                        formData.append('salonId', salon.id);
-                        files.forEach(f => formData.append('files', f));
-                        const res = await fetch('/api/salons/media/upload', {
-                          method: 'POST',
-                          body: formData,
-                          credentials: 'include',
-                        });
-                        if (res.ok) {
-                          const data = await res.json();
-                          const added = Array.isArray(data?.uploadedFiles) ? data.uploadedFiles.length : Array.isArray(data) ? data.length : 1;
-                          setWizardUploadedCount(prev => prev + added);
-                          queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon.id}/media`] });
-                          toast({ title: `${added} photo${added > 1 ? 's' : ''} uploaded!`, description: "Your salon gallery has been updated." });
-                        } else {
-                          const err = await res.json().catch(() => ({}));
-                          toast({ title: "Upload failed", description: err.message || "Please try again.", variant: "destructive" });
+                <div className="flex gap-3 items-start">
+                  {/* Upload zone */}
+                  <label className={`flex-1 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-6 cursor-pointer transition-all min-h-[130px] ${wizardUploading ? "border-pink-300 bg-pink-50" : "border-gray-300 bg-white hover:border-pink-400 hover:bg-pink-50/40"}`}>
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      multiple
+                      className="hidden"
+                      disabled={wizardUploading}
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (!files.length || !salon?.id) return;
+                        setWizardUploading(true);
+                        try {
+                          const formData = new FormData();
+                          formData.append('salonId', salon.id);
+                          files.forEach(f => formData.append('files', f));
+                          const res = await fetch('/api/salons/media/upload', {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'include',
+                          });
+                          if (res.ok) {
+                            const data = await res.json();
+                            const added = Array.isArray(data?.uploadedFiles) ? data.uploadedFiles.length : Array.isArray(data) ? data.length : 1;
+                            setWizardUploadedCount(prev => prev + added);
+                            queryClient.invalidateQueries({ queryKey: [`/api/salons/${salon.id}/media`] });
+                            toast({ title: `${added} photo${added > 1 ? 's' : ''} uploaded!`, description: "Your salon gallery has been updated." });
+                          } else {
+                            const err = await res.json().catch(() => ({}));
+                            toast({ title: "Upload failed", description: err.message || "Please try again.", variant: "destructive" });
+                          }
+                        } catch {
+                          toast({ title: "Upload failed", description: "Network error. Please try again.", variant: "destructive" });
+                        } finally {
+                          setWizardUploading(false);
+                          e.target.value = "";
                         }
-                      } catch {
-                        toast({ title: "Upload failed", description: "Network error. Please try again.", variant: "destructive" });
-                      } finally {
-                        setWizardUploading(false);
-                        e.target.value = "";
-                      }
-                    }}
-                  />
-                  {wizardUploading ? (
-                    <>
-                      <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
-                      <p className="text-sm font-semibold text-orange-600">Uploading photos...</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-md">
-                        <Camera className="h-7 w-7 text-white" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-semibold text-gray-800">Click to upload photos</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Images & videos · Multiple files supported</p>
-                      </div>
-                    </>
-                  )}
-                </label>
+                      }}
+                    />
+                    {wizardUploading ? (
+                      <><Loader2 className="h-9 w-9 text-pink-500 animate-spin" /><p className="text-sm font-semibold text-pink-600">Uploading...</p></>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center shadow-md">
+                          <Camera className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-semibold text-gray-800">Tap to upload photos</p>
+                          <p className="text-xs text-gray-400 mt-0.5">Images & videos · Multiple files ok</p>
+                        </div>
+                      </>
+                    )}
+                  </label>
 
-                {wizardUploadedCount > 0 && (
-                  <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                    <p className="text-sm font-medium text-green-700">{wizardUploadedCount} photo{wizardUploadedCount > 1 ? 's' : ''} uploaded successfully</p>
+                  {/* Stats / tips card */}
+                  <div className="w-36 flex-shrink-0 space-y-2">
+                    {wizardUploadedCount > 0 ? (
+                      <div className="rounded-xl bg-green-50 border border-green-200 p-3 text-center">
+                        <div className="text-2xl font-bold text-green-600">{wizardUploadedCount}</div>
+                        <p className="text-[10px] font-semibold text-green-500 uppercase tracking-wide">Photo{wizardUploadedCount > 1 ? 's' : ''} Added</p>
+                        <CheckCircle className="h-5 w-5 text-green-500 mx-auto mt-1" />
+                      </div>
+                    ) : (
+                      <div className="rounded-xl bg-pink-50 border border-pink-100 p-3 text-center">
+                        <div className="text-2xl">📸</div>
+                        <p className="text-[10px] text-pink-600 font-semibold mt-1">0 photos yet</p>
+                        <p className="text-[9px] text-gray-400 mt-0.5">Add at least 3</p>
+                      </div>
+                    )}
+                    <div className="rounded-xl bg-blue-50 border border-blue-100 p-2.5 space-y-1.5">
+                      <p className="text-[9px] font-bold text-blue-700 uppercase tracking-wide">Pro Tips</p>
+                      {["Bright, natural light", "Show your work area", "Include team photos"].map((tip) => (
+                        <div key={tip} className="flex items-start gap-1">
+                          <span className="text-blue-400 text-[9px] mt-0.5">•</span>
+                          <p className="text-[9px] text-gray-600">{tip}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                )}
-
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-xs text-gray-400">or</span>
-                  <div className="flex-1 h-px bg-gray-200" />
                 </div>
 
                 <Button
                   variant="outline"
                   onClick={() => window.open('/owner/media-gallery', '_blank')}
-                  className="w-full rounded-xl border-gray-300 text-gray-600 h-10 text-sm"
+                  className="w-full rounded-xl border-gray-200 text-gray-600 h-10 text-sm hover:border-pink-300 hover:text-pink-600"
                 >
-                  <Camera className="h-4 w-4 mr-2" /> Open Full Media Gallery (new tab)
+                  <Camera className="h-4 w-4 mr-2" /> Open Full Media Gallery
                 </Button>
 
                 <p className="text-center text-xs text-gray-400">You can always add more photos later from your dashboard</p>
@@ -6409,13 +6492,14 @@ export default function OwnerDashboard() {
 
           {/* Footer */}
           {setupWizardStep < 6 && (
-            <div className="flex-shrink-0 border-t bg-white px-4 py-3 flex items-center justify-between gap-3">
-              <button onClick={closeSetupWizard} className="text-sm text-gray-400 hover:text-gray-600 transition-colors px-2 py-1 rounded">
-                Skip setup
+            <div className="flex-shrink-0 border-t bg-white px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-1px_8px_rgba(0,0,0,0.06)]">
+              <button onClick={closeSetupWizard} className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-gray-50">
+                <X className="h-3.5 w-3.5" />
+                <span>Exit setup</span>
               </button>
               <div className="flex gap-2">
                 {setupWizardStep > 0 && setupWizardStep !== 4 && (
-                  <Button variant="outline" onClick={() => setSetupWizardStep(s => s - 1)} className="rounded-xl h-10 px-4 text-sm border-gray-200">
+                  <Button variant="outline" onClick={() => setSetupWizardStep(s => s - 1)} className="rounded-xl h-10 px-4 text-sm border-gray-200 hover:border-gray-300">
                     ← Back
                   </Button>
                 )}
