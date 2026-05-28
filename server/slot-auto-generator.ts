@@ -10,7 +10,7 @@
  *  - Immediately when a new staff member is added
  */
 
-import { eq, and, gte, lte } from 'drizzle-orm';
+import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { workingHours, staff, timeSlots, salons } from '../shared/schema';
 
 const SLOT_DURATION_MINUTES = 30;
@@ -119,7 +119,11 @@ export async function autoGenerateSlotsForStaff(
 
     const datesWithSlots = new Set<string>(existing.map((r: any) => r.date));
 
-    let created = 0;
+    // Collect ALL slots for all missing days first, then bulk-insert in one go
+    const allNewSlots: {
+      salonId: string; staffId: string; date: string;
+      startTime: string; endTime: string; isAvailable: boolean; slotType: string;
+    }[] = [];
 
     for (let i = 0; i <= DAYS_AHEAD; i++) {
       const day = addDays(today, i);
@@ -131,26 +135,25 @@ export async function autoGenerateSlotsForStaff(
       if (!wh || !wh.isOpen || !wh.openTime || !wh.closeTime) continue;
 
       const slots = buildSlots(ds, wh.openTime, wh.closeTime, wh.breakStartTime, wh.breakEndTime);
-
       for (const slot of slots) {
-        try {
-          await db.insert(timeSlots).values({
-            salonId,
-            staffId,
-            date: slot.date,
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-            isAvailable: true,
-            slotType: 'regular',
-          });
-          created++;
-        } catch {
-          // Ignore duplicate key violations
-        }
+        allNewSlots.push({
+          salonId, staffId, date: slot.date,
+          startTime: slot.startTime, endTime: slot.endTime,
+          isAvailable: true, slotType: 'regular',
+        });
       }
     }
 
-    return created;
+    if (allNewSlots.length === 0) return 0;
+
+    // Bulk insert in batches of 500 to avoid query size limits
+    const BATCH = 500;
+    for (let i = 0; i < allNewSlots.length; i += BATCH) {
+      const batch = allNewSlots.slice(i, i + BATCH);
+      await db.insert(timeSlots).values(batch).onConflictDoNothing();
+    }
+
+    return allNewSlots.length;
   } catch (err) {
     console.error(`[SlotGen] Error generating slots for staff ${staffId}:`, err);
     return 0;
