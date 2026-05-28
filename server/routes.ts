@@ -1108,6 +1108,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(updatedHours);
+
+      // Background: auto-generate slots for all staff now that hours are set
+      setImmediate(async () => {
+        try {
+          const { autoGenerateSlotsForSalon } = await import('./slot-auto-generator');
+          const result = await autoGenerateSlotsForSalon(db, salonId);
+          if (result.slotsCreated > 0) {
+            console.log(`[SlotGen] Auto-generated ${result.slotsCreated} slots for ${result.staffCount} staff after working hours update (salon ${salonId})`);
+          }
+        } catch (e) {
+          console.error('[SlotGen] Error auto-generating slots after working hours update:', e);
+        }
+      });
     } catch (error) {
       console.error("Error updating salon working hours:", error);
       res.status(500).json({ message: "Failed to update working hours" });
@@ -3860,6 +3873,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Staff member created successfully:', staffMember);
       res.json(staffMember);
+
+      // Background: auto-generate slots for the new staff member
+      setImmediate(async () => {
+        try {
+          const { autoGenerateSlotsForStaff } = await import('./slot-auto-generator');
+          const count = await autoGenerateSlotsForStaff(db, salonId, staffMember.id);
+          if (count > 0) console.log(`[SlotGen] Auto-generated ${count} slots for new staff ${staffMember.name}`);
+        } catch (e) {
+          console.error('[SlotGen] Error auto-generating slots for new staff:', e);
+        }
+      });
     } catch (error) {
       console.error("Error adding staff:", error);
       res.status(500).json({ message: "Failed to add staff" });
@@ -4827,6 +4851,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const workingHourData = insertWorkingHoursSchema.parse({ ...req.body, salonId: req.params.salonId });
       const workingHour = await storage.upsertWorkingHours(workingHourData);
       res.json(workingHour);
+
+      // Background: auto-generate slots for all staff after hours change
+      const salonIdForSlots = req.params.salonId;
+      setImmediate(async () => {
+        try {
+          const { autoGenerateSlotsForSalon } = await import('./slot-auto-generator');
+          const result = await autoGenerateSlotsForSalon(db, salonIdForSlots);
+          if (result.slotsCreated > 0) {
+            console.log(`[SlotGen] Auto-generated ${result.slotsCreated} slots for ${result.staffCount} staff (salon ${salonIdForSlots})`);
+          }
+        } catch (e) {
+          console.error('[SlotGen] Error auto-generating slots:', e);
+        }
+      });
     } catch (error) {
       console.error("Error updating working hours:", error);
       res.status(400).json({ message: "Invalid working hours data" });

@@ -265,6 +265,12 @@ export function startBookingScheduler() {
     const reEngaged = await checkAndSendReEngagement();
     if (reEngaged > 0) console.log(`📣 Re-engaged ${reEngaged} inactive user(s)`);
   }, 6 * 60 * 60 * 1000);
+
+  // Every 24 hours: auto-generate slots for all salons (rolling 30-day coverage)
+  setInterval(async () => {
+    const { runDailySlotMaintenance } = await import('./slot-auto-generator');
+    await runDailySlotMaintenance();
+  }, 24 * 60 * 60 * 1000);
   
   // Run immediately on startup (after 5s delay)
   setTimeout(async () => {
@@ -272,4 +278,11 @@ export function startBookingScheduler() {
     await checkAndSendReminders();
     await checkAndSendCompletionEmails();
   }, 5000);
+
+  // Run slot maintenance after 30s on startup (after server is fully ready)
+  setTimeout(async () => {
+    const { runDailySlotMaintenance } = await import('./slot-auto-generator');
+    console.log('[SlotGen] Running startup slot maintenance...');
+    await runDailySlotMaintenance();
+  }, 30 * 1000);
 }
