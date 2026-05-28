@@ -2327,66 +2327,59 @@ export default function SalonDetail() {
                             )}
                           />
 
-                          {form.watch("serviceIds")?.length > 0 && selectedDate && (
+                          {selectedDate && (
                             <FormField
                               control={form.control}
                               name="timeSlotId"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Available Time Slots</FormLabel>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <FormLabel className="text-sm font-semibold text-gray-800">
+                                      Available Time Slots
+                                    </FormLabel>
+                                    <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                                      {selectedDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                                     {timeSlotsLoading ? (
                                       <>
                                         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                                          <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                                          <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />
                                         ))}
                                       </>
-                                    ) : timeSlots && timeSlots.length > 0 ? (
-                                      // Filter and show only available slots with enhanced styling
+                                    ) : timeSlots && timeSlots.filter((slot: TimeSlot) => slot.isAvailable).length > 0 ? (
                                       timeSlots
                                         .filter((slot: TimeSlot) => slot.isAvailable)
                                         .map((slot: TimeSlot) => (
-                                          <div
+                                          <button
+                                            type="button"
                                             key={slot.id}
                                             onClick={() => field.onChange(slot.id)}
                                             className={`
-                                              relative border rounded-lg p-3 cursor-pointer transition-all duration-200 hover:shadow-md
-                                              ${field.value === slot.id 
-                                                ? 'border-primary bg-primary/5 shadow-sm' 
-                                                : 'border-gray-200 bg-white hover:border-primary/50'
+                                              relative flex flex-col items-center justify-center rounded-xl border-2 px-2 py-2.5 cursor-pointer transition-all duration-200
+                                              ${field.value === slot.id
+                                                ? 'border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-200 scale-105'
+                                                : 'border-gray-200 bg-white text-gray-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700'
                                               }
                                             `}
                                           >
-                                            <div className="text-center">
-                                              <div className="text-sm font-medium text-gray-900 mb-1">
-                                                {slot.startTime} - {slot.endTime}
-                                              </div>
-                                              <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center
-                                                ${field.value === slot.id 
-                                                  ? 'bg-primary text-white' 
-                                                  : 'bg-green-100 text-green-700'
-                                                }
-                                              `}>
-                                                <CheckCircle className="h-3 w-3 mr-1" />
-                                                Available
-                                              </div>
-                                            </div>
+                                            <span className="text-xs font-bold leading-tight">{slot.startTime}</span>
+                                            <span className={`text-[10px] mt-0.5 ${field.value === slot.id ? 'text-orange-100' : 'text-gray-400'}`}>
+                                              – {slot.endTime}
+                                            </span>
                                             {field.value === slot.id && (
-                                              <div className="absolute top-2 right-2">
-                                                <CheckCircle className="h-4 w-4 text-primary" />
+                                              <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-orange-600 rounded-full flex items-center justify-center">
+                                                <CheckCircle className="h-3 w-3 text-white" />
                                               </div>
                                             )}
-                                          </div>
+                                          </button>
                                         ))
                                     ) : (
-                                      <div className="col-span-1 sm:col-span-2 lg:col-span-4 text-center py-8">
-                                        <Clock className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                                        <p className="text-lg font-medium text-gray-600 mb-2">
-                                          No time slots available
-                                        </p>
-                                        <p className="text-sm text-gray-500">
-                                          Please select a different date or contact the salon
-                                        </p>
+                                      <div className="col-span-2 sm:col-span-3 lg:col-span-4 text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <Clock className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                                        <p className="text-sm font-medium text-gray-500">No slots available on this date</p>
+                                        <p className="text-xs text-gray-400 mt-1">Try a different date</p>
                                       </div>
                                     )}
                                   </div>
