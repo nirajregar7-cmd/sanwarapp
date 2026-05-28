@@ -5309,6 +5309,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slotCounts[staffMember.id] = countResult?.count || 0;
       }
 
+      // If ALL staff have 0 slots, trigger auto-generation in the background
+      const totalSlots = Object.values(slotCounts).reduce((s, v) => s + v, 0);
+      if (totalSlots === 0 && staffMembers.length > 0) {
+        const { autoGenerateSlotsForSalon } = await import('./slot-auto-generator');
+        autoGenerateSlotsForSalon(db, salonId).then(r => {
+          if (r.slotsCreated > 0) {
+            console.log(`[SlotGen] On-demand generated ${r.slotsCreated} slots for salon ${salonId}`);
+          }
+        }).catch(() => {});
+      }
+
       res.json(slotCounts);
     } catch (error) {
       console.error("Error fetching public staff slot counts:", error);

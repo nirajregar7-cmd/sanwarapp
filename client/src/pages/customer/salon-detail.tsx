@@ -183,8 +183,15 @@ export default function SalonDetail() {
       const response = await apiRequest("GET", url);
       return await response.json();
     },
-    refetchInterval: 60000, // Reduced to 60 seconds to improve performance
-    staleTime: 30 * 1000, // 30 seconds cache
+    // If ALL counts are 0, poll quickly (4s) so newly generated slots appear fast.
+    // Once slots exist, fall back to a relaxed 60s interval.
+    refetchInterval: (query) => {
+      const data = query.state.data as Record<string, number> | undefined;
+      if (!data) return 4000;
+      const total = Object.values(data).reduce((s, v) => s + v, 0);
+      return total === 0 ? 4000 : 60000;
+    },
+    staleTime: 3 * 1000,
   });
 
   // Fetch salon reviews with replies - parallel loading

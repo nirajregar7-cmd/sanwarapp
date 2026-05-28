@@ -83,10 +83,19 @@ export async function autoGenerateSlotsForStaff(
       .from(workingHours)
       .where(eq(workingHours.salonId, salonId));
 
-    if (!hours.length) return 0;
+    // If no working hours configured, use a sensible default: 10:00-20:00, Mon-Sat (Sun closed)
+    const DEFAULT_OPEN = '10:00';
+    const DEFAULT_CLOSE = '20:00';
+    const hoursByDay: Record<number, { isOpen: boolean; openTime: string; closeTime: string; breakStartTime?: string | null; breakEndTime?: string | null }> = {};
 
-    const hoursByDay: Record<number, typeof hours[0]> = {};
-    for (const h of hours) hoursByDay[h.dayOfWeek] = h;
+    if (hours.length) {
+      for (const h of hours) hoursByDay[h.dayOfWeek] = h;
+    } else {
+      // Default: Mon(1) through Sat(6) open, Sun(0) closed
+      for (let d = 1; d <= 6; d++) {
+        hoursByDay[d] = { isOpen: true, openTime: DEFAULT_OPEN, closeTime: DEFAULT_CLOSE, breakStartTime: null, breakEndTime: null };
+      }
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
