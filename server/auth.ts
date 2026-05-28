@@ -135,6 +135,8 @@ export function setupAuth(app: Express) {
     ttl: 7 * 24 * 60 * 60, // 7 days
   });
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "your-secret-key-change-this-in-production",
     resave: false,
@@ -142,7 +144,8 @@ export function setupAuth(app: Express) {
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
+      secure: isProduction, // true on HTTPS production domains like sanwarhub.in
+      sameSite: isProduction ? 'none' : 'lax', // 'none' needed for cross-origin HTTPS
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
   };

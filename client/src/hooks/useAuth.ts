@@ -85,7 +85,12 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      try {
+        await apiRequest("POST", "/api/logout");
+      } catch (err) {
+        // Network/fetch errors are ignored — we still log out locally
+        console.warn("Logout server call failed, logging out locally:", err);
+      }
     },
     onSuccess: () => {
       // Clear the cache immediately
@@ -95,12 +100,12 @@ export function useAuth() {
       // Force a hard refresh to reset everything
       window.location.href = '/';
     },
+    // onError will only fire for unexpected non-network errors now
     onError: (error: Error) => {
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Still clear local state even on error
+      queryClient.setQueryData(["/api/auth/user"], null);
+      queryClient.clear();
+      window.location.href = '/';
     },
   });
 
