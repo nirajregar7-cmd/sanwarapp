@@ -212,9 +212,9 @@ export default function Layout({ children }: LayoutProps) {
               {/* Language Switcher */}
               <LanguageSwitcher />
 
-              {!isAuthenticated && (
-                <Button asChild size="sm" className="bg-blue-600 text-white hover:bg-blue-700 text-xs sm:text-sm px-3 sm:px-4">
-                  <a href="/api/login">{t('nav.login')}</a>
+              {!isAuthenticated && !isMobile && (
+                <Button asChild size="sm" className="bg-primary text-white hover:bg-primary/90 text-xs sm:text-sm px-3 sm:px-4">
+                  <Link href="/auth">{t('nav.login')}</Link>
                 </Button>
               )}
 
@@ -223,8 +223,8 @@ export default function Layout({ children }: LayoutProps) {
                 <NotificationBell />
               )}
 
-              {/* Mobile Menu Button */}
-              {isAuthenticated && isMobile && (
+              {/* Mobile Menu Button — shown for ALL mobile users (auth or not) */}
+              {isMobile && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -242,7 +242,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Mobile Menu */}
-          {isAuthenticated && isMobile && mobileMenuOpen && (
+          {isMobile && mobileMenuOpen && (
             <div className="border-t border-gray-200 dark:border-gray-700 py-3 bg-white dark:bg-gray-900">
               <div className="space-y-3">
                 {/* Navigation Links Mobile */}
@@ -403,19 +403,35 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                 </div>
 
-                {/* Logout Button */}
+                {/* Auth Buttons — shown at bottom for ALL mobile users */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4 px-4">
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => {
-                      logoutMutation.mutate();
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    <LogOut className="h-4 w-4 mr-3" />
-                    Logout
-                  </Button>
+                  {isAuthenticated ? (
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => {
+                        logoutMutation.mutate();
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 mr-3" />
+                      Logout
+                    </Button>
+                  ) : (
+                    <div className="space-y-2">
+                      <Link
+                        href="/auth"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center justify-center w-full bg-primary text-white font-semibold py-3 rounded-xl text-sm hover:bg-primary/90 transition-colors"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Login / Register
+                      </Link>
+                      <p className="text-center text-xs text-gray-400 pb-1">
+                        Book appointments, track your history & more
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
