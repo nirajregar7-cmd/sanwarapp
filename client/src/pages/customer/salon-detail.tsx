@@ -2309,17 +2309,16 @@ export default function SalonDetail() {
                                 <FormLabel>Select Date</FormLabel>
                                 <Calendar
                                   mode="single"
-                                  selected={field.value}
+                                  selected={field.value ?? selectedDate}
+                                  defaultMonth={selectedDate ?? new Date()}
                                   onSelect={(date) => {
                                     field.onChange(date);
                                     setSelectedDate(date);
                                   }}
                                   disabled={(date) => {
-                                    // Compare with current IST date
-                                    const now = new Date();
-                                    const istDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-                                    istDate.setHours(0, 0, 0, 0); // Start of day in IST
-                                    return date < istDate || date.getDay() === 0;
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    return date < today || date.getDay() === 0;
                                   }}
                                   className="rounded-md border w-full"
                                 />
