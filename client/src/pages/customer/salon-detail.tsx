@@ -1347,11 +1347,13 @@ export default function SalonDetail() {
                   </div>
                 ) : servicesByCategory.length > 0 ? (
                   <div className="space-y-4">
-                    {/* Category Filter Buttons */}
-                    <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+                    {/* Category Filter Buttons — single scrollable row on mobile */}
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 bg-gray-50 rounded-lg p-3"
+                      style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
                       <button
                         onClick={() => setSelectedCategoryFilter("all")}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        style={{ scrollSnapAlign: "start" }}
+                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                           selectedCategoryFilter === "all"
                             ? "bg-primary text-white shadow-md"
                             : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
@@ -1362,13 +1364,19 @@ export default function SalonDetail() {
                       </button>
                       {servicesByCategory.map((category) => {
                         const catLower = (category.name || '').toLowerCase();
-                        const isMen = catLower.includes("men's") || category.name === "Beard & Grooming";
-                        const isWomen = catLower.includes("women's") || category.name === "Bridal Services" || category.name === "Saree Draping";
+                        const isMen = catLower.includes("men's") || catLower.includes("(men)") || category.name === "Beard & Grooming";
+                        const isWomen = catLower.includes("women's") || catLower.includes("(women)") || category.name === "Bridal Services" || category.name === "Saree Draping";
+                        // Shorten long gender-prefixed names for compact pill display
+                        const pillName = (category.name || '')
+                          .replace(/^Men's\s+/i, '')
+                          .replace(/^Women's\s+/i, '')
+                          .replace(/\s*\(Men\)\s*$/i, '')
+                          .replace(/\s*\(Women\)\s*$/i, '');
                         return (
                         <button
                           key={category.id}
                           onClick={() => setSelectedCategoryFilter(category.id)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 whitespace-nowrap ${
                             selectedCategoryFilter === category.id
                               ? "text-white shadow-md"
                               : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
@@ -1379,14 +1387,14 @@ export default function SalonDetail() {
                           data-testid={`filter-category-${category.id}`}
                         >
                           <div 
-                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                             style={{ 
-                              backgroundColor: selectedCategoryFilter === category.id ? "rgba(255,255,255,0.3)" : category.color || '#3B82F6' 
+                              backgroundColor: selectedCategoryFilter === category.id ? "rgba(255,255,255,0.4)" : category.color || '#3B82F6' 
                             }}
                           />
-                          <span>{category.name}</span>
-                          {isMen && <span className="text-xs opacity-80">♂</span>}
-                          {isWomen && <span className="text-xs opacity-80">♀</span>}
+                          <span>{pillName}</span>
+                          {isMen && <span className="opacity-70">♂</span>}
+                          {isWomen && <span className="opacity-70">♀</span>}
                         </button>
                         );
                       })}
