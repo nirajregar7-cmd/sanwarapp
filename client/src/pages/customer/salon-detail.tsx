@@ -1970,14 +1970,45 @@ export default function SalonDetail() {
             {/* Facilities */}
             {Array.isArray(facilities) && facilities.length > 0 && (
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-2">
                   <CardTitle className="flex items-center">
                     <span className="mr-2">🏢</span>
                     Facilities
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <CardContent className="px-0 pb-4">
+                  {/* Mobile: horizontal scroll carousel */}
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1 sm:hidden"
+                    style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+                    {facilities.map((facility: any) => (
+                      <div
+                        key={facility.id}
+                        style={{ scrollSnapAlign: "start", minWidth: "72vw", maxWidth: "72vw" }}
+                        className={`flex-shrink-0 flex flex-col p-3 rounded-xl border shadow-sm ${
+                          facility.isAvailable
+                            ? "bg-green-50 border-green-200"
+                            : "bg-gray-50 border-gray-200"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{facility.icon || "🔧"}</span>
+                            <span className="font-semibold text-sm">{facility.name}</span>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                            facility.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                          }`}>
+                            {facility.isAvailable ? "Available" : "Unavailable"}
+                          </span>
+                        </div>
+                        {facility.description && (
+                          <p className="text-xs text-gray-500 mt-1">{facility.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Desktop: grid */}
+                  <div className="hidden sm:grid grid-cols-2 gap-3 px-4">
                     {facilities.map((facility: any) => (
                       <div
                         key={facility.id}
@@ -1993,18 +2024,12 @@ export default function SalonDetail() {
                             <span className="font-medium">{facility.name}</span>
                           </div>
                           {facility.description && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              {facility.description}
-                            </p>
+                            <p className="text-sm text-gray-600 mt-1">{facility.description}</p>
                           )}
                         </div>
-                        <div
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            facility.isAvailable
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          facility.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                        }`}>
                           {facility.isAvailable ? "Available" : "Unavailable"}
                         </div>
                       </div>
@@ -2017,14 +2042,63 @@ export default function SalonDetail() {
             {/* Products */}
             {Array.isArray(products) && products.length > 0 && (
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-2">
                   <CardTitle className="flex items-center">
                     <span className="mr-2">🛍️</span>
                     Products
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <CardContent className="px-0 pb-4">
+                  {/* Mobile: horizontal scroll carousel */}
+                  <div
+                    className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1 sm:hidden"
+                    style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+                  >
+                    {products.map((product: any) => (
+                      <div
+                        key={product.id}
+                        style={{ scrollSnapAlign: "start", minWidth: "72vw", maxWidth: "72vw" }}
+                        className="flex-shrink-0 border rounded-xl p-3 shadow-sm bg-white"
+                      >
+                        {product.imageUrl && (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="w-full h-28 object-cover rounded-lg mb-2"
+                          />
+                        )}
+                        <div className="space-y-1">
+                          <h4 className="font-semibold text-sm leading-tight">{product.name}</h4>
+                          {product.brand && (
+                            <p className="text-xs text-gray-500">Brand: {product.brand}</p>
+                          )}
+                          {product.category && (
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full inline-block">
+                              {product.category}
+                            </span>
+                          )}
+                          {product.description && (
+                            <p className="text-xs text-gray-600 line-clamp-2">{product.description}</p>
+                          )}
+                          <div className="flex items-center justify-between pt-1">
+                            {product.price && (
+                              <span className="font-bold text-primary text-sm">₹{product.price}</span>
+                            )}
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              product.inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                            }`}>
+                              {product.inStock ? "In Stock" : "Out of Stock"}
+                            </span>
+                          </div>
+                          {product.stockQuantity > 0 && (
+                            <p className="text-xs text-gray-400">{product.stockQuantity} units available</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Desktop: grid */}
+                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 gap-4 px-4">
                     {products.map((product: any) => (
                       <div
                         key={product.id}
@@ -2054,20 +2128,14 @@ export default function SalonDetail() {
                             {product.price && (
                               <span className="font-bold text-primary">₹{product.price}</span>
                             )}
-                            <div
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                product.inStock
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                              }`}
-                            >
+                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              product.inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                            }`}>
                               {product.inStock ? "In Stock" : "Out of Stock"}
                             </div>
                           </div>
                           {product.stockQuantity > 0 && (
-                            <p className="text-xs text-gray-500">
-                              {product.stockQuantity} units available
-                            </p>
+                            <p className="text-xs text-gray-500">{product.stockQuantity} units available</p>
                           )}
                         </div>
                       </div>
