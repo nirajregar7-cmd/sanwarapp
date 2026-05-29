@@ -8209,9 +8209,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(__dirname, '../public/seo/sitemap.xml'));
   });
   
-  // Robots.txt for SEO
+  // Robots.txt for SEO — serve the complete version that allows all crawlers
   app.get('/robots.txt', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/seo/robots.txt'));
+    res.type('text/plain');
+    res.send(`User-agent: *
+Allow: /
+
+# Block admin, API, and internal routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth
+Disallow: /owner/
+Disallow: /_next/
+Disallow: /node_modules/
+Disallow: /.env
+Disallow: /server/
+
+# Sitemap location
+Sitemap: https://sanwarhub.in/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
+`);
   });
 
   // Salon Offers API endpoints
