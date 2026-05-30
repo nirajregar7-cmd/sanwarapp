@@ -1407,65 +1407,65 @@ export default function SalonDetail() {
                 ) : servicesByCategory.length > 0 ? (
                   <div className="space-y-4">
                     {/* Category Filter Buttons — single scrollable row on mobile */}
-                    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 bg-gray-50 rounded-lg p-3"
-                      style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
-                      <button
-                        onClick={() => setSelectedCategoryFilter("all")}
-                        style={{ scrollSnapAlign: "start" }}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                          selectedCategoryFilter === "all"
-                            ? "bg-primary text-white shadow-md"
-                            : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-                        }`}
-                        data-testid="filter-category-all"
-                      >
-                        All Services
-                      </button>
-                      {servicesByCategory.map((category) => {
-                        const catLower = (category.name || '').toLowerCase();
-                        const isMen = catLower.includes("men's") || catLower.includes("(men)") || category.name === "Beard & Grooming";
-                        const isWomen = catLower.includes("women's") || catLower.includes("(women)") || category.name === "Bridal Services" || category.name === "Saree Draping";
-                        // Shorten long gender-prefixed names for compact pill display
-                        const pillName = (category.name || '')
-                          .replace(/^Men's\s+/i, '')
-                          .replace(/^Women's\s+/i, '')
-                          .replace(/\s*\(Men\)\s*$/i, '')
-                          .replace(/\s*\(Women\)\s*$/i, '');
-                        return (
+                    <div className="relative">
+                      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 bg-gray-50 rounded-lg p-3"
+                        style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
                         <button
-                          key={category.id}
-                          onClick={() => setSelectedCategoryFilter(category.id)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 whitespace-nowrap ${
-                            selectedCategoryFilter === category.id
-                              ? "text-white shadow-md"
+                          onClick={() => setSelectedCategoryFilter("all")}
+                          style={{ scrollSnapAlign: "start" }}
+                          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                            selectedCategoryFilter === "all"
+                              ? "bg-primary text-white shadow-md"
                               : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
                           }`}
-                          style={{
-                            backgroundColor: selectedCategoryFilter === category.id ? category.color || '#3B82F6' : undefined
-                          }}
-                          data-testid={`filter-category-${category.id}`}
+                          data-testid="filter-category-all"
                         >
-                          <div 
-                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                            style={{ 
-                              backgroundColor: selectedCategoryFilter === category.id ? "rgba(255,255,255,0.4)" : category.color || '#3B82F6' 
-                            }}
-                          />
-                          <span>{pillName}</span>
-                          {isMen && <span className="opacity-70">♂</span>}
-                          {isWomen && <span className="opacity-70">♀</span>}
+                          All Services
                         </button>
-                        );
-                      })}
+                        {servicesByCategory.map((category) => {
+                          const catLower = (category.name || '').toLowerCase();
+                          const isMen = catLower.includes("men's") || catLower.includes("(men)") || category.name === "Beard & Grooming";
+                          const isWomen = catLower.includes("women's") || catLower.includes("(women)") || category.name === "Bridal Services" || category.name === "Saree Draping";
+                          const pillName = (category.name || '')
+                            .replace(/^Men's\s+/i, '')
+                            .replace(/^Women's\s+/i, '')
+                            .replace(/\s*\(Men\)\s*$/i, '')
+                            .replace(/\s*\(Women\)\s*$/i, '');
+                          return (
+                          <button
+                            key={category.id}
+                            onClick={() => setSelectedCategoryFilter(category.id)}
+                            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 whitespace-nowrap ${
+                              selectedCategoryFilter === category.id
+                                ? "text-white shadow-md"
+                                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                            }`}
+                            style={{
+                              backgroundColor: selectedCategoryFilter === category.id ? category.color || '#3B82F6' : undefined
+                            }}
+                            data-testid={`filter-category-${category.id}`}
+                          >
+                            <div
+                              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                              style={{
+                                backgroundColor: selectedCategoryFilter === category.id ? "rgba(255,255,255,0.4)" : category.color || '#3B82F6'
+                              }}
+                            />
+                            <span>{pillName}</span>
+                            {isMen && <span className="opacity-70">♂</span>}
+                            {isWomen && <span className="opacity-70">♀</span>}
+                          </button>
+                          );
+                        })}
+                      </div>
+                      {/* Right-side fade for scroll cue */}
+                      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none rounded-r-lg" />
                     </div>
-                    
+
                     <div
                       ref={servicesScrollRef}
                       onScroll={handleServicesScroll}
-                      onLoad={() => {
-                        const el = servicesScrollRef.current;
-                        if (el) setServicesCanScrollDown(el.scrollHeight > el.clientHeight);
-                      }}
+                      data-initialized="true"
                       className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 relative"
                     >
                       <div className="space-y-6">
