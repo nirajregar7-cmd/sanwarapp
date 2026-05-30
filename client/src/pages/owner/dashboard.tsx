@@ -698,14 +698,14 @@ const ALL_SERVICES_BY_GENDER = {
 
 // Premade staff templates for quick add
 const PREMADE_STAFF = [
-  { name: "Ravi Kumar", role: "Senior Hair Stylist", phone: "", email: "", specialties: ["Hair Cutting", "Coloring", "Styling"], experience: "5+ years" },
-  { name: "Priya Sharma", role: "Beautician", phone: "", email: "", specialties: ["Facials", "Waxing", "Threading"], experience: "3+ years" },
-  { name: "Amit Singh", role: "Barber", phone: "", email: "", specialties: ["Beard Styling", "Shaving", "Men's Haircuts"], experience: "4+ years" },
-  { name: "Neha Gupta", role: "Nail Technician", phone: "", email: "", specialties: ["Manicure", "Pedicure", "Nail Art"], experience: "2+ years" },
-  { name: "Rajesh Verma", role: "Massage Therapist", phone: "", email: "", specialties: ["Full Body Massage", "Head Massage", "Back Massage"], experience: "6+ years" },
-  { name: "Anita Patel", role: "Bridal Makeup Artist", phone: "", email: "", specialties: ["Bridal Makeup", "Mehndi", "HD Makeup"], experience: "7+ years" },
-  { name: "Suresh Yadav", role: "Hair Colorist", phone: "", email: "", specialties: ["Hair Coloring", "Highlights", "Balayage"], experience: "4+ years" },
-  { name: "Pooja Mehta", role: "Skin Specialist", phone: "", email: "", specialties: ["Facials", "Skin Treatment", "De-Tan"], experience: "3+ years" },
+  { name: "Ravi Kumar", role: "Senior Hair Stylist", phone: "", email: "", specialties: ["Hair Cutting", "Coloring", "Styling"], experience: "5+ years", description: "Expert in precision cuts, creative coloring, and trend-forward styling. Known for transforming looks with a personalized approach for every client." },
+  { name: "Priya Sharma", role: "Beautician", phone: "", email: "", specialties: ["Facials", "Waxing", "Threading"], experience: "3+ years", description: "Skilled in skin care routines, facial treatments, and precise threading. Dedicated to giving every client a flawless, refreshed look." },
+  { name: "Amit Singh", role: "Barber", phone: "", email: "", specialties: ["Beard Styling", "Shaving", "Men's Haircuts"], experience: "4+ years", description: "Specializes in sharp fades, classic shaves, and well-groomed beard shaping. A go-to stylist for men who value a clean, confident look." },
+  { name: "Neha Gupta", role: "Nail Technician", phone: "", email: "", specialties: ["Manicure", "Pedicure", "Nail Art"], experience: "2+ years", description: "Creative nail artist with a flair for intricate designs and long-lasting finishes. Delivers salon-quality manicures and pedicures every time." },
+  { name: "Rajesh Verma", role: "Massage Therapist", phone: "", email: "", specialties: ["Full Body Massage", "Head Massage", "Back Massage"], experience: "6+ years", description: "Certified therapist trained in relaxation and deep-tissue techniques. Helps clients de-stress and rejuvenate with every session." },
+  { name: "Anita Patel", role: "Bridal Makeup Artist", phone: "", email: "", specialties: ["Bridal Makeup", "Mehndi", "HD Makeup"], experience: "7+ years", description: "Transforms brides into their most radiant selves with flawless HD makeup and mehndi artistry. Trusted by hundreds of happy brides." },
+  { name: "Suresh Yadav", role: "Hair Colorist", phone: "", email: "", specialties: ["Hair Coloring", "Highlights", "Balayage"], experience: "4+ years", description: "Color specialist with expertise in highlights, balayage, and custom blends. Creates vibrant, damage-free color results tailored to each client." },
+  { name: "Pooja Mehta", role: "Skin Specialist", phone: "", email: "", specialties: ["Facials", "Skin Treatment", "De-Tan"], experience: "3+ years", description: "Focuses on skin health through targeted facials and de-tan treatments. Helps clients achieve clear, glowing skin with every visit." },
 ];
 
 // Premade FAQs for wizard setup
@@ -5751,6 +5751,9 @@ export default function OwnerDashboard() {
                         <p className="text-xs text-gray-400 truncate">
                           {member.specialties?.join(', ')}
                         </p>
+                        <p className="text-xs text-gray-500 leading-relaxed mt-1 line-clamp-2">
+                          {member.description}
+                        </p>
                       </div>
                     </div>
                   );
@@ -6490,6 +6493,9 @@ export default function OwnerDashboard() {
                             {alreadyExists ? "Added" : isSelected ? "✓ Selected" : "Select"}
                           </button>
                         </div>
+                        <p className="text-xs text-gray-500 leading-relaxed mt-1.5 line-clamp-2">
+                          {member.description}
+                        </p>
                         {isSelected && !alreadyExists && (
                           <div className="space-y-1.5 mt-1">
                             <input type="text" value={edits.name}
