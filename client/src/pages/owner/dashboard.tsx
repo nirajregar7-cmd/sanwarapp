@@ -23,6 +23,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { LeafletLocationPicker } from "@/components/LeafletLocationPicker";
+import { OwnerShowcasePanel } from "@/components/OwnerShowcasePanel";
 import type { UploadResult } from '@uppy/core';
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -2349,6 +2350,7 @@ export default function OwnerDashboard() {
                   >
                     {salon?.verificationStatus !== 'approved' ? '🔒' : '🔥'} Hire Staff
                   </TabsTrigger>
+                  <TabsTrigger value="showcase" className="text-xs py-3">Showcase</TabsTrigger>
                   <TabsTrigger value="settings" className="text-xs py-3" data-testid="settings-tab">Settings</TabsTrigger>
                 </TabsList>
               </div>
@@ -2371,6 +2373,7 @@ export default function OwnerDashboard() {
                   >
                     {salon?.verificationStatus !== 'approved' ? '🔒' : '🔥'} Hire Staff
                   </TabsTrigger>
+                  <TabsTrigger value="showcase" className="text-sm">Showcase</TabsTrigger>
                   <TabsTrigger value="settings" className="text-sm">Settings</TabsTrigger>
                 </TabsList>
               </div>
@@ -4075,6 +4078,10 @@ export default function OwnerDashboard() {
                   </div>
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="showcase" className="space-y-6">
+              <OwnerShowcasePanel />
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-6">

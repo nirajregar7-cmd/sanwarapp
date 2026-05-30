@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MoodRatingDisplay } from "@/components/MoodRatingSelector";
 import { ReviewPhotoGallery } from "@/components/ReviewPhotoGallery";
+import { CustomerShowcaseSection } from "@/components/CustomerShowcase";
 import { ReviewForm } from "./review-form";
 import { ReplyForm } from "@/components/ReplyForm";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
@@ -1642,6 +1643,13 @@ export default function SalonDetail() {
                 ) : (
                   <p className="text-gray-600 text-center py-8">No services available</p>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Real Customer Photos Showcase */}
+            <Card>
+              <CardContent className="pt-6">
+                <CustomerShowcaseSection salonId={salonId!} salonName={salon?.name} />
               </CardContent>
             </Card>
 

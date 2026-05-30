@@ -9,6 +9,7 @@ import {
   reviews,
   reviewReplies,
   salonGallery,
+  customerShowcase,
   salonLikes,
   salonOwnerAccounts,
   referrals,
@@ -56,6 +57,8 @@ import {
   type InsertReviewReply,
   type SalonGallery,
   type InsertSalonGallery,
+  type CustomerShowcase,
+  type InsertCustomerShowcase,
   type SalonLike,
   type InsertSalonLike,
   type Referral,
@@ -161,6 +164,14 @@ export interface IStorage {
   getGalleryImagesBySalon(salonId: string): Promise<SalonGallery[]>;
   updateGalleryImage(id: string, galleryImage: Partial<InsertSalonGallery>): Promise<SalonGallery | undefined>;
   deleteGalleryImage(id: string): Promise<void>;
+
+  // Customer showcase operations
+  createCustomerShowcase(entry: InsertCustomerShowcase): Promise<CustomerShowcase>;
+  getCustomerShowcaseBySalon(salonId: string): Promise<CustomerShowcase[]>;
+  getPendingCustomerShowcaseBySalon(salonId: string): Promise<CustomerShowcase[]>;
+  approveCustomerShowcase(id: string, salonId: string): Promise<CustomerShowcase | undefined>;
+  rejectCustomerShowcase(id: string, salonId: string): Promise<void>;
+  getCustomerShowcaseByCustomer(customerId: string): Promise<CustomerShowcase[]>;
 
   // Referral operations
   getReferralByCode(referralCode: string): Promise<Referral | undefined>;
@@ -1194,6 +1205,63 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGalleryImage(id: string): Promise<void> {
     await db.update(salonGallery).set({ isActive: false }).where(eq(salonGallery.id, id));
+  }
+
+  // Customer showcase operations
+  async createCustomerShowcase(entry: InsertCustomerShowcase): Promise<CustomerShowcase> {
+    const [newEntry] = await db.insert(customerShowcase).values(entry).returning();
+    return newEntry;
+  }
+
+  async getCustomerShowcaseBySalon(salonId: string): Promise<CustomerShowcase[]> {
+    return await db
+      .select()
+      .from(customerShowcase)
+      .where(and(
+        eq(customerShowcase.salonId, salonId),
+        eq(customerShowcase.isApproved, true)
+      ))
+      .orderBy(desc(customerShowcase.createdAt));
+  }
+
+  async getPendingCustomerShowcaseBySalon(salonId: string): Promise<CustomerShowcase[]> {
+    return await db
+      .select()
+      .from(customerShowcase)
+      .where(and(
+        eq(customerShowcase.salonId, salonId),
+        eq(customerShowcase.isApproved, false)
+      ))
+      .orderBy(desc(customerShowcase.createdAt));
+  }
+
+  async approveCustomerShowcase(id: string, salonId: string): Promise<CustomerShowcase | undefined> {
+    const [entry] = await db
+      .update(customerShowcase)
+      .set({ isApproved: true, isRewarded: true, updatedAt: new Date() })
+      .where(and(
+        eq(customerShowcase.id, id),
+        eq(customerShowcase.salonId, salonId)
+      ))
+      .returning();
+    return entry;
+  }
+
+  async rejectCustomerShowcase(id: string, salonId: string): Promise<void> {
+    await db
+      .delete(customerShowcase)
+      .where(and(
+        eq(customerShowcase.id, id),
+        eq(customerShowcase.salonId, salonId)
+      ));
+  }
+
+  async getCustomerShowcaseByCustomer(customerId: string): Promise<CustomerShowcase[]> {
+    return await db
+      .select()
+      .from(customerShowcase)
+      .where(eq(customerShowcase.customerId, customerId))
+      .orderBy(desc(customerShowcase.createdAt));
   }
 
   // Referral operations

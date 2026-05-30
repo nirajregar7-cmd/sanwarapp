@@ -18,7 +18,7 @@ import {
 import { db } from "./db";
 import { platformStats } from "@shared/schema";
 import { ObjectPermission } from "./objectAcl";
-import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, staffOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos, salonChats, salonFollowers, staffRegistrations, staffJobOffers } from "@shared/schema";
+import { insertSalonSchema, insertServiceSchema, insertWorkingHoursSchema, insertTimeSlotSchema, insertBookingSchema, insertWalkInBookingSchema, insertReviewSchema, insertPasswordResetOtpSchema, insertEmailVerificationOtpSchema, insertFeedbackSchema, insertHelpTicketSchema, insertHelpTicketMessageSchema, insertSalonFacilitySchema, insertSalonProductSchema, insertEmergencyWaitlistSchema, insertSalonEmergencyConfigSchema, insertEmergencySlotSchema, insertSalonOfferSchema, insertSalonOfferUsageSchema, insertProfileVisitSchema, insertSalonOwnerOtpSchema, insertPaymentOrderSchema, insertUpcomingFeatureVideoSchema, salons, users, bookings, services, serviceCategories, staff, reviews, workingHours, timeSlots, salonOwnerAccounts, revenueShares, notificationSettings, notificationHistory, pushSubscriptions, referrals, referralMilestones, freeBookingCredits, feedback, helpTickets, helpTicketMessages, salonFacilities, salonProducts, brandOffers, offerUsages, brandMessages, emailVerificationOtps, staffServices, staffWorkingHours, salonOffers, salonOfferUsage, profileVisits, salonMedia, salonOwnerOtps, staffOtps, paymentOrders, faqs, sanwarDiscountCards, upcomingFeatureVideos, salonChats, salonFollowers, staffRegistrations, staffJobOffers, customerShowcase } from "@shared/schema";
 import { sendBookingConfirmationNotification, sendSalonOwnerBookingNotification, notifyFollowersNewOffer } from "./notifications";
 import { sendWelcomeEmail, testEmailConnection, sendDiscountCardEmail } from "./welcomeEmail";
 import { sendEmailVerificationOtp } from "./emailService";
@@ -1042,6 +1042,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Customer Showcase — real customer photos at salon
+  app.get('/api/salons/:salonId/showcase', async (req, res) => {
+    try {
+      const { salonId } = req.params;
+      const showcase = await storage.getCustomerShowcaseBySalon(salonId);
+      res.json(showcase);
+    } catch (error) {
+      console.error("Error fetching customer showcase:", error);
+      res.status(500).json({ message: "Failed to fetch showcase" });
+    }
+  });
+
+  // Customer submits a showcase photo
+  app.post('/api/salons/:salonId/showcase', isAuthenticated, async (req: any, res) => {
+    try {
+      const { salonId } = req.params;
+      const customerId = req.user?.id;
+      const { photoUrl, caption, serviceName } = req.body;
+
+      if (!photoUrl) {
+        return res.status(400).json({ message: "Photo URL is required" });
+      }
+
+      const entry = await storage.createCustomerShowcase({
+        salonId,
+        customerId,
+        customerName: req.user?.firstName || req.user?.name || "Customer",
+        photoUrl,
+        caption: caption || null,
+        serviceName: serviceName || null,
+        isApproved: false,
+        isRewarded: false,
+        rewardAmount: "30",
+      });
+
+      res.status(201).json({ message: "Photo submitted! It will appear after salon owner approval.", entry });
+    } catch (error) {
+      console.error("Error creating showcase entry:", error);
+      res.status(500).json({ message: "Failed to submit photo" });
+    }
+  });
 
   // Salon working hours endpoint
   app.get('/api/salons/:salonId/working-hours', async (req, res) => {
@@ -3272,6 +3313,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Owner — get pending showcase submissions for approval
+  app.get('/api/owner/salon/showcase', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const [salon] = await db.select().from(salons).where(eq(salons.ownerId, userId));
+      if (!salon) return res.status(404).json({ message: "Salon not found" });
+
+      const pending = await storage.getPendingCustomerShowcaseBySalon(salon.id);
+      const approved = await storage.getCustomerShowcaseBySalon(salon.id);
+      res.json({ pending, approved, salonId: salon.id });
+    } catch (error) {
+      console.error("Error fetching owner showcase:", error);
+      res.status(500).json({ message: "Failed to fetch showcase" });
+    }
+  });
+
+  // Owner — approve a showcase photo (and credit customer wallet)
+  app.post('/api/owner/salon/showcase/:id/approve', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { id } = req.params;
+      const [salon] = await db.select().from(salons).where(eq(salons.ownerId, userId));
+      if (!salon) return res.status(404).json({ message: "Salon not found" });
+
+      const entry = await storage.approveCustomerShowcase(id, salon.id);
+      if (!entry) return res.status(404).json({ message: "Showcase entry not found" });
+
+      // Credit customer wallet
+      const rewardAmount = parseFloat(entry.rewardAmount || "30");
+      await storage.addWalletCredit(
+        entry.customerId,
+        rewardAmount,
+        `📸 Photo showcase reward at ${salon.name}`,
+        entry.id,
+        "showcase"
+      );
+
+      res.json({ message: `Approved! Customer received ₹${rewardAmount} wallet credit.`, entry });
+    } catch (error) {
+      console.error("Error approving showcase:", error);
+      res.status(500).json({ message: "Failed to approve showcase" });
+    }
+  });
+
+  // Owner — reject/delete a showcase photo
+  app.delete('/api/owner/salon/showcase/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { id } = req.params;
+      const [salon] = await db.select().from(salons).where(eq(salons.ownerId, userId));
+      if (!salon) return res.status(404).json({ message: "Salon not found" });
+
+      await storage.rejectCustomerShowcase(id, salon.id);
+      res.json({ message: "Photo removed." });
+    } catch (error) {
+      console.error("Error rejecting showcase:", error);
+      res.status(500).json({ message: "Failed to remove showcase" });
+    }
+  });
+
   // Update queue status for salon owner
   app.put('/api/owner/salon/queue', isAuthenticated, async (req: any, res) => {
     try {
@@ -4153,71 +4254,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Direct file upload endpoint for staff photos
   app.post("/api/upload", isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
-      console.log("Direct file upload request from user:", req.user?.id);
-      
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
-      
-      console.log("Uploaded file:", req.file.originalname, req.file.size, "bytes");
-      
-      const objectStorageService = new ObjectStorageService();
-      
-      // Generate unique filename
+
       const { randomUUID } = await import('crypto');
-      const fileExtension = req.file.originalname.split('.').pop() || 'jpg';
-      const filename = `${randomUUID()}.${fileExtension}`;
-      
-      // Get the private object directory
-      const privateDir = objectStorageService.getPrivateObjectDir();
-      const fullPath = `${privateDir}/uploads/${filename}`;
-      
-      // Parse the object path manually
-      let path = fullPath.startsWith("/") ? fullPath : `/${fullPath}`;
-      const pathParts = path.split("/");
-      if (pathParts.length < 3) {
-        throw new Error("Invalid path: must contain at least a bucket name");
-      }
-      const bucketName = pathParts[1];
-      const objectName = pathParts.slice(2).join("/");
-      
-      console.log("Storing file as:", `${bucketName}/${objectName}`);
-      
-      // Upload directly to Google Cloud Storage
-      const bucket = objectStorageClient.bucket(bucketName);
-      const file = bucket.file(objectName);
-      
-      // Upload the file
-      await file.save(req.file.buffer, {
-        metadata: {
-          contentType: req.file.mimetype,
-        },
-        validation: false,
-      });
-      
-      console.log("File uploaded successfully");
-      
-      // Set ACL policy for the uploaded file to make it accessible
-      try {
-        await objectStorageService.trySetObjectEntityAclPolicy(
-          `/objects/uploads/${filename}`,
-          {
-            owner: req.user.id,
-            visibility: "public", // Staff photos should be publicly accessible
-          }
-        );
-        console.log("ACL policy set successfully for uploaded file");
-      } catch (aclError) {
-        console.error("Error setting ACL policy:", aclError);
-        // Don't fail the upload if ACL setting fails
-      }
-      
-      // Return the object path in the expected format
-      const objectPath = `/objects/uploads/${filename}`;
-      
-      res.json({ 
-        url: objectPath,
-        path: objectPath,
+      const { writeFile, mkdir } = await import('fs/promises');
+      const { join } = await import('path');
+
+      const uploadsDir = join(process.cwd(), 'uploads');
+      await mkdir(uploadsDir, { recursive: true });
+
+      const ext = (req.file.originalname.split('.').pop() || 'jpg').toLowerCase();
+      const filename = `${randomUUID()}.${ext}`;
+      const filePath = join(uploadsDir, filename);
+      await writeFile(filePath, req.file.buffer);
+
+      res.json({
+        url: `/uploads/${filename}`,
+        path: `/uploads/${filename}`,
         filename: filename
       });
     } catch (error) {

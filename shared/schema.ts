@@ -604,7 +604,7 @@ export const walletTransactions = pgTable("wallet_transactions", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   description: text("description").notNull(),
   referenceId: varchar("reference_id"), // booking_id, referral_id, etc.
-  referenceType: varchar("reference_type", { enum: ["booking", "referral", "admin"] }),
+  referenceType: varchar("reference_type", { enum: ["booking", "referral", "admin", "showcase"] }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -651,6 +651,22 @@ export const profileVisits = pgTable("profile_visits", {
   visitDuration: integer("visit_duration"), // in seconds, can be updated when user leaves
   pageViewed: varchar("page_viewed").default("profile"), // profile, services, reviews, etc.
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Customer Showcase — real customer photos at salons
+export const customerShowcase = pgTable("customer_showcase", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salonId: varchar("salon_id").references(() => salons.id, { onDelete: "cascade" }).notNull(),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  customerName: varchar("customer_name", { length: 100 }), // Display name
+  photoUrl: text("photo_url").notNull(), // Customer selfie photo
+  caption: text("caption"), // Optional story/caption
+  serviceName: varchar("service_name", { length: 100 }), // What service they got
+  isApproved: boolean("is_approved").default(false), // Owner must approve
+  isRewarded: boolean("is_rewarded").default(false), // Wallet credit given
+  rewardAmount: decimal("reward_amount", { precision: 10, scale: 2 }).default("30"), // Default ₹30
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Free booking credits table
@@ -1318,6 +1334,12 @@ export const insertSalonGallerySchema = createInsertSchema(salonGallery).omit({
   createdAt: true,
 });
 
+export const insertCustomerShowcaseSchema = createInsertSchema(customerShowcase).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Salon facilities schemas
 export const insertSalonFacilitySchema = createInsertSchema(salonFacilities).omit({
   id: true,
@@ -1508,6 +1530,8 @@ export type SalonGallery = typeof salonGallery.$inferSelect;
 export type SalonMedia = typeof salonMedia.$inferSelect;
 export type InsertSalonMedia = typeof salonMedia.$inferInsert;
 export type InsertSalonGallery = z.infer<typeof insertSalonGallerySchema>;
+export type CustomerShowcase = typeof customerShowcase.$inferSelect;
+export type InsertCustomerShowcase = typeof customerShowcase.$inferInsert;
 export type SalonFacility = typeof salonFacilities.$inferSelect;
 export type InsertSalonFacility = z.infer<typeof insertSalonFacilitySchema>;
 export type SalonProduct = typeof salonProducts.$inferSelect;
