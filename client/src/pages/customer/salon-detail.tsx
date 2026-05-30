@@ -1406,13 +1406,28 @@ export default function SalonDetail() {
                   </div>
                 ) : servicesByCategory.length > 0 ? (
                   <div className="space-y-4">
-                    {/* Category Filter Buttons — single scrollable row on mobile */}
-                    <div className="relative">
-                      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 bg-gray-50 rounded-lg p-3"
-                        style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+                    {/* Category Filter Buttons — scrollable with arrow controls */}
+                    <div className="relative flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById('category-scroll');
+                          if (el) el.scrollBy({ left: -150, behavior: 'smooth' });
+                        }}
+                        className="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-500 hover:text-primary hover:border-primary transition-colors"
+                        aria-label="Scroll left"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+
+                      <div
+                        id="category-scroll"
+                        className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 bg-gray-50 rounded-lg p-3 flex-1"
+                        style={{ WebkitOverflowScrolling: "touch" }}
+                      >
                         <button
                           onClick={() => setSelectedCategoryFilter("all")}
-                          style={{ scrollSnapAlign: "start" }}
                           className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                             selectedCategoryFilter === "all"
                               ? "bg-primary text-white shadow-md"
@@ -1458,8 +1473,19 @@ export default function SalonDetail() {
                           );
                         })}
                       </div>
-                      {/* Right-side fade for scroll cue */}
-                      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none rounded-r-lg" />
+
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById('category-scroll');
+                          if (el) el.scrollBy({ left: 150, behavior: 'smooth' });
+                        }}
+                        className="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-500 hover:text-primary hover:border-primary transition-colors"
+                        aria-label="Scroll right"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
 
                     <div
