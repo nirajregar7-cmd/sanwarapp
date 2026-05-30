@@ -22,10 +22,12 @@ import {
   RotateCcw,
   Phone,
   Bell,
+  Share2,
 } from "lucide-react";
 import type { BookingWithDetails } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
+import { BookingShareCard } from "@/components/BookingShareCard";
 
 interface GroupedBooking extends BookingWithDetails {
   servicesList: string[];
@@ -40,6 +42,10 @@ export default function CustomerBookings() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
+  const [shareBooking, setShareBooking] = useState<null | {
+    id: string; salonName: string; salonAddress?: string; services: string[];
+    date: string; startTime: string; endTime: string; staffName?: string; totalAmount: number;
+  }>(null);
 
   const groupBookingsByAppointment = (bookings: BookingWithDetails[]): GroupedBooking[] => {
     const groups = new Map<string, BookingWithDetails[]>();
@@ -469,16 +475,39 @@ export default function CustomerBookings() {
 
                     <div className="flex gap-2">
                       {booking.groupStatus === "completed" ? (
-                        <Link href={`/salon/${booking.salonId}?review=true`}>
+                        <>
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-8 text-xs rounded-xl border-purple-200 text-purple-700 hover:bg-purple-50"
+                            onClick={() => setShareBooking({
+                              id: booking.id,
+                              salonName: (booking as any).salonName || "Salon",
+                              salonAddress: (booking as any).salonAddress,
+                              services: (booking as any).servicesList || [booking.serviceName || "Service"],
+                              date: booking.date,
+                              startTime: booking.startTime,
+                              endTime: booking.endTime,
+                              staffName: (booking as any).staffName,
+                              totalAmount: (booking as any).totalGroupAmount > 0
+                                ? (booking as any).totalGroupAmount
+                                : parseFloat(booking.totalAmount?.toString() || '0'),
+                            })}
                           >
-                            <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
-                            Review
+                            <Share2 className="h-3 w-3 mr-1" />
+                            Share
                           </Button>
-                        </Link>
+                          <Link href={`/salon/${booking.salonId}?review=true`}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs rounded-xl border-purple-200 text-purple-700 hover:bg-purple-50"
+                            >
+                              <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+                              Review
+                            </Button>
+                          </Link>
+                        </>
                       ) : (booking.groupStatus === "confirmed" ||
                           booking.groupStatus === "pending") &&
                         upcoming ? (
@@ -517,6 +546,14 @@ export default function CustomerBookings() {
       <LikedSalons />
       <FollowingSalons />
       <div className="h-6" />
+
+      {shareBooking && (
+        <BookingShareCard
+          open={!!shareBooking}
+          onClose={() => setShareBooking(null)}
+          booking={shareBooking}
+        />
+      )}
     </div>
   );
 }

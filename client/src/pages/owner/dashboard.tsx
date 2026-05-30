@@ -17,8 +17,9 @@ import {
   BarChart3, DollarSign, UserPlus, Settings, Scissors, CheckCircle, Upload,
   CreditCard, Camera, User, MessageSquare, AlertCircle, Percent, Video, Play, 
   HelpCircle, Edit2, Palette, Tags, Mail, LogOut, Shield, Gift, Send, MessageCircle, ArrowLeft,
-  Zap, Layers, Package, CheckSquare, Sparkles, X, Loader2
+  Zap, Layers, Package, CheckSquare, Sparkles, X, Loader2, QrCode, Link2, Copy
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { LeafletLocationPicker } from "@/components/LeafletLocationPicker";
@@ -4077,6 +4078,79 @@ export default function OwnerDashboard() {
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-6">
+              {/* Salon QR Code & Shareable Link */}
+              {salon && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <QrCode className="h-5 w-5 text-purple-600" />
+                      Salon QR Code & Share Link
+                    </CardTitle>
+                    <CardDescription>Let customers scan to visit your salon page instantly</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+                      <div className="flex-shrink-0 bg-white border-2 border-purple-100 rounded-2xl p-4 shadow-sm">
+                        <QRCodeSVG
+                          value={`https://sanwarhub.in/salon/${salon.id}`}
+                          size={140}
+                          bgColor="#ffffff"
+                          fgColor="#7c3aed"
+                          level="M"
+                        />
+                        <p className="text-center text-[11px] text-gray-400 mt-2 font-medium">Scan to visit salon</p>
+                      </div>
+                      <div className="flex-1 space-y-4 w-full">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-1">Your Salon Page Link</p>
+                          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+                            <Link2 className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                            <span className="text-sm text-gray-600 truncate flex-1">
+                              sanwarhub.in/salon/{salon.id}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-purple-600 hover:bg-purple-50"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`https://sanwarhub.in/salon/${salon.id}`);
+                                toast({ title: "Link copied!", description: "Share it anywhere to get more bookings." });
+                              }}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            className="rounded-xl border-green-200 text-green-700 hover:bg-green-50"
+                            onClick={() => {
+                              const text = `Book an appointment at *${salon.name}* 💇\n\n👉 https://sanwarhub.in/salon/${salon.id}`;
+                              window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                            }}
+                          >
+                            Share on WhatsApp
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="rounded-xl border-purple-200 text-purple-700 hover:bg-purple-50"
+                            onClick={() => {
+                              const text = `Book an appointment at ${salon.name} 💇 https://sanwarhub.in/salon/${salon.id}`;
+                              navigator.clipboard.writeText(text);
+                              toast({ title: "Copied!", description: "Paste this in Instagram bio or story." });
+                            }}
+                          >
+                            Copy for Instagram
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-400">Print the QR code and display it at your salon counter for walk-in customers to follow you instantly.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Owner Profile Management */}
               <Card>
                 <CardHeader>
