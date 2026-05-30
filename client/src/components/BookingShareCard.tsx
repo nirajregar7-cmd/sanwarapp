@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Share2, X, CheckCircle, Calendar, Clock, MapPin, User, Scissors } from "lucide-react";
+import { Share2, X, CheckCircle, Calendar, Clock, MapPin, User, Scissors, Gift, Sparkles } from "lucide-react";
 import { SiWhatsapp, SiInstagram, SiFacebook, SiTelegram } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +17,7 @@ interface BookingShareCardProps {
     endTime: string;
     staffName?: string;
     totalAmount: number;
+    hasOffer?: boolean;
   };
 }
 
@@ -25,7 +26,11 @@ export function BookingShareCard({ open, onClose, booking }: BookingShareCardPro
   const salonLink = "https://sanwarhub.in";
   const bookingId = booking.id.slice(-6).toUpperCase();
 
-  const shareText = `✂️ Just booked at *${booking.salonName}* via Sanwar!\n\n📅 ${booking.date}\n⏰ ${booking.startTime} – ${booking.endTime}\n💇 ${booking.services.join(", ")}\n\nBook your appointment too 👉 ${salonLink}`;
+  const offerLine = booking.hasOffer
+    ? `\n🎁 *Special offer available* — book via Sanwar & save more!`
+    : `\n💡 Book your salon appointments easily on *Sanwar*`;
+
+  const shareText = `✂️ Just booked at *${booking.salonName}* via Sanwar!${offerLine}\n\n📅 ${booking.date}\n⏰ ${booking.startTime}${booking.endTime ? ` – ${booking.endTime}` : ""}\n💇 ${booking.services.join(", ")}\n\nBook & get exclusive offers 👉 ${salonLink}`;
 
   const shareViaWhatsApp = () =>
     window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
@@ -71,6 +76,7 @@ export function BookingShareCard({ open, onClose, booking }: BookingShareCardPro
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-sm p-0 overflow-hidden rounded-3xl border-0 gap-0 [&>button]:hidden">
+        {/* Header */}
         <div className="relative bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 p-6 pb-10 text-white">
           <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white">
             <X className="h-5 w-5" />
@@ -84,14 +90,23 @@ export function BookingShareCard({ open, onClose, booking }: BookingShareCardPro
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-white/70 text-xs uppercase tracking-widest mb-1">Booking Confirmed</p>
+              <p className="text-white/70 text-xs uppercase tracking-widest mb-1">Booking Confirmed!</p>
               <h2 className="text-xl font-bold leading-tight">{booking.salonName}</h2>
               <p className="text-white/70 text-xs mt-1">#{bookingId}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white mx-4 -mt-6 rounded-2xl shadow-lg p-4 mb-4">
+        {/* Sanwar Offer Banner */}
+        {booking.hasOffer && (
+          <div className="mx-4 -mt-4 bg-gradient-to-r from-amber-400 to-orange-400 rounded-2xl px-4 py-2.5 flex items-center gap-2 shadow-md z-10 relative">
+            <Gift className="h-4 w-4 text-white flex-shrink-0" />
+            <p className="text-white text-xs font-semibold">Special offer available at this salon via Sanwar!</p>
+          </div>
+        )}
+
+        {/* Booking Details Card */}
+        <div className={`bg-white mx-4 ${booking.hasOffer ? "mt-3" : "-mt-6"} rounded-2xl shadow-lg p-4 mb-4`}>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -111,15 +126,19 @@ export function BookingShareCard({ open, onClose, booking }: BookingShareCardPro
                 <p className="text-sm font-semibold text-gray-800">{formattedDate}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Clock className="h-4 w-4 text-amber-500" />
+            {(booking.startTime || booking.endTime) && (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Clock className="h-4 w-4 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time</p>
+                  <p className="text-sm font-semibold text-gray-800">
+                    {booking.startTime}{booking.endTime ? ` – ${booking.endTime}` : ""}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time</p>
-                <p className="text-sm font-semibold text-gray-800">{booking.startTime} – {booking.endTime}</p>
-              </div>
-            </div>
+            )}
             {booking.staffName && (
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-pink-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -143,21 +162,26 @@ export function BookingShareCard({ open, onClose, booking }: BookingShareCardPro
               </div>
             )}
           </div>
-          <div className="mt-4 pt-3 border-t border-dashed border-gray-200 flex items-center justify-between">
-            <span className="text-xs text-gray-400">Total Amount</span>
-            <span className="text-lg font-bold text-purple-700">₹{booking.totalAmount.toFixed(2)}</span>
-          </div>
+          {booking.totalAmount > 0 && (
+            <div className="mt-4 pt-3 border-t border-dashed border-gray-200 flex items-center justify-between">
+              <span className="text-xs text-gray-400">Total Amount</span>
+              <span className="text-lg font-bold text-purple-700">₹{booking.totalAmount.toFixed(2)}</span>
+            </div>
+          )}
         </div>
 
+        {/* Sanwar Promo Strip */}
         <div className="px-4 pb-2">
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl px-4 py-3 text-center border border-purple-100">
-            <p className="text-xs text-gray-500">Book your appointment at</p>
-            <p className="text-sm font-bold text-purple-700">sanwarhub.in</p>
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl px-4 py-3 text-center border border-purple-100 flex items-center justify-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+            <p className="text-xs text-purple-700 font-semibold">Booked via Sanwar · sanwarhub.in</p>
+            <Sparkles className="h-3.5 w-3.5 text-purple-500" />
           </div>
         </div>
 
+        {/* Share Buttons */}
         <div className="px-4 pb-6 pt-2">
-          <p className="text-xs text-gray-400 text-center mb-3">Share your experience</p>
+          <p className="text-xs text-gray-400 text-center mb-3 font-medium">Share on social media</p>
           <div className="grid grid-cols-4 gap-2">
             <button onClick={shareViaWhatsApp} className="flex flex-col items-center gap-1 p-3 bg-green-50 hover:bg-green-100 rounded-2xl transition-colors">
               <SiWhatsapp className="h-6 w-6 text-green-600" />

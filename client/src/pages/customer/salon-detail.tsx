@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
+import { BookingShareCard } from "@/components/BookingShareCard";
 import { 
   ArrowLeft, Star, MapPin, Phone, Mail, Clock, Users, Calendar as CalendarIcon,
   Scissors, Heart, Share2, CheckCircle, IndianRupee, User, Camera, X, Eye,
@@ -68,6 +69,43 @@ export default function SalonDetail() {
   const [expandedFaqs, setExpandedFaqs] = useState<Set<string>>(new Set());
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
   const [cartServiceIds, setCartServiceIds] = useState<string[]>([]);
+  const [showBookingShare, setShowBookingShare] = useState(false);
+  const [bookingShareData, setBookingShareData] = useState<{
+    id: string; salonName: string; salonAddress?: string; services: string[];
+    date: string; startTime: string; endTime: string; staffName?: string;
+    totalAmount: number; hasOffer: boolean;
+  } | null>(null);
+
+  // Build share card data from booking form data + available salon/service/slot data
+  const buildBookingShareData = (variables: any, resultId?: string) => {
+    const serviceNames = (variables.serviceIds || []).map((id: string) => {
+      const svc = services.find((s: any) => s.id === id);
+      return svc?.name || "Service";
+    });
+    const slot = timeSlots.find((s: any) => s.id === variables.timeSlotId);
+    const staffMember = staff.find((s: any) => s.id === variables.staffId);
+    const totalAmount = (variables.serviceIds || []).reduce((sum: number, id: string) => {
+      const svc = services.find((s: any) => s.id === id);
+      return sum + (parseFloat(svc?.price?.toString() || "0"));
+    }, 0);
+    const dateStr = variables.date instanceof Date
+      ? variables.date.toISOString().split('T')[0]
+      : variables.date;
+
+    setBookingShareData({
+      id: resultId || Date.now().toString(),
+      salonName: salon?.name || "Salon",
+      salonAddress: (salon as any)?.address || (salon as any)?.city || undefined,
+      services: serviceNames.length > 0 ? serviceNames : ["Appointment"],
+      date: dateStr,
+      startTime: slot?.startTime || "",
+      endTime: slot?.endTime || "",
+      staffName: staffMember?.name,
+      totalAmount,
+      hasOffer: (offers as any[]).length > 0,
+    });
+    setShowBookingShare(true);
+  };
 
   // Toggle a service in the cart
   const toggleCartService = (serviceId: string) => {
@@ -436,7 +474,7 @@ export default function SalonDetail() {
       const result = await response.json();
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (result, variables) => {
       toast({
         title: "Booking Request Sent!",
         description: "Your request has been sent to the salon. You'll be notified once the salon confirms your appointment.",
@@ -446,6 +484,7 @@ export default function SalonDetail() {
       form.reset();
       setCartServiceIds([]);
       queryClient.invalidateQueries({ queryKey: [`/api/salons/${resolvedSalonId}/time-slots`] });
+      buildBookingShareData(variables, (result as any)?.bookingId || (result as any)?.id);
     },
     onError: (error) => {
       console.error("Pay at salon booking failed:", error);
@@ -540,7 +579,7 @@ export default function SalonDetail() {
       
       return bookingData;
     },
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       toast({
         title: "Booking Request Sent!",
         description: "Your request is pending salon confirmation. You'll get an email once the salon confirms.",
@@ -553,6 +592,7 @@ export default function SalonDetail() {
       
       // Clear pending booking data from localStorage
       localStorage.removeItem('pendingBooking');
+      buildBookingShareData(variables, (result as any)?.bookingId || (result as any)?.id);
     },
     onError: (error: Error) => {
       console.error("Booking mutation error:", error);
@@ -2890,6 +2930,15 @@ export default function SalonDetail() {
           </Button>
         </div>
       </div>
+
+      {/* Booking Share Card — auto-pops after successful booking */}
+      {bookingShareData && (
+        <BookingShareCard
+          open={showBookingShare}
+          onClose={() => { setShowBookingShare(false); setBookingShareData(null); }}
+          booking={bookingShareData}
+        />
+      )}
     </div>
   );
 }
