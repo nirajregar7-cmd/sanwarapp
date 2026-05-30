@@ -21,10 +21,9 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Link } from "wouter";
-import { ObjectUploader } from "@/components/ObjectUploader";
+import { LocalUploader } from "@/components/LocalUploader";
 import { LeafletLocationPicker } from "@/components/LeafletLocationPicker";
 import { OwnerShowcasePanel } from "@/components/OwnerShowcasePanel";
-import type { UploadResult } from '@uppy/core';
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1619,51 +1618,26 @@ export default function OwnerDashboard() {
     }
   };
 
-  // Manual image upload function
+  // Manual image upload function via local storage
   const handleImageUpload = async (file: File) => {
     if (!file) return;
-    
     setImageUploading(true);
     try {
-      // Get upload URL
-      const response = await fetch('/api/objects/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const { uploadURL } = await response.json();
-
-      // Upload file
-      await fetch(uploadURL, {
-        method: 'PUT',
-        body: file,
-      });
-
-      // Set ACL policy
-      try {
-        const aclResponse = await fetch('/api/salon-images', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageUrl: uploadURL }),
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await response.json();
+      const url = data.url || data.path;
+      if (url) {
+        setTempImageUrl(url);
+        salonForm.setValue('imageUrl', url);
+        toast({
+          title: "Image Ready",
+          description: "Click 'Update Salon' below to save your new image.",
         });
-        
-        if (aclResponse.ok) {
-          const { objectPath } = await aclResponse.json();
-          setTempImageUrl(objectPath);
-          salonForm.setValue('imageUrl', objectPath);
-        } else {
-          setTempImageUrl(uploadURL);
-          salonForm.setValue('imageUrl', uploadURL);
-        }
-      } catch (error) {
-        console.error("Error setting image ACL:", error);
-        setTempImageUrl(uploadURL);
-        salonForm.setValue('imageUrl', uploadURL);
+      } else {
+        throw new Error('No URL returned from server');
       }
-
-      toast({
-        title: "Image Ready",
-        description: "Click 'Update Salon' below to save your new image.",
-      });
     } catch (error) {
       console.error("Error uploading image:", error);
       toast({
@@ -2036,61 +2010,6 @@ export default function OwnerDashboard() {
     setGalleryDialogOpen(true);
   };
 
-  const handleGalleryUpload = async (): Promise<{ method: "PUT"; url: string }> => {
-    try {
-      const response = await apiRequest('POST', '/api/objects/upload');
-      const data = await response.json() as { uploadURL: string };
-      console.log("Upload URL response:", data);
-      return {
-        method: "PUT",
-        url: data.uploadURL,
-      };
-    } catch (error) {
-      console.error("Error getting upload URL:", error);
-      throw error;
-    }
-  };
-
-  const handleGalleryUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    console.log("Upload result:", result);
-    if (result.successful && result.successful.length > 0) {
-      const uploadedFile = result.successful[0];
-      console.log("Uploaded file:", uploadedFile);
-      
-      // Extract the URL from Uppy's response 
-      // After successful upload to S3, the file URL is in the uploadURL field
-      const uploadURL = (uploadedFile as any).uploadURL || (uploadedFile as any).response?.uploadURL;
-      let imageUrl = uploadURL;
-      
-      // Remove query parameters to get clean URL for storage
-      if (imageUrl && imageUrl.includes('?')) {
-        imageUrl = imageUrl.split('?')[0];
-      }
-      
-      // If we still don't have a URL, construct it manually from the original upload URL
-      if (!imageUrl) {
-        // This should not happen with proper upload, but fallback
-        console.error("No image URL found in upload response, checking alternative sources");
-        console.log("Upload file object:", uploadedFile);
-      }
-      
-      console.log("Final image URL:", imageUrl);
-      
-      if (imageUrl) {
-        // Submit the form with the uploaded image URL
-        const formData = galleryForm.getValues();
-        galleryMutation.mutate({
-          ...formData,
-          imageUrl,
-        });
-        // Close the dialog
-        setGalleryDialogOpen(false);
-      } else {
-        console.error("No image URL found in upload result");
-        alert("Upload failed - no URL found. Please try again.");
-      }
-    }
-  };
 
   const handleDeleteGallery = (imageId: string) => {
     if (confirm("Are you sure you want to delete this image?")) {
@@ -4871,61 +4790,23 @@ export default function OwnerDashboard() {
                             </Button>
                           </div>
                         )}
-                        <ObjectUploader
-                          maxNumberOfFiles={1}
-                          maxFileSize={5242880} // 5MB
-                          onGetUploadParameters={async () => {
-                            const response = await apiRequest('POST', '/api/objects/upload');
-                            const data = await response.json();
-                            return {
-                              method: 'PUT' as const,
-                              url: data.uploadURL,
-                            };
+                        <LocalUploader
+                          maxFileSize={5 * 1024 * 1024}
+                          accept="image/*"
+                          onUpload={(url) => {
+                            field.onChange(url);
+                            toast({
+                              title: "Photo uploaded!",
+                              description: "Staff profile picture has been uploaded successfully.",
+                            });
                           }}
-                          onComplete={(result) => {
-                            console.log('Staff photo upload completed:', result);
-                            if (result.successful && result.successful.length > 0) {
-                              const uploadedFile = result.successful[0];
-                              const imageUrl = uploadedFile.uploadURL;
-                              console.log('Uploaded file URL:', imageUrl);
-                              
-                              if (imageUrl) {
-                                // Convert Google Storage URL to our object path format
-                                let finalUrl = imageUrl;
-                                if (imageUrl.startsWith('https://storage.googleapis.com/')) {
-                                  // Extract path and convert to /objects/ format
-                                  const url = new URL(imageUrl);
-                                  const pathParts = url.pathname.split('/');
-                                  console.log('URL path parts:', pathParts);
-                                  if (pathParts.length >= 4) {
-                                    // Extract bucket and object path - avoid double "uploads" 
-                                    const objectPath = pathParts.slice(3).join('/');
-                                    console.log('Extracted object path:', objectPath);
-                                    // Don't add "/uploads/" if it already starts with "uploads/"
-                                    if (objectPath.startsWith('uploads/')) {
-                                      finalUrl = `/objects/${objectPath}`;
-                                    } else {
-                                      finalUrl = `/objects/uploads/${objectPath}`;
-                                    }
-                                  }
-                                }
-                                
-                                console.log('Final URL being set:', finalUrl);
-                                field.onChange(finalUrl);
-                                toast({
-                                  title: "Photo uploaded!",
-                                  description: "Staff profile picture has been uploaded successfully.",
-                                });
-                              }
-                            }
-                          }}
-                          buttonClassName="w-full"
+                          buttonText={field.value ? 'Change Photo' : 'Upload Photo'}
                         >
                           <div className="flex items-center gap-2">
                             <Camera className="h-4 w-4" />
                             <span>{field.value ? 'Change Photo' : 'Upload Photo'}</span>
                           </div>
-                        </ObjectUploader>
+                        </LocalUploader>
                         <p className="text-xs text-gray-500">
                           Upload a profile picture for this staff member (max 5MB)
                         </p>
@@ -4998,15 +4879,19 @@ export default function OwnerDashboard() {
                 <div>
                   <label className="text-sm font-medium">Upload Image</label>
                   <div className="mt-2">
-                    <ObjectUploader
-                      onGetUploadParameters={handleGalleryUpload}
-                      onComplete={handleGalleryUploadComplete}
-                      maxFileSize={10485760} // 10MB
-                      buttonClassName="w-full"
+                    <LocalUploader
+                      maxFileSize={10 * 1024 * 1024}
+                      accept="image/*"
+                      onUpload={(url) => {
+                        const formData = galleryForm.getValues();
+                        galleryMutation.mutate({ ...formData, imageUrl: url });
+                        setGalleryDialogOpen(false);
+                      }}
+                      buttonText="Choose Image"
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       Choose Image
-                    </ObjectUploader>
+                    </LocalUploader>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Max 10MB. JPG, PNG supported.</p>
                 </div>
@@ -5176,27 +5061,15 @@ export default function OwnerDashboard() {
                 {salon?.promotionalVideoUrl ? 'Replace Video' : 'Upload Video'}
               </label>
               <div className="mt-2">
-                <ObjectUploader
-                  onGetUploadParameters={async () => {
-                    const response = await apiRequest("POST", "/api/objects/upload");
-                    const data = await response.json();
-                    return {
-                      method: 'PUT' as const,
-                      url: data.uploadURL,
-                    };
-                  }}
-                  onComplete={(result) => {
-                    if (result.successful && result.successful.length > 0) {
-                      const uploadURL = result.successful[0].uploadURL;
-                      updatePromoVideoMutation.mutate(uploadURL);
-                    }
-                  }}
+                <LocalUploader
                   maxFileSize={100 * 1024 * 1024} // 100MB for videos
-                  buttonClassName="w-full"
+                  accept="video/*"
+                  onUpload={(url) => updatePromoVideoMutation.mutate(url)}
+                  buttonText={salon?.promotionalVideoUrl ? 'Replace Video' : 'Upload Video'}
                 >
                   <Video className="h-4 w-4 mr-2" />
-                  {salon?.promotionalVideoUrl ? 'Replace Video' : 'Choose Video'}
-                </ObjectUploader>
+                  {salon?.promotionalVideoUrl ? 'Replace Video' : 'Upload Video'}
+                </LocalUploader>
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 Upload MP4, WebM, or MOV files up to 100MB. Keep videos under 2 minutes for best customer experience.
@@ -5352,38 +5225,19 @@ export default function OwnerDashboard() {
                   )}
                 </div>
                 
-                <ObjectUploader
-                  onGetUploadParameters={async () => {
-                    setProfileImageUploading(true);
-                    const response = await apiRequest("POST", "/api/objects/upload");
-                    const data = await response.json();
-                    return {
-                      method: "PUT" as const,
-                      url: data.uploadURL,
-                    };
-                  }}
-                  onComplete={(result) => {
+                <LocalUploader
+                  maxFileSize={5 * 1024 * 1024}
+                  accept="image/*"
+                  onUpload={(url) => {
+                    setTempProfileImageUrl(url);
+                    profileForm.setValue('profileImageUrl', url);
                     setProfileImageUploading(false);
-                    const photoUrl = result.successful?.[0]?.uploadURL || "";
-                    
-                    if (photoUrl) {
-                      const normalizedPath = photoUrl.startsWith('/objects/') 
-                        ? photoUrl 
-                        : photoUrl.includes('/uploads/') 
-                          ? `/objects${photoUrl.split('/uploads')[1] ? '/uploads' + photoUrl.split('/uploads')[1] : ''}`
-                          : photoUrl;
-                      
-                      setTempProfileImageUrl(normalizedPath);
-                      profileForm.setValue('profileImageUrl', normalizedPath);
-                    }
                   }}
-                  maxFileSize={5485760} // 5MB
-                  buttonClassName="w-full"
-                  buttonType="button"
+                  buttonText={profileImageUploading ? "Uploading..." : "Change Photo"}
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   {profileImageUploading ? "Uploading..." : "Change Photo"}
-                </ObjectUploader>
+                </LocalUploader>
               </div>
 
               <FormField

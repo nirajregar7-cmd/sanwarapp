@@ -9,8 +9,7 @@ import { Camera, Save, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ObjectUploader } from "@/components/ObjectUploader";
-import type { UploadResult } from "@uppy/core";
+import { LocalUploader } from "@/components/LocalUploader";
 
 interface CustomerProfileFormData {
   firstName: string;
@@ -78,61 +77,18 @@ export default function CustomerProfile() {
     }
   });
 
-  // Handle profile picture upload
-  const handleGetUploadParameters = async () => {
-    const response = await apiRequest("POST", "/api/objects/upload");
-    const data = await response.json();
-    return {
-      method: "PUT" as const,
-      url: data.uploadURL,
-    };
-  };
-
-  const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadedFile = result.successful[0];
-      const uploadURL = uploadedFile.uploadURL;
-      
-      if (uploadURL) {
-        // Convert Google Storage URL to our object path format
-        let finalUrl = uploadURL;
-        if (uploadURL.startsWith('https://storage.googleapis.com/')) {
-          // Extract path and convert to /objects/ format
-          const url = new URL(uploadURL);
-          const pathParts = url.pathname.split('/');
-          if (pathParts.length >= 4) {
-            // Extract the full object path after bucket name
-            const fullObjectPath = pathParts.slice(3).join('/');
-            
-            // The object path in GCS is like: .private/uploads/UUID
-            // We want to convert it to: /objects/uploads/UUID
-            if (fullObjectPath.includes('.private/uploads/')) {
-              const objectId = fullObjectPath.replace('.private/uploads/', '');
-              finalUrl = `/objects/uploads/${objectId}`;
-            } else {
-              // Fallback: just use the object ID part
-              const objectId = pathParts[pathParts.length - 1];
-              finalUrl = `/objects/uploads/${objectId}`;
-            }
-          }
-        }
-        
-        // Update profile with the new image URL, including required firstName
-        await updateProfileMutation.mutateAsync({
-          firstName: formData.firstName || profile?.firstName || '',
-          lastName: formData.lastName || profile?.lastName || '',
-          phone: formData.phone || profile?.phone || '',
-          profileImageUrl: finalUrl
-        });
-        
-        // Update local form data
-        setFormData(prev => ({
-          ...prev,
-          profileImageUrl: finalUrl || ''
-        }));
-        
-      }
-    }
+  // Handle profile picture upload via local storage
+  const handleProfileUpload = async (url: string) => {
+    await updateProfileMutation.mutateAsync({
+      firstName: formData.firstName || profile?.firstName || '',
+      lastName: formData.lastName || profile?.lastName || '',
+      phone: formData.phone || profile?.phone || '',
+      profileImageUrl: url
+    });
+    setFormData(prev => ({
+      ...prev,
+      profileImageUrl: url
+    }));
   };
 
   const handleSave = () => {
@@ -235,15 +191,14 @@ export default function CustomerProfile() {
                 </Avatar>
                 {isEditing && (
                   <div className="absolute -bottom-2 -right-2">
-                    <ObjectUploader
-                      maxNumberOfFiles={1}
-                      maxFileSize={5 * 1024 * 1024} // 5MB
-                      onGetUploadParameters={handleGetUploadParameters}
-                      onComplete={handleUploadComplete}
-                      buttonClassName="h-8 w-8 rounded-full p-0"
+                    <LocalUploader
+                      maxFileSize={5 * 1024 * 1024}
+                      accept="image/*"
+                      onUpload={handleProfileUpload}
+                      className="h-8 w-8"
                     >
                       <Camera className="h-4 w-4" />
-                    </ObjectUploader>
+                    </LocalUploader>
                   </div>
                 )}
               </div>

@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { MoodRatingSelector } from "@/components/MoodRatingSelector";
-import { ObjectUploader } from "@/components/ObjectUploader";
+import { LocalUploader } from "@/components/LocalUploader";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Star, MessageSquare, Camera, X } from "lucide-react";
 import type { MoodRating } from "@shared/schema";
-import type { UploadResult } from "@uppy/core";
 
 const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
@@ -46,29 +45,6 @@ export function ReviewForm({ salonId, bookingId, onSubmitSuccess, trigger }: Rev
       photos: [],
     },
   });
-
-  // Handle photo upload completion
-  const handlePhotoUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    const newPhotos = (result.successful || []).map((file) => {
-      // Get the uploaded file URL - could be from uploadURL or response
-      let photoUrl = file.uploadURL || file.response?.uploadURL || file.response?.body || '';
-      
-      // If it's a full Google Cloud Storage URL, keep it as is for now
-      // The server will normalize it when saving the review
-      return photoUrl;
-    }).filter(Boolean) as string[];
-    
-    if (newPhotos.length > 0) {
-      const updatedPhotos = [...uploadedPhotos, ...newPhotos];
-      setUploadedPhotos(updatedPhotos);
-      form.setValue('photos', updatedPhotos);
-      
-      toast({
-        title: "Photos uploaded successfully",
-        description: `${newPhotos.length} photo(s) added to your review.`,
-      });
-    }
-  };
 
   // Handle photo removal
   const removePhoto = (photoUrl: string) => {
@@ -203,24 +179,23 @@ export function ReviewForm({ salonId, bookingId, onSubmitSuccess, trigger }: Rev
             <FormItem>
               <FormLabel>Add Photos (optional)</FormLabel>
               <div className="space-y-3">
-                <ObjectUploader
-                  maxNumberOfFiles={3}
-                  maxFileSize={5485760} // 5MB
-                  onGetUploadParameters={async () => {
-                    const response = await apiRequest("POST", "/api/objects/upload");
-                    const data = await response.json();
-                    return {
-                      method: "PUT" as const,
-                      url: data.uploadURL,
-                    };
+                <LocalUploader
+                  maxFileSize={5 * 1024 * 1024}
+                  accept="image/*"
+                  onUpload={(url) => {
+                    const updated = [...uploadedPhotos, url];
+                    setUploadedPhotos(updated);
+                    form.setValue('photos', updated);
+                    toast({
+                      title: "Photo uploaded",
+                      description: "Added to your review.",
+                    });
                   }}
-                  onComplete={handlePhotoUploadComplete}
-                  buttonClassName="w-full"
-                  buttonType="button"
+                  buttonText="Add Photos"
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   Add Photos
-                </ObjectUploader>
+                </LocalUploader>
                 
                 {/* Display uploaded photos */}
                 {uploadedPhotos.length > 0 && (

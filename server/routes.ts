@@ -3536,36 +3536,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to update this salon" });
       }
       
-      // Convert Google Cloud Storage URL to local serving URL and set ACL policy
-      let localVideoUrl = promotionalVideoUrl;
-      if (promotionalVideoUrl.includes('storage.googleapis.com')) {
-        // Extract the file ID from the storage URL
-        const urlParts = promotionalVideoUrl.split('/');
-        const fileId = urlParts[urlParts.length - 1].split('?')[0]; // Remove query parameters
-        localVideoUrl = `/objects/uploads/${fileId}`;
-      }
-      
-      // Set ACL policy for public access (same as gallery images)
-      try {
-        const objectStorageService = new ObjectStorageService();
-        console.log('Setting promotional video ACL for:', localVideoUrl);
-        const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-          localVideoUrl,
-          {
-            owner: userId,
-            visibility: "public", // Promotional videos should be public
-          }
-        );
-        console.log('✅ Promotional video ACL set successfully:', objectPath);
-        localVideoUrl = objectPath; // Use the corrected path
-      } catch (error) {
-        console.error('❌ Error setting promotional video ACL:', error);
-        console.error('Continuing with original path:', localVideoUrl);
-        // Continue with the original path if ACL setting fails
-      }
+      // Use local URL directly (GCS/ACL is broken - local uploads work)
+      const videoUrl = promotionalVideoUrl;
       
       const [updatedSalon] = await db.update(salons)
-        .set({ promotionalVideoUrl: localVideoUrl, updatedAt: new Date() })
+        .set({ promotionalVideoUrl: videoUrl, updatedAt: new Date() })
         .where(eq(salons.id, salonId))
         .returning();
       
