@@ -2211,7 +2211,7 @@ export default function OwnerDashboard() {
               <div className="flex items-center gap-3 sm:gap-4">
                 {/* Preview My Salon button */}
                 <a
-                  href={`/salon/${salon.id}`}
+                  href={`/salon/${salon.slug || salon.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 text-white text-sm font-semibold transition-all shadow-sm"
@@ -4092,7 +4092,7 @@ export default function OwnerDashboard() {
                     <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
                       <div className="flex-shrink-0 bg-white border-2 border-purple-100 rounded-2xl p-4 shadow-sm">
                         <QRCodeSVG
-                          value={`https://sanwarhub.in/salon/${salon.id}`}
+                          value={`https://sanwarhub.in/salon/${salon.slug || salon.id}`}
                           size={140}
                           bgColor="#ffffff"
                           fgColor="#7c3aed"
@@ -4106,14 +4106,14 @@ export default function OwnerDashboard() {
                           <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
                             <Link2 className="h-4 w-4 text-purple-500 flex-shrink-0" />
                             <span className="text-sm text-gray-600 truncate flex-1">
-                              sanwarhub.in/salon/{salon.id}
+                              sanwarhub.in/salon/{salon.slug || salon.id}
                             </span>
                             <Button
                               size="sm"
                               variant="ghost"
                               className="h-7 px-2 text-purple-600 hover:bg-purple-50"
                               onClick={() => {
-                                navigator.clipboard.writeText(`https://sanwarhub.in/salon/${salon.id}`);
+                                navigator.clipboard.writeText(`https://sanwarhub.in/salon/${salon.slug || salon.id}`);
                                 toast({ title: "Link copied!", description: "Share it anywhere to get more bookings." });
                               }}
                             >
@@ -4126,7 +4126,7 @@ export default function OwnerDashboard() {
                             variant="outline"
                             className="rounded-xl border-green-200 text-green-700 hover:bg-green-50"
                             onClick={() => {
-                              const text = `Book an appointment at *${salon.name}* 💇\n\n👉 https://sanwarhub.in/salon/${salon.id}`;
+                              const text = `Book an appointment at *${salon.name}* 💇\n\n👉 https://sanwarhub.in/salon/${salon.slug || salon.id}`;
                               window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
                             }}
                           >
@@ -4136,7 +4136,7 @@ export default function OwnerDashboard() {
                             variant="outline"
                             className="rounded-xl border-purple-200 text-purple-700 hover:bg-purple-50"
                             onClick={() => {
-                              const text = `Book an appointment at ${salon.name} 💇 https://sanwarhub.in/salon/${salon.id}`;
+                              const text = `Book an appointment at ${salon.name} 💇 https://sanwarhub.in/salon/${salon.slug || salon.id}`;
                               navigator.clipboard.writeText(text);
                               toast({ title: "Copied!", description: "Paste this in Instagram bio or story." });
                             }}

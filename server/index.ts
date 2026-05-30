@@ -74,6 +74,37 @@ app.use((req, res, next) => {
   }, async () => {
     log(`serving on port ${port}`);
     
+    // Backfill missing slugs for existing salons (one-time migration)
+    try {
+      const { db } = await import('./db');
+      const { salons } = await import('../shared/schema');
+      const { isNull, eq } = await import('drizzle-orm');
+      const missingSlugs = await db.select({ id: salons.id, name: salons.name })
+        .from(salons)
+        .where(isNull(salons.slug));
+      for (const salon of missingSlugs) {
+        const base = salon.name
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .trim()
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-")
+          .slice(0, 80);
+        let candidate = base;
+        let counter = 1;
+        while (true) {
+          const [existing] = await db.select({ id: salons.id }).from(salons).where(eq(salons.slug, candidate));
+          if (!existing || existing.id === salon.id) break;
+          candidate = `${base}-${counter++}`;
+        }
+        await db.update(salons).set({ slug: candidate }).where(eq(salons.id, salon.id));
+        log(`Assigned slug "${candidate}" to salon ${salon.id}`);
+      }
+      if (missingSlugs.length > 0) log(`✅ Backfilled slugs for ${missingSlugs.length} salons`);
+    } catch (migrationErr) {
+      console.error('❌ Slug backfill failed:', migrationErr);
+    }
+
     // Start the booking notification scheduler
     try {
       const { startBookingScheduler } = await import('./booking-scheduler');

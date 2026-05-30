@@ -60,17 +60,8 @@ export default function AuthPage() {
         return redirectUrl;
       }
       
-      // It's a slug, fetch salon to get UUID
-      try {
-        const response = await fetch(`/api/salons/${slugOrId}`);
-        if (response.ok) {
-          const salon = await response.json();
-          // Return UUID-based URL
-          return `/salon/${salon.id}`;
-        }
-      } catch (error) {
-        console.error('Failed to convert slug to UUID:', error);
-      }
+      // It's a slug — use it directly (backend accepts slug or UUID)
+      return redirectUrl;
     }
     
     return redirectUrl;

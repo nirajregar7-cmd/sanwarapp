@@ -316,7 +316,7 @@ export default function ExplorePage() {
               const hasOffers = (salon as any).hasActiveOffers;
 
               return (
-                <Link key={salon.id} href={`/salon/${salon.id}`}>
+                <Link key={salon.id} href={`/salon/${(salon as any).slug || salon.id}`}>
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden active:scale-[0.98] transition-transform cursor-pointer">
                     <div className="flex gap-0">
                       {/* Image */}

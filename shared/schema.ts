@@ -85,6 +85,7 @@ export const salons = pgTable("salons", {
   brandOwnerId: varchar("brand_owner_id").references(() => users.id, { onDelete: "set null" }),
   brandName: varchar("brand_name"),
   name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 300 }).unique(), // URL-friendly slug e.g. "my-salon-name"
   description: text("description"),
   phone: varchar("phone", { length: 20 }),
   address: text("address").notNull(),

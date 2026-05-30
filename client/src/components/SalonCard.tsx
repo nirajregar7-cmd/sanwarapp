@@ -165,7 +165,7 @@ export default function SalonCard({ salon }: SalonCardProps) {
   };
 
   return (
-    <Link href={`/salon/${salon.id}`} data-testid={`link-salon-card-${salon.id}`}>
+    <Link href={`/salon/${(salon as any).slug || salon.id}`} data-testid={`link-salon-card-${salon.id}`}>
       <Card className="overflow-hidden hover:shadow-xl transition-all duration-200 cursor-pointer group hover:scale-[1.02] hover:ring-2 hover:ring-primary/20 h-full flex flex-col">
         <div className="relative">
           <img 

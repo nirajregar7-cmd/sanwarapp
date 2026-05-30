@@ -1122,7 +1122,7 @@ export default function SalonDetail() {
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 bg-white rounded-xl p-2 shadow-sm border border-purple-100">
                 <QRCodeSVG
-                  value={`https://sanwarhub.in/salon/${salonId}`}
+                  value={`https://sanwarhub.in/salon/${salon?.slug || salonId}`}
                   size={72}
                   bgColor="#ffffff"
                   fgColor="#7c3aed"
@@ -1135,7 +1135,7 @@ export default function SalonDetail() {
                 <button
                   className="mt-2 text-xs text-purple-600 font-medium underline underline-offset-2"
                   onClick={() => {
-                    navigator.clipboard.writeText(`https://sanwarhub.in/salon/${salonId}`);
+                    navigator.clipboard.writeText(`https://sanwarhub.in/salon/${salon?.slug || salonId}`);
                     toast({ title: "Link copied!", description: "Share it with friends." });
                   }}
                 >

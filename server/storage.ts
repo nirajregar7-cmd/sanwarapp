@@ -115,6 +115,7 @@ export interface IStorage {
   // Salon operations
   createSalon(salon: InsertSalon): Promise<Salon>;
   getSalonById(id: string): Promise<Salon | undefined>;
+  getSalonBySlug(slug: string): Promise<Salon | undefined>;
   getSalonsByOwner(ownerId: string): Promise<Salon[]>;
   getAllSalons(): Promise<Salon[]>;
   updateSalon(id: string, salon: Partial<InsertSalon>): Promise<Salon | undefined>;
@@ -378,17 +379,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Salon operations
+
+  // Generate a URL-friendly slug from a salon name, ensuring uniqueness
+  private async generateUniqueSlug(name: string, existingId?: string): Promise<string> {
+    const base = name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .slice(0, 80);
+    let candidate = base;
+    let counter = 1;
+    while (true) {
+      const [existing] = await db
+        .select({ id: salons.id })
+        .from(salons)
+        .where(eq(salons.slug, candidate));
+      if (!existing || existing.id === existingId) return candidate;
+      candidate = `${base}-${counter++}`;
+    }
+  }
+
   async createSalon(salon: InsertSalon): Promise<Salon> {
-    const [newSalon] = await db.insert(salons).values(salon).returning();
+    const slug = await this.generateUniqueSlug(salon.name);
+    const [newSalon] = await db.insert(salons).values({ ...salon, slug }).returning();
     return newSalon;
   }
 
   async getSalonById(id: string): Promise<Salon | undefined> {
-    const [salon] = await db
-      .select()
-      .from(salons)
-      .where(eq(salons.id, id));
-    
+    // Accept both UUID and slug
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(id)) {
+      const [salon] = await db.select().from(salons).where(eq(salons.id, id));
+      return salon;
+    }
+    // Treat as slug
+    const [salon] = await db.select().from(salons).where(eq(salons.slug, id));
+    return salon;
+  }
+
+  async getSalonBySlug(slug: string): Promise<Salon | undefined> {
+    const [salon] = await db.select().from(salons).where(eq(salons.slug, slug));
     return salon;
   }
 
@@ -407,9 +439,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSalon(id: string, salonData: Partial<InsertSalon>): Promise<Salon | undefined> {
+    let slug: string | undefined;
+    if (salonData.name) {
+      slug = await this.generateUniqueSlug(salonData.name, id);
+    }
     const [salon] = await db
       .update(salons)
-      .set({ ...salonData, updatedAt: new Date() })
+      .set({ ...salonData, ...(slug ? { slug } : {}), updatedAt: new Date() })
       .where(eq(salons.id, id))
       .returning();
     return salon;
